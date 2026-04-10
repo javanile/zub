@@ -22,7 +22,7 @@ from urllib.parse import urlencode
 GITHUB_API = "https://api.github.com"
 TOPIC = "zig-package"
 BATCH_SIZE = 10
-DEFAULT_CATEGORY = "tooling"
+DEFAULT_CATEGORY = ""
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PACKAGES_DIR = os.path.join(ROOT_DIR, "_packages")
@@ -165,6 +165,7 @@ def repo_to_markdown(repo, readme=None):
 
     # YAML frontmatter
     kw_lines = "".join(f"\n  - {k}" for k in keywords) if keywords else ""
+    category_line = f"\ncategory: {category}" if category else ""
     frontmatter = f"""---
 title: {yaml_str(name)}
 description: {yaml_str(description)}
@@ -172,9 +173,8 @@ license: {yaml_str(license_name)}
 author: {yaml_str(owner)}
 author_github: {yaml_str(owner)}
 repository: {repo["html_url"]}
-category: {category}
-topics:{kw_lines}
-date: {date}
+keywords:{kw_lines}
+date: {date}{category_line}
 permalink: /packages/{owner}/{name}/
 ---"""
 
