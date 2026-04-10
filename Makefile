@@ -16,11 +16,15 @@ serve: check-env
 		-v $$PWD:/srv/jekyll \
 		-v $$PWD/.bundles_cache:/tmp/.bundles_cache \
 		-e BUNDLE_PATH=/tmp/.bundles_cache \
-		-p 4000:4000 \
+		-p 4091:4091 \
 		jekyll/builder:3.8 bash -c "\
 			chmod 777 \$$BUNDLE_PATH && \
 			gem install bundler -v 2.4.22 && bundle install && \
-			bundle exec jekyll serve --host 0.0.0.0 --verbose --config _config.yml,_config_dev.yml"
+			bundle exec jekyll serve --host 0.0.0.0 -P 4091 --verbose --config _config.yml,_config_dev.yml"
+
+sync-zigistry:
+	@rm -f sync/zigistry.json sync/zigistry.lock
+	@python3 sync/zigistry.py
 
 dev-push:
 	@git config credential.helper 'cache --timeout=3600'

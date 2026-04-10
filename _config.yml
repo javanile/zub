@@ -1,3 +1,3 @@
 title: Zub
-tagline: Distributed package index for Zig language
+tagline: A distributed package index for Zig
 remote_theme: javanile/package-manager@main
