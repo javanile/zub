@@ -1,6 +1,6 @@
-# Contributing to zub
+# Contributing to ZÜB
 
-zub is a distributed package index for Zig. Contributions are welcome in three main areas: adding packages manually, improving the sync pipeline, and improving the site itself.
+ZÜB is a distributed package index for Zig. Contributions are welcome in three main areas: adding packages manually, improving the sync pipeline, and improving the site itself.
 
 ## Ways to contribute
 

@@ -45,3 +45,12 @@ jekyll-archives:
     - tags
   permalinks:
     category: /cat/:name/
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - LICENCE
+  - security/*
+  - stats/*
+  - sync/*
+  - Makefile

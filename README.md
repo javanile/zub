@@ -1,4 +1,4 @@
-# zub
+# ZÜB
 
 A distributed package index for Zig.
 
