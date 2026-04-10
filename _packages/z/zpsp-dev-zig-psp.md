@@ -8,8 +8,8 @@ repository: https://github.com/zPSP-Dev/Zig-PSP
 keywords:
   - psp
   - psp-sdk
-  - zig
 date: 2026-04-08
+last_sync: 2026-04-08T20:46:50Z
 permalink: /packages/zPSP-Dev/Zig-PSP/
 ---
 

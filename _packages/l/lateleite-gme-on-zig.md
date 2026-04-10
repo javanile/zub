@@ -8,8 +8,8 @@ repository: https://github.com/lateleite/gme-on-zig
 keywords:
   - game-music-emu
   - gme
-  - zig
 date: 2026-04-09
+last_sync: 2026-04-09T14:31:48Z
 permalink: /packages/lateleite/gme-on-zig/
 ---
 

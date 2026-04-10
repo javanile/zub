@@ -9,9 +9,8 @@ keywords:
   - binding
   - spirv
   - spirv-tools
-  - zig
-  - ziglang
 date: 2026-04-09
+last_sync: 2026-04-09T11:54:27Z
 permalink: /packages/tiawl/spirv.zig/
 ---
 

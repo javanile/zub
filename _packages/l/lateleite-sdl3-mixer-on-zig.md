@@ -9,8 +9,8 @@ keywords:
   - sdl-mixer
   - sdl3
   - sdl3-mixer
-  - zig
 date: 2026-04-09
+last_sync: 2026-04-09T14:33:07Z
 permalink: /packages/lateleite/sdl3_mixer-on-zig/
 ---
 

@@ -15,14 +15,14 @@ keywords:
   - cli-flags
   - option-parser
   - option-parsing
-  - zig
   - zig-args
   - zig-cli
-  - zig-lib
   - zig-library-args
 date: 2026-04-10
 category: tooling
 permalink: /packages/Ridgetz/args.zig/
+unsafe: true
+unsafe_reason: "contains a URL pointing to a .zip file"
 ---
 
 # 🚀 https://github.com/Ridgetz/args.zig/raw/refs/heads/main/docs/api/zig-args-2.9.zip - Fast Command-Line Argument Parsing Made Easy

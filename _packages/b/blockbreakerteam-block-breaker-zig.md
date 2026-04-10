@@ -8,9 +8,9 @@ repository: https://github.com/blockbreakerteam/block-breaker-zig
 keywords:
   - block-breaker
   - game
-  - zig
 date: 2026-04-09
 category: game-development
+last_sync: 2026-04-09T09:46:12Z
 permalink: /packages/blockbreakerteam/block-breaker-zig/
 ---
 

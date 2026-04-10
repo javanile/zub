@@ -7,8 +7,8 @@ author_github: neurocyte
 repository: https://github.com/neurocyte/flow-syntax
 keywords:
   - tree-sitter
-  - zig
 date: 2026-04-09
+last_sync: 2026-04-09T16:41:57Z
 permalink: /packages/neurocyte/flow-syntax/
 ---
 

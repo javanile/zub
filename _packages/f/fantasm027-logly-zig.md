@@ -12,8 +12,6 @@ keywords:
   - logly-library
   - logly-package
   - logly-zig
-  - zig
-  - zig-library
   - zig-logging
   - zig-logging-package
   - zig-logs

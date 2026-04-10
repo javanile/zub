@@ -9,8 +9,8 @@ keywords:
   - ogg
   - opus-codec
   - opusfile
-  - zig
 date: 2026-04-09
+last_sync: 2026-04-09T14:25:19Z
 permalink: /packages/lateleite/opusfile-on-zig/
 ---
 

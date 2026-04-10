@@ -8,10 +8,8 @@ repository: https://github.com/zigcc/zig-course
 keywords:
   - tutorial
   - tutorials
-  - zig
-  - zig-lang
-  - ziglang
 date: 2026-04-08
+last_sync: 2026-04-08T11:14:14Z
 permalink: /packages/zigcc/zig-course/
 ---
 

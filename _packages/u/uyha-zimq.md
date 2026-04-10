@@ -9,10 +9,10 @@ keywords:
   - bindings
   - libzmq
   - zeromq
-  - zig
   - zmq
 date: 2026-04-09
 category: systems
+last_sync: 2026-04-09T14:10:28Z
 permalink: /packages/uyha/zimq/
 ---
 

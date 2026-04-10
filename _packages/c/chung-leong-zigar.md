@@ -14,9 +14,9 @@ keywords:
   - rollup-plugin
   - wasm
   - webpack-plugin
-  - zig
 date: 2026-04-09
 category: systems
+last_sync: 2026-04-09T15:41:13Z
 permalink: /packages/chung-leong/zigar/
 ---
 

@@ -8,8 +8,8 @@ repository: https://github.com/neurocyte/thespian
 keywords:
   - actor-model
   - cpp
-  - zig
 date: 2026-04-09
+last_sync: 2026-04-09T17:52:08Z
 permalink: /packages/neurocyte/thespian/
 ---
 

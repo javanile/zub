@@ -6,8 +6,8 @@ author: nektro
 author_github: nektro
 repository: https://github.com/nektro/zig-git
 keywords:
-  - zig
 date: 2026-04-09
+last_sync: 2026-04-09T22:26:16Z
 permalink: /packages/nektro/zig-git/
 ---
 

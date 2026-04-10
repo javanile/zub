@@ -8,9 +8,9 @@ repository: https://github.com/floooh/sokol-zig
 keywords:
   - crossplatform
   - sokol
-  - zig
 date: 2026-04-09
 category: game-development
+last_sync: 2026-04-09T13:35:16Z
 permalink: /packages/floooh/sokol-zig/
 ---
 

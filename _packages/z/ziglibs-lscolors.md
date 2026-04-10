@@ -7,8 +7,6 @@ author_github: ziglibs
 repository: https://github.com/ziglibs/lscolors
 keywords:
   - ls-colors
-  - zig
-  - ziglang
 date: 2026-04-10
 permalink: /packages/ziglibs/lscolors/
 ---

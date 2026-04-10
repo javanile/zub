@@ -7,9 +7,9 @@ author_github: neurocyte
 repository: https://github.com/neurocyte/cbor
 keywords:
   - cbor
-  - zig-library
 date: 2026-04-09
 category: data-formats
+last_sync: 2026-04-09T16:51:05Z
 permalink: /packages/neurocyte/cbor/
 ---
 

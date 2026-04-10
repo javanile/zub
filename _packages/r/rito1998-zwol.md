@@ -10,10 +10,9 @@ keywords:
   - command-line
   - wake-on-lan
   - wol
-  - zig
-  - ziglang
 date: 2026-04-07
 category: tooling
+last_sync: 2026-04-07T20:18:19Z
 permalink: /packages/rito1998/zwol/
 ---
 

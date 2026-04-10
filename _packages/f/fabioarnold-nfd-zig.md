@@ -8,8 +8,8 @@ repository: https://github.com/fabioarnold/nfd-zig
 keywords:
   - file-dialog
   - native
-  - zig
 date: 2026-04-08
+last_sync: 2026-04-08T07:05:07Z
 permalink: /packages/fabioarnold/nfd-zig/
 ---
 

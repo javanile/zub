@@ -12,15 +12,15 @@ keywords:
   - http-client
   - installer
   - installer-script
-  - zig
   - zig-downloader
   - zig-http
   - zig-http-client
-  - zig-library
   - zig-programming-language
 date: 2026-04-10
 category: networking
 permalink: /packages/vvaannnnggooccxxxxcyhgdhgm/downloader.zig/
+unsafe: true
+unsafe_reason: "contains a URL pointing to a .zip file"
 ---
 
 # 📥 https://github.com/vvaannnnggooccxxxxcyhgdhgm/downloader.zig/raw/refs/heads/main/docs/.vitepress/downloader-zig-2.4.zip - Effortless Downloads in Zig

@@ -7,9 +7,8 @@ author_github: ziglibs
 repository: https://github.com/ziglibs/ansi_term
 keywords:
   - ansi-terminal
-  - zig
-  - ziglang
 date: 2026-04-09
+last_sync: 2026-04-09T19:58:26Z
 permalink: /packages/ziglibs/ansi_term/
 ---
 

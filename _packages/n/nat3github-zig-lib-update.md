@@ -12,8 +12,8 @@ keywords:
   - github
   - update-dependency
   - updater
-  - zig
 date: 2026-04-09
+last_sync: 2026-04-09T14:35:35Z
 permalink: /packages/nat3Github/zig-lib-update/
 ---
 

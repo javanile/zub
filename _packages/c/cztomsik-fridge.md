@@ -9,9 +9,9 @@ keywords:
   - database
   - sqlite
   - sqlite3
-  - zig
 date: 2026-04-07
 category: data-formats
+last_sync: 2026-04-07T07:33:54Z
 permalink: /packages/cztomsik/fridge/
 ---
 

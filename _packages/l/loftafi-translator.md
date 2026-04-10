@@ -6,8 +6,8 @@ author: loftafi
 author_github: loftafi
 repository: https://github.com/loftafi/translator
 keywords:
-  - zig
 date: 2026-04-09
+last_sync: 2026-04-09T06:08:50Z
 permalink: /packages/loftafi/translator/
 ---
 

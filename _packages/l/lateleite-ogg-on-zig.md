@@ -7,8 +7,8 @@ author_github: lateleite
 repository: https://github.com/lateleite/ogg-on-zig
 keywords:
   - ogg
-  - zig
 date: 2026-04-09
+last_sync: 2026-04-09T14:24:32Z
 permalink: /packages/lateleite/ogg-on-zig/
 ---
 

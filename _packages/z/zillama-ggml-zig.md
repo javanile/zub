@@ -7,8 +7,8 @@ author_github: zillama
 repository: https://github.com/zillama/ggml-zig
 keywords:
   - machine-learning
-  - zig-library
 date: 2026-04-09
+last_sync: 2026-04-09T09:46:58Z
 permalink: /packages/zillama/ggml-zig/
 ---
 

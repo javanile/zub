@@ -12,8 +12,8 @@ keywords:
   - file-encryption
   - turbo
   - turbocrypt
-  - ziglang
 date: 2026-04-10
+last_sync: 2026-04-10T07:59:42Z
 permalink: /packages/jedisct1/turbocrypt/
 ---
 

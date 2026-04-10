@@ -9,6 +9,7 @@ keywords:
   - bignum
   - floating-point
 date: 2026-04-07
+last_sync: 2026-04-07T20:18:04Z
 permalink: /packages/TemariVirus/zig-bigfloat/
 ---
 

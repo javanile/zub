@@ -12,9 +12,9 @@ keywords:
   - cursor
   - terminal
   - tui
-  - zig
 date: 2026-04-08
 category: tooling
+last_sync: 2026-04-08T02:08:15Z
 permalink: /packages/xyaman/mibu/
 ---
 

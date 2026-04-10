@@ -8,8 +8,8 @@ repository: https://github.com/marselester/maxminddb.zig
 keywords:
   - maxmind
   - maxmind-db
-  - zig
 date: 2026-04-10
+last_sync: 2026-04-10T00:00:20Z
 permalink: /packages/marselester/maxminddb.zig/
 ---
 

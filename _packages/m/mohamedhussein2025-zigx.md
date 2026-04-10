@@ -17,10 +17,7 @@ keywords:
   - python-zig-bindings
   - trading
   - xll
-  - zig
   - zig-bindings
-  - zig-lib
-  - zig-library
   - zig-python
   - zig-python-bindings
 date: 2026-04-10

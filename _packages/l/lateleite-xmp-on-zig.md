@@ -10,8 +10,8 @@ keywords:
   - pcm
   - tracker-music
   - xmp
-  - zig
 date: 2026-04-09
+last_sync: 2026-04-09T14:09:19Z
 permalink: /packages/lateleite/xmp-on-zig/
 ---
 

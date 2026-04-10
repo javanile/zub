@@ -7,8 +7,8 @@ author_github: joachimschmidt557
 repository: https://github.com/joachimschmidt557/linenoize
 keywords:
   - readline
-  - zig
 date: 2026-04-09
+last_sync: 2026-04-09T16:49:21Z
 permalink: /packages/joachimschmidt557/linenoize/
 ---
 

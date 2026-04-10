@@ -9,8 +9,8 @@ keywords:
   - ogg
   - ogg-vorbis
   - vorbis
-  - zig
 date: 2026-04-09
+last_sync: 2026-04-09T14:25:58Z
 permalink: /packages/lateleite/vorbis-on-zig/
 ---
 

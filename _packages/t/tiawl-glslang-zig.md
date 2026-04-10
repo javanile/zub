@@ -8,9 +8,8 @@ repository: https://github.com/tiawl/glslang.zig
 keywords:
   - binding
   - glslang
-  - zig
-  - ziglang
 date: 2026-04-07
+last_sync: 2026-04-07T17:10:11Z
 permalink: /packages/tiawl/glslang.zig/
 ---
 

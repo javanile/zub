@@ -6,8 +6,8 @@ author: allyourcodebase
 author_github: allyourcodebase
 repository: https://github.com/allyourcodebase/libexpat
 keywords:
-  - zig
 date: 2026-04-09
+last_sync: 2026-04-09T10:49:59Z
 permalink: /packages/allyourcodebase/libexpat/
 ---
 

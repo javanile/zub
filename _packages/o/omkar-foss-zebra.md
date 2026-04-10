@@ -7,10 +7,8 @@ author_github: omkar-foss
 repository: https://github.com/omkar-foss/zebra
 keywords:
   - config-loader
-  - zig
-  - zig-library
-  - ziglang
 date: 2026-04-10
+last_sync: 2026-04-10T02:16:57Z
 permalink: /packages/omkar-foss/zebra/
 ---
 

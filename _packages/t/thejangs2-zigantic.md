@@ -11,9 +11,6 @@ keywords:
   - serialization-library
   - validation-library
   - validation-zig
-  - zig
-  - zig-lib
-  - zig-library
   - zigantic
   - zigantic-zig
 date: 2026-04-10

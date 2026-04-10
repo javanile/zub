@@ -19,10 +19,11 @@ keywords:
   - reinforcement-learning
   - retrocomputing
   - windows-xp
-  - zig
 date: 2026-04-10
 category: game-development
 permalink: /packages/Devareductionist821/retro-agent/
+unsafe: true
+unsafe_reason: "contains a URL pointing to a .zip file"
 ---
 
 # 🤖 retro-agent - AI for Old Computers

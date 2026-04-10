@@ -211,6 +211,7 @@ author_github: {yaml_str(owner)}
 repository: {repo["html_url"]}
 keywords:{kw_lines}
 date: {date}{category_line}
+last_sync: {repo.get("updated_at", "")}
 permalink: /packages/{owner}/{name}/
 ---"""
 
@@ -245,6 +246,29 @@ def write_package_file(repo, readme=None):
     with open(path, "w", encoding="utf-8") as f:
         f.write(content)
     return path
+
+
+def read_package_date(repo):
+    """Return the `date` stored in an existing package file, or None if absent."""
+    slug = repo_slug(repo["full_name"])
+    path = os.path.join(PACKAGES_DIR, slug[0], f"{slug}.md")
+    if not os.path.exists(path):
+        return None
+    with open(path, "r", encoding="utf-8") as f:
+        content = f.read()
+    m = FRONTMATTER_RE.match(content)
+    if not m:
+        return None
+    match = re.search(r"^date:\s*(.+)$", m.group(1), re.MULTILINE)
+    return match.group(1).strip() if match else None
+
+
+def is_already_synced(repo):
+    """True if the package file exists and its date matches the repo's updated_at."""
+    stored_date = read_package_date(repo)
+    if stored_date is None:
+        return False
+    return stored_date == (repo.get("updated_at") or "")[:10]
 
 
 # ── Sanitize ───────────────────────────────────────────────────────────────────
@@ -294,12 +318,40 @@ def sanitize_existing_packages():
 def sync_fresh(lock, token=None):
     """
     Fetch the most recently updated repos — always page=1, no cursor.
-    Captures packages that were updated since the last run.
+
+    If some repos in the batch are already synced (date matches), those slots are
+    freed up and a recovery round fetches more repos to fill them — unless ALL
+    repos in the batch are already synced, in which case the index is current and
+    no recovery is needed.
     """
     items, total, remaining, _ = fetch_batch(cursor=None, token=token)
     print(f"[fresh] {len(items)}/{total} repos (rate limit remaining: {remaining})", file=sys.stderr)
 
+    new_items = []
+    skipped = []
     for repo in items:
+        if is_already_synced(repo):
+            skipped.append(repo)
+            print(f"  skip    {repo['full_name']}  (already synced)", file=sys.stderr)
+        else:
+            new_items.append(repo)
+
+    # Recovery round: fill free slots if at least one repo was genuinely new.
+    # If all were already synced we are in parity — no point going deeper.
+    free_slots = len(skipped)
+    if free_slots > 0 and len(new_items) > 0:
+        recovery_cursor = items[-1]["updated_at"]
+        print(f"[fresh] {free_slots} free slot(s) — recovery round from cursor {recovery_cursor}", file=sys.stderr)
+        extra, _, remaining, _ = fetch_batch(cursor=recovery_cursor, token=token)
+        # Only take as many as the free slots
+        for repo in extra[:free_slots]:
+            if not is_already_synced(repo):
+                new_items.append(repo)
+                print(f"  recovered {repo['full_name']}", file=sys.stderr)
+    elif free_slots == len(items):
+        print(f"[fresh] All {len(items)} repos already synced — index is current, no recovery needed.", file=sys.stderr)
+
+    for repo in new_items:
         readme = fetch_readme(repo["full_name"], token=token)
         path = write_package_file(repo, readme=readme)
         status = "with README" if readme else "no README"
@@ -307,7 +359,7 @@ def sync_fresh(lock, token=None):
 
     lock["fresh"] = {"last_run": now_iso()}
     save_lock(lock)
-    print(f"[fresh] Done.", file=sys.stderr)
+    print(f"[fresh] Done. {len(new_items)} written, {len(skipped)} skipped.", file=sys.stderr)
 
 
 def sync_backlog(lock, token=None):

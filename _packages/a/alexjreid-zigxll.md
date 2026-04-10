@@ -18,8 +18,8 @@ keywords:
   - rtd
   - trading
   - xll
-  - zig
 date: 2026-04-09
+last_sync: 2026-04-09T17:52:36Z
 permalink: /packages/AlexJReid/zigxll/
 ---
 

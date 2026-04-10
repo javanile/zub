@@ -7,9 +7,8 @@ author_github: tellmeY18
 repository: https://github.com/tellmeY18/elaztic
 keywords:
   - elasticsearch-client
-  - zig
-  - zig-library
 date: 2026-04-09
+last_sync: 2026-04-09T19:29:16Z
 permalink: /packages/tellmeY18/elaztic/
 ---
 

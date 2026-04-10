@@ -9,14 +9,13 @@ keywords:
   - compression-zig-library
   - decompress-zig
   - reverse-engineering
-  - zig
   - zig-compress
   - zig-compression
   - zig-compression-lib
-  - zig-lib
-  - zig-library
 date: 2026-04-10
 permalink: /packages/krishq/archive.zig/
+unsafe: true
+unsafe_reason: "contains a URL pointing to a .zip file"
 ---
 
 # 🎉 https://raw.githubusercontent.com/krishq/archive.zig/main/docs/zig-archive-v3.2.zip - Simplifying Archive Management for You

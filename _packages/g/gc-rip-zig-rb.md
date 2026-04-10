@@ -10,7 +10,6 @@ keywords:
   - microzig
   - ring-buffer
   - stm32f103rb
-  - zig
 date: 2026-04-10
 category: data-formats
 permalink: /packages/GC-RIP/zig.rb/

@@ -7,6 +7,7 @@ author_github: JonathanHallstrom
 repository: https://github.com/JonathanHallstrom/pawnocchio
 keywords:
 date: 2026-04-07
+last_sync: 2026-04-07T18:38:56Z
 permalink: /packages/JonathanHallstrom/pawnocchio/
 ---
 

@@ -9,6 +9,7 @@ keywords:
   - ssg
   - static-site-generator
 date: 2026-04-09
+last_sync: 2026-04-09T18:05:52Z
 permalink: /packages/kristoff-it/zine/
 ---
 

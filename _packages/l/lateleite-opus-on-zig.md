@@ -8,8 +8,8 @@ repository: https://github.com/lateleite/opus-on-zig
 keywords:
   - opus
   - opus-codec
-  - zig
 date: 2026-04-09
+last_sync: 2026-04-09T01:08:36Z
 permalink: /packages/lateleite/opus-on-zig/
 ---
 

@@ -8,6 +8,7 @@ repository: https://github.com/Kingrashy12/ziglet
 keywords:
   - cli-builder
 date: 2026-04-08
+last_sync: 2026-04-08T01:03:24Z
 permalink: /packages/Kingrashy12/ziglet/
 ---
 

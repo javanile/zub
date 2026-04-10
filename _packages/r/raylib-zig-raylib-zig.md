@@ -11,9 +11,9 @@ keywords:
   - game-development
   - gamedev
   - raylib
-  - zig
 date: 2026-04-10
 category: systems
+last_sync: 2026-04-10T12:28:34Z
 permalink: /packages/raylib-zig/raylib-zig/
 ---
 

@@ -8,9 +8,9 @@ repository: https://github.com/RecursiveError/ClockHelper-zig
 keywords:
   - embedded
   - stm32
-  - zig
 date: 2026-04-09
 category: embedded
+last_sync: 2026-04-09T19:52:59Z
 permalink: /packages/RecursiveError/ClockHelper-zig/
 ---
 

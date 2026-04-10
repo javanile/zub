@@ -13,9 +13,9 @@ keywords:
   - entity-component-system
   - systems
   - zevy
-  - zig-library
 date: 2026-04-10
 category: game-development
+last_sync: 2026-04-10T00:17:47Z
 permalink: /packages/captkirk88/zevy-ecs/
 ---
 

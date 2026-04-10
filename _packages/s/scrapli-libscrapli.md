@@ -7,6 +7,7 @@ author_github: scrapli
 repository: https://github.com/scrapli/libscrapli
 keywords:
 date: 2026-04-09
+last_sync: 2026-04-09T06:59:53Z
 permalink: /packages/scrapli/libscrapli/
 ---
 

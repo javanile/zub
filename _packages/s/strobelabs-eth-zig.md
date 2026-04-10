@@ -23,10 +23,10 @@ keywords:
   - rlp
   - secp256k1
   - web3
-  - zig
   - zig-ethereum
 date: 2026-04-08
 category: systems
+last_sync: 2026-04-08T19:47:34Z
 permalink: /packages/StrobeLabs/eth.zig/
 ---
 

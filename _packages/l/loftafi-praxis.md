@@ -7,6 +7,7 @@ author_github: loftafi
 repository: https://github.com/loftafi/praxis
 keywords:
 date: 2026-04-08
+last_sync: 2026-04-08T00:41:44Z
 permalink: /packages/loftafi/praxis/
 ---
 

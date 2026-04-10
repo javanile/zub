@@ -9,10 +9,9 @@ keywords:
   - json-serialization
   - parser
   - serde
-  - zig
-  - zig-library
 date: 2026-04-09
 category: data-formats
+last_sync: 2026-04-09T13:08:10Z
 permalink: /packages/OrlovEvgeny/serde.zig/
 ---
 
