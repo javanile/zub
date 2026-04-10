@@ -5,8 +5,7 @@ license: MIT
 author: AlexJReid
 author_github: AlexJReid
 repository: https://github.com/AlexJReid/zigxll
-category: tooling
-topics:
+keywords:
   - custom-functions
   - excel
   - excel-custom-functions

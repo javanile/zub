@@ -5,8 +5,7 @@ license: 0BSD
 author: lateleite
 author_github: lateleite
 repository: https://github.com/lateleite/xmp-on-zig
-category: tooling
-topics:
+keywords:
   - module-music
   - pcm
   - tracker-music

@@ -5,8 +5,7 @@ license: MIT
 author: allyourcodebase
 author_github: allyourcodebase
 repository: https://github.com/allyourcodebase/libexpat
-category: tooling
-topics:
+keywords:
   - zig
 date: 2026-04-09
 permalink: /packages/allyourcodebase/libexpat/

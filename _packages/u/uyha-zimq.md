@@ -5,14 +5,14 @@ license: MIT
 author: uyha
 author_github: uyha
 repository: https://github.com/uyha/zimq
-category: systems
-topics:
+keywords:
   - bindings
   - libzmq
   - zeromq
   - zig
   - zmq
 date: 2026-04-09
+category: systems
 permalink: /packages/uyha/zimq/
 ---
 

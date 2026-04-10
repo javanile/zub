@@ -5,8 +5,7 @@ license: MIT
 author: neurocyte
 author_github: neurocyte
 repository: https://github.com/neurocyte/thespian
-category: tooling
-topics:
+keywords:
   - actor-model
   - cpp
   - zig

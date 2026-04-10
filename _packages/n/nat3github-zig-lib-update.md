@@ -1,12 +1,11 @@
 ---
 title: zig-lib-update
 description: update tool - zig utility tool for updating remote git dependencies in .zon files
-license: 
+license: ""
 author: nat3Github
 author_github: nat3Github
 repository: https://github.com/nat3Github/zig-lib-update
-category: tooling
-topics:
+keywords:
   - dependency-manager-update
   - git
   - git-deps

@@ -5,8 +5,7 @@ license: MPL-2.0
 author: nektro
 author_github: nektro
 repository: https://github.com/nektro/zig-git
-category: tooling
-topics:
+keywords:
   - zig
 date: 2026-04-09
 permalink: /packages/nektro/zig-git/

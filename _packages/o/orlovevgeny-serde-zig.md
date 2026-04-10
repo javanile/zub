@@ -5,14 +5,14 @@ license: MIT
 author: OrlovEvgeny
 author_github: OrlovEvgeny
 repository: https://github.com/OrlovEvgeny/serde.zig
-category: data-formats
-topics:
+keywords:
   - json-serialization
   - parser
   - serde
   - zig
   - zig-library
 date: 2026-04-09
+category: data-formats
 permalink: /packages/OrlovEvgeny/serde.zig/
 ---
 

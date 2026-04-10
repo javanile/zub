@@ -5,8 +5,7 @@ license: MIT
 author: neurocyte
 author_github: neurocyte
 repository: https://github.com/neurocyte/flow-syntax
-category: tooling
-topics:
+keywords:
   - tree-sitter
   - zig
 date: 2026-04-09

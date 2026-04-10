@@ -5,8 +5,7 @@ license: MIT
 author: StrobeLabs
 author_github: StrobeLabs
 repository: https://github.com/StrobeLabs/eth.zig
-category: systems
-topics:
+keywords:
   - abi
   - blockchain
   - crypto
@@ -27,6 +26,7 @@ topics:
   - zig
   - zig-ethereum
 date: 2026-04-08
+category: systems
 permalink: /packages/StrobeLabs/eth.zig/
 ---
 

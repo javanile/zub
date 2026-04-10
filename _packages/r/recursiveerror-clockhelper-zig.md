@@ -5,12 +5,12 @@ license: MIT
 author: RecursiveError
 author_github: RecursiveError
 repository: https://github.com/RecursiveError/ClockHelper-zig
-category: embedded
-topics:
+keywords:
   - embedded
   - stm32
   - zig
 date: 2026-04-09
+category: embedded
 permalink: /packages/RecursiveError/ClockHelper-zig/
 ---
 

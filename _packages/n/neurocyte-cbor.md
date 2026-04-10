@@ -5,11 +5,11 @@ license: MIT
 author: neurocyte
 author_github: neurocyte
 repository: https://github.com/neurocyte/cbor
-category: data-formats
-topics:
+keywords:
   - cbor
   - zig-library
 date: 2026-04-09
+category: data-formats
 permalink: /packages/neurocyte/cbor/
 ---
 

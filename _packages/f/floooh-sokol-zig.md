@@ -5,12 +5,12 @@ license: Zlib
 author: floooh
 author_github: floooh
 repository: https://github.com/floooh/sokol-zig
-category: game-development
-topics:
+keywords:
   - crossplatform
   - sokol
   - zig
 date: 2026-04-09
+category: game-development
 permalink: /packages/floooh/sokol-zig/
 ---
 

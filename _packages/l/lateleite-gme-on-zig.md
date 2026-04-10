@@ -5,8 +5,7 @@ license: 0BSD
 author: lateleite
 author_github: lateleite
 repository: https://github.com/lateleite/gme-on-zig
-category: tooling
-topics:
+keywords:
   - game-music-emu
   - gme
   - zig

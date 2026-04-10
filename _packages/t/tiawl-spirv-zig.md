@@ -5,8 +5,7 @@ license: Unlicense
 author: tiawl
 author_github: tiawl
 repository: https://github.com/tiawl/spirv.zig
-category: tooling
-topics:
+keywords:
   - binding
   - spirv
   - spirv-tools

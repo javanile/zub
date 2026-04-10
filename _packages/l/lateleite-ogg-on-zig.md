@@ -5,8 +5,7 @@ license: 0BSD
 author: lateleite
 author_github: lateleite
 repository: https://github.com/lateleite/ogg-on-zig
-category: tooling
-topics:
+keywords:
   - ogg
   - zig
 date: 2026-04-09

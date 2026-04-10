@@ -5,8 +5,7 @@ license: 0BSD
 author: lateleite
 author_github: lateleite
 repository: https://github.com/lateleite/sdl3_mixer-on-zig
-category: tooling
-topics:
+keywords:
   - sdl-mixer
   - sdl3
   - sdl3-mixer

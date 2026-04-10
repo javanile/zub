@@ -5,8 +5,7 @@ license: 0BSD
 author: lateleite
 author_github: lateleite
 repository: https://github.com/lateleite/opus-on-zig
-category: tooling
-topics:
+keywords:
   - opus
   - opus-codec
   - zig

@@ -5,8 +5,7 @@ license: 0BSD
 author: lateleite
 author_github: lateleite
 repository: https://github.com/lateleite/vorbis-on-zig
-category: tooling
-topics:
+keywords:
   - ogg
   - ogg-vorbis
   - vorbis

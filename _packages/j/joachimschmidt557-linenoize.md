@@ -5,8 +5,7 @@ license: MIT
 author: joachimschmidt557
 author_github: joachimschmidt557
 repository: https://github.com/joachimschmidt557/linenoize
-category: tooling
-topics:
+keywords:
   - readline
   - zig
 date: 2026-04-09

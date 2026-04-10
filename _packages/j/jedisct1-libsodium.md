@@ -5,12 +5,12 @@ license: NOASSERTION
 author: jedisct1
 author_github: jedisct1
 repository: https://github.com/jedisct1/libsodium
-category: systems
-topics:
+keywords:
   - c
   - crypto
   - cryptography
 date: 2026-04-09
+category: systems
 permalink: /packages/jedisct1/libsodium/
 ---
 

@@ -5,8 +5,7 @@ license: MIT
 author: kristoff-it
 author_github: kristoff-it
 repository: https://github.com/kristoff-it/zine
-category: tooling
-topics:
+keywords:
   - ssg
   - static-site-generator
 date: 2026-04-09

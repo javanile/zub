@@ -5,8 +5,7 @@ license: MIT
 author: ziglibs
 author_github: ziglibs
 repository: https://github.com/ziglibs/ansi_term
-category: tooling
-topics:
+keywords:
   - ansi-terminal
   - zig
   - ziglang

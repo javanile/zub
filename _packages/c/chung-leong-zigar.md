@@ -5,8 +5,7 @@ license: MIT
 author: chung-leong
 author_github: chung-leong
 repository: https://github.com/chung-leong/zigar
-category: systems
-topics:
+keywords:
   - bunjs
   - electron
   - javascript
@@ -17,6 +16,7 @@ topics:
   - webpack-plugin
   - zig
 date: 2026-04-09
+category: systems
 permalink: /packages/chung-leong/zigar/
 ---
 

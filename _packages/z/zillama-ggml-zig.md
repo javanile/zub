@@ -5,8 +5,7 @@ license: MPL-2.0
 author: zillama
 author_github: zillama
 repository: https://github.com/zillama/ggml-zig
-category: tooling
-topics:
+keywords:
   - machine-learning
   - zig-library
 date: 2026-04-09

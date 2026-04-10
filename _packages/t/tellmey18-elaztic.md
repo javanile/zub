@@ -5,8 +5,7 @@ license: AGPL-3.0
 author: tellmeY18
 author_github: tellmeY18
 repository: https://github.com/tellmeY18/elaztic
-category: tooling
-topics:
+keywords:
   - elasticsearch-client
   - zig
   - zig-library

@@ -1,16 +1,16 @@
 ---
 title: block-breaker-zig
 description: "Block Breaker game engine for Zig - https://block-breaker-game.com"
-license: 
+license: ""
 author: blockbreakerteam
 author_github: blockbreakerteam
 repository: https://github.com/blockbreakerteam/block-breaker-zig
-category: game-development
-topics:
+keywords:
   - block-breaker
   - game
   - zig
 date: 2026-04-09
+category: game-development
 permalink: /packages/blockbreakerteam/block-breaker-zig/
 ---
 

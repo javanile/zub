@@ -1,15 +1,15 @@
 ---
 title: httpz.zig
 description: A Zig HTTP 1.1 and HTTP 2 Server and Client
-license: 
+license: ""
 author: allain
 author_github: allain
 repository: https://github.com/allain/httpz.zig
-category: networking
-topics:
+keywords:
   - http-client
   - http-server
 date: 2026-04-08
+category: networking
 permalink: /packages/allain/httpz.zig/
 ---
 
