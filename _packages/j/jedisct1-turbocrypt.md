@@ -5,8 +5,7 @@ license: MIT
 author: jedisct1
 author_github: jedisct1
 repository: https://github.com/jedisct1/turbocrypt
-category: tooling
-topics:
+keywords:
   - crypt
   - encryption
   - file

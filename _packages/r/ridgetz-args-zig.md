@@ -5,8 +5,7 @@ license: MIT
 author: Ridgetz
 author_github: Ridgetz
 repository: https://github.com/Ridgetz/args.zig
-category: tooling
-topics:
+keywords:
   - args-kwargs
   - args-parser
   - argsparse
@@ -22,6 +21,7 @@ topics:
   - zig-lib
   - zig-library-args
 date: 2026-04-10
+category: tooling
 permalink: /packages/Ridgetz/args.zig/
 ---
 

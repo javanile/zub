@@ -5,8 +5,7 @@ license: MIT
 author: Brunhar123
 author_github: Brunhar123
 repository: https://github.com/Brunhar123/tui.zig
-category: tooling
-topics:
+keywords:
   - cli
   - editor
   - game
@@ -27,6 +26,7 @@ topics:
   - zig-programming-language
   - zig-tui
 date: 2026-04-10
+category: tooling
 permalink: /packages/Brunhar123/tui.zig/
 ---
 

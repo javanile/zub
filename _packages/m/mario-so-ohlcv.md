@@ -5,8 +5,7 @@ license: MIT
 author: Mario-SO
 author_github: Mario-SO
 repository: https://github.com/Mario-SO/ohlcv
-category: tooling
-topics:
+keywords:
   - finance
   - trading
 date: 2026-04-09

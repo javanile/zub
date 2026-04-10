@@ -5,8 +5,7 @@ license: MIT
 author: ThejanGS2
 author_github: ThejanGS2
 repository: https://github.com/ThejanGS2/zigantic
-category: data-formats
-topics:
+keywords:
   - serialization
   - serialization-deserialization
   - serialization-library
@@ -18,6 +17,7 @@ topics:
   - zigantic
   - zigantic-zig
 date: 2026-04-10
+category: data-formats
 permalink: /packages/ThejanGS2/zigantic/
 ---
 
