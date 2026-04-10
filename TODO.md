@@ -20,3 +20,8 @@ Firma dei pacchetti / hash verification — integrare il .hash nativo di Zig nel
 Pagina "Contribute" — istruzioni per aprire PR, aggiungere pacchetti manualmente, segnalare errori.
 Rate limiting sull'API — protezione base prima che il progetto cresca.
 Whitepaper nella repo — quello che hai appena scaricato, in docs/WHITEPAPER.md o come WHITEPAPER.md nella root.
+La sezione "Get Started" è praticamente vuota — rimanda solo al README su GitHub
+"Contribute" idem — rimanda al CONTRIBUTING.md
+Nessun contatore totale pacchetti visibile
+Nessuna barra di ricerca funzionante nella navigazione (solo nella homepage)
+Nessuna pagina /nodes o indicazione del modello federato
