@@ -19,6 +19,8 @@ topics:
   - zigantic-zig
 date: 2026-04-10
 permalink: /packages/ThejanGS2/zigantic/
+unsafe: true
+unsafe_reason: "contains a URL pointing to a .zip file"
 ---
 
 # 🚀 zigantic - Simplify Zig Data Validation

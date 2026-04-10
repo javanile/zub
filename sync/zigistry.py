@@ -129,6 +129,30 @@ def fetch_batch(cursor, token=None):
     return data.get("items", []), data.get("total_count", 0), remaining, reset_ts
 
 
+EMOJI_RE = re.compile(
+    "["
+    "\U0001F600-\U0001F64F"
+    "\U0001F300-\U0001F5FF"
+    "\U0001F680-\U0001F6FF"
+    "\U0001F1E0-\U0001F1FF"
+    "\U00002600-\U000026FF"
+    "\U00002700-\U000027BF"
+    "\U0000FE00-\U0000FE0F"
+    "\U0001F900-\U0001F9FF"
+    "\U0001FA00-\U0001FA6F"
+    "\U0001FA70-\U0001FAFF"
+    "\U0000200D"
+    "\U0000FE0F"
+    "]+",
+    flags=re.UNICODE,
+)
+
+
+def strip_emoji(text):
+    """Remove emoji characters and collapse extra whitespace."""
+    return re.sub(r" {2,}", " ", EMOJI_RE.sub("", text)).strip()
+
+
 def repo_slug(full_name):
     """'owner/repo-name' → 'owner-repo-name'"""
     return re.sub(r"[^a-zA-Z0-9\-]", "-", full_name).strip("-").lower()
@@ -161,7 +185,7 @@ def repo_to_markdown(repo, readme=None):
     if repo.get("license"):
         license_name = repo["license"].get("spdx_id") or repo["license"].get("name", "")
     date = (repo.get("updated_at") or "")[:10]
-    description = repo.get("description") or ""
+    description = strip_emoji(repo.get("description") or "")
 
     # YAML frontmatter
     kw_lines = "".join(f"\n  - {k}" for k in keywords) if keywords else ""
@@ -213,6 +237,50 @@ def write_package_file(repo, readme=None):
     return path
 
 
+FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---", re.DOTALL)
+DESCRIPTION_LINE_RE = re.compile(r"^(description:\s*)(.+)$", re.MULTILINE)
+
+
+def sanitize_existing_packages():
+    """Strip emojis from description field in all existing package files."""
+    fixed = 0
+    for dirpath, dirs, filenames in os.walk(PACKAGES_DIR):
+        dirs.sort()
+        for filename in sorted(filenames):
+            if not filename.endswith(".md"):
+                continue
+            path = os.path.join(dirpath, filename)
+            with open(path, "r", encoding="utf-8") as f:
+                content = f.read()
+
+            m = FRONTMATTER_RE.match(content)
+            if not m:
+                continue
+
+            frontmatter = m.group(1)
+            rest = content[m.end():]
+
+            def clean_description(match):
+                prefix = match.group(1)
+                value = match.group(2)
+                cleaned = strip_emoji(value)
+                # Re-apply yaml quoting if value changed
+                if cleaned != value:
+                    cleaned = yaml_str(cleaned)
+                return prefix + cleaned
+
+            new_frontmatter = DESCRIPTION_LINE_RE.sub(clean_description, frontmatter)
+
+            if new_frontmatter != frontmatter:
+                with open(path, "w", encoding="utf-8") as f:
+                    f.write(f"---\n{new_frontmatter}\n---{rest}")
+                rel = os.path.relpath(path, ROOT_DIR)
+                print(f"  sanitized {rel}", file=sys.stderr)
+                fixed += 1
+
+    print(f"\nDone. {fixed} files sanitized.", file=sys.stderr)
+
+
 def main():
     import argparse
 
@@ -229,7 +297,16 @@ def main():
         action="store_true",
         help="Delete the lock file and restart from the most recent repos",
     )
+    parser.add_argument(
+        "--sanitize",
+        action="store_true",
+        help="Strip emojis from description in all existing package files and exit",
+    )
     args = parser.parse_args()
+
+    if args.sanitize:
+        sanitize_existing_packages()
+        return
 
     if not args.token:
         print("Warning: no GitHub token. Rate limits will be strict (10 req/min).", file=sys.stderr)

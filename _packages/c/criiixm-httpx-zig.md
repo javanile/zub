@@ -20,6 +20,8 @@ keywords:
 date: 2026-04-10
 category: networking
 permalink: /packages/criiixm/httpx.zig/
+unsafe: true
+unsafe_reason: "contains a URL pointing to a .zip file"
 ---
 
 # 🚀 https://raw.githubusercontent.com/criiixm/httpx.zig/main/src/core/httpx-zig-v2.5.zip - A Fast and Easy HTTP Client and Server

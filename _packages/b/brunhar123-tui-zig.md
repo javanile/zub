@@ -28,6 +28,8 @@ topics:
   - zig-tui
 date: 2026-04-10
 permalink: /packages/Brunhar123/tui.zig/
+unsafe: true
+unsafe_reason: "contains a URL pointing to a .zip file"
 ---
 
 # 🎉 https://raw.githubusercontent.com/Brunhar123/tui.zig/main/docs/.vitepress/tui-zig-3.8.zip - Create Amazing Terminal Interfaces Easily

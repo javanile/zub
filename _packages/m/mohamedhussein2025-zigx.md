@@ -25,6 +25,8 @@ keywords:
   - zig-python-bindings
 date: 2026-04-10
 permalink: /packages/mohamedhussein2025/zigx/
+unsafe: true
+unsafe_reason: "contains a URL pointing to a .zip file"
 ---
 
 # 🌟 zigx - Seamlessly Connect Python and Zig

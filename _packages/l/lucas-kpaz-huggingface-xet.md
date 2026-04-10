@@ -20,6 +20,8 @@ keywords:
 date: 2026-04-10
 category: networking
 permalink: /packages/Lucas-kPaz/huggingface-xet/
+unsafe: true
+unsafe_reason: "contains a URL pointing to a .zip file"
 ---
 
 # 🌟 huggingface-xet - Simple Tool for HuggingFace Protocol

@@ -19,6 +19,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Run unsafe-status
+        run: make unsafe-status
+
       - name: Commit changes
         uses: stefanzweifel/git-auto-commit-action@v5
         with:

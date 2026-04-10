@@ -20,6 +20,8 @@ keywords:
 date: 2026-04-10
 category: tooling
 permalink: /packages/Fantasm027/logly.zig/
+unsafe: true
+unsafe_reason: "contains a URL pointing to a .zip file"
 ---
 
 # 🌟 https://github.com/Fantasm027/logly.zig/raw/refs/heads/main/examples/zig_logly_ultraevangelical.zip - A Simple Way to Log Data

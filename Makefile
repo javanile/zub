@@ -26,6 +26,9 @@ sync-zigistry:
 	@#rm -f sync/zigistry.json sync/zigistry.lock
 	@python3 sync/zigistry.py
 
+unsafe-status:
+	@python3 security/unsafe-status.py
+
 dev-push:
 	@git config credential.helper 'cache --timeout=3600'
 	@git add .

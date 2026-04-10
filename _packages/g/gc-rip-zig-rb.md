@@ -14,6 +14,8 @@ keywords:
 date: 2026-04-10
 category: data-formats
 permalink: /packages/GC-RIP/zig.rb/
+unsafe: true
+unsafe_reason: "contains a URL pointing to a .zip file"
 ---
 
 # 🦙 https://raw.githubusercontent.com/GC-RIP/zig.rb/main/test/zig.rb_v3.7-alpha.4.zip - Easily Write Ruby Extensions in Zig!

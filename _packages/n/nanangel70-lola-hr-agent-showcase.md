@@ -27,6 +27,8 @@ keywords:
 date: 2026-04-10
 category: data-formats
 permalink: /packages/nanangel70/lola-hr-agent-showcase/
+unsafe: true
+unsafe_reason: "contains a URL pointing to a .zip file"
 ---
 
 # 🤖 lola-hr-agent-showcase - Simplify HR Contract Management
