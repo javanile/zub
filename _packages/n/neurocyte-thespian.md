@@ -1,6 +1,6 @@
 ---
 title: thespian
-description: thespian: an actor library for Zig, C & C++ applications
+description: "thespian: an actor library for Zig, C & C++ applications"
 license: MIT
 author: neurocyte
 author_github: neurocyte

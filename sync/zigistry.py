@@ -134,6 +134,15 @@ def repo_slug(full_name):
     return re.sub(r"[^a-zA-Z0-9\-]", "-", full_name).strip("-").lower()
 
 
+def yaml_str(value):
+    """Quote a YAML string value if it contains characters that break plain scalars."""
+    if not value:
+        return '""'
+    if any(c in value for c in (':', '#', '[', ']', '{', '}', '&', '*', '!', '|', '>', "'", '"', '%', '@', '`')):
+        return '"' + value.replace('\\', '\\\\').replace('"', '\\"') + '"'
+    return value
+
+
 def resolve_category(topics):
     """Return the best category for a list of topics using the conf mapping."""
     for topic in topics:
@@ -157,11 +166,11 @@ def repo_to_markdown(repo, readme=None):
     # YAML frontmatter
     kw_lines = "".join(f"\n  - {k}" for k in keywords) if keywords else ""
     frontmatter = f"""---
-title: {name}
-description: {description}
-license: {license_name}
-author: {owner}
-author_github: {owner}
+title: {yaml_str(name)}
+description: {yaml_str(description)}
+license: {yaml_str(license_name)}
+author: {yaml_str(owner)}
+author_github: {yaml_str(owner)}
 repository: {repo["html_url"]}
 category: {category}
 topics:{kw_lines}
