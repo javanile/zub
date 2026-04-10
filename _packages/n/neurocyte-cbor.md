@@ -1,6 +1,6 @@
 ---
 title: cbor
-description: A Fast & flexible cbor encoding, decoding and matching library for Zig
+description: "A Fast & flexible cbor encoding, decoding and matching library for Zig"
 license: MIT
 author: neurocyte
 author_github: neurocyte

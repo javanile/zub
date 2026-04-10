@@ -1,6 +1,6 @@
 ---
 title: opusfile-on-zig
-description: Opusfile library wrapped with Zig build's system
+description: "Opusfile library wrapped with Zig build's system"
 license: 0BSD
 author: lateleite
 author_github: lateleite

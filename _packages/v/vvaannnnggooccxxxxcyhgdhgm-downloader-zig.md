@@ -1,6 +1,6 @@
 ---
 title: downloader.zig
-description: 🌐 Download files easily with downloader.zig, a simple and efficient tool built in Zig for fast and reliable downloading tasks.
+description: Download files easily with downloader.zig, a simple and efficient tool built in Zig for fast and reliable downloading tasks.
 license: MIT
 author: vvaannnnggooccxxxxcyhgdhgm
 author_github: vvaannnnggooccxxxxcyhgdhgm

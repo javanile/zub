@@ -1,6 +1,6 @@
 ---
 title: tui.zig
-description: 🎛️ Create terminal user interfaces in Zig easily. TUI.zig offers a simple way to build interactive console applications with modern design.
+description: Create terminal user interfaces in Zig easily. TUI.zig offers a simple way to build interactive console applications with modern design.
 license: MIT
 author: Brunhar123
 author_github: Brunhar123

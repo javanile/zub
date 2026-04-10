@@ -1,6 +1,6 @@
 ---
 title: httpx.zig
-description: "🚀 Build HTTP clients with httpx.zig, a robust library for Zig that simplifies network requests and enhances your application's performance."
+description: "\" Build HTTP clients with httpx.zig, a robust library for Zig that simplifies network requests and enhances your application's performance.\""
 license: MIT
 author: criiixm
 author_github: criiixm

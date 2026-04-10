@@ -1,6 +1,6 @@
 ---
 title: zigantic
-description: 🚀 Build high-performance applications with Zig using Zigantic, a powerful framework designed for efficiency and ease of use.
+description: Build high-performance applications with Zig using Zigantic, a powerful framework designed for efficiency and ease of use.
 license: MIT
 author: ThejanGS2
 author_github: ThejanGS2

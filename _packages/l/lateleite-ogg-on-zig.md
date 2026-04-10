@@ -1,6 +1,6 @@
 ---
 title: ogg-on-zig
-description: The OGG container library wrapped with Zig's build system
+description: "The OGG container library wrapped with Zig's build system"
 license: 0BSD
 author: lateleite
 author_github: lateleite

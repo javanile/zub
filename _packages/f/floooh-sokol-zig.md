@@ -1,6 +1,6 @@
 ---
 title: sokol-zig
-description: Zig bindings for the sokol headers (https://github.com/floooh/sokol)
+description: "Zig bindings for the sokol headers (https://github.com/floooh/sokol)"
 license: Zlib
 author: floooh
 author_github: floooh

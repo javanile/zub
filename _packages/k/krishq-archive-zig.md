@@ -1,6 +1,6 @@
 ---
 title: archive.zig
-description: 📦 Simplify data management with Archive.zig, a lightweight Zig library for efficient data archiving and retrieval.
+description: Simplify data management with Archive.zig, a lightweight Zig library for efficient data archiving and retrieval.
 license: MIT
 author: krishq
 author_github: krishq

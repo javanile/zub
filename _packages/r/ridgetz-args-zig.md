@@ -1,6 +1,6 @@
 ---
 title: args.zig
-description: 🔧 Simplify command-line argument parsing in Zig with args.zig for clean, efficient, and user-friendly application development.
+description: Simplify command-line argument parsing in Zig with args.zig for clean, efficient, and user-friendly application development.
 license: MIT
 author: Ridgetz
 author_github: Ridgetz

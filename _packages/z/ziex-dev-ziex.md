@@ -1,6 +1,6 @@
 ---
 title: ziex
-description: Full-stack web framework for Zig. HTML syntax within Zig code, just like JSX but for Zig!
+description: "Full-stack web framework for Zig. HTML syntax within Zig code, just like JSX but for Zig!"
 license: MIT
 author: ziex-dev
 author_github: ziex-dev

@@ -1,6 +1,6 @@
 ---
 title: zig.rb
-description: 🧩 Create type-safe Ruby native extensions effortlessly with zig.rb, offering automatic memory management and high performance using Zig.
+description: Create type-safe Ruby native extensions effortlessly with zig.rb, offering automatic memory management and high performance using Zig.
 license: ""
 author: GC-RIP
 author_github: GC-RIP

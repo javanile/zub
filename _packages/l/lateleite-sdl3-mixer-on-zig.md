@@ -1,6 +1,6 @@
 ---
 title: sdl3_mixer-on-zig
-description: SDL3_Mixer library wrapped with Zig's build system
+description: "SDL3_Mixer library wrapped with Zig's build system"
 license: 0BSD
 author: lateleite
 author_github: lateleite

@@ -1,6 +1,6 @@
 ---
 title: xmp-on-zig
-description: XMP module/tracker rendering library wrapped with Zig's build system
+description: "XMP module/tracker rendering library wrapped with Zig's build system"
 license: 0BSD
 author: lateleite
 author_github: lateleite

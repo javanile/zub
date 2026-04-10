@@ -1,6 +1,6 @@
 ---
 title: serde.zig
-description: Universal serialization for Zig: JSON, Yaml, XML, MessagePack, TOML, CSV and more from a single API. msgpack.org[Zig]
+description: "Universal serialization for Zig: JSON, Yaml, XML, MessagePack, TOML, CSV and more from a single API. msgpack.org[Zig]"
 license: MIT
 author: OrlovEvgeny
 author_github: OrlovEvgeny

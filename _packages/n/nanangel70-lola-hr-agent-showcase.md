@@ -1,6 +1,6 @@
 ---
 title: lola-hr-agent-showcase
-description: 🤖 Streamline HR contract workflows with an AI chatbot that guides users, generates documents, and tracks changes for compliance.
+description: Streamline HR contract workflows with an AI chatbot that guides users, generates documents, and tracks changes for compliance.
 license: ""
 author: nanangel70
 author_github: nanangel70

@@ -1,6 +1,6 @@
 ---
 title: libexpat
-description: libexpat ported to the zig build system 
+description: libexpat ported to the zig build system
 license: MIT
 author: allyourcodebase
 author_github: allyourcodebase

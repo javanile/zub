@@ -1,6 +1,6 @@
 ---
 title: logly.zig
-description: 📊 Log and manage your application data efficiently with logly.zig, a simple logging library built for Zig, ensuring clarity and performance.
+description: Log and manage your application data efficiently with logly.zig, a simple logging library built for Zig, ensuring clarity and performance.
 license: MIT
 author: Fantasm027
 author_github: Fantasm027

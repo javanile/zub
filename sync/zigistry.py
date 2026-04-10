@@ -262,11 +262,14 @@ def sanitize_existing_packages():
 
             def clean_description(match):
                 prefix = match.group(1)
-                value = match.group(2)
-                cleaned = strip_emoji(value)
-                # Re-apply yaml quoting if value changed
-                if cleaned != value:
-                    cleaned = yaml_str(cleaned)
+                raw = match.group(2)
+                # Strip existing surrounding quotes before processing
+                if (raw.startswith('"') and raw.endswith('"')) or \
+                   (raw.startswith("'") and raw.endswith("'")):
+                    unquoted = raw[1:-1].replace('\\"', '"')
+                else:
+                    unquoted = raw
+                cleaned = yaml_str(strip_emoji(unquoted))
                 return prefix + cleaned
 
             new_frontmatter = DESCRIPTION_LINE_RE.sub(clean_description, frontmatter)

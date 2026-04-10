@@ -1,6 +1,6 @@
 ---
 title: spirv.zig
-description: spirv-tools packaged for @ziglang 
+description: "spirv-tools packaged for @ziglang"
 license: Unlicense
 author: tiawl
 author_github: tiawl

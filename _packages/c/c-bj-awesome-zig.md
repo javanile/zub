@@ -1,6 +1,6 @@
 ---
 title: awesome-zig
-description: "📜Zig Learning Guide & Project Lists"
+description: "\"Zig Learning Guide & Project Lists\""
 license: CC0-1.0
 author: C-BJ
 author_github: C-BJ

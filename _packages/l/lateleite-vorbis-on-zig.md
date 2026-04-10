@@ -1,6 +1,6 @@
 ---
 title: vorbis-on-zig
-description: Vorbis audio codec library wrapped with Zig's build system
+description: "Vorbis audio codec library wrapped with Zig's build system"
 license: 0BSD
 author: lateleite
 author_github: lateleite

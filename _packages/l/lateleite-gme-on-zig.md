@@ -1,6 +1,6 @@
 ---
 title: gme-on-zig
-description: Game Music Emulators library wrapped with Zig's build system
+description: "Game Music Emulators library wrapped with Zig's build system"
 license: 0BSD
 author: lateleite
 author_github: lateleite

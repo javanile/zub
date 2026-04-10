@@ -1,6 +1,6 @@
 ---
 title: zigx
-description: 🚀 Simplify data management and processing with ZigX, a powerful Python library for efficient data manipulation and easy integration into your projects.
+description: Simplify data management and processing with ZigX, a powerful Python library for efficient data manipulation and easy integration into your projects.
 license: Apache-2.0
 author: mohamedhussein2025
 author_github: mohamedhussein2025

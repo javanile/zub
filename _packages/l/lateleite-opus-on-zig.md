@@ -1,6 +1,6 @@
 ---
 title: opus-on-zig
-description: Opus codec wrapped with Zig's build system
+description: "Opus codec wrapped with Zig's build system"
 license: 0BSD
 author: lateleite
 author_github: lateleite
