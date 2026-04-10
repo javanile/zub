@@ -3,6 +3,11 @@ tagline: A distributed package index for Zig
 remote_theme: javanile/package-manager@main
 logo: https://raw.githubusercontent.com/javanile/zub/main/assets/images/logo.png
 
+brand_font_url: "https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap"
+brand_font_family: "'Montserrat', sans-serif"
+brand_font_weight: 700
+brand_font_style: normal
+
 defaults:
   - scope:
       path: ""
