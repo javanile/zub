@@ -23,7 +23,7 @@ serve: check-env
 			bundle exec jekyll serve --host 0.0.0.0 -P 4091 --verbose --config _config.yml,_config_dev.yml"
 
 sync-zigistry:
-	@rm -f sync/zigistry.json sync/zigistry.lock
+	@#rm -f sync/zigistry.json sync/zigistry.lock
 	@python3 sync/zigistry.py
 
 dev-push:

@@ -1,12 +1,11 @@
 ---
 title: huggingface-xet
-description: 🗂️ Manage large files efficiently with XET protocol: compress, deduplicate, and store using Zig for optimized model and dataset handling.
+description: "🗂️ Manage large files efficiently with XET protocol: compress, deduplicate, and store using Zig for optimized model and dataset handling."
 license: MIT
 author: Lucas-kPaz
 author_github: Lucas-kPaz
 repository: https://github.com/Lucas-kPaz/huggingface-xet
-category: networking
-topics:
+keywords:
   - face
   - hf
   - hugging
@@ -19,6 +18,7 @@ topics:
   - xorb
   - zig
 date: 2026-04-10
+category: networking
 permalink: /packages/Lucas-kPaz/huggingface-xet/
 ---
 

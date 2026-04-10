@@ -5,8 +5,7 @@ license: MIT
 author: krishq
 author_github: krishq
 repository: https://github.com/krishq/archive.zig
-category: tooling
-topics:
+keywords:
   - compression-zig-library
   - decompress-zig
   - reverse-engineering

@@ -5,8 +5,7 @@ license: MIT
 author: Devareductionist821
 author_github: Devareductionist821
 repository: https://github.com/Devareductionist821/retro-agent
-category: game-development
-topics:
+keywords:
   - agent
   - agents
   - ai
@@ -22,6 +21,7 @@ topics:
   - windows-xp
   - zig
 date: 2026-04-10
+category: game-development
 permalink: /packages/Devareductionist821/retro-agent/
 ---
 

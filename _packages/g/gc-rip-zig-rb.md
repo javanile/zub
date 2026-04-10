@@ -1,18 +1,18 @@
 ---
 title: zig.rb
 description: 🧩 Create type-safe Ruby native extensions effortlessly with zig.rb, offering automatic memory management and high performance using Zig.
-license: 
+license: ""
 author: GC-RIP
 author_github: GC-RIP
 repository: https://github.com/GC-RIP/zig.rb
-category: data-formats
-topics:
+keywords:
   - embedded-zig
   - microzig
   - ring-buffer
   - stm32f103rb
   - zig
 date: 2026-04-10
+category: data-formats
 permalink: /packages/GC-RIP/zig.rb/
 ---
 

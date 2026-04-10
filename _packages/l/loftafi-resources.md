@@ -5,8 +5,7 @@ license: MIT
 author: loftafi
 author_github: loftafi
 repository: https://github.com/loftafi/resources
-category: tooling
-topics:
+keywords:
 date: 2026-04-10
 permalink: /packages/loftafi/resources/
 ---

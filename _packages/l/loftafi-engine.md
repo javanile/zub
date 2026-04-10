@@ -5,8 +5,7 @@ license: NOASSERTION
 author: loftafi
 author_github: loftafi
 repository: https://github.com/loftafi/engine
-category: tooling
-topics:
+keywords:
 date: 2026-04-10
 permalink: /packages/loftafi/engine/
 ---

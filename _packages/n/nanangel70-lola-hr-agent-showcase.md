@@ -1,12 +1,11 @@
 ---
 title: lola-hr-agent-showcase
 description: 🤖 Streamline HR contract workflows with an AI chatbot that guides users, generates documents, and tracks changes for compliance.
-license: 
+license: ""
 author: nanangel70
 author_github: nanangel70
 repository: https://github.com/nanangel70/lola-hr-agent-showcase
-category: data-formats
-topics:
+keywords:
   - aws
   - compiler
   - discord-bot
@@ -26,6 +25,7 @@ topics:
   - sqlite
   - torch
 date: 2026-04-10
+category: data-formats
 permalink: /packages/nanangel70/lola-hr-agent-showcase/
 ---
 

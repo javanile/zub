@@ -5,8 +5,7 @@ license: MIT
 author: Fantasm027
 author_github: Fantasm027
 repository: https://github.com/Fantasm027/logly.zig
-category: tooling
-topics:
+keywords:
   - logging
   - logging-package-zig
   - logly
@@ -19,6 +18,7 @@ topics:
   - zig-logging-package
   - zig-logs
 date: 2026-04-10
+category: tooling
 permalink: /packages/Fantasm027/logly.zig/
 ---
 

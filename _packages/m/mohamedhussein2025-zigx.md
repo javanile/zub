@@ -5,8 +5,7 @@ license: Apache-2.0
 author: mohamedhussein2025
 author_github: mohamedhussein2025
 repository: https://github.com/mohamedhussein2025/zigx
-category: tooling
-topics:
+keywords:
   - custom-functions
   - excel
   - excel-custom-functions
