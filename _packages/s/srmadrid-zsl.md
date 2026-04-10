@@ -1,0 +1,94 @@
+---
+title: zsl
+description: Zig scientific library
+license: MIT
+author: srmadrid
+author_github: srmadrid
+repository: https://github.com/srmadrid/zsl
+category: tooling
+topics:
+  - math
+date: 2026-04-08
+permalink: /packages/srmadrid/zsl/
+---
+
+# zsl: zig scientific library
+
+A generic numerical and symbolic mathematics library for Zig.
+
+## Warning
+
+This library is in the early stages of development and might return incorrect results. Breaking changes are to be expected every commit, and only the most basic functionality is currently implemented.
+
+## Current Features
+
+- Core:
+  - Math:
+    - Accurate math functions for all floating point types
+  - Types:
+    - Rationals
+    - Dyadic rationals
+    - Complexes
+- Vectors (`vector`):
+  - Two storage formats:
+    - `Dense`
+    - `Sparse`
+- Matrices (`matrix`):
+  - Diverse storage formats:
+    - General (`general`):
+      - `Dense`
+      - `Sparse` (CSR, CSC)
+    - Symmetric (`symmetric`):
+      - `Dense`
+      - `Sparse` (CSR, CSC)
+    - Hermitian (`hermitian`):
+      - `Dense`
+      - `Sparse` (CSR, CSC)
+    - Triangular (`triangular`):
+      - `Dense`
+      - `Sparse` (CSR, CSC)
+    - `Diagonal`
+    - `Permutation`
+  - Matrix addition/subtraction and scalar multiplication/division
+  - Views
+- N-dimensional arrays (`array`):
+  - Two storage formats:
+    - `Dense` (plus `Strided` for views)
+    - `Sparse` (CSF): not implemented yet
+  - Broadcasting
+  - Element-wise operations
+  - Views
+- Linear Algebra (`linalg`):
+  - Matrix multiplication
+  - Matrix decompositions:
+    - LU (no pivoting (`lu`), partial pivoting (`plu`), full pivoting (`pluq`))
+    - Cholesky (lower (`llt`), upper (`utu`), "smart" (`cholesky`))
+    - Bunch-Kaufman (lower (`ldlt`), upper (`udut`), "smart" (`bunchkaufman`))
+    - QR (no pivoting (`qr`), column pivoting (`qrp`))
+  - BLAS routines (`blas`)
+  - Select LAPACK routines (`lapack`)
+- Automatic Differentiation (`autodiff`): currently only used for testing generic numeric type support
+  - Dual numbers
+- Symbolic System:
+  - Nothing implemented yet
+
+## Installation
+
+To use this library in your project, run
+
+```bash
+zig fetch --save git+https://github.com/srmadrid/zsl
+```
+
+and add it to your build.zig file:
+
+```zig
+const zsl = b.dependency("zsl", .{});
+exe.root_module.addImport("zsl", zsl.module("zsl"));
+```
+
+## Notes
+
+This library is in the early stages of development and is not yet ready for use. Breaking changes are to be expected every commit, and only the most basic functionality is currently implemented (see [Current Features](#current-features) for more information). If you decide to use this library, please be aware that you may encounter bugs and incomplete features. If you find a bug, please report it via an issue on GitHub.
+
+Any feature requests or suggestions are welcome. Please open an issue on GitHub to discuss any ideas you have.
