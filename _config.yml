@@ -1,6 +1,7 @@
 title: Zub
 tagline: A distributed package index for Zig
 remote_theme: javanile/package-manager@main
+logo: https://raw.githubusercontent.com/javanile/zub/main/assets/images/logo.png
 
 defaults:
   - scope:
