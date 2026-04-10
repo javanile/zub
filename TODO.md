@@ -1,4 +1,4 @@
-Top 20 cose da fare per ZÜB, ordinate per priorità:
+TODO
 
 HTTPS — il "Not secure" in barra è il problema più visibile e più dannoso per la credibilità di un registry.
 Pagina dettaglio pacchetto — dalla homepage si vedono le card ma serve una pagina /packages/{name} con versioni, README, dipendenze, link alla repo.
