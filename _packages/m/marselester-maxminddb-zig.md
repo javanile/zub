@@ -5,8 +5,7 @@ license: ISC
 author: marselester
 author_github: marselester
 repository: https://github.com/marselester/maxminddb.zig
-category: tooling
-topics:
+keywords:
   - maxmind
   - maxmind-db
   - zig

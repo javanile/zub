@@ -1,12 +1,11 @@
 ---
 title: zevy-ecs
-description: ECS inspired by the rust Bevy ecs api but FASTER!
+description: "ECS inspired by the rust Bevy ecs api but FASTER!"
 license: MIT
 author: captkirk88
 author_github: captkirk88
 repository: https://github.com/captkirk88/zevy-ecs
-category: game-development
-topics:
+keywords:
   - archetype
   - bevy
   - ecs
@@ -16,6 +15,7 @@ topics:
   - zevy
   - zig-library
 date: 2026-04-10
+category: game-development
 permalink: /packages/captkirk88/zevy-ecs/
 ---
 

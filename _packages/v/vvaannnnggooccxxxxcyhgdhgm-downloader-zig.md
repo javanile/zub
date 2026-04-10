@@ -5,8 +5,7 @@ license: MIT
 author: vvaannnnggooccxxxxcyhgdhgm
 author_github: vvaannnnggooccxxxxcyhgdhgm
 repository: https://github.com/vvaannnnggooccxxxxcyhgdhgm/downloader.zig
-category: networking
-topics:
+keywords:
   - downloader
   - downloader-zig
   - http
@@ -20,6 +19,7 @@ topics:
   - zig-library
   - zig-programming-language
 date: 2026-04-10
+category: networking
 permalink: /packages/vvaannnnggooccxxxxcyhgdhgm/downloader.zig/
 unsafe: true
 unsafe_reason: "contains a URL pointing to a .zip file"
