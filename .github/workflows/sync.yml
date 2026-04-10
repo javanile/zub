@@ -15,7 +15,12 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run sync
-        run: make sync-zigistry
+        run: make sync-zigistry mode=fresh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run sync
+        run: make sync-zigistry mode=backlog
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

@@ -24,7 +24,7 @@ serve: check-env
 
 sync-zigistry:
 	@#rm -f sync/zigistry.json sync/zigistry.lock
-	@python3 sync/zigistry.py
+	@python3 sync/zigistry.py --mode $(mode)
 
 unsafe-status:
 	@python3 security/unsafe-status.py

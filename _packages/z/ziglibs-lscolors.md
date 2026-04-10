@@ -1,0 +1,46 @@
+---
+title: lscolors
+description: A zig library for colorizing paths according to LS_COLORS
+license: MIT
+author: ziglibs
+author_github: ziglibs
+repository: https://github.com/ziglibs/lscolors
+keywords:
+  - ls-colors
+  - zig
+  - ziglang
+date: 2026-04-10
+permalink: /packages/ziglibs/lscolors/
+---
+
+# lscolors
+
+![CI](https://github.com/ziglibs/zig-lscolors/workflows/CI/badge.svg)
+
+A zig library for colorizing paths according to the `LS_COLORS`
+environment variable. Designed to work with Zig 0.15.2.
+
+## Quick Example
+
+```zig
+const std = @import("std");
+
+const LsColors = @import("lscolors").LsColors;
+
+pub fn main() !void {
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    var lsc = try LsColors.fromEnv(allocator);
+    defer lsc.deinit();
+
+    var dir = try std.fs.cwd().openDir(".", .{ .iterate = true });
+    defer dir.close();
+
+    var iterator = dir.iterate();
+    while (try iterator.next()) |itm| {
+        std.log.info("{}", .{try lsc.styled(itm.name)});
+    }
+}
+```

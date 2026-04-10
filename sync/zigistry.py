@@ -2,8 +2,16 @@
 """
 zigistry.py - Crawl GitHub for zig-package topic repos and write _packages/*.md
 
-Uses the "Around the Time" mechanism for stable, complete, drift-free crawling.
-See README.md for a full explanation.
+Two sync modes, one lock file:
+
+  --mode fresh    Always fetches the most recently updated repos (no cursor).
+                  Runs fast, keeps the index current with the GitHub activity stream.
+
+  --mode backlog  Walks the full repo list oldest-to-newest using a time cursor.
+                  Guarantees every package is eventually indexed. Auto-resets when
+                  the list is exhausted and starts over from the top.
+
+See README.md for a full explanation of the sync architecture.
 """
 
 import base64
@@ -29,106 +37,6 @@ PACKAGES_DIR = os.path.join(ROOT_DIR, "_packages")
 LOCK_FILE = os.path.join(os.path.dirname(__file__), "zigistry.lock")
 CONF_FILE = os.path.join(os.path.dirname(__file__), "zigistry.conf")
 
-
-def load_topic_map():
-    """Load topic → category mapping from zigistry.conf."""
-    cfg = configparser.ConfigParser(strict=False)
-    cfg.read(CONF_FILE)
-    if not cfg.has_section("topics"):
-        return {}
-    return {k.strip(): v.strip() for k, v in cfg.items("topics")}
-
-
-TOPIC_MAP = load_topic_map()
-
-
-def github_request(url, token=None):
-    headers = {
-        "Accept": "application/vnd.github+json",
-        "X-GitHub-Api-Version": "2022-11-28",
-        "User-Agent": "zub-zigistry/1.0",
-    }
-    if token:
-        headers["Authorization"] = f"Bearer {token}"
-
-    req = urllib.request.Request(url, headers=headers)
-    try:
-        with urllib.request.urlopen(req) as resp:
-            data = json.loads(resp.read().decode())
-            rate_remaining = resp.headers.get("X-RateLimit-Remaining", "?")
-            rate_reset = resp.headers.get("X-RateLimit-Reset", None)
-            return data, int(rate_remaining) if rate_remaining != "?" else None, rate_reset
-    except urllib.error.HTTPError as e:
-        body = e.read().decode()
-        print(f"HTTP {e.code}: {body}", file=sys.stderr)
-        if e.code == 403:
-            reset = e.headers.get("X-RateLimit-Reset")
-            if reset:
-                wait = int(reset) - int(time.time()) + 1
-                print(f"Rate limited. Waiting {wait}s...", file=sys.stderr)
-                time.sleep(max(wait, 1))
-                return github_request(url, token)
-        raise
-
-
-def load_lock():
-    if os.path.exists(LOCK_FILE):
-        with open(LOCK_FILE, "r") as f:
-            return json.load(f)
-    return None
-
-
-def save_lock(cursor):
-    lock = {
-        "cursor": cursor,
-        "last_run": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-    }
-    with open(LOCK_FILE, "w") as f:
-        json.dump(lock, f, indent=2)
-
-
-def delete_lock():
-    if os.path.exists(LOCK_FILE):
-        os.remove(LOCK_FILE)
-
-
-def fetch_readme(full_name, token=None):
-    """Fetch and decode the README for a repo. Returns plain text or None."""
-    url = f"{GITHUB_API}/repos/{full_name}/readme"
-    try:
-        data, _, _ = github_request(url, token)
-        content = data.get("content", "")
-        encoding = data.get("encoding", "base64")
-        if encoding == "base64":
-            return base64.b64decode(content).decode("utf-8", errors="replace")
-        return content
-    except urllib.error.HTTPError as e:
-        if e.code == 404:
-            return None
-        raise
-
-
-def fetch_batch(cursor, token=None):
-    """
-    Fetch one batch of BATCH_SIZE repos updated before `cursor`.
-    Always requests page=1 of the filtered window — no page drift possible.
-    """
-    query = f"topic:{TOPIC}"
-    if cursor:
-        query += f" pushed:<{cursor}"
-
-    params = urlencode({
-        "q": query,
-        "sort": "updated",
-        "order": "desc",
-        "per_page": BATCH_SIZE,
-        "page": 1,
-    })
-    url = f"{GITHUB_API}/search/repositories?{params}"
-    data, remaining, reset_ts = github_request(url, token)
-    return data.get("items", []), data.get("total_count", 0), remaining, reset_ts
-
-
 EMOJI_RE = re.compile(
     "["
     "\U0001F600-\U0001F64F"
@@ -147,19 +55,119 @@ EMOJI_RE = re.compile(
     flags=re.UNICODE,
 )
 
+FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---", re.DOTALL)
+DESCRIPTION_LINE_RE = re.compile(r"^(description:\s*)(.+)$", re.MULTILINE)
+
+
+# ── Config ─────────────────────────────────────────────────────────────────────
+
+def load_conf():
+    cfg = configparser.ConfigParser(strict=False)
+    cfg.read(CONF_FILE)
+    topic_map = {}
+    if cfg.has_section("topics"):
+        topic_map = {k.strip(): v.strip() for k, v in cfg.items("topics")}
+    ignore = set()
+    if cfg.has_section("ignore_topics"):
+        ignore = {k.strip() for k, _ in cfg.items("ignore_topics")}
+    return topic_map, ignore
+
+
+TOPIC_MAP, IGNORE_TOPICS = load_conf()
+
+
+# ── Lock file ──────────────────────────────────────────────────────────────────
+
+def load_lock():
+    if os.path.exists(LOCK_FILE):
+        with open(LOCK_FILE, "r") as f:
+            return json.load(f)
+    return {}
+
+
+def save_lock(lock):
+    with open(LOCK_FILE, "w") as f:
+        json.dump(lock, f, indent=2)
+
+
+def now_iso():
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+# ── GitHub API ─────────────────────────────────────────────────────────────────
+
+def github_request(url, token=None):
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+        "User-Agent": "zub-zigistry/1.0",
+    }
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+
+    req = urllib.request.Request(url, headers=headers)
+    try:
+        with urllib.request.urlopen(req) as resp:
+            data = json.loads(resp.read().decode())
+            remaining = resp.headers.get("X-RateLimit-Remaining", "?")
+            reset_ts = resp.headers.get("X-RateLimit-Reset", None)
+            return data, int(remaining) if remaining != "?" else None, reset_ts
+    except urllib.error.HTTPError as e:
+        body = e.read().decode()
+        print(f"HTTP {e.code}: {body}", file=sys.stderr)
+        if e.code == 403:
+            reset = e.headers.get("X-RateLimit-Reset")
+            if reset:
+                wait = int(reset) - int(time.time()) + 1
+                print(f"Rate limited. Waiting {wait}s...", file=sys.stderr)
+                time.sleep(max(wait, 1))
+                return github_request(url, token)
+        raise
+
+
+def fetch_batch(cursor=None, token=None):
+    """
+    Fetch one batch of BATCH_SIZE repos.
+    If cursor is given, only repos updated strictly before that timestamp are returned.
+    Always requests page=1 — no page drift possible.
+    """
+    query = f"topic:{TOPIC}"
+    if cursor:
+        query += f" pushed:<{cursor}"
+
+    params = urlencode({
+        "q": query,
+        "sort": "updated",
+        "order": "desc",
+        "per_page": BATCH_SIZE,
+        "page": 1,
+    })
+    url = f"{GITHUB_API}/search/repositories?{params}"
+    data, remaining, reset_ts = github_request(url, token)
+    return data.get("items", []), data.get("total_count", 0), remaining, reset_ts
+
+
+def fetch_readme(full_name, token=None):
+    url = f"{GITHUB_API}/repos/{full_name}/readme"
+    try:
+        data, _, _ = github_request(url, token)
+        content = data.get("content", "")
+        if data.get("encoding") == "base64":
+            return base64.b64decode(content).decode("utf-8", errors="replace")
+        return content
+    except urllib.error.HTTPError as e:
+        if e.code == 404:
+            return None
+        raise
+
+
+# ── Text helpers ───────────────────────────────────────────────────────────────
 
 def strip_emoji(text):
-    """Remove emoji characters and collapse extra whitespace."""
     return re.sub(r" {2,}", " ", EMOJI_RE.sub("", text)).strip()
 
 
-def repo_slug(full_name):
-    """'owner/repo-name' → 'owner-repo-name'"""
-    return re.sub(r"[^a-zA-Z0-9\-]", "-", full_name).strip("-").lower()
-
-
 def yaml_str(value):
-    """Quote a YAML string value if it contains characters that break plain scalars."""
     if not value:
         return '""'
     if any(c in value for c in (':', '#', '[', ']', '{', '}', '&', '*', '!', '|', '>', "'", '"', '%', '@', '`')):
@@ -167,8 +175,11 @@ def yaml_str(value):
     return value
 
 
+def repo_slug(full_name):
+    return re.sub(r"[^a-zA-Z0-9\-]", "-", full_name).strip("-").lower()
+
+
 def resolve_category(topics):
-    """Return the best category for a list of topics using the conf mapping."""
     for topic in topics:
         cat = TOPIC_MAP.get(topic.lower().strip())
         if cat:
@@ -176,10 +187,12 @@ def resolve_category(topics):
     return DEFAULT_CATEGORY
 
 
+# ── Package file generation ────────────────────────────────────────────────────
+
 def repo_to_markdown(repo, readme=None):
     owner, name = repo["full_name"].split("/", 1)
     topics = repo.get("topics", [])
-    keywords = [t for t in topics if t != TOPIC]
+    keywords = [t for t in topics if t not in IGNORE_TOPICS]
     category = resolve_category(keywords)
     license_name = ""
     if repo.get("license"):
@@ -187,7 +200,6 @@ def repo_to_markdown(repo, readme=None):
     date = (repo.get("updated_at") or "")[:10]
     description = strip_emoji(repo.get("description") or "")
 
-    # YAML frontmatter
     kw_lines = "".join(f"\n  - {k}" for k in keywords) if keywords else ""
     category_line = f"\ncategory: {category}" if category else ""
     frontmatter = f"""---
@@ -202,7 +214,6 @@ date: {date}{category_line}
 permalink: /packages/{owner}/{name}/
 ---"""
 
-    # Body: use real README if available, otherwise fallback to a minimal stub
     if readme:
         body = readme.strip() + "\n"
     else:
@@ -221,7 +232,6 @@ Add to your `build.zig.zon`:
 }},
 ```
 """
-
     return frontmatter + "\n\n" + body
 
 
@@ -237,12 +247,9 @@ def write_package_file(repo, readme=None):
     return path
 
 
-FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---", re.DOTALL)
-DESCRIPTION_LINE_RE = re.compile(r"^(description:\s*)(.+)$", re.MULTILINE)
-
+# ── Sanitize ───────────────────────────────────────────────────────────────────
 
 def sanitize_existing_packages():
-    """Strip emojis from description field in all existing package files."""
     fixed = 0
     for dirpath, dirs, filenames in os.walk(PACKAGES_DIR):
         dirs.sort()
@@ -263,14 +270,12 @@ def sanitize_existing_packages():
             def clean_description(match):
                 prefix = match.group(1)
                 raw = match.group(2)
-                # Strip existing surrounding quotes before processing
                 if (raw.startswith('"') and raw.endswith('"')) or \
                    (raw.startswith("'") and raw.endswith("'")):
                     unquoted = raw[1:-1].replace('\\"', '"')
                 else:
                     unquoted = raw
-                cleaned = yaml_str(strip_emoji(unquoted))
-                return prefix + cleaned
+                return prefix + yaml_str(strip_emoji(unquoted))
 
             new_frontmatter = DESCRIPTION_LINE_RE.sub(clean_description, frontmatter)
 
@@ -284,11 +289,74 @@ def sanitize_existing_packages():
     print(f"\nDone. {fixed} files sanitized.", file=sys.stderr)
 
 
+# ── Sync modes ─────────────────────────────────────────────────────────────────
+
+def sync_fresh(lock, token=None):
+    """
+    Fetch the most recently updated repos — always page=1, no cursor.
+    Captures packages that were updated since the last run.
+    """
+    items, total, remaining, _ = fetch_batch(cursor=None, token=token)
+    print(f"[fresh] {len(items)}/{total} repos (rate limit remaining: {remaining})", file=sys.stderr)
+
+    for repo in items:
+        readme = fetch_readme(repo["full_name"], token=token)
+        path = write_package_file(repo, readme=readme)
+        status = "with README" if readme else "no README"
+        print(f"  wrote {os.path.relpath(path, ROOT_DIR)}  ({repo['full_name']}, {status})", file=sys.stderr)
+
+    lock["fresh"] = {"last_run": now_iso()}
+    save_lock(lock)
+    print(f"[fresh] Done.", file=sys.stderr)
+
+
+def sync_backlog(lock, token=None):
+    """
+    Walk the full repo list using a time cursor (pushed:<cursor).
+    Advances BATCH_SIZE repos per run. When exhausted, resets and starts over.
+    Guarantees every package is eventually indexed.
+    """
+    state = lock.get("backlog", {})
+    cursor = state.get("cursor")
+
+    if cursor:
+        print(f"[backlog] Resuming from cursor: {cursor}", file=sys.stderr)
+    else:
+        print(f"[backlog] Starting new cycle from the most recently updated repos.", file=sys.stderr)
+
+    items, total, remaining, _ = fetch_batch(cursor=cursor, token=token)
+    print(f"[backlog] {len(items)}/{total} repos in window (rate limit remaining: {remaining})", file=sys.stderr)
+
+    if not items:
+        lock["backlog"] = {"cursor": None, "last_run": now_iso(), "last_cycle": now_iso()}
+        save_lock(lock)
+        print(f"[backlog] Full cycle complete. Cursor reset. Next run restarts from the top.", file=sys.stderr)
+        return
+
+    for repo in items:
+        readme = fetch_readme(repo["full_name"], token=token)
+        path = write_package_file(repo, readme=readme)
+        status = "with README" if readme else "no README"
+        print(f"  wrote {os.path.relpath(path, ROOT_DIR)}  ({repo['full_name']}, {status})", file=sys.stderr)
+
+    new_cursor = items[-1]["updated_at"]
+    lock["backlog"] = {"cursor": new_cursor, "last_run": now_iso()}
+    save_lock(lock)
+    print(f"[backlog] Cursor advanced to: {new_cursor}", file=sys.stderr)
+
+
+# ── Main ───────────────────────────────────────────────────────────────────────
+
 def main():
     import argparse
 
     parser = argparse.ArgumentParser(
-        description="Crawl GitHub zig-package topic using the Around the Time mechanism."
+        description="Crawl GitHub zig-package topic repos and write _packages/*.md"
+    )
+    parser.add_argument(
+        "--mode",
+        choices=["fresh", "backlog"],
+        help="Sync mode: 'fresh' captures recently updated repos, 'backlog' walks the full list",
     )
     parser.add_argument(
         "--token",
@@ -297,13 +365,13 @@ def main():
     )
     parser.add_argument(
         "--reset",
-        action="store_true",
-        help="Delete the lock file and restart from the most recent repos",
+        metavar="MODE",
+        help="Reset the cursor for a specific mode (fresh|backlog|all)",
     )
     parser.add_argument(
         "--sanitize",
         action="store_true",
-        help="Strip emojis from description in all existing package files and exit",
+        help="Strip emojis and fix YAML quoting in all existing package files, then exit",
     )
     args = parser.parse_args()
 
@@ -311,43 +379,29 @@ def main():
         sanitize_existing_packages()
         return
 
+    if args.reset:
+        lock = load_lock()
+        targets = ["fresh", "backlog"] if args.reset == "all" else [args.reset]
+        for t in targets:
+            lock.pop(t, None)
+            print(f"Reset: cleared state for mode '{t}'.", file=sys.stderr)
+        save_lock(lock)
+        return
+
+    if not args.mode:
+        parser.error("--mode is required (choose: fresh, backlog)")
+
     if not args.token:
         print("Warning: no GitHub token. Rate limits will be strict (10 req/min).", file=sys.stderr)
         print("Set GITHUB_TOKEN env var or use --token.", file=sys.stderr)
 
-    if args.reset:
-        delete_lock()
-        print("Lock deleted. Will restart from the most recent repos.", file=sys.stderr)
-
     os.makedirs(PACKAGES_DIR, exist_ok=True)
-
     lock = load_lock()
-    cursor = lock["cursor"] if lock else None
 
-    if cursor:
-        print(f"Resuming from cursor: {cursor}", file=sys.stderr)
-    else:
-        print("No lock found. Starting from the most recently updated repos.", file=sys.stderr)
-
-    items, total, remaining, _ = fetch_batch(cursor, token=args.token)
-
-    print(f"Fetched {len(items)}/{total} repos in this window (rate limit remaining: {remaining})", file=sys.stderr)
-
-    if not items:
-        delete_lock()
-        print("Full cycle complete. Lock deleted. Next run will restart from the top.", file=sys.stderr)
-    else:
-        for repo in items:
-            readme = fetch_readme(repo["full_name"], token=args.token)
-            path = write_package_file(repo, readme=readme)
-            readme_status = "with README" if readme else "no README"
-            print(f"  wrote {os.path.relpath(path, ROOT_DIR)}  ({repo['full_name']}, {readme_status})", file=sys.stderr)
-
-        new_cursor = items[-1]["updated_at"]
-        save_lock(new_cursor)
-        print(f"Lock updated. New cursor: {new_cursor}", file=sys.stderr)
-
-    print(f"Done.", file=sys.stderr)
+    if args.mode == "fresh":
+        sync_fresh(lock, token=args.token)
+    elif args.mode == "backlog":
+        sync_backlog(lock, token=args.token)
 
 
 if __name__ == "__main__":

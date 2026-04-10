@@ -2,73 +2,96 @@
 
 A distributed package index for Zig.
 
-## Package sync: the "Around the Time" mechanism
+## Package sync architecture
 
-The `sync-zigistry` process does not download all GitHub repositories in a single shot. Instead it uses a crawling strategy called **"Around the Time"**: each run fetches only 10 repositories, advances a time-based cursor, and on the next run continues exactly where it left off — with no drift and no missed packages.
-
-### How it works
-
-A lock file (`sync/zigistry.lock`) stores the current cursor — the `updated_at` timestamp of the last repo processed:
+The sync pipeline uses a single lock file (`sync/zigistry.lock`) with independent state for each sync mode. Two modes run on every scheduled execution, each with a different purpose.
 
 ```json
 {
-  "cursor": "2026-03-15T10:32:00Z",
-  "last_run": "2026-04-10T12:00:00Z"
+  "fresh": {
+    "last_run": "2026-04-10T10:30:00Z"
+  },
+  "backlog": {
+    "cursor": "2026-03-15T10:32:00Z",
+    "last_run": "2026-04-10T10:30:00Z"
+  }
 }
 ```
 
-Each run issues a single GitHub query anchored to that cursor:
+---
+
+### Mode: `fresh`
+
+**Purpose:** capture packages that were updated recently.
+
+Every run fetches `page=1` of `topic:zig-package sort=updated_at desc` — no cursor, no state beyond `last_run`. This mode runs fast and keeps the index current with the GitHub activity stream. A package updated an hour ago will appear in the index after the next scheduled run.
 
 ```
-topic:zig-package pushed:<{cursor}  sort=updated_at desc  page=1
+Every run → fetch 10 most recently updated repos → write/overwrite _packages/*.md
 ```
 
-By always requesting `page=1` of the filtered window — instead of advancing the page number — the result set is always stable and deterministic.
+---
+
+### Mode: `backlog`
+
+**Purpose:** guarantee that every package is eventually indexed, including repos that have never been updated since creation.
+
+Uses a time-based cursor (`pushed:<cursor`) that advances backward through the timeline. Each run fetches `page=1` of the filtered window — this eliminates **page drift** (the problem that occurs when repos get updated mid-crawl and shift the page boundaries).
 
 ```
-lock exists?
-  ├── YES → query with cursor → fetch 10 repos → update cursor to oldest in batch
-  └── NO  → query without filter → fetch 10 most recent repos → create lock
-```
-
-When a run returns zero results the full cycle is complete: the lock is automatically deleted and the next run restarts from the most recently updated repos.
-
-The lock can also be reset manually by deleting `sync/zigistry.lock` or running:
-
-```bash
-python3 sync/zigistry.py --reset
-```
-
-### Why a timestamp cursor instead of a page number
-
-A page-number approach suffers from **page drift**: if a repo gets updated between two runs it moves up in the list, causing every other repo to shift down by one position. Some repos get skipped, others get processed twice.
-
-The cursor solves this by filtering the dataset at query time:
-
-```
-Run 1: cursor=NOW          → repos updated before NOW         (10 most recent)
-Run 2: cursor=T[10]        → repos updated before T[10]       (next 10)
-Run 3: cursor=T[20]        → repos updated before T[20]       (next 10)
+Run 1: no cursor     → 10 most recent repos   → cursor = T[10]
+Run 2: cursor=T[10]  → next 10 repos          → cursor = T[20]
+Run 3: cursor=T[20]  → next 10 repos          → cursor = T[30]
 ...
-Run N: cursor=T[(N-1)*10]  → 0 results → lock deleted → cycle complete
+Run N: cursor=T[end] → 0 results              → cursor reset → cycle restarts
 ```
 
-No matter how many repos get updated between runs, the window below the cursor never shifts. Each batch is always a stable `page=1` of a narrower and narrower slice of the timeline.
+When a run returns zero results the full cycle is complete: the cursor is cleared and the next run starts over from the top.
 
-### Advantages of "Around the Time"
+A package that gets updated while the backlog cursor is below it will be picked up by `fresh` mode immediately, and by `backlog` again in the next full cycle.
 
-| Property | Benefit |
+---
+
+### Why two modes?
+
+| Need | Mode |
 |---|---|
-| **Complete coverage** | Every repo is processed exactly once per cycle, including repos that have never been updated since creation |
-| **No page drift** | Repos that get updated mid-cycle move above the cursor and are picked up at the start of the next cycle, not skipped |
-| **Incremental by design** | Each run is one lightweight API call (10 results). Friendly to cron, rate limits, and CI pipelines |
-| **Self-healing** | A repo updated after it was processed will resurface at the top of the next cycle automatically |
-| **Safe reset** | Deleting the lock file restarts from the top with no side effects on the accumulated index |
+| New or recently updated package appears quickly | `fresh` |
+| Package created years ago and never updated gets indexed | `backlog` |
+| Package updated mid-backlog-cycle is not missed | `fresh` catches it; `backlog` re-syncs next cycle |
+
+Both modes write to the same `_packages/` directory and are safe to run in sequence in the same CI job.
+
+---
 
 ### Running
 
 ```bash
-make sync-zigistry
+# One batch of fresh packages
+make sync-zigistry mode=fresh
+
+# One batch from the backlog
+make sync-zigistry mode=backlog
+
+# Fix emoji and YAML quoting in existing files
+python3 sync/zigistry.py --sanitize
+
+# Reset backlog cursor (restart full crawl)
+python3 sync/zigistry.py --reset backlog
+
+# Reset everything
+python3 sync/zigistry.py --reset all
 ```
 
 Set `GITHUB_TOKEN` to avoid strict unauthenticated rate limits (10 req/min).
+
+### Lock file semaphores
+
+Each mode has its own independent state inside `zigistry.lock`. Adding a new mode in the future requires only a new function in `sync/zigistry.py` and a new key in the lock file — existing modes are unaffected.
+
+| Key | Description |
+|---|---|
+| `fresh.last_run` | Timestamp of last fresh run |
+| `backlog.cursor` | `updated_at` of last processed repo; `null` means start of new cycle |
+| `backlog.last_run` | Timestamp of last backlog run |
+| `backlog.last_cycle` | Timestamp of last completed full cycle |

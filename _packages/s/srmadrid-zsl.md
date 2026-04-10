@@ -5,10 +5,9 @@ license: MIT
 author: srmadrid
 author_github: srmadrid
 repository: https://github.com/srmadrid/zsl
-category: tooling
-topics:
+keywords:
   - math
-date: 2026-04-08
+date: 2026-04-10
 permalink: /packages/srmadrid/zsl/
 ---
 

@@ -5,8 +5,7 @@ license: MIT
 author: ziex-dev
 author_github: ziex-dev
 repository: https://github.com/ziex-dev/ziex
-category: tooling
-topics:
+keywords:
   - client-side-rendering
   - frontend
   - full-stack
@@ -19,7 +18,7 @@ topics:
   - web-assembly
   - web-framework
   - zig
-date: 2026-04-09
+date: 2026-04-10
 permalink: /packages/ziex-dev/ziex/
 ---
 
