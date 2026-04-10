@@ -12,8 +12,8 @@ Thumbs.db
 .rbenv-version
 .rvmrc
 
+__pycache__/
 .bundles_cache/
 Gemfile
 Gemfile.lock
 _config_dev.yml
-__pycache__/
