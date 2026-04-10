@@ -6,6 +6,8 @@ Uses the "Around the Time" mechanism for stable, complete, drift-free crawling.
 See README.md for a full explanation.
 """
 
+import base64
+import configparser
 import json
 import os
 import re
@@ -20,10 +22,24 @@ from urllib.parse import urlencode
 GITHUB_API = "https://api.github.com"
 TOPIC = "zig-package"
 BATCH_SIZE = 10
+DEFAULT_CATEGORY = "tooling"
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PACKAGES_DIR = os.path.join(ROOT_DIR, "_packages")
 LOCK_FILE = os.path.join(os.path.dirname(__file__), "zigistry.lock")
+CONF_FILE = os.path.join(os.path.dirname(__file__), "zigistry.conf")
+
+
+def load_topic_map():
+    """Load topic → category mapping from zigistry.conf."""
+    cfg = configparser.ConfigParser(strict=False)
+    cfg.read(CONF_FILE)
+    if not cfg.has_section("topics"):
+        return {}
+    return {k.strip(): v.strip() for k, v in cfg.items("topics")}
+
+
+TOPIC_MAP = load_topic_map()
 
 
 def github_request(url, token=None):
@@ -76,6 +92,22 @@ def delete_lock():
         os.remove(LOCK_FILE)
 
 
+def fetch_readme(full_name, token=None):
+    """Fetch and decode the README for a repo. Returns plain text or None."""
+    url = f"{GITHUB_API}/repos/{full_name}/readme"
+    try:
+        data, _, _ = github_request(url, token)
+        content = data.get("content", "")
+        encoding = data.get("encoding", "base64")
+        if encoding == "base64":
+            return base64.b64decode(content).decode("utf-8", errors="replace")
+        return content
+    except urllib.error.HTTPError as e:
+        if e.code == 404:
+            return None
+        raise
+
+
 def fetch_batch(cursor, token=None):
     """
     Fetch one batch of BATCH_SIZE repos updated before `cursor`.
@@ -102,10 +134,20 @@ def repo_slug(full_name):
     return re.sub(r"[^a-zA-Z0-9\-]", "-", full_name).strip("-").lower()
 
 
-def repo_to_markdown(repo):
+def resolve_category(topics):
+    """Return the best category for a list of topics using the conf mapping."""
+    for topic in topics:
+        cat = TOPIC_MAP.get(topic.lower().strip())
+        if cat:
+            return cat
+    return DEFAULT_CATEGORY
+
+
+def repo_to_markdown(repo, readme=None):
     owner, name = repo["full_name"].split("/", 1)
     topics = repo.get("topics", [])
     keywords = [t for t in topics if t != TOPIC]
+    category = resolve_category(keywords)
     license_name = ""
     if repo.get("license"):
         license_name = repo["license"].get("spdx_id") or repo["license"].get("name", "")
@@ -114,7 +156,6 @@ def repo_to_markdown(repo):
 
     # YAML frontmatter
     kw_lines = "".join(f"\n  - {k}" for k in keywords) if keywords else ""
-    slug = repo_slug(repo["full_name"])
     frontmatter = f"""---
 title: {name}
 description: {description}
@@ -122,13 +163,20 @@ license: {license_name}
 author: {owner}
 author_github: {owner}
 repository: {repo["html_url"]}
+category: {category}
 topics:{kw_lines}
 date: {date}
-permalink: /packages/{slug}/
+permalink: /packages/{owner}/{name}/
 ---"""
 
-    # Markdown body
-    install_block = f"""## Installation
+    # Body: use real README if available, otherwise fallback to a minimal stub
+    if readme:
+        body = readme.strip() + "\n"
+    else:
+        body = f"# {name}\n\n"
+        if description:
+            body += f"{description}\n\n"
+        body += f"""## Installation
 
 Add to your `build.zig.zon`:
 
@@ -138,23 +186,19 @@ Add to your `build.zig.zon`:
         .url = "https://github.com/{repo["full_name"]}/archive/refs/heads/{repo.get("default_branch", "main")}.tar.gz",
     }},
 }},
-```"""
-
-    body = f"# {name}\n\n"
-    if description:
-        body += f"{description}\n\n"
-    body += install_block + "\n"
+```
+"""
 
     return frontmatter + "\n\n" + body
 
 
-def write_package_file(repo):
+def write_package_file(repo, readme=None):
     slug = repo_slug(repo["full_name"])
     letter = slug[0] if slug else "_"
     subdir = os.path.join(PACKAGES_DIR, letter)
     os.makedirs(subdir, exist_ok=True)
     path = os.path.join(subdir, f"{slug}.md")
-    content = repo_to_markdown(repo)
+    content = repo_to_markdown(repo, readme=readme)
     with open(path, "w", encoding="utf-8") as f:
         f.write(content)
     return path
@@ -205,8 +249,10 @@ def main():
         print("Full cycle complete. Lock deleted. Next run will restart from the top.", file=sys.stderr)
     else:
         for repo in items:
-            path = write_package_file(repo)
-            print(f"  wrote {os.path.relpath(path, ROOT_DIR)}  ({repo['full_name']})", file=sys.stderr)
+            readme = fetch_readme(repo["full_name"], token=args.token)
+            path = write_package_file(repo, readme=readme)
+            readme_status = "with README" if readme else "no README"
+            print(f"  wrote {os.path.relpath(path, ROOT_DIR)}  ({repo['full_name']}, {readme_status})", file=sys.stderr)
 
         new_cursor = items[-1]["updated_at"]
         save_lock(new_cursor)

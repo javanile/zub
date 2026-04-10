@@ -5,23 +5,18 @@ license: NOASSERTION
 author: loftafi
 author_github: loftafi
 repository: https://github.com/loftafi/engine
+category: tooling
 topics:
 date: 2026-04-10
-permalink: /packages/loftafi-engine/
+permalink: /packages/loftafi/engine/
 ---
 
-# engine
+# Engine
 
-A simple GUI wrapper for building cross platform GUI apps.
+This zig module provides a lightweight GUI api based around SDL3
+and SDL3 TTF.
 
-## Installation
-
-Add to your `build.zig.zon`:
-
-```zig
-.dependencies = .{
-    .engine = .{
-        .url = "https://github.com/loftafi/engine/archive/refs/heads/master.tar.gz",
-    },
-},
-```
+This code is released under the terms of the MIT license. This
+code is useful for my purposes. No warrantee is given or implied
+that this library will be suitable for your purpose and no warantee
+is given or implied that this code is free from defects.

@@ -1,3 +1,41 @@
 title: Zub
 tagline: A distributed package index for Zig
 remote_theme: javanile/package-manager@main
+
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: "default"
+  - scope:
+      type: "posts"
+    values:
+      layout: "post"
+      comments: true
+  - scope:
+      type: "sets"
+    values:
+      _hide_content: true
+  - scope:
+      path: "index.html"
+    values:
+      body_class: "show_hero_search"
+  - scope:
+      type: "categories"
+    values:
+      body_class: "page-packages"
+
+collections:
+  packages:
+    output: true
+    permalink: /:collection/:name
+  categories:
+    output: true
+    permalink: /:collection/:name
+
+jekyll-archives:
+  enabled:
+    - categories
+    - tags
+  permalinks:
+    category: /cat/:name/
