@@ -13,8 +13,9 @@ keywords:
   - validation-zig
   - zigantic
   - zigantic-zig
-date: 2026-04-10
+date: 2026-04-11
 category: data-formats
+last_sync: 2026-04-11T07:23:35Z
 permalink: /packages/ThejanGS2/zigantic/
 unsafe: true
 unsafe_reason: "contains a URL pointing to a .zip file"
