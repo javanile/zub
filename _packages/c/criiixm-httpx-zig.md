@@ -15,9 +15,9 @@ keywords:
   - http-zig
   - httpx
   - httpx-zig
-date: 2026-04-11
+date: 2026-04-12
 category: networking
-last_sync: 2026-04-11T07:33:30Z
+last_sync: 2026-04-12T08:40:18Z
 permalink: /packages/criiixm/httpx.zig/
 unsafe: true
 unsafe_reason: "contains a URL pointing to a .zip file"
