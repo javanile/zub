@@ -24,9 +24,9 @@ keywords:
   - programming-language
   - sqlite
   - torch
-date: 2026-04-12
+date: 2026-04-13
 category: data-formats
-last_sync: 2026-04-12T08:59:56Z
+last_sync: 2026-04-13T11:05:48Z
 permalink: /packages/nanangel70/lola-hr-agent-showcase/
 unsafe: true
 unsafe_reason: "contains a URL pointing to a .zip file"

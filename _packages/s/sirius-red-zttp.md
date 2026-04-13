@@ -6,8 +6,8 @@ author: sirius-red
 author_github: sirius-red
 repository: https://github.com/sirius-red/zttp
 keywords:
-date: 2026-04-07
-last_sync: 2026-04-07T23:29:06Z
+date: 2026-04-12
+last_sync: 2026-04-12T21:28:06Z
 permalink: /packages/sirius-red/zttp/
 ---
 

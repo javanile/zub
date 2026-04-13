@@ -8,9 +8,9 @@ repository: https://github.com/ZigEmbeddedGroup/microzig
 keywords:
   - embedded
   - hal
-date: 2026-04-10
+date: 2026-04-12
 category: embedded
-last_sync: 2026-04-10T22:44:54Z
+last_sync: 2026-04-12T15:33:08Z
 permalink: /packages/ZigEmbeddedGroup/microzig/
 ---
 

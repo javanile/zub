@@ -22,9 +22,9 @@ keywords:
   - zig-cli
   - zig-programming-language
   - zig-tui
-date: 2026-04-12
+date: 2026-04-13
 category: tooling
-last_sync: 2026-04-12T08:32:47Z
+last_sync: 2026-04-13T10:32:57Z
 permalink: /packages/Brunhar123/tui.zig/
 unsafe: true
 unsafe_reason: "contains a URL pointing to a .zip file"
