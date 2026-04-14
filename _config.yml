@@ -8,6 +8,8 @@ brand_font_family: "'Montserrat', sans-serif"
 brand_font_weight: 900
 brand_font_style: normal
 
+suggested_command: "zig f -S zub.sh/{package}"
+
 defaults:
   - scope:
       path: ""
