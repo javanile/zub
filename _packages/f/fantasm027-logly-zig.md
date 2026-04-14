@@ -15,8 +15,9 @@ keywords:
   - zig-logging
   - zig-logging-package
   - zig-logs
-date: 2026-04-10
+date: 2026-04-14
 category: tooling
+last_sync: 2026-04-14T10:18:42Z
 permalink: /packages/Fantasm027/logly.zig/
 unsafe: true
 unsafe_reason: "contains a URL pointing to a .zip file"

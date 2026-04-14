@@ -16,9 +16,9 @@ keywords:
   - zig-http
   - zig-http-client
   - zig-programming-language
-date: 2026-04-13
+date: 2026-04-14
 category: networking
-last_sync: 2026-04-13T10:34:18Z
+last_sync: 2026-04-14T10:28:21Z
 permalink: /packages/vvaannnnggooccxxxxcyhgdhgm/downloader.zig/
 unsafe: true
 unsafe_reason: "contains a URL pointing to a .zip file"
