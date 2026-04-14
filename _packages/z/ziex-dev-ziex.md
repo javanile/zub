@@ -17,7 +17,8 @@ keywords:
   - web
   - web-assembly
   - web-framework
-date: 2026-04-10
+date: 2026-04-14
+last_sync: 2026-04-14T10:42:16Z
 permalink: /packages/ziex-dev/ziex/
 ---
 

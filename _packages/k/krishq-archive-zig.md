@@ -12,7 +12,8 @@ keywords:
   - zig-compress
   - zig-compression
   - zig-compression-lib
-date: 2026-04-10
+date: 2026-04-14
+last_sync: 2026-04-14T10:49:20Z
 permalink: /packages/krishq/archive.zig/
 unsafe: true
 unsafe_reason: "contains a URL pointing to a .zip file"
