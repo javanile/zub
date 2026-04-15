@@ -7,6 +7,7 @@ author_github: dayvster
 repository: https://github.com/dayvster/argh
 keywords:
 date: 2026-04-05
+updated_at: 2026-04-05T17:03:46+00:00
 last_sync: 2026-04-05T17:03:46Z
 permalink: /packages/dayvster/argh/
 ---

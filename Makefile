@@ -22,6 +22,8 @@ serve: check-env
 			gem install bundler -v 2.4.22 && bundle install && \
 			bundle exec jekyll serve --host 0.0.0.0 -P 4091 --verbose --config _config.yml,_config_dev.yml"
 
+mode ?= fresh
+
 sync-zigistry:
 	@#rm -f sync/zigistry.json sync/zigistry.lock
 	@python3 sync/zigistry.py --mode $(mode)

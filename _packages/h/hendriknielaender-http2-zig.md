@@ -8,9 +8,10 @@ repository: https://github.com/hendriknielaender/http2.zig
 keywords:
   - http-server
   - http2
-date: 2026-04-06
+date: 2026-04-14
 category: networking
-last_sync: 2026-04-06T17:30:12Z
+updated_at: 2026-04-14T01:37:33+00:00
+last_sync: 2026-04-14T01:37:33Z
 permalink: /packages/hendriknielaender/http2.zig/
 ---
 

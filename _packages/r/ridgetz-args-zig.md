@@ -18,9 +18,10 @@ keywords:
   - zig-args
   - zig-cli
   - zig-library-args
-date: 2026-04-14
+date: 2026-04-15
 category: tooling
-last_sync: 2026-04-14T10:32:35Z
+updated_at: 2026-04-15T07:03:59+00:00
+last_sync: 2026-04-15T07:03:59Z
 permalink: /packages/Ridgetz/args.zig/
 unsafe: true
 unsafe_reason: "contains a URL pointing to a .zip file"

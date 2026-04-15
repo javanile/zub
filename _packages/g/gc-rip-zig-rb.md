@@ -10,8 +10,10 @@ keywords:
   - microzig
   - ring-buffer
   - stm32f103rb
-date: 2026-04-10
+date: 2026-04-15
 category: data-formats
+updated_at: 2026-04-15T10:22:13+00:00
+last_sync: 2026-04-15T10:22:13Z
 permalink: /packages/GC-RIP/zig.rb/
 unsafe: true
 unsafe_reason: "contains a URL pointing to a .zip file"

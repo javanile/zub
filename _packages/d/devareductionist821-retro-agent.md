@@ -19,9 +19,10 @@ keywords:
   - reinforcement-learning
   - retrocomputing
   - windows-xp
-date: 2026-04-14
+date: 2026-04-15
 category: game-development
-last_sync: 2026-04-14T11:17:51Z
+updated_at: 2026-04-15T07:47:49+00:00
+last_sync: 2026-04-15T07:47:49Z
 permalink: /packages/Devareductionist821/retro-agent/
 unsafe: true
 unsafe_reason: "contains a URL pointing to a .zip file"

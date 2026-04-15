@@ -189,6 +189,15 @@ def resolve_category(topics):
 
 # ── Package file generation ────────────────────────────────────────────────────
 
+def format_updated_at(github_ts):
+    """Convert GitHub's updated_at (e.g. '2026-04-09T09:46:12Z') to '+00:00' format."""
+    if not github_ts:
+        return ""
+    if github_ts.endswith("Z"):
+        return github_ts[:-1] + "+00:00"
+    return github_ts
+
+
 def repo_to_markdown(repo, readme=None):
     owner, name = repo["full_name"].split("/", 1)
     topics = repo.get("topics", [])
@@ -198,6 +207,7 @@ def repo_to_markdown(repo, readme=None):
     if repo.get("license"):
         license_name = repo["license"].get("spdx_id") or repo["license"].get("name", "")
     date = (repo.get("updated_at") or "")[:10]
+    updated_at = format_updated_at(repo.get("updated_at", ""))
     description = strip_emoji(repo.get("description") or "")
 
     kw_lines = "".join(f"\n  - {k}" for k in keywords) if keywords else ""
@@ -211,6 +221,7 @@ author_github: {yaml_str(owner)}
 repository: {repo["html_url"]}
 keywords:{kw_lines}
 date: {date}{category_line}
+updated_at: {updated_at}
 last_sync: {repo.get("updated_at", "")}
 permalink: /packages/{owner}/{name}/
 ---"""

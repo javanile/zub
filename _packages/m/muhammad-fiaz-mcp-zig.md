@@ -14,6 +14,7 @@ keywords:
   - zig-model-context-protocol
   - ziglibrary
 date: 2026-04-06
+updated_at: 2026-04-06T20:08:49+00:00
 last_sync: 2026-04-06T20:08:49Z
 permalink: /packages/muhammad-fiaz/mcp.zig/
 ---
