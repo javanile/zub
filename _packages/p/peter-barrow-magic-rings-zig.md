@@ -9,6 +9,7 @@ keywords:
   - ringbuffer
   - shared-memory
 date: 2026-04-06
+updated_at: 2026-04-06T15:29:06+00:00
 last_sync: 2026-04-06T15:29:06Z
 permalink: /packages/Peter-Barrow/magic-rings-zig/
 ---

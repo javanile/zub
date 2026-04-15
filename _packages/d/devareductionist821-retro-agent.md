@@ -24,6 +24,8 @@ category: game-development
 updated_at: 2026-04-15T07:47:49+00:00
 last_sync: 2026-04-15T07:47:49Z
 permalink: /packages/Devareductionist821/retro-agent/
+unsafe: true
+unsafe_reason: "contains a URL pointing to a .zip file"
 ---
 
 # 🤖 retro-agent - AI for Old Computers

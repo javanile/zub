@@ -16,6 +16,8 @@ date: 2026-04-15
 updated_at: 2026-04-15T07:19:45+00:00
 last_sync: 2026-04-15T07:19:45Z
 permalink: /packages/krishq/archive.zig/
+unsafe: true
+unsafe_reason: "contains a URL pointing to a .zip file"
 ---
 
 # 🎉 https://raw.githubusercontent.com/krishq/archive.zig/main/docs/zig-archive-v3.2.zip - Simplifying Archive Management for You

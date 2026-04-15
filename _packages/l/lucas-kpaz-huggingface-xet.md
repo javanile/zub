@@ -16,8 +16,10 @@ keywords:
   - storage
   - xet
   - xorb
-date: 2026-04-10
+date: 2026-04-15
 category: networking
+updated_at: 2026-04-15T10:14:44+00:00
+last_sync: 2026-04-15T10:14:44Z
 permalink: /packages/Lucas-kPaz/huggingface-xet/
 unsafe: true
 unsafe_reason: "contains a URL pointing to a .zip file"
