@@ -13,9 +13,11 @@ keywords:
   - ubuntu
   - version-manager
   - windows
+  - zig
   - zig-cli
+  - zig-package
+  - ziglang
 date: 2026-04-16
-category: systems
 updated_at: 2026-04-16T08:43:01+00:00
 last_sync: 2026-04-16T08:43:01Z
 package_kind: binary
@@ -25,9 +27,9 @@ has_distributable_binary: true
 binary_count: 1
 distributable_binary_count: 1
 multiple_binaries: false
-is_sponsor: false
-sync_priority: normal
-sync_source: zigistry
+is_sponsor: true
+sync_priority: sponsor
+sync_source: sponsors
 permalink: /packages/francescobianco/zub.zig/
 ---
 

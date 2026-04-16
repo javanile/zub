@@ -1,14 +1,27 @@
 ---
 title: packbase
-description: Packbase is a self-hosted distribution layer for Zig packages
+description: Packbase is a self-hosted distribution layer for software packages
 license: MIT
 author: francescobianco
 author_github: francescobianco
 repository: https://github.com/francescobianco/packbase
 keywords:
+  - git-tag
+  - package
+  - package-manager
 date: 2026-04-15
-updated_at: 2026-04-15T08:11:53+00:00
-last_sync: 2026-04-15T08:11:53Z
+updated_at: 2026-04-15T20:15:57+00:00
+last_sync: 2026-04-15T20:15:57Z
+package_kind: binary
+has_library: false
+has_binary: true
+has_distributable_binary: true
+binary_count: 1
+distributable_binary_count: 1
+multiple_binaries: false
+is_sponsor: true
+sync_priority: sponsor
+sync_source: sponsors
 permalink: /packages/francescobianco/packbase/
 ---
 
@@ -125,7 +138,10 @@ Mirror an upstream Git repository.
   "status": "ok",
   "package": "repo",
   "tag": "v1.2.3",
-  "url": "/p/repo/tag/v1.2.3.tar.gz"
+  "url": "/p/repo/tag/v1.2.3.tar.gz",
+  "tarballs_created": 4,
+  "tarballs_present": 0,
+  "tarball_count": 4
 }
 ```
 
@@ -137,7 +153,7 @@ Mirror an upstream Git repository.
 | `401` | Missing Authorization header |
 | `403` | Invalid token |
 | `422` | Repository has no tags |
-| `502` | `git clone` failed (network or URL error) |
+| `502` | upstream fetch failed (network or URL error) |
 
 ### `GET /p/<package>/tag/<tag>.tar.gz`
 
@@ -183,7 +199,16 @@ Le informazioni non vengono calcolate on demand: se manca lo snapshot, va esegui
   "latest_tag": "v0.1.0",
   "latest_size_bytes": 371,
   "size_bytes": 371,
-  "tarballs": [{"tag": "v0.1.0", "size_bytes": 371}],
+  "tarballs": [{
+    "tag": "v0.1.0",
+    "size_bytes": 371,
+    "manifest_present": true,
+    "git_commit_oid": "ce919ccf45951856a762ffdb8ef850301cd8c588",
+    "git_tree_oid": "ce919ccf45951856a762ffdb8ef850301cd8c588",
+    "tarball_sha256": "…",
+    "tarball_md5": "…",
+    "tarball_crc32": "…"
+  }],
   "smart_http_ready": true,
   "pseudo_git_fetchable": true,
   "healthy": true
@@ -198,7 +223,7 @@ Le informazioni non vengono calcolate on demand: se manca lo snapshot, va esegui
 }
 ```
 
-### `GET /api/info`
+### `GET /api/status`
 
 Restituisce metadati dell'istanza, incluso l'identificativo di rilascio della
 build servita e lo stato persistito dell'ultima `update`.
@@ -208,6 +233,9 @@ build servita e lo stato persistito dell'ultima `update`.
 {
   "service": "packbase",
   "release": "r0007",
+  "packages_total": 79,
+  "packages_healthy": 74,
+  "packages_unhealthy": 5,
   "update": {
     "state": "idle",
     "started_at": 1776183143,
@@ -220,8 +248,8 @@ build servita e lo stato persistito dell'ultima `update`.
 ### `POST /api/update`
 
 Riallinea in modo soft lo stato interno in modo pubblico e idempotente:
-- usa i repository ospitati sotto `/git` come sorgente di verità locale
-- rigenera i tarball mancanti sotto `/p`
+- materializza i tarball mancanti sotto `/p` per i pacchetti del source catalog che non sono `fresh`
+- mantiene il supporto ai repository fixture locali
 - aggiorna `update-server-info`
 - scarica `PACKBASE_SOURCE`, conserva lo snapshot locale, calcola un diff con lo snapshot precedente e aggiorna la lista dei pacchetti registrati
 - aggiorna lo snapshot persistito dei package sotto `.packbase/package-info.json`, includendo size e fetchability pseudo-Git
