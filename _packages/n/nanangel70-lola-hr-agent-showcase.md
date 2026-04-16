@@ -39,6 +39,8 @@ is_sponsor: false
 sync_priority: normal
 sync_source: zigistry
 permalink: /packages/nanangel70/lola-hr-agent-showcase/
+unsafe: true
+unsafe_reason: "contains a URL pointing to a .zip file"
 ---
 
 # 🤖 lola-hr-agent-showcase - Simplify HR Contract Management

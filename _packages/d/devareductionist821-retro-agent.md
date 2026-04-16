@@ -34,6 +34,8 @@ is_sponsor: false
 sync_priority: normal
 sync_source: zigistry
 permalink: /packages/Devareductionist821/retro-agent/
+unsafe: true
+unsafe_reason: "contains a URL pointing to a .zip file"
 ---
 
 # 🤖 retro-agent - AI for Old Computers

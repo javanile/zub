@@ -18,8 +18,8 @@ keywords:
   - zig-package
   - ziglang
 date: 2026-04-16
-updated_at: 2026-04-16T08:43:01+00:00
-last_sync: 2026-04-16T08:43:01Z
+updated_at: 2026-04-16T10:35:25+00:00
+last_sync: 2026-04-16T10:35:25Z
 package_kind: binary
 has_library: false
 has_binary: true

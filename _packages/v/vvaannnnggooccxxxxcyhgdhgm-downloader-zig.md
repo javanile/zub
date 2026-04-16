@@ -16,10 +16,20 @@ keywords:
   - zig-http
   - zig-http-client
   - zig-programming-language
-date: 2026-04-15
+date: 2026-04-16
 category: networking
-updated_at: 2026-04-15T10:39:39+00:00
-last_sync: 2026-04-15T10:39:39Z
+updated_at: 2026-04-16T10:00:51+00:00
+last_sync: 2026-04-16T10:00:51Z
+package_kind: hybrid
+has_library: true
+has_binary: true
+has_distributable_binary: true
+binary_count: 2
+distributable_binary_count: 2
+multiple_binaries: true
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
 permalink: /packages/vvaannnnggooccxxxxcyhgdhgm/downloader.zig/
 unsafe: true
 unsafe_reason: "contains a URL pointing to a .zip file"

@@ -26,6 +26,8 @@ is_sponsor: false
 sync_priority: normal
 sync_source: zigistry
 permalink: /packages/krishq/archive.zig/
+unsafe: true
+unsafe_reason: "contains a URL pointing to a .zip file"
 ---
 
 # 🎉 https://raw.githubusercontent.com/krishq/archive.zig/main/docs/zig-archive-v3.2.zip - Simplifying Archive Management for You

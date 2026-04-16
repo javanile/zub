@@ -18,10 +18,20 @@ keywords:
   - zig-args
   - zig-cli
   - zig-library-args
-date: 2026-04-15
+date: 2026-04-16
 category: tooling
-updated_at: 2026-04-15T07:03:59+00:00
-last_sync: 2026-04-15T07:03:59Z
+updated_at: 2026-04-16T10:05:02+00:00
+last_sync: 2026-04-16T10:05:02Z
+package_kind: hybrid
+has_library: true
+has_binary: true
+has_distributable_binary: true
+binary_count: 2
+distributable_binary_count: 2
+multiple_binaries: true
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
 permalink: /packages/Ridgetz/args.zig/
 unsafe: true
 unsafe_reason: "contains a URL pointing to a .zip file"
