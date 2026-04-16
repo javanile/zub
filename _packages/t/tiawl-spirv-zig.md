@@ -9,8 +9,19 @@ keywords:
   - binding
   - spirv
   - spirv-tools
-date: 2026-04-09
-last_sync: 2026-04-09T11:54:27Z
+date: 2026-04-16
+updated_at: 2026-04-16T07:47:20+00:00
+last_sync: 2026-04-16T07:47:20Z
+package_kind: library
+has_library: true
+has_binary: false
+has_distributable_binary: false
+binary_count: 0
+distributable_binary_count: 0
+multiple_binaries: false
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
 permalink: /packages/tiawl/spirv.zig/
 ---
 

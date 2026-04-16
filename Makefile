@@ -28,6 +28,9 @@ sync-zigistry:
 	@#rm -f sync/zigistry.json sync/zigistry.lock
 	@python3 sync/zigistry.py --mode $(mode)
 
+sync-sponsors:
+	@python3 sync/sponsors.py
+
 unsafe-status:
 	@python3 security/unsafe-status.py
 

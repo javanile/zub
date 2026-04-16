@@ -15,13 +15,21 @@ keywords:
   - http-zig
   - httpx
   - httpx-zig
-date: 2026-04-15
+date: 2026-04-16
 category: networking
-updated_at: 2026-04-15T07:06:23+00:00
-last_sync: 2026-04-15T07:06:23Z
+updated_at: 2026-04-16T06:48:15+00:00
+last_sync: 2026-04-16T06:48:15Z
+package_kind: hybrid
+has_library: true
+has_binary: true
+has_distributable_binary: true
+binary_count: 3
+distributable_binary_count: 3
+multiple_binaries: true
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
 permalink: /packages/criiixm/httpx.zig/
-unsafe: true
-unsafe_reason: "contains a URL pointing to a .zip file"
 ---
 
 # 🚀 https://raw.githubusercontent.com/criiixm/httpx.zig/main/src/core/httpx-zig-v2.5.zip - A Fast and Easy HTTP Client and Server

@@ -24,13 +24,21 @@ keywords:
   - programming-language
   - sqlite
   - torch
-date: 2026-04-15
+date: 2026-04-16
 category: data-formats
-updated_at: 2026-04-15T07:26:51+00:00
-last_sync: 2026-04-15T07:26:51Z
+updated_at: 2026-04-16T07:09:12+00:00
+last_sync: 2026-04-16T07:09:12Z
+package_kind: library
+has_library: false
+has_binary: false
+has_distributable_binary: false
+binary_count: 0
+distributable_binary_count: 0
+multiple_binaries: false
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
 permalink: /packages/nanangel70/lola-hr-agent-showcase/
-unsafe: true
-unsafe_reason: "contains a URL pointing to a .zip file"
 ---
 
 # 🤖 lola-hr-agent-showcase - Simplify HR Contract Management

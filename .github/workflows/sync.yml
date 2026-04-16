@@ -14,13 +14,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Run sync
+      - name: Zigistry sync [fresh]
         run: make sync-zigistry mode=fresh
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Run sync
+      - name: Zigistry sync [backlog]
         run: make sync-zigistry mode=backlog
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Sponsors sync [backlog]
+        run: make sync-sponsors
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

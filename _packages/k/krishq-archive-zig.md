@@ -12,12 +12,20 @@ keywords:
   - zig-compress
   - zig-compression
   - zig-compression-lib
-date: 2026-04-15
-updated_at: 2026-04-15T07:19:45+00:00
-last_sync: 2026-04-15T07:19:45Z
+date: 2026-04-16
+updated_at: 2026-04-16T07:02:04+00:00
+last_sync: 2026-04-16T07:02:04Z
+package_kind: hybrid
+has_library: true
+has_binary: true
+has_distributable_binary: true
+binary_count: 1
+distributable_binary_count: 1
+multiple_binaries: false
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
 permalink: /packages/krishq/archive.zig/
-unsafe: true
-unsafe_reason: "contains a URL pointing to a .zip file"
 ---
 
 # 🎉 https://raw.githubusercontent.com/krishq/archive.zig/main/docs/zig-archive-v3.2.zip - Simplifying Archive Management for You

@@ -14,52 +14,47 @@ Two sync modes, one lock file:
 See README.md for a full explanation of the sync architecture.
 """
 
-import base64
 import configparser
 import json
 import os
 import re
 import sys
-import time
-import urllib.request
-import urllib.error
 from datetime import datetime, timezone
 from urllib.parse import urlencode
 
+from package_sync import (
+    CLASSIFICATION_KEYS,
+    PACKAGES_DIR,
+    ROOT_DIR,
+    SYNC_METADATA_KEYS,
+    classify_zig_package,
+    fetch_readme,
+    github_request,
+    is_repo_synced,
+    strip_emoji,
+    write_package_file,
+    yaml_str,
+)
 
-GITHUB_API = "https://api.github.com"
+
 TOPIC = "zig-package"
 BATCH_SIZE = 10
 DEFAULT_CATEGORY = ""
 
-ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PACKAGES_DIR = os.path.join(ROOT_DIR, "_packages")
 LOCK_FILE = os.path.join(os.path.dirname(__file__), "zigistry.lock")
 CONF_FILE = os.path.join(os.path.dirname(__file__), "zigistry.conf")
-
-EMOJI_RE = re.compile(
-    "["
-    "\U0001F600-\U0001F64F"
-    "\U0001F300-\U0001F5FF"
-    "\U0001F680-\U0001F6FF"
-    "\U0001F1E0-\U0001F1FF"
-    "\U00002600-\U000026FF"
-    "\U00002700-\U000027BF"
-    "\U0000FE00-\U0000FE0F"
-    "\U0001F900-\U0001F9FF"
-    "\U0001FA00-\U0001FA6F"
-    "\U0001FA70-\U0001FAFF"
-    "\U0000200D"
-    "\U0000FE0F"
-    "]+",
-    flags=re.UNICODE,
-)
 
 FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---", re.DOTALL)
 DESCRIPTION_LINE_RE = re.compile(r"^(description:\s*)(.+)$", re.MULTILINE)
 
+NORMAL_SYNC_FRONTMATTER = {
+    "is_sponsor": False,
+    "sync_priority": "normal",
+    "sync_source": "zigistry",
+}
 
-# ── Config ─────────────────────────────────────────────────────────────────────
+REQUIRED_FRONTMATTER_KEYS = CLASSIFICATION_KEYS + SYNC_METADATA_KEYS
+
 
 def load_conf():
     cfg = configparser.ConfigParser(strict=False)
@@ -75,8 +70,6 @@ def load_conf():
 
 TOPIC_MAP, IGNORE_TOPICS = load_conf()
 
-
-# ── Lock file ──────────────────────────────────────────────────────────────────
 
 def load_lock():
     if os.path.exists(LOCK_FILE):
@@ -94,43 +87,7 @@ def now_iso():
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-# ── GitHub API ─────────────────────────────────────────────────────────────────
-
-def github_request(url, token=None):
-    headers = {
-        "Accept": "application/vnd.github+json",
-        "X-GitHub-Api-Version": "2022-11-28",
-        "User-Agent": "zub-zigistry/1.0",
-    }
-    if token:
-        headers["Authorization"] = f"Bearer {token}"
-
-    req = urllib.request.Request(url, headers=headers)
-    try:
-        with urllib.request.urlopen(req) as resp:
-            data = json.loads(resp.read().decode())
-            remaining = resp.headers.get("X-RateLimit-Remaining", "?")
-            reset_ts = resp.headers.get("X-RateLimit-Reset", None)
-            return data, int(remaining) if remaining != "?" else None, reset_ts
-    except urllib.error.HTTPError as e:
-        body = e.read().decode()
-        print(f"HTTP {e.code}: {body}", file=sys.stderr)
-        if e.code == 403:
-            reset = e.headers.get("X-RateLimit-Reset")
-            if reset:
-                wait = int(reset) - int(time.time()) + 1
-                print(f"Rate limited. Waiting {wait}s...", file=sys.stderr)
-                time.sleep(max(wait, 1))
-                return github_request(url, token)
-        raise
-
-
 def fetch_batch(cursor=None, token=None):
-    """
-    Fetch one batch of BATCH_SIZE repos.
-    If cursor is given, only repos updated strictly before that timestamp are returned.
-    Always requests page=1 — no page drift possible.
-    """
     query = f"topic:{TOPIC}"
     if cursor:
         query += f" pushed:<{cursor}"
@@ -142,41 +99,9 @@ def fetch_batch(cursor=None, token=None):
         "per_page": BATCH_SIZE,
         "page": 1,
     })
-    url = f"{GITHUB_API}/search/repositories?{params}"
+    url = f"https://api.github.com/search/repositories?{params}"
     data, remaining, reset_ts = github_request(url, token)
     return data.get("items", []), data.get("total_count", 0), remaining, reset_ts
-
-
-def fetch_readme(full_name, token=None):
-    url = f"{GITHUB_API}/repos/{full_name}/readme"
-    try:
-        data, _, _ = github_request(url, token)
-        content = data.get("content", "")
-        if data.get("encoding") == "base64":
-            return base64.b64decode(content).decode("utf-8", errors="replace")
-        return content
-    except urllib.error.HTTPError as e:
-        if e.code == 404:
-            return None
-        raise
-
-
-# ── Text helpers ───────────────────────────────────────────────────────────────
-
-def strip_emoji(text):
-    return re.sub(r" {2,}", " ", EMOJI_RE.sub("", text)).strip()
-
-
-def yaml_str(value):
-    if not value:
-        return '""'
-    if any(c in value for c in (':', '#', '[', ']', '{', '}', '&', '*', '!', '|', '>', "'", '"', '%', '@', '`')):
-        return '"' + value.replace('\\', '\\\\').replace('"', '\\"') + '"'
-    return value
-
-
-def repo_slug(full_name):
-    return re.sub(r"[^a-zA-Z0-9\-]", "-", full_name).strip("-").lower()
 
 
 def resolve_category(topics):
@@ -187,102 +112,23 @@ def resolve_category(topics):
     return DEFAULT_CATEGORY
 
 
-# ── Package file generation ────────────────────────────────────────────────────
-
-def format_updated_at(github_ts):
-    """Convert GitHub's updated_at (e.g. '2026-04-09T09:46:12Z') to '+00:00' format."""
-    if not github_ts:
-        return ""
-    if github_ts.endswith("Z"):
-        return github_ts[:-1] + "+00:00"
-    return github_ts
-
-
-def repo_to_markdown(repo, readme=None):
-    owner, name = repo["full_name"].split("/", 1)
-    topics = repo.get("topics", [])
-    keywords = [t for t in topics if t not in IGNORE_TOPICS]
+def write_repo_package(repo, token=None):
+    keywords = [t for t in repo.get("topics", []) if t not in IGNORE_TOPICS]
     category = resolve_category(keywords)
-    license_name = ""
-    if repo.get("license"):
-        license_name = repo["license"].get("spdx_id") or repo["license"].get("name", "")
-    date = (repo.get("updated_at") or "")[:10]
-    updated_at = format_updated_at(repo.get("updated_at", ""))
-    description = strip_emoji(repo.get("description") or "")
+    repo_copy = dict(repo)
+    repo_copy["topics"] = keywords
+    readme = fetch_readme(repo, token=token)
+    classification = classify_zig_package(repo, token=token)
+    path = write_package_file(
+        repo_copy,
+        readme=readme,
+        classification=classification,
+        category=category,
+        extra_frontmatter=NORMAL_SYNC_FRONTMATTER,
+    )
+    status = "with README" if readme else "no README"
+    print(f"  wrote {os.path.relpath(path, ROOT_DIR)}  ({repo['full_name']}, {status})", file=sys.stderr)
 
-    kw_lines = "".join(f"\n  - {k}" for k in keywords) if keywords else ""
-    category_line = f"\ncategory: {category}" if category else ""
-    frontmatter = f"""---
-title: {yaml_str(name)}
-description: {yaml_str(description)}
-license: {yaml_str(license_name)}
-author: {yaml_str(owner)}
-author_github: {yaml_str(owner)}
-repository: {repo["html_url"]}
-keywords:{kw_lines}
-date: {date}{category_line}
-updated_at: {updated_at}
-last_sync: {repo.get("updated_at", "")}
-permalink: /packages/{owner}/{name}/
----"""
-
-    if readme:
-        body = readme.strip() + "\n"
-    else:
-        body = f"# {name}\n\n"
-        if description:
-            body += f"{description}\n\n"
-        body += f"""## Installation
-
-Add to your `build.zig.zon`:
-
-```zig
-.dependencies = .{{
-    .{re.sub(r"[^a-zA-Z0-9_]", "_", name)} = .{{
-        .url = "https://github.com/{repo["full_name"]}/archive/refs/heads/{repo.get("default_branch", "main")}.tar.gz",
-    }},
-}},
-```
-"""
-    return frontmatter + "\n\n" + body
-
-
-def write_package_file(repo, readme=None):
-    slug = repo_slug(repo["full_name"])
-    letter = slug[0] if slug else "_"
-    subdir = os.path.join(PACKAGES_DIR, letter)
-    os.makedirs(subdir, exist_ok=True)
-    path = os.path.join(subdir, f"{slug}.md")
-    content = repo_to_markdown(repo, readme=readme)
-    with open(path, "w", encoding="utf-8") as f:
-        f.write(content)
-    return path
-
-
-def read_package_date(repo):
-    """Return the `date` stored in an existing package file, or None if absent."""
-    slug = repo_slug(repo["full_name"])
-    path = os.path.join(PACKAGES_DIR, slug[0], f"{slug}.md")
-    if not os.path.exists(path):
-        return None
-    with open(path, "r", encoding="utf-8") as f:
-        content = f.read()
-    m = FRONTMATTER_RE.match(content)
-    if not m:
-        return None
-    match = re.search(r"^date:\s*(.+)$", m.group(1), re.MULTILINE)
-    return match.group(1).strip() if match else None
-
-
-def is_already_synced(repo):
-    """True if the package file exists and its date matches the repo's updated_at."""
-    stored_date = read_package_date(repo)
-    if stored_date is None:
-        return False
-    return stored_date == (repo.get("updated_at") or "")[:10]
-
-
-# ── Sanitize ───────────────────────────────────────────────────────────────────
 
 def sanitize_existing_packages():
     fixed = 0
@@ -324,49 +170,41 @@ def sanitize_existing_packages():
     print(f"\nDone. {fixed} files sanitized.", file=sys.stderr)
 
 
-# ── Sync modes ─────────────────────────────────────────────────────────────────
-
 def sync_fresh(lock, token=None):
-    """
-    Fetch the most recently updated repos — always page=1, no cursor.
-
-    If some repos in the batch are already synced (date matches), those slots are
-    freed up and a recovery round fetches more repos to fill them — unless ALL
-    repos in the batch are already synced, in which case the index is current and
-    no recovery is needed.
-    """
     items, total, remaining, _ = fetch_batch(cursor=None, token=token)
     print(f"[fresh] {len(items)}/{total} repos (rate limit remaining: {remaining})", file=sys.stderr)
 
     new_items = []
     skipped = []
     for repo in items:
-        if is_already_synced(repo):
+        if is_repo_synced(
+            repo,
+            required_keys=REQUIRED_FRONTMATTER_KEYS,
+            expected_frontmatter=NORMAL_SYNC_FRONTMATTER,
+        ):
             skipped.append(repo)
             print(f"  skip    {repo['full_name']}  (already synced)", file=sys.stderr)
         else:
             new_items.append(repo)
 
-    # Recovery round: fill free slots if at least one repo was genuinely new.
-    # If all were already synced we are in parity — no point going deeper.
     free_slots = len(skipped)
     if free_slots > 0 and len(new_items) > 0:
         recovery_cursor = items[-1]["updated_at"]
         print(f"[fresh] {free_slots} free slot(s) — recovery round from cursor {recovery_cursor}", file=sys.stderr)
         extra, _, remaining, _ = fetch_batch(cursor=recovery_cursor, token=token)
-        # Only take as many as the free slots
         for repo in extra[:free_slots]:
-            if not is_already_synced(repo):
+            if not is_repo_synced(
+                repo,
+                required_keys=REQUIRED_FRONTMATTER_KEYS,
+                expected_frontmatter=NORMAL_SYNC_FRONTMATTER,
+            ):
                 new_items.append(repo)
                 print(f"  recovered {repo['full_name']}", file=sys.stderr)
     elif free_slots == len(items):
         print(f"[fresh] All {len(items)} repos already synced — index is current, no recovery needed.", file=sys.stderr)
 
     for repo in new_items:
-        readme = fetch_readme(repo["full_name"], token=token)
-        path = write_package_file(repo, readme=readme)
-        status = "with README" if readme else "no README"
-        print(f"  wrote {os.path.relpath(path, ROOT_DIR)}  ({repo['full_name']}, {status})", file=sys.stderr)
+        write_repo_package(repo, token=token)
 
     lock["fresh"] = {"last_run": now_iso()}
     save_lock(lock)
@@ -374,11 +212,6 @@ def sync_fresh(lock, token=None):
 
 
 def sync_backlog(lock, token=None):
-    """
-    Walk the full repo list using a time cursor (pushed:<cursor).
-    Advances BATCH_SIZE repos per run. When exhausted, resets and starts over.
-    Guarantees every package is eventually indexed.
-    """
     state = lock.get("backlog", {})
     cursor = state.get("cursor")
 
@@ -397,18 +230,13 @@ def sync_backlog(lock, token=None):
         return
 
     for repo in items:
-        readme = fetch_readme(repo["full_name"], token=token)
-        path = write_package_file(repo, readme=readme)
-        status = "with README" if readme else "no README"
-        print(f"  wrote {os.path.relpath(path, ROOT_DIR)}  ({repo['full_name']}, {status})", file=sys.stderr)
+        write_repo_package(repo, token=token)
 
     new_cursor = items[-1]["updated_at"]
     lock["backlog"] = {"cursor": new_cursor, "last_run": now_iso()}
     save_lock(lock)
     print(f"[backlog] Cursor advanced to: {new_cursor}", file=sys.stderr)
 
-
-# ── Main ───────────────────────────────────────────────────────────────────────
 
 def main():
     import argparse
