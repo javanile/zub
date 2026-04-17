@@ -7,15 +7,39 @@ author_github: agagniere
 repository: https://github.com/agagniere/unitz
 keywords:
   - physics
-date: 2026-04-05
+date: 2026-04-13
 category: game-development
-last_sync: 2026-04-05T10:31:33Z
+updated_at: 2026-04-13T13:11:50+00:00
+last_sync: 2026-04-13T13:11:50Z
+package_kind: library
+has_library: true
+has_binary: false
+has_distributable_binary: false
+binary_count: 0
+distributable_binary_count: 0
+multiple_binaries: false
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
 permalink: /packages/agagniere/unitz/
 ---
 
 # Unitz
 
 Achieve compile-time unit correctness and avoid runtime surprises.
+
+## Status
+
+| Architecture \ OS | Linux | MacOS |
+|:------------------|:-----:|:-----:|
+| `x86_64`          | ✅    | ✅    |
+| `arm64`           | ✅    | ✅    |
+
+| Branch name | Zig version        |
+|:------------|:-------------------|
+| `master`    | `master`           |
+| `zig-0.15`  | `0.14.x`, `0.15.x` |
+| `zig-0.13`  | `0.13.x`           |
 
 ## Showcase
 

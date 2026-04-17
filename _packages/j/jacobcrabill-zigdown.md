@@ -8,9 +8,20 @@ repository: https://github.com/JacobCrabill/zigdown
 keywords:
   - markdown
   - terminal
-date: 2026-04-06
+date: 2026-04-16
 category: tooling
-last_sync: 2026-04-06T23:21:27Z
+updated_at: 2026-04-16T19:24:19+00:00
+last_sync: 2026-04-16T19:24:19Z
+package_kind: hybrid
+has_library: true
+has_binary: true
+has_distributable_binary: true
+binary_count: 2
+distributable_binary_count: 2
+multiple_binaries: true
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
 permalink: /packages/JacobCrabill/zigdown/
 ---
 
