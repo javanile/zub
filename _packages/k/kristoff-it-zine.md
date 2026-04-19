@@ -8,8 +8,19 @@ repository: https://github.com/kristoff-it/zine
 keywords:
   - ssg
   - static-site-generator
-date: 2026-04-09
-last_sync: 2026-04-09T18:05:52Z
+date: 2026-04-18
+updated_at: 2026-04-18T07:02:04+00:00
+last_sync: 2026-04-18T07:02:04Z
+package_kind: binary
+has_library: false
+has_binary: true
+has_distributable_binary: true
+binary_count: 4
+distributable_binary_count: 4
+multiple_binaries: true
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
 permalink: /packages/kristoff-it/zine/
 ---
 

@@ -8,20 +8,29 @@ repository: https://github.com/floooh/sokol-zig
 keywords:
   - crossplatform
   - sokol
-date: 2026-04-13
+date: 2026-04-19
 category: game-development
-last_sync: 2026-04-13T11:34:58Z
+updated_at: 2026-04-19T10:40:53+00:00
+last_sync: 2026-04-19T10:40:53Z
+package_kind: hybrid
+has_library: true
+has_binary: true
+has_distributable_binary: true
+binary_count: 1
+distributable_binary_count: 1
+multiple_binaries: false
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
 permalink: /packages/floooh/sokol-zig/
 ---
 
 [![build](https://github.com/floooh/sokol-zig/actions/workflows/main.yml/badge.svg)](https://github.com/floooh/sokol-zig/actions/workflows/main.yml)
 
-For Zig version 0.15+
+For Zig version 0.16+
 
 In case of breaking changes in Zig, the bindings might fall behind. Please don't hesitate to
 ping me via a Github issue, or even better, provide a PR :)
-
-Support for stable Zig versions is in branches (e.g. `zig-0.12.0`), those versions are 'frozen in time' though.
 
 Related projects:
 

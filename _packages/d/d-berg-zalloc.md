@@ -7,7 +7,18 @@ author_github: D-Berg
 repository: https://github.com/D-Berg/zalloc
 keywords:
 date: 2026-04-11
+updated_at: 2026-04-11T07:58:39+00:00
 last_sync: 2026-04-11T07:58:39Z
+package_kind: library
+has_library: true
+has_binary: false
+has_distributable_binary: false
+binary_count: 0
+distributable_binary_count: 0
+multiple_binaries: false
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
 permalink: /packages/D-Berg/zalloc/
 ---
 
