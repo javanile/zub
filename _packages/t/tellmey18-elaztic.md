@@ -7,8 +7,19 @@ author_github: tellmeY18
 repository: https://github.com/tellmeY18/elaztic
 keywords:
   - elasticsearch-client
-date: 2026-04-09
-last_sync: 2026-04-09T19:29:16Z
+date: 2026-04-16
+updated_at: 2026-04-16T00:27:16+00:00
+last_sync: 2026-04-16T00:27:16Z
+package_kind: hybrid
+has_library: true
+has_binary: true
+has_distributable_binary: true
+binary_count: 1
+distributable_binary_count: 1
+multiple_binaries: false
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
 permalink: /packages/tellmeY18/elaztic/
 ---
 

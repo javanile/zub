@@ -7,8 +7,19 @@ author_github: joachimschmidt557
 repository: https://github.com/joachimschmidt557/linenoize
 keywords:
   - readline
-date: 2026-04-09
-last_sync: 2026-04-09T16:49:21Z
+date: 2026-04-11
+updated_at: 2026-04-11T11:50:52+00:00
+last_sync: 2026-04-11T11:50:52Z
+package_kind: hybrid
+has_library: true
+has_binary: true
+has_distributable_binary: true
+binary_count: 2
+distributable_binary_count: 2
+multiple_binaries: true
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
 permalink: /packages/joachimschmidt557/linenoize/
 ---
 

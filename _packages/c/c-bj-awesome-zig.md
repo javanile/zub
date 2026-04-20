@@ -8,8 +8,19 @@ repository: https://github.com/C-BJ/awesome-zig
 keywords:
   - awesome
   - awesome-list
-date: 2026-04-10
-last_sync: 2026-04-10T05:07:34Z
+date: 2026-04-20
+updated_at: 2026-04-20T02:58:04+00:00
+last_sync: 2026-04-20T02:58:04Z
+package_kind: library
+has_library: false
+has_binary: false
+has_distributable_binary: false
+binary_count: 0
+distributable_binary_count: 0
+multiple_binaries: false
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
 permalink: /packages/C-BJ/awesome-zig/
 ---
 

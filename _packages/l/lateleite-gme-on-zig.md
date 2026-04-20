@@ -9,7 +9,18 @@ keywords:
   - game-music-emu
   - gme
 date: 2026-04-09
+updated_at: 2026-04-09T14:31:48+00:00
 last_sync: 2026-04-09T14:31:48Z
+package_kind: library
+has_library: true
+has_binary: false
+has_distributable_binary: false
+binary_count: 0
+distributable_binary_count: 0
+multiple_binaries: false
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
 permalink: /packages/lateleite/gme-on-zig/
 ---
 
