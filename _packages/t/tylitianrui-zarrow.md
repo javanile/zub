@@ -12,10 +12,10 @@ keywords:
   - columnar-format
   - serialization
   - zarrow
-date: 2026-04-20
+date: 2026-04-21
 category: data-formats
-updated_at: 2026-04-20T11:30:25+00:00
-last_sync: 2026-04-20T11:30:25Z
+updated_at: 2026-04-21T11:36:27+00:00
+last_sync: 2026-04-21T11:36:27Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -33,35 +33,38 @@ permalink: /packages/tylitianrui/zarrow/
 
 [English](README.md) | [中文](docs/README-ZH.md)
 
-A Zig implementation of Apache Arrow.
+A Zig implementation of Apache Arrow for zero-copy, columnar data interchange.
 
-## Status
+`zarrow` brings Arrow’s in-memory format and IPC workflows into Zig, with support for core memory layouts, array builders, validation, and efficient slicing.
 
-- Development: Active development (continuously evolving)
-- Stability: Core functionality is usable; API and coverage are still being refined
-- Test baseline: `zig build test` must pass before committing
+Built for people who want Arrow in a systems language with explicit control, predictable performance, and clean interoperability boundaries.
 
-## Metadata
+## Highlights
 
-| Field | Value |
-|---|---|
-| Name | `zarrow` |
-| Current version | `0.0.1` |
-| Minimum Zig version | `0.15.1` |
-| Maximum Zig version | `0.15.x` (Zig 0.16+ not yet supported) |
-| Dependencies declared | Yes (`build.zig.zon`) |
-| Direct dependencies | `flatbufferz` |
+- Core Apache Arrow memory model in Zig
+- Builders for constructing Arrow arrays
+- Layout validation for safer data handling
+- Zero-copy slicing
+- Arrow IPC stream read/write
+- Designed for interoperability with other Arrow implementations
 
-Note: version, minimum Zig version, and dependencies are sourced from [build.zig.zon](build.zig.zon).
+## Why this project exists
 
-## Supported
+Apache Arrow is one of the most important foundations for modern analytics and data infrastructure, but Zig still lacks a mature native implementation.
 
-- Arrow core memory model and array builders
-- Layout validation (ArrayData validate)
-- Zero-copy slicing and shared read-only buffers
-- IPC Stream Reader: Schema / RecordBatch / DictionaryBatch
-- IPC Stream Writer: Schema / RecordBatch / DictionaryBatch (including REE and dictionary delta)
-- Interop matrix: PyArrow, arrow-rs, Arrow C++ (bidirectional read/write verification)
+`zarrow` exists to close that gap: not by wrapping another ecosystem, but by building Arrow in Zig directly.
+
+
+## Project status
+
+`zarrow` is under active development and already useful for experimentation, interoperability testing, and building Arrow-based tooling in Zig.
+
+The project aims to make Zig a serious option for working with Arrow data in systems, analytics, and data infrastructure use cases.
+
+The project is actively evolving and intended for developers exploring Arrow-based tooling, interoperability, and systems integration in Zig.
+
+Contributions, bug reports, and interoperability feedback are welcome.
+
 
 ## Usage
 
@@ -74,8 +77,6 @@ zig fetch --save "git+https://github.com/tylitianrui/zarrow#master"
 ```
 
 ### 2. Configure `build.zig`
-
-`zarrow` now uses pre-generated `arrow_fbs` sources committed in the repository, while keeping `flatbufferz` as the FlatBuffers runtime dependency. Consumers only need to add the module import:
 
 ```zig
 const zarrow_dep = b.dependency("zarrow", .{
@@ -132,3 +133,9 @@ For splitting `zarrow-compute`, `zarrow-flight`, and `zarrow-parquet` into separ
 
 - [docs/multi-repo-split-zh.md](docs/multi-repo-split-zh.md)
 - Scaffold script: `tools/scaffold_downstream_repo.sh`
+
+## Contributing
+
+- [CONTRIBUTING.md](CONTRIBUTING.md)
+- [API Stability Policy](docs/api-stability.md)
+- [Release Checklist](docs/release-checklist.md)

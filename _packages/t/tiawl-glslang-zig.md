@@ -8,9 +8,9 @@ repository: https://github.com/tiawl/glslang.zig
 keywords:
   - binding
   - glslang
-date: 2026-04-16
-updated_at: 2026-04-16T07:49:31+00:00
-last_sync: 2026-04-16T07:49:31Z
+date: 2026-04-21
+updated_at: 2026-04-21T09:47:04+00:00
+last_sync: 2026-04-21T09:47:04Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -43,8 +43,7 @@ The goal of this repository is not to provide a [Zig][2] binding for [KhronosGro
 
 ## Dependencies
 
-The [Zig][2] part of this package is relying on the latest [Zig][2] release (0.15.2) and will only be updated for the next one.
-It you use a more recent [Zig][2] version, please consider the `zig-nightly` branch and `*-nightly` tags.
+The [Zig][2] part of this package requires the latest (0.16.0) or the master (0.17.0-dev) [Zig][2] release.
 
 For other dependencies see [the build.zig.zon](https://github.com/tiawl/glslang.zig/blob/zig-stable/build.zig.zon)
 

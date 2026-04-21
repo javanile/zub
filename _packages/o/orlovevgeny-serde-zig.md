@@ -9,9 +9,20 @@ keywords:
   - json-serialization
   - parser
   - serde
-date: 2026-04-09
+date: 2026-04-18
 category: data-formats
-last_sync: 2026-04-09T13:08:10Z
+updated_at: 2026-04-18T16:05:22+00:00
+last_sync: 2026-04-18T16:05:22Z
+package_kind: hybrid
+has_library: true
+has_binary: true
+has_distributable_binary: true
+binary_count: 1
+distributable_binary_count: 1
+multiple_binaries: false
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
 permalink: /packages/OrlovEvgeny/serde.zig/
 ---
 

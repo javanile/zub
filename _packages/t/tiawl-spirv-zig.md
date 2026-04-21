@@ -9,9 +9,9 @@ keywords:
   - binding
   - spirv
   - spirv-tools
-date: 2026-04-16
-updated_at: 2026-04-16T07:47:20+00:00
-last_sync: 2026-04-16T07:47:20Z
+date: 2026-04-21
+updated_at: 2026-04-21T09:46:09+00:00
+last_sync: 2026-04-21T09:46:09Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -41,8 +41,7 @@ However this repository has subtle differences for maintainability tasks:
 
 ## Dependencies
 
-The [Zig][4] part of this package is relying on the latest [Zig][4] release (0.15.2) and will only be updated for the next one.
-It you use a more recent [Zig][4] version, please consider the `zig-nightly` branch and `*-nightly` tags.
+The [Zig][4] part of this package requires the latest (0.16.0) or the master (0.17.0-dev) [Zig][4] release.
 
 For other dependencies see [the build.zig.zon](https://github.com/tiawl/spirv.zig/blob/zig-stable/build.zig.zon)
 
