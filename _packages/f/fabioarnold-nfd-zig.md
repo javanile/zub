@@ -8,8 +8,19 @@ repository: https://github.com/fabioarnold/nfd-zig
 keywords:
   - file-dialog
   - native
-date: 2026-04-08
-last_sync: 2026-04-08T07:05:07Z
+date: 2026-04-17
+updated_at: 2026-04-17T21:59:55+00:00
+last_sync: 2026-04-17T21:59:55Z
+package_kind: hybrid
+has_library: true
+has_binary: true
+has_distributable_binary: true
+binary_count: 1
+distributable_binary_count: 1
+multiple_binaries: false
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
 permalink: /packages/fabioarnold/nfd-zig/
 ---
 
