@@ -16,10 +16,20 @@ keywords:
   - storage
   - xet
   - xorb
-date: 2026-04-15
+date: 2026-04-23
 category: networking
-updated_at: 2026-04-15T10:14:44+00:00
-last_sync: 2026-04-15T10:14:44Z
+updated_at: 2026-04-23T11:32:34+00:00
+last_sync: 2026-04-23T11:32:34Z
+package_kind: hybrid
+has_library: true
+has_binary: true
+has_distributable_binary: true
+binary_count: 4
+distributable_binary_count: 4
+multiple_binaries: true
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
 permalink: /packages/Lucas-kPaz/huggingface-xet/
 unsafe: true
 unsafe_reason: "contains a URL pointing to a .zip file"

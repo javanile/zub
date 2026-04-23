@@ -8,9 +8,9 @@ repository: https://github.com/Peter-Barrow/magic-rings-zig
 keywords:
   - ringbuffer
   - shared-memory
-date: 2026-04-06
-updated_at: 2026-04-06T15:29:06+00:00
-last_sync: 2026-04-06T15:29:06Z
+date: 2026-04-22
+updated_at: 2026-04-22T12:50:48+00:00
+last_sync: 2026-04-22T12:50:48Z
 package_kind: library
 has_library: true
 has_binary: false

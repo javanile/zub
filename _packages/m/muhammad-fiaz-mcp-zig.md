@@ -13,9 +13,19 @@ keywords:
   - zig-mcp
   - zig-model-context-protocol
   - ziglibrary
-date: 2026-04-06
-updated_at: 2026-04-06T20:08:49+00:00
-last_sync: 2026-04-06T20:08:49Z
+date: 2026-04-20
+updated_at: 2026-04-20T19:37:00+00:00
+last_sync: 2026-04-20T19:37:00Z
+package_kind: hybrid
+has_library: true
+has_binary: true
+has_distributable_binary: true
+binary_count: 4
+distributable_binary_count: 4
+multiple_binaries: true
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
 permalink: /packages/muhammad-fiaz/mcp.zig/
 ---
 

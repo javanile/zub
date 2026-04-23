@@ -14,6 +14,16 @@ keywords:
 date: 2026-04-08
 updated_at: 2026-04-08T05:37:48+00:00
 last_sync: 2026-04-08T05:37:48Z
+package_kind: hybrid
+has_library: true
+has_binary: true
+has_distributable_binary: true
+binary_count: 2
+distributable_binary_count: 2
+multiple_binaries: true
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
 permalink: /packages/Marco-Christiani/zigrad/
 ---
 

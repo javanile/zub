@@ -9,6 +9,16 @@ keywords:
 date: 2026-04-05
 updated_at: 2026-04-05T17:03:46+00:00
 last_sync: 2026-04-05T17:03:46Z
+package_kind: hybrid
+has_library: true
+has_binary: true
+has_distributable_binary: true
+binary_count: 8
+distributable_binary_count: 8
+multiple_binaries: true
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
 permalink: /packages/dayvster/argh/
 ---
 
