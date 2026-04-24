@@ -12,10 +12,10 @@ keywords:
   - columnar-format
   - serialization
   - zarrow
-date: 2026-04-22
+date: 2026-04-24
 category: data-formats
-updated_at: 2026-04-22T10:24:44+00:00
-last_sync: 2026-04-22T10:24:44Z
+updated_at: 2026-04-24T11:37:49+00:00
+last_sync: 2026-04-24T11:37:49Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -41,11 +41,13 @@ Built for people who want Arrow in a systems language with explicit control, pre
 
 ## Highlights
 
+
 - Core Apache Arrow memory model in Zig
 - Builders for constructing Arrow arrays
 - Layout validation for safer data handling
 - Zero-copy slicing
 - Arrow IPC stream read/write
+- Arrow C Data/C Stream ABI import/export
 - Designed for interoperability with other Arrow implementations
 
 ## Why this project exists
@@ -127,15 +129,18 @@ For compute framework APIs used by downstream `zarrow-compute`, see:
 - [docs/compute-api-zh.md](docs/compute-api-zh.md)
 - Example: `examples/compute_lifecycle.zig`
 
-## Downstream Repos
+## Interop
 
-For splitting `zarrow-compute`, `zarrow-flight`, and `zarrow-parquet` into separate repos while depending on `zarrow`, see:
+For Arrow IPC and C ABI interop coverage and local verification commands, see:
 
-- [docs/multi-repo-split-zh.md](docs/multi-repo-split-zh.md)
-- Scaffold script: `tools/scaffold_downstream_repo.sh`
+- [docs/interop-arrow-go.md](docs/interop-arrow-go.md)
+- [docs/interop-c-abi.md](docs/interop-c-abi.md)
+- C ABI Zig example: `zig build example-c_abi_roundtrip`
 
 ## Contributing
 
 - [CONTRIBUTING.md](CONTRIBUTING.md)
+- [Changelog](CHANGELOG.md)
 - [API Stability Policy](docs/api-stability.md)
 - [Release Checklist](docs/release-checklist.md)
+- [Release Notes Draft](docs/release-notes-next.md)

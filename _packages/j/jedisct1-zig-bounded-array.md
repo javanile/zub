@@ -11,9 +11,9 @@ keywords:
   - bounded
   - boundedarray
   - tinyvec
-date: 2026-04-13
-updated_at: 2026-04-13T23:34:44+00:00
-last_sync: 2026-04-13T23:34:44Z
+date: 2026-04-22
+updated_at: 2026-04-22T16:47:37+00:00
+last_sync: 2026-04-22T16:47:37Z
 package_kind: library
 has_library: true
 has_binary: false

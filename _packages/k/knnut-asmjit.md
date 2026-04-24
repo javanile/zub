@@ -7,9 +7,9 @@ author_github: KNnut
 repository: https://github.com/KNnut/asmjit
 keywords:
   - asmjit
-date: 2026-04-13
-updated_at: 2026-04-13T05:13:47+00:00
-last_sync: 2026-04-13T05:13:47Z
+date: 2026-04-18
+updated_at: 2026-04-18T12:08:37+00:00
+last_sync: 2026-04-18T12:08:37Z
 package_kind: library
 has_library: true
 has_binary: false

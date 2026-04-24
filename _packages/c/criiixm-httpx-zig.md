@@ -15,10 +15,10 @@ keywords:
   - http-zig
   - httpx
   - httpx-zig
-date: 2026-04-23
+date: 2026-04-24
 category: networking
-updated_at: 2026-04-23T09:26:13+00:00
-last_sync: 2026-04-23T09:26:13Z
+updated_at: 2026-04-24T11:10:35+00:00
+last_sync: 2026-04-24T11:10:35Z
 package_kind: hybrid
 has_library: true
 has_binary: true
