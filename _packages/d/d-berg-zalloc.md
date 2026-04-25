@@ -6,9 +6,9 @@ author: D-Berg
 author_github: D-Berg
 repository: https://github.com/D-Berg/zalloc
 keywords:
-date: 2026-04-11
-updated_at: 2026-04-11T07:58:39+00:00
-last_sync: 2026-04-11T07:58:39Z
+date: 2026-04-21
+updated_at: 2026-04-21T13:59:49+00:00
+last_sync: 2026-04-21T13:59:49Z
 package_kind: library
 has_library: true
 has_binary: false

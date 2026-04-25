@@ -20,9 +20,19 @@ keywords:
   - zig-bindings
   - zig-python
   - zig-python-bindings
-date: 2026-04-15
-updated_at: 2026-04-15T10:27:35+00:00
-last_sync: 2026-04-15T10:27:35Z
+date: 2026-04-25
+updated_at: 2026-04-25T09:50:26+00:00
+last_sync: 2026-04-25T09:50:26Z
+package_kind: library
+has_library: false
+has_binary: false
+has_distributable_binary: false
+binary_count: 0
+distributable_binary_count: 0
+multiple_binaries: false
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
 permalink: /packages/mohamedhussein2025/zigx/
 unsafe: true
 unsafe_reason: "contains a URL pointing to a .zip file"

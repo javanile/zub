@@ -10,10 +10,10 @@ keywords:
   - fuzzy
   - fuzzy-search
   - unix
-date: 2026-04-18
+date: 2026-04-22
 category: tooling
-updated_at: 2026-04-18T18:41:25+00:00
-last_sync: 2026-04-18T18:41:25Z
+updated_at: 2026-04-22T04:45:42+00:00
+last_sync: 2026-04-22T04:45:42Z
 package_kind: hybrid
 has_library: true
 has_binary: true
