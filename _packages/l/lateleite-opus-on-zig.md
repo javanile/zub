@@ -1,6 +1,6 @@
 ---
 title: opus-on-zig
-description: "Opus codec wrapped with Zig's build system"
+description: "Use https://github.com/allyourcodebase/opus instead - more features and build options"
 license: 0BSD
 author: lateleite
 author_github: lateleite
@@ -8,9 +8,9 @@ repository: https://github.com/lateleite/opus-on-zig
 keywords:
   - opus
   - opus-codec
-date: 2026-04-09
-updated_at: 2026-04-09T01:08:36+00:00
-last_sync: 2026-04-09T01:08:36Z
+date: 2026-04-23
+updated_at: 2026-04-23T21:15:23+00:00
+last_sync: 2026-04-23T21:15:23Z
 package_kind: library
 has_library: true
 has_binary: false

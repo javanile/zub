@@ -12,10 +12,10 @@ keywords:
   - lola-language
   - programming-language
   - script-language
-date: 2026-04-15
+date: 2026-04-26
 category: systems
-updated_at: 2026-04-15T11:41:28+00:00
-last_sync: 2026-04-15T11:41:28Z
+updated_at: 2026-04-26T09:59:31+00:00
+last_sync: 2026-04-26T09:59:31Z
 package_kind: hybrid
 has_library: true
 has_binary: true

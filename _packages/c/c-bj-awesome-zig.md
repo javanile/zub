@@ -8,9 +8,9 @@ repository: https://github.com/C-BJ/awesome-zig
 keywords:
   - awesome
   - awesome-list
-date: 2026-04-20
-updated_at: 2026-04-20T02:58:04+00:00
-last_sync: 2026-04-20T02:58:04Z
+date: 2026-04-25
+updated_at: 2026-04-25T08:46:31+00:00
+last_sync: 2026-04-25T08:46:31Z
 package_kind: library
 has_library: false
 has_binary: false
