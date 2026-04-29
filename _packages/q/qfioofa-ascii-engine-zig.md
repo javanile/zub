@@ -23,8 +23,8 @@ keywords:
   - zero-dependency
 date: 2026-04-16
 category: game-development
-updated_at: 2026-04-16T10:34:25+00:00
-last_sync: 2026-04-16T10:34:25Z
+updated_at: 2026-04-16T20:54:04+00:00
+last_sync: 2026-04-16T20:54:04Z
 package_kind: binary
 has_library: false
 has_binary: true

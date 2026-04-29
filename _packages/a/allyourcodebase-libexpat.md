@@ -6,8 +6,19 @@ author: allyourcodebase
 author_github: allyourcodebase
 repository: https://github.com/allyourcodebase/libexpat
 keywords:
-date: 2026-04-09
-last_sync: 2026-04-09T10:49:59Z
+date: 2026-04-16
+updated_at: 2026-04-16T22:54:37+00:00
+last_sync: 2026-04-16T22:54:37Z
+package_kind: hybrid
+has_library: true
+has_binary: true
+has_distributable_binary: true
+binary_count: 4
+distributable_binary_count: 4
+multiple_binaries: true
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
 permalink: /packages/allyourcodebase/libexpat/
 ---
 
@@ -24,7 +35,7 @@ First, update your `build.zig.zon`:
 ```
 # Initialize a `zig build` project if you haven't already
 zig init
-zig fetch --save git+https://github.com/allyourcodebase/libexpat.git#2.7.1-2
+zig fetch --save git+https://github.com/allyourcodebase/libexpat.git#2.7.1-3
 ```
 
 You can then import `expat` in your `build.zig` with:
