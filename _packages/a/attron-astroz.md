@@ -1,0 +1,308 @@
+---
+title: astroz
+description: "Astrodynamics and Spacecraft Toolkit. Features fast orbit prop, celestial precession, CCSDS parsing, RF parsing, fits image parsing, and more!"
+license: GPL-3.0
+author: ATTron
+author_github: ATTron
+repository: https://github.com/ATTron/astroz
+keywords:
+  - astro
+  - astronomy
+  - astrophysics
+  - ccsds
+  - celestial-bodies
+  - fits-files
+  - fits-image
+  - orbit-determination
+  - orbital-simulation
+  - radio-frequency
+  - rf
+  - sdr
+  - sgp4
+  - space
+  - spacecraft
+  - tle
+  - toolkit
+date: 2026-04-30
+updated_at: 2026-04-30T00:37:48+00:00
+last_sync: 2026-04-30T00:37:48Z
+package_kind: hybrid
+has_library: true
+has_binary: true
+has_distributable_binary: true
+binary_count: 2
+distributable_binary_count: 2
+multiple_binaries: true
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
+permalink: /packages/ATTron/astroz/
+---
+
+<h1 align="center">
+  <img src="https://repository-images.githubusercontent.com/819657891/7fdb22c8-7171-4b75-9f33-88a62ea67259" width="900" height="600" />
+</h1>
+
+[![CI][ci-shd]][ci-url]
+[![CD][cd-shd]][cd-url]
+[![DC][dc-shd]][dc-url]
+
+## Astronomical and Spacecraft Toolkit Written in Zig
+
+**Featuring the fastest CPU based open source SGP4/SDP4 propagator**
+
+| Orbital Mechanics | Spacecraft Ops | Astronomy |
+|-------------------|----------------|-----------|
+| SGP4/SDP4 propagation | CCSDS packets | FITS parsing |
+| TLE & OMM parsing | VITA49 packets | WCS coordinates |
+| Orbital maneuvers | Attitude determination | Star precession |
+| Force models (J2-J4, drag, SRP, third-body) | CSPICE ephemeris | Celestial bodies |
+| Dormand-Prince 8(7) integrator | Monte Carlo sims | |
+
+### Performance
+
+Sub-meter accuracy validated against reference implementations. Automatically dispatches between SGP4 (near-earth) and SDP4 (deep-space) based on orbital period. Uses SIMD (AVX512/AVX2) to process 8 satellites simultaneously, with multithreaded constellation propagation across all available cores.
+
+#### Single-Threaded (1.2M propagations, single satellite)
+
+| Implementation | Props/sec | Speedup vs python-sgp4 |
+|----------------|-----------|------------------------|
+| **astroz** | **30.8M** | **11x** |
+| Rust sgp4 | 5.1M | 1.8x |
+| heyoka | 3.8M | 1.3x |
+| satkit | 3.5M | 1.2x |
+| python-sgp4 | 2.8M | 1x |
+
+#### Multi-Threaded Constellation (13,478 satellites × 1,440 times)
+
+| Implementation | 1 Thread | 16 Threads |
+|----------------|----------|------------|
+| **astroz** | 37.7M/s | **303M/s** |
+| heyoka | 15.7M/s | 155.6M/s |
+| Rust sgp4 (rayon) | 4.4M/s | 47.9M/s |
+| satkit | 3.5M/s | 3.5M/s |
+| python-sgp4 | 2.7M/s | 2.7M/s |
+
+*Benchmarked on AMD Ryzen 7 7840U (16 threads). All implementations using their optimal configurations (SIMD, pre-allocated outputs, batch mode).*
+
+Uses SIMD (AVX512 for 8-wide, AVX2/SSE for 4-wide) with multithreaded time-major iteration. Validated against Vallado AIAA 2006-6753 reference vectors (< 10m position error, < 1µm/s velocity error). Set `ASTROZ_THREADS` environment variable to control thread count (defaults to all available cores).
+
+The [Cesium visualization example](examples/README.md) propagates the entire active satellite catalog (~13,000 satellites) at interactive rates. **[Try the live demo →](https://attron.github.io/astroz-demo/)**
+
+### Validated Accuracy
+
+Force models and propagators are validated against reference implementations:
+
+| Component | Reference | Tolerance |
+|-----------|-----------|-----------|
+| SGP4/SDP4 propagation | python-sgp4 | < 100m position |
+| J2 RAAN drift | Vallado analytical | < 1% |
+| Hohmann transfer ΔV | poliastro | < 0.1% |
+| Orbital periods | Analytical | 1e-10 relative |
+| Two-body energy | Conservation law | 1e-10 over 100 orbits |
+
+Run validation tests: `zig build test`
+
+With CSPICE enabled (for high-precision ephemeris): `zig build test -Denable-cspice=true`
+
+### Python
+
+Only supports **Linux x86_64** and **macOS ARM64** (Python 3.10–3.14):
+
+```bash
+pip install astroz
+```
+
+#### python-sgp4 Compatible API (Recommended)
+
+Drop-in replacement for [python-sgp4](https://github.com/brandon-rhodes/python-sgp4) with transparent deep-space (SDP4) support. Just change the import for instant speedup:
+
+```python
+# Before                                    # After
+from sgp4.api import Satrec, jday      →    from astroz.api import Satrec, jday
+```
+
+| Your Code | python-sgp4 | astroz | Speedup |
+|-----------|-------------|--------|---------|
+| `sat.sgp4()` loop | 1.3M/s | 2.5M/s | **2x** |
+| `sat.sgp4_array()` | 2.7M/s | 15M/s | **5x** |
+| `SatrecArray.sgp4()` | 3M/s | 290M/s | **100x** |
+
+See [migration guide](bindings/python/README.md#migrating-from-python-sgp4) for optimization tips.
+
+```python
+from astroz.api import Satrec, SatrecArray, jday, WGS72
+import numpy as np
+
+# Single satellite (same syntax as python-sgp4)
+line1 = "1 25544U 98067A   24127.82853009  .00015698  00000+0  27310-3 0  9995"
+line2 = "2 25544  51.6393 160.4574 0003580 140.6673 205.7250 15.50957674452123"
+sat = Satrec.twoline2rv(line1, line2, WGS72)
+
+jd, fr = jday(2024, 5, 6, 12, 0, 0.0)
+error, position, velocity = sat.sgp4(jd, fr)
+
+# Batch propagation (270-330M props/sec with SIMD)
+sat_array = SatrecArray([sat1, sat2, ...])  # List of Satrec objects
+
+# Single time point (scalars)
+e, r, v = sat_array.sgp4(2460000.5, 0.5)
+
+# Multiple time points (arrays)
+jd = np.full(1440, 2460000.5)
+fr = np.linspace(0, 1, 1440)
+e, r, v = sat_array.sgp4(jd, fr)  # (n_sats, n_times, 3)
+
+# Skip velocities for 30% faster propagation
+e, r, _ = sat_array.sgp4(jd, fr, velocities=False)
+```
+
+#### High-Level API
+
+Convenience functions for common workflows:
+
+```python
+from astroz import propagate, Constellation
+import numpy as np
+
+# Load and propagate - automatically optimized for maximum performance
+positions = propagate("starlink", np.arange(1440))  # 1 day at 1-min intervals
+# shape: (1440, num_satellites, 3) in km, ECEF coordinates
+
+# With options
+from datetime import datetime, timezone
+positions = propagate(
+    "starlink",
+    np.arange(1440),
+    start_time=datetime(2024, 6, 15, tzinfo=timezone.utc),
+    output="geodetic",  # "ecef" (default), "teme", or "geodetic"
+)
+
+# With velocities
+positions, velocities = propagate("starlink", np.arange(1440), velocities=True)
+
+# For repeated propagation, pre-parse to avoid overhead
+c = Constellation("starlink")
+positions = propagate(c, np.arange(1440))
+```
+
+#### Orbital Mechanics & Numerical Propagation
+
+```python
+from astroz import hohmann_transfer, propagate_numerical, EARTH_MU, EARTH_J2, EARTH_R_EQ
+
+# Hohmann transfer: LEO to GEO
+result = hohmann_transfer(EARTH_MU, 6778, 42164)
+print(f"Total ΔV: {result['total_dv']:.3f} km/s")
+
+# Numerical propagation with J2 perturbation
+state = (6778.0, 0.0, 0.0, 0.0, 7.668, 0.0)  # [x,y,z,vx,vy,vz] km, km/s
+times, states = propagate_numerical(
+    state, 0.0, 86400.0, 60.0, EARTH_MU,
+    j2=EARTH_J2, r_eq=EARTH_R_EQ,
+)
+```
+
+Also available: `bi_elliptic_transfer`, `lambert`, `orbital_velocity`, `orbital_period`, `escape_velocity`. See [Python README](bindings/python/README.md) for full details.
+
+### Usage
+
+- Add `astroz` as a dependency in your `build.zig.zon`.
+
+```sh
+zig fetch --save https://github.com/ATTron/astroz/archive/<git_tag_or_commit_hash>.tar.gz
+#or
+zig fetch --save git+https://github.com/ATTron/astroz/#HEAD
+```
+
+- Use `astroz` as a module in your `build.zig`.
+
+```zig
+const astroz_dep = b.dependency("astroz", .{
+    .target = target,
+    .optimize = optimize,
+});
+const astroz_mod = astroz_dep.module("astroz");
+exe.root_module.addImport("astroz", astroz_mod);
+```
+
+- Propagate any satellite — the `Satellite` type auto-selects SGP4 or SDP4:
+
+```zig
+const astroz = @import("astroz");
+
+var tle = try astroz.Tle.parse(tle_string, allocator);
+defer tle.deinit();
+
+const sat = try astroz.Satellite.init(tle, astroz.constants.wgs84);
+const result = try sat.propagate(60.0); // minutes from epoch
+const pos = result[0]; // [x, y, z] km
+const vel = result[1]; // [vx, vy, vz] km/s
+```
+
+### Examples
+
+#### Spacecraft Operations
+
+- #### [Force Model Propagation](examples/maneuver_planning.zig)
+  Composable force models (TwoBody, J2) with the Dormand-Prince 8(7) adaptive integrator. Shows `ForceModel.wrap()` and `Composite` for combining perturbations.
+
+- #### [Constellation Phasing](examples/constellation_phasing.zig)
+  Sun-synchronous orbit design and constellation plane separation using J2-induced RAAN drift.
+
+- #### [Orbit Orientation Determination](examples/simple_spacecraft_orientation.zig)
+  Calculate spacecraft attitude and orientation.
+
+#### Orbital Mechanics
+
+- #### [Planet Transfer & Mission Planning](examples/transfer_propagation.zig)
+  Demonstrates interplanetary transfers with mission planning (Hohmann vs Bi-Elliptic comparison) and trajectory propagation.
+
+- #### [Orbit Maneuvers](examples/orbit_maneuvers.zig)
+  Comprehensive example showing TLE-based orbit propagation with various maneuver types: impulse, plane change, and phase change.
+
+- #### [Monte Carlo Simulation](examples/simple_monte_carlo.zig)
+  Statistical analysis for mission planning with uncertainty.
+
+- #### [Propagation](examples/propagation.zig)
+  Analytical orbit propagation using SGP4/SDP4 with TLE input. Demonstrates direct SGP4 usage, the modular propagator interface, and the unified Satellite type that auto-dispatches between SGP4 and SDP4.
+
+- #### [SPICE Propagation](examples/spice_propagation.zig)
+  High-fidelity LEO propagation with SPICE-updated Sun/Moon ephemeris. Combines TwoBody + J2 + SRP + third-body perturbations with real-time position updates.
+
+- #### [Cesium Satellite Visualization](examples/README.md) — **[Live Demo](https://attron.github.io/astroz-demo/)**
+
+  Interactive 3D visualization of the entire near-earth satellite catalog (~13,000 satellites) using Cesium. Features multithreaded SGP4/SDP4 propagation at ~300M props/sec, constellation filtering, search, and satellite tracking.
+
+#### Telemetry & Data Handling
+
+- #### [Parse Vita49](examples/parse_vita49.zig) / [with Callback](examples/parse_vita49_callback.zig)
+  VITA Radio Transport (VRT) packet stream parsing.
+
+- #### [Parse CCSDS](examples/parse_ccsds.zig) / [with File Sync](examples/parse_ccsds_file_sync.zig)
+  Parse CCSDS space packet protocol from files.
+
+- #### [Create CCSDS Packet](examples/create_ccsds_packet.zig) / [with Config](examples/create_ccsds_packet_config.zig)
+  Generate CCSDS packets for telemetry.
+
+#### Astronomy & Astrometry
+
+- #### [Generate Image from FITS File](examples/parse_fits_file.zig)
+  Parse and render FITS astronomical image data.
+
+<img src="test/test.png" width="450" height="400" alt="sample fits image as png"/>
+
+- #### [Precess Star Coordinates](examples/precess_star.zig)
+  Calculate stellar precession to a target epoch.
+
+- #### [Calculate WCS from TLE](examples/wcs.zig)
+  Compute World Coordinate System values from orbital elements.
+
+<!-- MARKDOWN LINKS -->
+
+[ci-shd]: https://img.shields.io/github/actions/workflow/status/ATTron/astroz/ci.yaml?branch=main&logo=github&label=CI&labelColor=black
+[ci-url]: https://github.com/ATTron/astroz/blob/main/.github/workflows/ci.yaml
+[cd-shd]: https://img.shields.io/github/actions/workflow/status/ATTron/astroz/cd.yaml?branch=main&logo=github&label=CD&labelColor=black
+[cd-url]: https://github.com/ATTron/astroz/blob/main/.github/workflows/cd.yaml
+[dc-shd]: https://img.shields.io/badge/click-F6A516?logo=zig&logoColor=F6A516&label=doc&labelColor=black
+[dc-url]: https://attron.github.io/astroz
