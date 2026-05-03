@@ -8,10 +8,10 @@ repository: https://github.com/castholm/zigglgen
 keywords:
   - bindings
   - opengl
-date: 2026-04-21
+date: 2026-04-25
 category: systems
-updated_at: 2026-04-21T10:28:32+00:00
-last_sync: 2026-04-21T10:28:32Z
+updated_at: 2026-04-25T14:23:08+00:00
+last_sync: 2026-04-25T14:23:08Z
 package_kind: binary
 has_library: false
 has_binary: true

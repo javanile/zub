@@ -7,8 +7,19 @@ author_github: Kingrashy12
 repository: https://github.com/Kingrashy12/ziglet
 keywords:
   - cli-builder
-date: 2026-04-08
-last_sync: 2026-04-08T01:03:24Z
+date: 2026-04-20
+updated_at: 2026-04-20T16:01:57+00:00
+last_sync: 2026-04-20T16:01:57Z
+package_kind: hybrid
+has_library: true
+has_binary: true
+has_distributable_binary: true
+binary_count: 2
+distributable_binary_count: 1
+multiple_binaries: true
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
 permalink: /packages/Kingrashy12/ziglet/
 ---
 
