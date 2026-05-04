@@ -13,10 +13,10 @@ keywords:
   - websocket
   - websocket-client
   - websocket-server
-date: 2026-04-15
+date: 2026-05-04
 category: networking
-updated_at: 2026-04-15T15:42:07+00:00
-last_sync: 2026-04-15T15:42:07Z
+updated_at: 2026-05-04T10:16:46+00:00
+last_sync: 2026-05-04T10:16:46Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -30,95 +30,78 @@ sync_source: zigistry
 permalink: /packages/lalinsky/dusty/
 ---
 
-Dusty is a HTTP client/server library built on top of [zio](https://github.com/lalinsky/zio) (coroutine/async engine) and [llhttp](https://github.com/nodejs/llhttp) (HTTP parser from NodeJS).
-The server API is inspired by Karl Seguin's [http.zig](https://github.com/karlseguin/http.zig), and tries to be as compatible as possible. By using a coroutine scheduler under the hood, it's very easy to efficiently wait for a HTTP client request in a HTTP server handler, or perhaps have a long-runing WebSocket session and don't worry about state management between callbacks.
+Dusty is a HTTP client/server library built on top of Zig's standard library I/O interface (`std.Io`) and [llhttp](https://github.com/nodejs/llhttp) (HTTP parser from NodeJS).
+
+The library was originally written for [zio](https://github.com/lalinsky/zio), and later ported to `std.Io`. It's still recommended to use it with zio's
+implementation of the `std.Io` interface, especially if you need to communicate with other services over the network in your HTTP request handlers,
+or if you are using WebSocket. However, it's usable with any implementation, even the default `std.Io.Threaded`.
+
+The server API is inspired by Karl Seguin's [http.zig](https://github.com/karlseguin/http.zig), and tries to be as compatible as possible.
 
 ## Features
-- Asynchronous I/O for multiple concurrent connections on a single CPU thread
-- Requests handled in lightweight coroutines
 - Router with support for parameters and wildcards
 - Supports HTTP/1.0 and HTTP/1.1
 - Supports chunked transfer encoding in both request/response bodies
 - Server-Sent Events (SSE) for streaming responses
 - WebSocket support (RFC 6455)
-- Request/keepalive timeouts via coroutine auto-cancellation
 - HTTP/HTTPS client with connection pooling
 - Unix domain socket support for client connections
 
 ## Installation
 
 ```sh
-zig fetch --save "git+https://github.com/lalinsky/dusty#v0.1.0"
-zig fetch --save "git+https://github.com/lalinsky/zio#v0.9.0"
+zig fetch --save "git+https://github.com/lalinsky/dusty"
 ```
 
-Then in your `build.zig`, add the modules as dependencies:
+Then in your `build.zig`, add the module as a dependency:
 
 ```zig
 const dusty = b.dependency("dusty", .{
     .target = target,
     .optimize = optimize,
 });
-const zio = b.dependency("zio", .{
-    .target = target,
-    .optimize = optimize,
-});
 exe.root_module.addImport("dusty", dusty.module("dusty"));
-exe.root_module.addImport("zio", zio.module("zio"));
 ```
 
-## Server Example
+## Usage
+
+### Server Example
 
 ```zig
 const std = @import("std");
-const zio = @import("zio");
 const http = @import("dusty");
 
 fn handleUser(req: *http.Request, res: *http.Response) !void {
     const user_id = req.params.get("id") orelse "guest";
+    try req.io.sleep(.fromMilliseconds(10), .real);
     try res.json(.{ .id = user_id, .name = "John Doe" }, .{});
 }
 
-pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
-
-    var rt = try zio.Runtime.init(allocator, .{});
-    defer rt.deinit();
-
-    var server = http.Server(void).init(allocator, .{}, {});
+pub fn main(init: std.process.Init) !void {
+    var server = http.Server(void).init(init.gpa, init.io, .{}, {});
     defer server.deinit();
 
     server.router.get("/user/:id", handleUser);
 
-    const addr = try zio.net.IpAddress.parseIp("127.0.0.1", 8080);
+    const addr: http.Address = .{ .ip = try std.Io.net.IpAddress.parse("127.0.0.1", 8080) };
     try server.listen(addr);
 }
 ```
 
-## Client Example
+### Client Example
 
 ```zig
 const std = @import("std");
-const zio = @import("zio");
 const http = @import("dusty");
 
-pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
-
-    var rt = try zio.Runtime.init(allocator, .{});
-    defer rt.deinit();
-
-    var client = http.Client.init(allocator, .{});
+pub fn main(init: std.process.Init) !void {
+    var client = http.Client.init(init.gpa, init.io, .{});
     defer client.deinit();
 
     var response = try client.fetch("http://httpbin.org/get", .{});
     defer response.deinit();
 
-    std.debug.print("Status: {t}\n", .{response.status()});
+    std.debug.print("Status: {any}\n", .{response.status()});
 
     if (try response.body()) |body| {
         std.debug.print("Body: {s}\n", .{body});
@@ -126,7 +109,7 @@ pub fn main() !void {
 }
 ```
 
-### Unix Socket Example
+### Unix Socket Client Example
 
 For communicating with services like Docker Engine:
 
@@ -135,4 +118,47 @@ var response = try client.fetch("http://localhost/v1.41/info", .{
     .unix_socket_path = "/var/run/docker.sock",
 });
 defer response.deinit();
+```
+
+## Selecting the I/O Backend
+
+The examples above use `init.io`, the threaded I/O implementation from the stdlib. This is suitable for development or small servers.
+
+For production use, it's recommended to use [zio](https://github.com/lalinsky/zio), which provides a coroutine-based async I/O runtime.
+This allows you to serve many more requests using just a few OS threads. This is especially important if you need to wait on other
+network services inside your request handlers. In the future, you can also use `std.Io.Evented`, but that implementation is not finished yet,
+it's missing any networking functionality, so use zio for now.
+
+Add it as a dependency:
+
+```sh
+zig fetch --save "git+https://github.com/lalinsky/zio#v0.10.0"
+```
+
+In `build.zig`, add the zio module:
+
+```zig
+const zio = b.dependency("zio", .{
+    .target = target,
+    .optimize = optimize,
+});
+exe.root_module.addImport("zio", zio.module("zio"));
+```
+
+Then initialize zio's runtime and pass it to dusty:
+
+```zig
+const std = @import("std");
+const zio = @import("zio");
+const http = @import("dusty");
+
+pub fn main(init: std.process.Init) !void {
+    var rt = try zio.Runtime.init(init.gpa, .{});
+    defer rt.deinit();
+
+    var server = http.Server(void).init(init.gpa, rt.io(), .{}, {});
+    defer server.deinit();
+
+    // ... continue as before ...
+}
 ```

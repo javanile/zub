@@ -24,10 +24,10 @@ keywords:
   - programming-language
   - sqlite
   - torch
-date: 2026-05-03
+date: 2026-05-04
 category: data-formats
-updated_at: 2026-05-03T10:10:39+00:00
-last_sync: 2026-05-03T10:10:39Z
+updated_at: 2026-05-04T10:45:31+00:00
+last_sync: 2026-05-04T10:45:31Z
 package_kind: library
 has_library: false
 has_binary: false
