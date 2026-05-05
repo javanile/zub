@@ -10,9 +10,20 @@ keywords:
   - libzmq
   - zeromq
   - zmq
-date: 2026-04-09
+date: 2026-04-27
 category: systems
-last_sync: 2026-04-09T14:10:28Z
+updated_at: 2026-04-27T22:18:34+00:00
+last_sync: 2026-04-27T22:18:34Z
+package_kind: hybrid
+has_library: true
+has_binary: true
+has_distributable_binary: true
+binary_count: 1
+distributable_binary_count: 1
+multiple_binaries: false
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
 permalink: /packages/uyha/zimq/
 ---
 

@@ -12,10 +12,10 @@ keywords:
   - command-line
   - positional-arguments
   - subcommands
-date: 2026-04-22
+date: 2026-05-05
 category: tooling
-updated_at: 2026-04-22T05:01:30+00:00
-last_sync: 2026-04-22T05:01:30Z
+updated_at: 2026-05-05T11:13:51+00:00
+last_sync: 2026-05-05T11:13:51Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -85,7 +85,7 @@ pub fn main() !void {
     var args = cmd.config(.{ .style = .classic }).parse(allocator) catch |e|
         zargs.exitf(e, 1, "\n{s}\n", .{cmd.usageString()});
     defer cmd.destroy(&args, allocator);
-    if (args.logfile) |logfile| std.debug.print("Store log into {}\n", .{logfile});
+    if (args.logfile) |logfile| std.debug.print("Store log into {f}\n", .{logfile});
     switch (args.action) {
         .install => |a| {
             std.debug.print("Installing {s}\n", .{a.name});
@@ -138,9 +138,11 @@ In your `build.zig`, use `addImport` (for example):
 ```zig
 const exe = b.addExecutable(.{
     .name = "your_app",
-    .root_source_file = b.path("src/main.zig"),
-    .target = b.standardTargetOptions(.{}),
-    .optimize = b.standardOptimizeOption(.{}),
+    .root_module = b.createModule(.{
+        .root_source_file = b.path("src/main.zig"),
+        .target = b.standardTargetOptions(.{}),
+        .optimize = b.standardOptimizeOption(.{}),
+    }),
 });
 exe.root_module.addImport("zargs", b.dependency("zargs", .{}).module("zargs"));
 b.installArtifact(exe);

@@ -11,8 +11,8 @@ keywords:
   - zig-libary
 date: 2026-04-19
 category: systems
-updated_at: 2026-04-19T10:09:43+00:00
-last_sync: 2026-04-19T10:09:43Z
+updated_at: 2026-04-19T15:39:16+00:00
+last_sync: 2026-04-19T15:39:16Z
 package_kind: hybrid
 has_library: true
 has_binary: true
