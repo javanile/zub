@@ -6,9 +6,9 @@ author: speed2exe
 author_github: speed2exe
 repository: https://github.com/speed2exe/tree-fmt
 keywords:
-date: 2026-04-19
-updated_at: 2026-04-19T09:58:55+00:00
-last_sync: 2026-04-19T09:58:55Z
+date: 2026-05-01
+updated_at: 2026-05-01T19:22:19+00:00
+last_sync: 2026-05-01T19:22:19Z
 package_kind: library
 has_library: true
 has_binary: false

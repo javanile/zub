@@ -17,9 +17,19 @@ keywords:
   - web
   - web-assembly
   - web-framework
-date: 2026-04-15
-updated_at: 2026-04-15T08:13:49+00:00
-last_sync: 2026-04-15T08:13:49Z
+date: 2026-05-04
+updated_at: 2026-05-04T18:38:26+00:00
+last_sync: 2026-05-04T18:38:26Z
+package_kind: hybrid
+has_library: true
+has_binary: true
+has_distributable_binary: true
+binary_count: 5
+distributable_binary_count: 5
+multiple_binaries: true
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
 permalink: /packages/ziex-dev/ziex/
 ---
 
