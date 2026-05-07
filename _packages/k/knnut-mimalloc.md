@@ -7,9 +7,9 @@ author_github: KNnut
 repository: https://github.com/KNnut/mimalloc
 keywords:
   - mimalloc
-date: 2026-04-12
-updated_at: 2026-04-12T09:32:47+00:00
-last_sync: 2026-04-12T09:32:47Z
+date: 2026-04-18
+updated_at: 2026-04-18T16:50:10+00:00
+last_sync: 2026-04-18T16:50:10Z
 package_kind: library
 has_library: true
 has_binary: false
