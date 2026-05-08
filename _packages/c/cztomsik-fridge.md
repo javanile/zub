@@ -9,10 +9,10 @@ keywords:
   - database
   - sqlite
   - sqlite3
-date: 2026-04-07
+date: 2026-05-08
 category: data-formats
-updated_at: 2026-04-07T07:33:54+00:00
-last_sync: 2026-04-07T07:33:54Z
+updated_at: 2026-05-08T08:26:32+00:00
+last_sync: 2026-05-08T08:26:32Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -81,7 +81,7 @@ builder.
 Sessions can be either one-shot or pooled. Let's start with the simplest case:
 
 ```zig
-var db = try fr.Session.open(fr.SQLite3, allocator, .{ .filename = ":memory:" });
+var db = try fr.Session.open(fr.SQLite3, allocator, io, .{ .filename = ":memory:" });
 defer db.deinit();
 ```
 
@@ -195,7 +195,7 @@ Here's how to use the `fr.Pool`:
 
 ```zig
 // During your app initialization
-var pool = try fr.Pool(fr.SQLite3).init(allocator, .{ .max_count = 5 }, .{ .filename = ":memory:" });
+var pool = try fr.Pool(fr.SQLite3).init(allocator, io, .{ .max_count = 5 }, .{ .filename = ":memory:" });
 defer pool.deinit();
 
 // Inside your request handler
@@ -232,7 +232,7 @@ change their types or remove default values. While it's not a fully-fledged
 migration system, it works surprisingly well for most cases.
 
 ```zig
-try fr.migrate(allocator, "my.db", @embedFile("db_schema.sql"));
+try fr.migrate(db, io, @embedFile("db_schema.sql"));
 ```
 
 ## License

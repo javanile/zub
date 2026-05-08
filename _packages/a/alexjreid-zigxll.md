@@ -18,8 +18,19 @@ keywords:
   - rtd
   - trading
   - xll
-date: 2026-04-09
-last_sync: 2026-04-09T17:52:36Z
+date: 2026-05-08
+updated_at: 2026-05-08T09:36:34+00:00
+last_sync: 2026-05-08T09:36:34Z
+package_kind: library
+has_library: true
+has_binary: false
+has_distributable_binary: false
+binary_count: 0
+distributable_binary_count: 0
+multiple_binaries: false
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
 permalink: /packages/AlexJReid/zigxll/
 ---
 
@@ -169,6 +180,12 @@ xwin --accept-license splat --output ~/.xwin
 ```
 
 If you don't have Cargo, [install Rust](https://rustup.rs/) or grab a prebuilt binary from the [releases page](https://github.com/Jake-Shadle/xwin/releases).
+
+**Debug CRT:** xwin only includes release CRT libraries. If you get linker errors about `MSVCRTD.lib`, create a symlink:
+
+```bash
+ln -s ~/.xwin/crt/lib/x86_64/msvcrt.lib ~/.xwin/crt/lib/x86_64/MSVCRTD.lib
+```
 
 Once set up, `zig build` auto-detects `~/.xwin` and cross-compiles.
 

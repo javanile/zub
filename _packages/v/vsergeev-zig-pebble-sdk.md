@@ -9,9 +9,9 @@ keywords:
   - pebble
   - pebble-sdk
   - pebble-watch
-date: 2026-04-16
-updated_at: 2026-04-16T07:29:52+00:00
-last_sync: 2026-04-16T07:29:52Z
+date: 2026-05-08
+updated_at: 2026-05-08T08:29:49+00:00
+last_sync: 2026-05-08T08:29:49Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -153,7 +153,7 @@ The `ld.lld: warning: address (0x82) of section .note.gnu.build-id is not a
 multiple of alignment (4)` warning can be safely ignored.
 
 The resulting `zig-out/watchface_example.pbw` can be installed to a Pebble
-watch or published to the or [Pebble](https://appstore-api.repebble.com/dashboard) or [Rebble](https://developer.rebble.io/guides/appstore-publishing/) app store.
+watch or published to the [Pebble](https://appstore-api.repebble.com/dashboard) or [Rebble](https://developer.rebble.io/guides/appstore-publishing/) app store.
 
 **Emulate the Pebble application:**
 
@@ -212,7 +212,7 @@ The translated Pebble C API can be inspected in the Zig cache with: `less $(find
 The `.pebble` substructure in the options of
 `pebble_sdk.addPebbleApplication()` mirrors the JSON [Pebble App
 Metadata](https://developer.repebble.com/guides/tools-and-resources/app-metadata/).
-See its [definition](build.zig#L447-L466) for an exhaustive list of options.
+See its [definition](build.zig#L422-L441) for an exhaustive list of options.
 
 The `uuid` field should be unique for every application, and can be generated
 with the `uuidgen` command.
@@ -233,8 +233,14 @@ As a convenience, generated application IDs are available at
 
 ## PebbleKit JS Sources
 
-PebbleKit JS sources detected in the `src/pkjs/` project subdirectory are
-automatically bundled with `webpack` and packaged into the pbw.
+Bundled PebbleKit JS source paths can be specified with the `pebblekit_js_file`
+and `pebblekit_js_map_file` fields in the options of
+`pebble_sdk.addPebbleApplication()` to be packaged into the pbw. Projects can
+incorporate custom JavaScript build flows to produce these files.
+
+See the [Pebble App
+Configuration](https://developer.repebble.com/guides/user-interfaces/app-configuration-static/)
+page for basic instructions on how to build a configuration page.
 
 ## Important Notes
 
