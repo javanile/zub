@@ -1,0 +1,134 @@
+---
+title: build.crab
+description: Build and use Rust libraries from Zig
+license: MIT
+author: akarpovskii
+author_github: akarpovskii
+repository: https://github.com/akarpovskii/build.crab
+keywords:
+  - cargo
+  - rust
+date: 2026-05-08
+updated_at: 2026-05-08T04:27:11+00:00
+last_sync: 2026-05-08T04:27:11Z
+package_kind: hybrid
+has_library: true
+has_binary: true
+has_distributable_binary: true
+binary_count: 1
+distributable_binary_count: 1
+multiple_binaries: false
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
+permalink: /packages/akarpovskii/build.crab/
+---
+
+# build.crab
+
+Thin wrapper around Cargo which integrates it with Zig's build system. <br>
+Cross-compilation is supported.
+
+## Requirements
+
+Please see `.minimum_zig_version` field of the `build.zig.zon` file.
+
+## Usage
+
+```sh
+zig fetch --save git+https://github.com/akarpovskii/build.crab
+```
+
+In `build.zig` (replace `crate` with the name of your crate):
+```zig
+const build_crab = @import("build_crab");
+const crate_artifacts = build_crab.addCargoBuild(
+    b,
+    .{
+        .manifest_path = b.path("path/to/Cargo.toml"),
+        // You can pass additional arguments to Cargo
+        .cargo_args = &.{
+            "--release",
+            "--quiet",
+        },
+    },
+    .{
+        // Set to .Debug to see debug logs,
+        // defaults to the same optimization level as your package.
+        .optimize = .ReleaseSafe,
+    },
+);
+
+module.addLibraryPath(crate_artifacts);
+module.linkSystemLibrary("crate", .{});
+```
+
+See [`example`](./example/build.zig) for the other examples.
+
+## Cross-compilation
+
+Use `target` argument to specify the cross-compilation target:
+
+```zig
+const target = b.standardTargetOptions(.{});
+const build_crab = @import("build_crab");
+const crate_artifacts = build_crab.addCargoBuild(
+    b,
+    .{
+        // Cargo params
+    },
+    .{
+        .target = target,
+    },
+);
+```
+
+`build.crab` binaries will still be built for the native target, but it will try its best to convert Zig's target triple to Rust and call `cargo build` with the appropriate `--target` argument.
+
+See [`rust.zig`](src/rust.zig) and the tests at the bottom to know how the conversion is done.
+
+## Override Rust target
+
+Use `rust_target` from `CargoConfig` to override the `--target` argument passed to `cargo build`:
+
+```zig
+const target = b.standardTargetOptions(.{});
+const build_crab = @import("build_crab");
+const crate_artifacts = build_crab.addCargoBuild(
+    b,
+    .{
+        .rust_target = .{
+            // Override only some parts
+            .override = .{ .vendor = .{ .custom = "alpine" } },
+
+            // Or specify the value explicitly
+            // .value = "x86_64-alpine-linux-musl",
+        },
+        ...
+    },
+    ...
+);
+```
+
+## Windows
+
+### Toolchain
+
+By default, Rust on Windows targets MSVC toolchain. This creates additional problems as you have to link against msvcrt, etc.
+
+If you want to avoid that, you can target windows-gnu. This is the default behavior of `build.crab`.
+
+### Unused symbols
+
+I recommend adding the following parameters to `Cargo.toml`:
+
+```toml
+[profile.release]
+opt-level = "z"  # Optimize for size.
+strip = true
+lto = true
+```
+
+Otherwise, you will have to link some obscure Windows libraries even if you don't use them.
+
+And it also makes the size of the rust library smaller.

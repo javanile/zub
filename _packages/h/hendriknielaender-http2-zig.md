@@ -6,18 +6,23 @@ author: hendriknielaender
 author_github: hendriknielaender
 repository: https://github.com/hendriknielaender/http2.zig
 keywords:
+  - boringssl
   - http-server
   - http2
-date: 2026-04-23
+  - openssl
+  - tls
+  - tls-proxy
+  - tls-support
+date: 2026-05-06
 category: networking
-updated_at: 2026-04-23T10:56:06+00:00
-last_sync: 2026-04-23T10:56:06Z
+updated_at: 2026-05-06T16:14:13+00:00
+last_sync: 2026-05-06T16:14:13Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 3
-distributable_binary_count: 3
+binary_count: 4
+distributable_binary_count: 4
 multiple_binaries: true
 is_sponsor: false
 sync_priority: normal

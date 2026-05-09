@@ -8,10 +8,10 @@ repository: https://github.com/allain/httpz.zig
 keywords:
   - http-client
   - http-server
-date: 2026-04-13
+date: 2026-05-07
 category: networking
-updated_at: 2026-04-13T19:15:12+00:00
-last_sync: 2026-04-13T19:15:12Z
+updated_at: 2026-05-07T03:59:30+00:00
+last_sync: 2026-05-07T03:59:30Z
 package_kind: hybrid
 has_library: true
 has_binary: true
