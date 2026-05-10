@@ -1,0 +1,628 @@
+---
+title: libqt6c
+description: Qt 6 for C
+license: MIT
+author: rcalixte
+author_github: rcalixte
+repository: https://github.com/rcalixte/libqt6c
+keywords:
+  - bindings
+  - c
+  - gui
+  - gui-library
+  - qt
+  - qt6
+date: 2026-05-10
+category: systems
+updated_at: 2026-05-10T00:16:45+00:00
+last_sync: 2026-05-10T00:16:45Z
+package_kind: library
+has_library: true
+has_binary: false
+has_distributable_binary: false
+binary_count: 0
+distributable_binary_count: 0
+multiple_binaries: false
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
+permalink: /packages/rcalixte/libqt6c/
+unsafe: true
+unsafe_reason: "contains a URL pointing to a .zip file"
+---
+
+###
+
+<div align="center">
+<img alt="libqt6c" src="assets/libqt6c.png" height="128px;" />
+
+[![MIT License](https://img.shields.io/badge/License-MIT-blue)](https://github.com/rcalixte/libqt6c/blob/master/LICENSE)
+[![Go Report Card](https://goreportcard.com/badge/github.com/rcalixte/libqt6c)](https://goreportcard.com/report/github.com/rcalixte/libqt6c)
+[![Static Badge](https://img.shields.io/badge/v0.16%20(stable)-fdc009?logo=zig&logoColor=f7a41d&label=Zig)](https://ziglang.org/download/)
+
+[![Documentation](https://github.com/rcalixte/libqt6c/actions/workflows/docs.yml/badge.svg?branch=master)](https://github.com/rcalixte/libqt6c/actions/workflows/docs.yml)
+</div>
+
+---
+
+MIT-licensed Qt 6 bindings for C
+
+This library is a straightforward binding of the Qt 6.8+ API. You must have a working C and C++ development toolchain to use this binding as well as the development files needed to build Qt 6 applications. This library and the related examples use the Zig toolchain. The [Building](#building) section below has instructions for installing the required dependencies.
+
+For previous libqt6c versions supporting Qt 6.4+, there are branches corresponding to the major and minor version of the Qt base, e.g. `6.4`. Note that these versions will receive minimal support and should be considered frozen.
+
+This library is designed to be used as a dependency in a larger application and not as a standalone library. The versioning scheme used by this library is based on the Qt version used as a base to generate the bindings with an additional nod to the library revision number. Any breaking changes to the library will be reflected in the changelog.
+
+These bindings are based on the [MIQT bindings for Go](https://github.com/mappu/miqt) that were released in August 2024. This library features support for Qt Core, GUI, Widgets, and Network as well as [additional Qt modules](https://doc.qt.io/qt-6/qt-additional-modules.html) such as Multimedia, Print Support, Spatial Audio, SQL, SVG, WebChannel, WebEngine, and more. In addition to Qt modules, this library also features support for third-party libraries such as [QCustomPlot](https://www.qcustomplot.com), [QScintilla](https://riverbankcomputing.com/software/qscintilla), various [KDE Frameworks](https://develop.kde.org/products/frameworks/), and others. This library has support for slots/signals, subclassing, custom widgets, async via Qt, etc. In addition, there is library tooling that provides native support for Qt Creator/Designer forms and [the Qt Resource System](https://doc.qt.io/qt-6/resources.html). With improper handling, it is fairly easy to encounter segmentation faults or errors but developing in the Debug build mode affords significant advantages that aid the developer experience. Q3 of the [FAQ](#faq) is a decent entry point for newcomers in addition to the [examples](https://github.com/rcalixte/libqt6c-examples) and the [demo application](https://github.com/rcalixte/libqt6c-demo). Please try out the library and start a [discussion](https://github.com/rcalixte/libqt6c/discussions) if you have any questions or issues directly relevant to this library.
+
+---
+
+### TABLE OF CONTENTS
+
+- [Supported platforms](#supported-platforms)
+- [License](#license)
+- [Examples](#examples)
+- [Building](#building)
+  - [FreeBSD (native)](#freebsd-native)
+  - [Linux (native)](#linux-native)
+    - [Debian-based distributions](#debian-based-distributions)
+    - [Fedora-based distributions](#fedora-based-distributions)
+    - [Arch-based distributions](#arch-based-distributions)
+    - [openSUSE-based distributions](#opensuse-based-distributions)
+  - [macOS (native)](#macos-native)
+  - [Windows (native)](#windows-native)
+- [Tools](#tools)
+  - [FreeBSD](#freebsd)
+  - [Linux](#linux)
+    - [Debian-based](#debian-based)
+    - [Fedora-based](#fedora-based)
+    - [Arch-based](#arch-based)
+    - [openSUSE-based](#opensuse-based)
+  - [macOS](#macos)
+  - [Windows](#windows)
+- [Usage](#usage)
+- [FAQ](#faq)
+  - [Q1. Can I release a proprietary, commercial app with this binding?](#q1-can-i-release-a-proprietary-commercial-app-with-this-binding)
+  - [Q2. How long does it take to compile?](#q2-how-long-does-it-take-to-compile)
+  - [Q3. How does the `libqt6c` API differ from the official Qt C++ API?](#q3-how-does-the-libqt6c-api-differ-from-the-official-qt-c-api)
+    - [API at a glance](#api-at-a-glance)
+      - [Objects](#objects)
+      - [Signals/slots](#signalsslots)
+      - [Enums](#enums)
+  - [Q4. What build modes are supported by the library's build system?](#q4-what-build-modes-are-supported-by-the-librarys-build-system)
+  - [Q5. Can I use another build system?](#q5-can-i-use-another-build-system)
+  - [Q6. How can I add bindings for another Qt library?](#q6-how-can-i-add-bindings-for-another-qt-library)
+- [Special Thanks](#special-thanks)
+
+Supported platforms
+-------------------
+
+| OS      | Arch   | Linkage (Bindings) | Status  |
+| ------- | ------ | ------------------ | ------- |
+| FreeBSD | arm64  | Static             | ✅ Works |
+| FreeBSD | x86_64 | Static             | ✅ Works |
+| Linux   | arm64  | Static             | ✅ Works |
+| Linux   | x86_64 | Static             | ✅ Works |
+| macOS   | arm64  | Static             | ✅ Works |
+| Windows | x86_64 | Static             | ✅ Works |
+
+By default, these bindings are statically linked and the auxiliary dependent libraries are dynamically linked.
+
+Some libraries have restrictions, either due to limited platform support, less-permissive licensing, or other reasons. For less-permissive licenses, these restrictions are documented in the library's README file. The prefix paths for the subdirectory for these libraries are documented below.
+
+| Prefix             | Operating System Support  | Licensing   |
+| ------------------ | ------------------------- | ----------- |
+| extras-            | all platforms<sup>1</sup> | Permissive  |
+| foss-extras-       | BSD & Linux only          | Permissive  |
+| foss-restricted-   | BSD & Linux only          | Restrictive |
+| posix-extras-      | non-Windows<sup>1</sup>   | Permissive  |
+| posix-restricted-  | non-Windows<sup>1</sup>   | Restrictive |
+| restricted-extras- | all platforms<sup>1</sup> | Restrictive |
+
+<sup>1</sup>While macOS and Windows are supported upstream by some of these libraries, library installation for these platforms may be non-trivial. Therefore, these libraries are disabled by default and must be explicitly enabled with the appropriate build option.
+
+License
+-------
+
+The `libqt6c` bindings and wrappers are licensed under the MIT license.
+
+You must also meet your [license obligations for Qt](https://doc.qt.io/qt-6/licensing.html) and the included libraries.
+
+Examples
+--------
+
+The [`helloworld`](https://github.com/rcalixte/libqt6c-examples/tree/master/src/helloworld/main.c) example follows:
+
+```c
+#include <libqt6c.h>
+// Either the single global header or individual library headers can be used
+#include <libqapplication.h>
+#include <libqwidget.h>
+#include <libqpushbutton.h>
+
+#define BUFFER_SIZE 64
+static size_t counter = 0;
+static char buffer[BUFFER_SIZE];
+
+void on_clicked(void* self) {
+    counter++;
+    snprintf(buffer, BUFFER_SIZE, "You have clicked the button %ld time(s)", counter);
+    q_pushbutton_set_text(self, buffer);
+}
+
+int main(int argc, char* argv[]) {
+    // Initialize the Qt application
+    QApplication* qapp = q_application_new(&argc, argv);
+
+    // Create a new widget
+    QWidget* widget = q_widget_new2();
+
+    // We don't need to free/delete the button, it's a child of the widget
+    QPushButton* button = q_pushbutton_new5("Hello world!", widget);
+    q_pushbutton_set_fixed_width(button, 320);
+    // Connect the button to the callback function
+    q_pushbutton_on_clicked(button, on_clicked);
+
+    // Display the widget
+    q_widget_show(widget);
+
+    // Start the event loop
+    int result = q_application_exec();
+
+    // Cleanup the widget and the application objects
+    q_widget_delete(widget);
+    q_application_delete(qapp);
+
+    printf("OK!\n");
+
+    return result;
+}
+```
+
+Full examples are available in the [`libqt6c-examples`](https://github.com/rcalixte/libqt6c-examples) repository.
+
+Building
+--------
+
+Once the required packages are installed, the library can be built from the root of the repository:
+
+```bash
+zig build
+```
+
+The compiled libraries can be installed to the system in a non-default location by adding the `--prefix-lib-dir` option to the build command:
+
+```bash
+sudo zig build --prefix-lib-dir /usr/local/lib/libqt6c # creates /usr/local/lib/libqt6c/{libraries}
+```
+
+Prefixed libraries have per-library options that can be used to enable or disable them (where supported):
+
+```bash
+zig build -Denable-charts -Denable-qscintilla=false
+```
+
+In the event that one or more extra library include paths are needed e.g. a locally compiled extra library in a non-standard path, the `extra-paths` option supports this use case:
+
+```bash
+zig build -Dextra-paths="C:/Qt/6/llvm-mingw_64"
+```
+
+or
+
+```bash
+zig build -Dextra-paths={"/opt/qt6","/opt/lib/qt6"}
+```
+
+To see the full list of build options available:
+
+```bash
+zig build --help
+```
+
+> [!IMPORTANT]
+> Cross-compilation is not supported by this library at this time.
+
+The following are instructions for building this __full__ library and the examples associated with this library. Only maintainers are suggested to directly build the full library. Where system libraries are not required or used, the installation of the libraries is optional.
+
+---
+
+### FreeBSD (native)
+
+For dynamic linking with the Qt 6 system libraries:
+
+```bash
+sudo pkg install llvm qt6-base qt6-charts qt6-connectivity qt6-location qt6-multimedia qt6-pdf qt6-positioning qt6-scxml qt6-speech qt6-svg qt6-webchannel qt6-webengine qt6-websockets qt6-tools kColorPicker-qt6 kf6-attica kf6-karchive kf6-kbookmarks kf6-kcodecs kf6-kcolorscheme kf6-kcompletion kf6-kconfig kf6-kconfigwidgets kf6-kcoreaddons kf6-kcrash kf6-kfilemetadata kf6-kglobalaccel kf6-kguiaddons kf6-ki18n kf6-kiconthemes kf6-kidletime kf6-kio kf6-kitemmodels kf6-kitemviews kf6-kjobwidgets kf6-knewstuff kf6-knotifications kf6-kparts kf6-kplotting kf6-kservice kf6-solid kf6-sonnet kf6-kstatusnotifieritem kf6-ksvg kf6-syntax-highlighting kf6-ktexteditor kf6-ktextwidgets kf6-kunitconversion kf6-kwidgetsaddons kf6-kwindowsystem kf6-kxmlgui kImageAnnotator-qt6 libaccounts-qt6 plasma6-layer-shell-qt qcustomplot-qt6 qscintilla2-qt6 qtermwidget qtkeychain-qt6 PackageKit-Qt6 poppler-qt6 signon-qt6
+```
+
+> [!NOTE]
+> The `zig` package will need to be downloaded and installed separately if the latest stable version is not available in the default repositories.
+
+---
+
+### Linux (native)
+
+For dynamic linking with the Qt 6 system libraries:
+
+#### Debian-based distributions
+
+```bash
+sudo apt install gcc libstdc++-14-dev-$(dpkg --print-architecture)-cross clang-format qt6-base-dev qt6-base-private-dev qt6-charts-dev qt6-connectivity-dev qt6-location-dev qt6-multimedia-dev qt6-pdf-dev qt6-positioning-dev qt6-scxml-dev qt6-speech-dev qt6-svg-dev qt6-webchannel-dev qt6-webengine-dev qt6-websockets-dev qt6-tools-dev libaccounts-qt6-dev libkcolorpicker-qt6-dev libkf6archive-dev libkf6attica-dev libkf6bookmarks-dev libkf6codecs-dev libkf6colorscheme-dev libkf6completion-dev libkf6config-dev libkf6configwidgets-dev libkf6coreaddons-dev libkf6crash-dev libkf6filemetadata-dev libkf6globalaccel-dev libkf6guiaddons-dev libkf6i18n-dev libkf6iconthemes-dev libkf6idletime-dev libkf6kio-dev libkf6itemmodels-dev libkf6itemviews-dev libkf6jobwidgets-dev libkf6newstuff-dev libkf6notifications-dev libkf6parts-dev libkf6plotting-dev libkf6service-dev libkf6solid-dev libkf6sonnet-dev libkf6statusnotifieritem-dev libkf6svg-dev libkf6syntaxhighlighting-dev libkf6texteditor-dev libkf6textwidgets-dev libkf6unitconversion-dev libkf6widgetsaddons-dev libkf6windowsystem-dev libkf6xmlgui-dev libkimageannotator-qt6-dev liblayershellqtinterface-dev libpackagekitqt6-dev libpoppler-qt6-dev libqcustomplot-dev libqscintilla2-qt6-dev libqtermwidget-dev libsignon-qt6-dev qtkeychain-qt6-dev qt6-speech-flite-plugin sonnet6-plugins
+```
+
+> [!NOTE]
+> The `zig` package must be downloaded and installed separately.
+
+#### Fedora-based distributions
+
+```bash
+sudo dnf install sysroot-$(uname -m)-fc$(lsb_release -rs)-glibc gcc libstdc++-devel clang-tools-extra qt6-qtbase-devel qt6-qtcharts-devel qt6-qtconnectivity-devel qt6-qtlocation-devel qt6-qtmultimedia-devel qt6-qtpdf-devel qt6-qtpositioning-devel qt6-qtscxml-devel qt6-qtspeech-devel qt6-qtsvg-devel qt6-qttools-devel qt6-qtwebchannel-devel qt6-qtwebengine-devel qt6-qtwebsockets-devel kcolorpicker-qt6-devel kf6-attica-devel kf6-karchive-devel kf6-kbookmarks-devel kf6-kcodecs-devel kf6-kcolorscheme-devel kf6-kcompletion-devel kf6-kconfig-devel kf6-kconfigwidgets-devel kf6-kcoreaddons-devel kf6-kcrash-devel kf6-kfilemetadata-devel kf6-kglobalaccel-devel kf6-kguiaddons-devel kf6-ki18n-devel kf6-kiconthemes-devel kf6-kidletime-devel kf6-kio-devel kf6-kitemmodels-devel kf6-kitemviews-devel kf6-kjobwidgets-devel kf6-knewstuff-devel kf6-knotifications-devel kf6-kparts-devel kf6-kplotting-devel kf6-kservice-devel kf6-kstatusnotifieritem-devel kf6-ksvg-devel kf6-ktexteditor-devel kf6-ktextwidgets-devel kf6-kunitconversion-devel kf6-kwidgetsaddons-devel kf6-kwindowsystem-devel kf6-kxmlgui-devel kf6-solid-devel kf6-sonnet-devel kf6-syntax-highlighting-devel kimageannotator-qt6-devel layer-shell-qt-devel libaccounts-qt6-devel qcustomplot-qt6-devel qscintilla-qt6-devel qtermwidget-devel qtkeychain-qt6-devel kf6-sonnet-aspell PackageKit-Qt6-devel poppler-qt6-devel signon-qt6-devel
+```
+
+> [!NOTE]
+> The `zig` package will need to be downloaded and installed separately if the latest stable version is not available in the default repositories.
+
+#### Arch-based distributions
+
+```bash
+sudo pacman -S gcc clang qt6-base qt6-charts qt6-connectivity qt6-location qt6-multimedia qt6-positioning qt6-scxml qt6-speech qt6-svg qt6-webchannel qt6-webengine qt6-websockets qt6-tools attica karchive kbookmarks kcodecs kcolorpicker kcolorscheme kcompletion kconfig kconfigwidgets kcoreaddons kcrash kfilemetadata kglobalaccel kguiaddons ki18n kiconthemes kidletime kimageannotator kio kitemmodels kitemviews kjobwidgets knewstuff knotifications kparts kplotting kservice kstatusnotifieritem ksvg ktexteditor ktextwidgets kunitconversion kwidgetsaddons kwindowsystem kxmlgui layer-shell-qt libaccounts-qt packagekit-qt6 poppler-qt6 qcustomplot-qt6 qscintilla-qt6 qtermwidget qtkeychain-qt6 signond solid sonnet syntax-highlighting
+```
+
+Users of Arch-based distributions need to __make sure that all packages are up-to-date__.
+
+> [!NOTE]
+> The `zig` package will need to be downloaded and installed separately if the latest stable version is not available in the default repositories.
+
+#### openSUSE-based distributions
+
+```bash
+sudo zypper install qt6-base-devel qt6-charts-devel qt6-connectivity-devel qt6-designer-devel qt6-location-devel qt6-multimediawidgets-devel qt6-pdfwidgets-devel qt6-positioning-devel qt6-spatialaudio-devel qt6-statemachine-devel qt6-svg-devel qt6-texttospeech-devel qt6-tools-devel qt6-uitools-devel qt6-webchannel-devel qt6-webenginewidgets-devel qt6-websockets-devel kColorPicker-Qt6-devel kf6-attica-devel kf6-karchive-devel kf6-kbookmarks-devel kf6-kcodecs-devel kf6-kcolorscheme-devel kf6-kcompletion-devel kf6-kconfig-devel kf6-kconfigwidgets-devel kf6-kcoreaddons-devel kf6-kcrash-devel kf6-kfilemetadata-devel kf6-kglobalaccel-devel kf6-kguiaddons-devel kf6-ki18n-devel kf6-kiconthemes-devel kf6-kidletime-devel kf6-kio-devel kf6-kitemmodels-devel kf6-kitemviews-devel kf6-kjobwidgets-devel kf6-knewstuff-devel kf6-knotifications-devel kf6-kparts-devel kf6-kplotting-devel kf6-kservice-devel kf6-kstatusnotifieritem-devel kf6-ksvg-devel kf6-ktexteditor-devel kf6-ktextwidgets-devel kf6-kunitconversion-devel kf6-kwidgetsaddons-devel kf6-kwindowsystem-devel kf6-kxmlgui-devel kf6-solid-devel kf6-sonnet-devel kf6-syntax-highlighting-devel kImageAnnotator-Qt6-devel layer-shell-qt6-devel libaccounts-qt6-devel libpoppler-qt6-devel libsignon-qt6-devel qcustomplot-qt6-devel qscintilla-qt6-devel qtermwidget-devel qtkeychain-qt6-devel packagekitqt6-devel
+```
+
+Users of openSUSE-based distributions need to __make sure that all packages are up-to-date__.
+
+> [!NOTE]
+> The `zig` package must be downloaded and installed separately as the version available in the default repositories is too unstable for usage.
+
+---
+
+### macOS (native)
+
+For macOS, currently the Qt 6 framework and QScintilla are available via [Homebrew](https://brew.sh/).
+
+```bash
+brew install qt6 qscintilla2
+```
+
+> [!IMPORTANT]
+> In recent versions of Qt 6, the symlinks are not correctly created at the time of installation and must be created manually for each framework. This can be done with commands similar to the following commands but for the appropriate framework:
+>
+> ```bash
+> ln -s /opt/homebrew/lib/QtCore.framework/Headers /opt/homebrew/include/QtCore
+> ln -s /opt/homebrew/lib/QtGui.framework/Headers /opt/homebrew/include/QtGui
+> ln -s /opt/homebrew/lib/QtWidgets.framework/Headers /opt/homebrew/include/QtWidgets
+> ```
+>
+> An example one-liner for the above commands is:
+>
+> ```bash
+> for fw in /opt/homebrew/lib/Qt*.framework/Headers; do framework_path="${fw#*/lib/}"; framework_name="${framework_path%%.framework*}"; /bin/ln -sv "${fw}" "/opt/homebrew/include/${framework_name}"; done;
+> ```
+>
+> This is currently not necessary for the QScintilla framework.
+
+The official Qt installer is also supported but will require manually creating the symlinks as above and using the `extra-paths` option described below, using the root of the include directory as the path value.
+
+> [!NOTE]
+> The `zig` package will need to be downloaded and installed separately if the latest stable version is not available via Homebrew.
+
+---
+
+### Windows (native)
+
+For Windows, currently only the components built with LLVM-MinGW from the official Qt installer are supported.
+
+> [!NOTE]
+> The `zig` package will need to be downloaded and installed separately.
+
+---
+
+Tools
+-----
+
+<div align="center">
+<img alt="libqt6c-tools" src="assets/libqt6c-tools.png" />
+</div>
+
+The [`lupdate-c`](https://github.com/rcalixte/libqt6c/tree/master/cmd/lupdate-c), [`uic-c`](https://github.com/rcalixte/libqt6c/tree/master/cmd/uic-c), and [`qrc-c`](https://github.com/rcalixte/libqt6c/tree/master/cmd/qrc-c) tools are provided for use with [Qt Linguist](https://doc.qt.io/qt-6/qtlinguist-index.html) as well as [Qt Creator](https://doc.qt.io/qtcreator/index.html) and/or [Qt Designer](https://doc.qt.io/qt-6/qtdesigner-manual.html). The tools are not required for the library to function but are recommended for convenience to augment the tooling provided by Qt.
+
+The custom implementation of Qt's `lupdate` allows for the generation of translation source files directly from C code. There are also custom implementations of Qt's `uic` and `rcc` tools to allow using Qt Creator or Qt Designer for form design and resource management. There is full support for the additional widgets provided by the KDE Frameworks in the design mode, enabled via command-line flags. The programs and their respective documentation are located at the links above.
+
+> [!NOTE]
+> Only Qt Creator 16.0 (or higher) and Qt Designer 6.8.2 (or higher) are supported for use with these tools. Any existing `.ui` or `.qrc` files should be saved/exported from one of them to ensure proper execution with the custom tooling. Older versions can result in panics and are not supported.
+
+While optional for the `lupdate-c` and `uic-c` programs, there is a hard system dependency for the `qrc-c` program on the `rcc` tool provided by Qt.
+
+In addition to the library tooling above, there are bindings for Qt Designer and Qt UI Tools that support run-time loading of forms for widget construction. Refer to the [designer](https://github.com/rcalixte/libqt6c-examples/tree/master/src/libraries/designer) and [uitools](https://github.com/rcalixte/libqt6c-examples/tree/master/src/libraries/uitools) examples for sample usage.
+
+---
+
+### FreeBSD
+
+```bash
+sudo pkg install qt6-tools
+```
+
+Once installed, the `lrelease` and `lupdate` tools are located at:
+
+- `/usr/local/lib/qt6/bin/lrelease`
+- `/usr/local/lib/qt6/bin/lupdate`
+
+The `rcc` and `uic` tools are already installed with `qt6-base` and located at:
+
+- `/usr/local/libexec/qt6/rcc`
+- `/usr/local/libexec/qt6/uic`
+
+---
+
+### Linux
+
+#### Debian-based
+
+```bash
+sudo apt install qt6-base-dev-tools qt6-l10n-tools
+```
+
+Once installed, the tools are located at:
+
+- `/usr/lib/qt6/bin/lrelease`
+- `/usr/lib/qt6/bin/lupdate`
+- `/usr/lib/qt6/libexec/rcc`
+- `/usr/lib/qt6/libexec/uic`
+
+#### Fedora-based
+
+```bash
+sudo dnf install qt6-linguist
+```
+
+Once installed, the `lrelease` and `lupdate` tools are located at:
+
+- `/usr/lib64/qt6/bin/lrelease`
+- `/usr/lib64/qt6/bin/lupdate`
+
+The `rcc` and `uic` tools are already installed with `qt6-qtbase-devel` and located at:
+
+- `/usr/lib64/qt6/libexec/rcc`
+- `/usr/lib64/qt6/libexec/uic`
+
+#### Arch-based
+
+```bash
+sudo pacman -S qt6-tools
+```
+
+Once installed, the `lrelease` and `lupdate` tools are located at:
+
+- `/usr/lib/qt6/bin/lrelease`
+- `/usr/lib/qt6/bin/lupdate`
+
+The `rcc` and `uic` tools are already installed with `qt6-base` and located at:
+
+- `/usr/lib/qt6/rcc`
+- `/usr/lib/qt6/uic`
+
+#### openSUSE-based
+
+All of the tools are already installed as dependencies of `qt6-tools-devel` and available at:
+
+- `/usr/bin/lrelease6`
+- `/usr/bin/lupdate6`
+- `/usr/libexec/qt6/rcc`
+- `/usr/libexec/qt6/uic`
+
+---
+
+### macOS
+
+If Qt 6 is installed via Homebrew, the tools are already installed and located at:
+
+- `/opt/homebrew/bin/lrelease`
+- `/opt/homebrew/bin/lupdate`
+- `/opt/homebrew/share/qt/libexec/rcc`
+- `/opt/homebrew/share/qt/libexec/uic`
+
+If Qt 6 is installed via the official installer, the tools are already installed and located in a subdirectory of the Qt installation path similar to the paths above.
+
+---
+
+### Windows
+
+If Qt 6 is installed via the official installer, the tools are already installed and located at:
+
+- `C:\Qt\6.8.3\llvm-mingw_64\bin\lrelease.exe`
+- `C:\Qt\6.8.3\llvm-mingw_64\bin\lupdate.exe`
+- `C:\Qt\6.8.3\llvm-mingw_64\bin\rcc.exe`
+- `C:\Qt\6.8.3\llvm-mingw_64\bin\uic.exe`
+
+The version of the Qt 6 installation path may differ depending on the version of Qt that is installed.
+
+---
+
+Usage
+-----
+
+- If using Zig's build system, import the library into your project:
+
+```bash
+zig fetch --save https://github.com/rcalixte/libqt6c
+```
+
+- An alternative option is to use a commit hash to import the library into your project:
+
+```bash
+zig fetch --save https://github.com/rcalixte/libqt6c/archive/<commit>.tar.gz
+```
+
+Alternative file formats exist as well, such as:
+
+```bash
+zig fetch --save https://github.com/rcalixte/libqt6c/archive/<commit>.zip
+```
+
+- Add the library to your `build.zig` file:
+
+```zig
+const qt6c = b.dependency("libqt6c", .{
+    .target = target,
+    .optimize = .ReleaseFast,
+});
+
+// After defining the executable, add the include path from the library
+exe.root_module.addIncludePath(qt6c.path("include"));
+
+// Link the compiled libqt6c libraries to the executable
+// qt_lib_name is the name of the target library without prefix and suffix, e.g. qapplication, qwidget, etc.
+exe.root_module.linkLibrary(qt6c.artifact(qt_lib_name));
+```
+
+- Use the library in your code:
+
+```c
+// the main qt6 header to import (C ABI Qt typedefs are included)
+#include <libqt6c.h>
+```
+
+Full examples of the build system and sample applications can be found in the [`libqt6c-examples`](https://github.com/rcalixte/libqt6c-examples) repository.
+
+FAQ
+---
+
+### Q1. Can I release a proprietary, commercial app with this binding?
+
+Yes. You must also meet your Qt license obligations: either dynamically link Qt library files under the LGPL or purchase a Qt commercial license for static linking.
+
+### Q2. How long does it take to compile?
+
+Under normal conditions, the first compilation of the entire library should take less than 30 minutes, assuming the hardware in use is at or above the level of that of a consumer-grade mid-tier machine released in the past decade. Once the build cache is warmed up, subsequent compilations should be very fast, on the order of seconds. __Compiling the entire library is not necessary unless direct library development is an objective.__ For client applications that use and configure a specific subset of the main library, the expected compilation time should be much shorter, e.g. compiling the `helloworld` example, only linking the libraries needed and without a warm cache, should take under 30 seconds. This assumes the Zig build system is being used.
+
+### Q3. How does the `libqt6c` API differ from the official Qt C++ API?
+
+Supported Qt C++ class methods are implemented 1:1 as C functions where the function names in C correspond to the snake_case equivalent of the combined Qt C++ class and method names, with the `Q` prefix altered to `q_`. [The official Qt documentation](https://doc.qt.io/qt-6/classes.html) should be used for reference and is included in the library wrapper header code (though not all links are guaranteed to work perfectly, nor is this functionality in scope for this project). Some of the main concepts are described below with a table of code equivalents following for reference.
+
+- `QWidget::show()` is projected as `q_widget_show(void*)`
+- `QPushButton::setText(QString)` is projected as `q_pushbutton_set_text(void*, const char*)`
+
+As a mental model, developers consuming this library should keep in mind that there are essentially two different tracks of memory management required for clean operation: one for the C++ side and one for the C side. The C side is managed by the developer and the C++ side has variant ownership semantics. Ownership semantics are documented throughout the [C++ documentation](https://doc.qt.io/qt-6/topics-core.html).
+
+The library tries to adhere to idiomatic C where possible but is still bound by the complexity of the Qt C++ API. Knowledge of the Qt C++ API is required to understand and make full use of the library. While not an exhaustive list, there are some key topics to understand:
+
+- [Qt object ownership](https://doc.qt.io/qt-6/objecttrees.html)
+- [Qt signals and slots](https://doc.qt.io/qt-6/signalsandslots.html)
+- [Qt's property system](https://doc.qt.io/qt-6/properties.html)
+- [Qt's Meta-Object system](https://doc.qt.io/qt-6/metaobjects.html)
+- [Qt widgets](https://doc.qt.io/qt-6/examples-widgets.html)
+
+The `QAnyStringView`, `QByteArray`, `QByteArrayView`, and `QString` types are projected as plain C types: `char*` and `const char*`. The `QList<T>`, `QSpan<T>`, `QVector<T>`, and `QSet<T>` types are projected as `T**` or `T*[]` when used as an input parameter and supported by the helper library as `libqt_list<T>` when used as a return type. The `QHash<K,V>` and `QMap<K,V>` types are supported by the helper library as `libqt_map<K,V>` but are limited beyond basic capacities with no goal of feature expansion beyond the functionality required for adequate operation in the library. The same applies for the `QMultiHash<K,V>` and `QMultiMap<K,V>` types that are represented as `libqt_map<K,V*>`. Consumers of this library are free to use types from other libraries as well, especially for hash types. The [included helper library](https://github.com/rcalixte/libqt6c/blob/master/include/qtlibc.h) is not meant to be robust but to provide containers and functions for porting the Qt C++ API to a consumable C ABI API, however there are convenience macros and functions available for use. By default, this library does not expose the raw C ABI bindings and instead only makes the wrapper constructs and C ABI pointer types for the Qt C++ API available. Therefore, it is not possible call the raw C ABI or any of the Qt type's methods and some C equivalent method from the wrappers must be used instead. This library was constructed with the goal of enabling single-language application development. Anything beyond that boundary is up to the developer to implement.
+
+- C string types are internally converted to `QString` using `QString::fromUtf8`. Therefore, the C string input must be UTF-8 to avoid [mojibake](https://en.wikipedia.org/wiki/Mojibake). If the C input string contains binary data, the conversion would corrupt such bytes into U+FFFD (�). On return to C space, this becomes `\xEF\xBF\xBD`.
+
+- The `libqt6c` library does not extend the C standard library and therefore it is up to the developer to provide their own functions for complex types like `QHash`, `QMap`, `QSet`, etc. beyond the scope of the helper library's containers.
+
+Where Qt returns a C++ object by value (e.g. `QSize`), the binding may have moved it to the heap, and in C, this may be represented as a pointer type. In such cases, the caller is the owner and must free the object (using either `_delete` methods for the type or deallocation with `free`, `libqt_string_free`, etc.). This means code using `libqt6c` can look similar to the Qt C++ equivalent code but with the addition of proper memory management to avoid memory leaks.
+
+The `connect(targetObject, SIGNAL(signal()), targetSlot, SLOT(slot()))` methods are projected as `_on_signal(targetObject, slot)`. While the parameters in the methods themselves are more convenient to use, the documentation comments in the C header code should be used for reference for the proper usage of the parameter types and Qt vtable references. The example code above includes a simple callback function that can be used as a reference.
+
+- You can also override virtual methods like `paint_event` in the same way. Where supported, there are additional `_on_` and `_super_` variants:
+  - `on_paint_event`: Set an override callback function to be called when `paint_event` is invoked. For certain methods, even with the override set, the base class implementation can still be called by Qt internally and these calls can not be prevented.
+  - `super_paint_event`: Invoke the base class implementation of `paint_event`. This is useful for when the custom implementation requires the base class implementation. (When there is no override set, the `super_paint_event` implementation is equivalent to `paint_event`.)
+
+Due to current limitations, QPainter does not reliably initialize within paint event callbacks, even when using manual `begin()` and `end()` calls. The result is warnings such as "A paint device can only be painted by one painter at a time" and "Painter not active." As a workaround, use QStylePainter instead for painting operations. QStylePainter inherits from QPainter, meaning that it provides access to the same drawing methods (`drawRect`, `drawLine`, `setBrush`, etc.), but it properly handles the painting context that fails to be managed with the standard QPainter. This is not Qt's official recommendation, but for practical purposes, when using this library, use QStylePainter as your standard painter class for paint event implementations.
+
+Qt class inherited types are projected via void pointers and type casting in C. For example, to pass a `QLabel* myLabel` to a function taking only the `QWidget*` base class, it should be sufficient to pass `myLabel` and the library will automatically cast it to the correct type and Qt vtable reference.
+
+- When a Qt subclass adds a method overload (e.g. `QMenu::sizeHint(QMenu*)` vs `QWidget::sizeHint(QWidget*)`), the base class version is shadowed and can only be called via `q_widget_size_hint(void*)` while the subclass implementation can be called directly, e.g. `q_menu_size_hint(void*)`. Inherited methods are shadowed for convenience as well, e.g. `q_menu_show(void*)` is equivalent to `q_widget_show(void*)`. While the library aims to simplify usage, consideration should still be given to the Qt documentation for the proper usage of the parameter types and Qt vtable references.
+
+Qt expects fixed OS threads to be used for each QObject. When you first call `q_application_new`, that will be considered the [Qt main thread](https://doc.qt.io/qt-6.8/thread-basics.html#gui-thread-and-worker-thread).
+
+- When accessing Qt objects from inside another thread, it's safest to use `q_threading_async` to access the Qt objects from Qt's main thread. The [Threading library](https://github.com/rcalixte/libqt6c/tree/master/src/threading/libqt6cthreading.h) documents additional available strategies within the header code.
+
+Qt C++ enums are projected as PascalCase C typedef enums, replacing namespace indicators from C++ (`::`) with underscores and where the C enum values are represented by the uppercase equivalent of the Qt C++ class name, enum name, and enum value, with casing exceptions for the values for `Qt::Key` and `QsciLexerRuby::PercentString*`. For example, `Qt::AlignmentFlag` is projected as a C enum typedef of `Qt__AlignmentFlag` with values prefixed by `QT_ALIGNMENTFLAG`. Enum values are typed in their definitions as `int8_t`, `int32_t`, `uint8_t`, `uint16_t`, `uint32_t`, or `uint64_t` by the C API when expected as a parameter or returned as a type. Qt C++ [QFlags](https://doc.qt.io/qt-6/qflags.html) are projected as `int32_t`, `uint8_t`, `uint16_t`, or `uint32_t` when expected as a parameter or returned as a type by the C API.
+
+#### API at a glance
+
+##### Objects
+
+```cpp
+// Qt 6 C++ API
+QWidget* widget = new QWidget();
+widget->setWindowTitle("Hello world!");
+widget->show();
+
+delete widget;
+```
+
+```c
+// libqt6c API
+QWidget* widget = q_widget_new2();
+q_widget_set_window_title(widget, "Hello world!");
+q_widget_show(widget);
+
+q_widget_delete(widget);
+```
+
+##### Signals/slots
+
+```cpp
+// Qt 6 C++ API
+connect(widget, &QWidget::customEvent, this, &MyClass::onCustomEvent);
+```
+
+```c
+// libqt6c API
+q_widget_on_custom_event(widget, on_custom_event);
+```
+
+##### Enums
+
+```cpp
+// Qt 6 C++ API
+Qt::AlignmentFlag alignment = Qt::AlignmentFlag::AlignLeft | Qt::AlignmentFlag::AlignTop;
+```
+
+```c
+// libqt6c API
+int32_t alignment = QT_ALIGNMENTFLAG_ALIGNLEFT | QT_ALIGNMENTFLAG_ALIGNTOP;
+```
+
+> [!IMPORTANT]
+> Some C++ idioms that were difficult to project were omitted from the binding. This can be improved in the future.
+
+### Q4. What build modes are supported by the library's build system?
+
+Currently, `Debug`, `ReleaseFast`, `ReleaseSafe`, and `ReleaseSmall` are supported. The default build mode is `Debug`. To change the build mode:
+
+```bash
+zig build -Doptimize=ReleaseSmall
+```
+
+or
+
+```bash
+zig build --release=small
+```
+
+### Q5. Can I use another build system?
+
+In theory, any build system that supports both C and C++ should work. However, this has only been lightly tested and is therefore unsupported and left as an exercise for the interested reader.
+
+### Q6. How can I add bindings for another Qt library?
+
+Fork this repository and add your library to the `genbindings/config-libraries` file. [Read more »](https://github.com/rcalixte/libqt6c/tree/master/cmd/genbindings/README.md)
+
+Special Thanks
+--------------
+
+- [@mappu](https://github.com/mappu) for the [MIQT](https://github.com/mappu/miqt) bindings that provided the phenomenal foundation for this project
+
+- [@arnetheduck](https://github.com/arnetheduck) for proving the value of collaboration on the back-end of this project while working across different target languages

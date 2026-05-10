@@ -13,9 +13,20 @@ keywords:
   - entity-component-system
   - systems
   - zevy
-date: 2026-04-11
+date: 2026-05-05
 category: game-development
-last_sync: 2026-04-11T10:16:15Z
+updated_at: 2026-05-05T23:43:08+00:00
+last_sync: 2026-05-05T23:43:08Z
+package_kind: library
+has_library: true
+has_binary: false
+has_distributable_binary: false
+binary_count: 0
+distributable_binary_count: 0
+multiple_binaries: false
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
 permalink: /packages/captkirk88/zevy-ecs/
 ---
 
@@ -23,10 +34,7 @@ permalink: /packages/captkirk88/zevy-ecs/
 
 A high-performance, archetype-based Entity-Component-System (ECS) framework written in Zig. It provides a type-safe, efficient way to manage entities, components, systems, resources, and events in your applications.
 
-[![Zig Version](https://img.shields.io/badge/zig-0.16.0.dev-blue.svg)](https://ziglang.org/)
-
-> [!NOTE]
-> See the `zig-1.51` branch (yes I messed up the branch name) version compatible with Zig 0.15.x but I'll probably delete it because the new zevy-ecs version is much better and Zig 0.16-dev has been out for a while now.
+[![Zig Version](https://img.shields.io/badge/zig-0.16.0-blue.svg)](https://ziglang.org/)
 
 ## Why Zig?
 
@@ -36,7 +44,7 @@ Good question.  The std API has changed to the point I don't even know anymore. 
 ## Features
 
 - **Archetype-based storage**: Efficiently groups entities with the same component combinations for cache-friendly iteration
-- **Type-safe queries**: Compile-time validated component queries with include/exclude filters and optional components
+- **Type-safe queries**: Compile-time validated component queries with support for optional components and filters (With/Without)
 - **Flexible system parameters**: Built-in support for Query, Res (resources), Local (per-system state), State/NextState, EventReader/EventWriter, Relations
 - **Relationship Support** : Manage entity relationships with minimal overhead using the Relations system parameter
 - **Resource management**: Global state accessible across systems with automatic cleanup
@@ -55,6 +63,7 @@ Good question.  The std API has changed to the point I don't even know anymore. 
     - [Entities](#entities)
     - [Components](#components)
     - [Queries](#queries)
+        - [Custom Query Types](#custom-query-types)
     - [Systems](#systems)
     - [System Parameters](#system-parameters)
     - [Resources](#resources)
@@ -288,9 +297,55 @@ var entity_query = manager.query(
         entity: zevy_ecs.Entity,
         pos: Position,
     },
-);while (entity_query.next()) |item| {
+);
+while (entity_query.next()) |item| {
     std.debug.print("Entity {d} at ({d}, {d})\n",
         .{ item.entity.id, item.pos.x, item.pos.y });
+}
+```
+
+#### Custom Query Types
+
+Any type can participate in a query by declaring `QueryFilter`, `QueryResultType` + `query`, or both.
+
+```zig
+// Filter + result: only matches entities with Health, yields whether hp > 0
+const IsAlive = struct {
+    pub const QueryFilter = zevy_ecs.With(Health);
+    pub const QueryResultType = bool;
+    pub fn query(ctx: zevy_ecs.QueryContext) bool {
+        return ctx.get(Health).value > 0;
+    }
+};
+
+// Result-only: no constraints, contributes a result field populated at runtime
+const CurrentEntity = struct {
+    pub const QueryResultType = zevy_ecs.Entity;
+    pub fn query(ctx: zevy_ecs.QueryContext) zevy_ecs.Entity {
+        return ctx.entity;
+    }
+};
+
+// Both: requires Health AND yields its raw value as a result field.
+const HealthValue = struct {
+    pub const QueryFilter = zevy_ecs.With(Health);
+    pub const QueryResultType = i32;
+    pub fn query(ctx: zevy_ecs.QueryContext) i32 {
+        return ctx.get(Health).value;
+    }
+};
+
+var q = manager.query(struct {
+    pos: Position,
+    alive: IsAlive,      // filter + result field (bool)
+    hp: HealthValue,     // filter + result field (i32)
+    ent: CurrentEntity,  // result field (Entity)
+});
+while (q.next()) |item| {
+    _ = item.pos;   // *Position
+    _ = item.alive; // bool  — true when Health.value > 0
+    _ = item.hp;    // i32
+    _ = item.ent;   // Entity
 }
 ```
 
@@ -437,20 +492,30 @@ const GameConfig = struct {
     fps: u32,
 };
 
-// Add resource, returns pointer to resource
+// Add resource, returns a Ref that must be deinited when you're done with it
 var config = try manager.addResource(GameConfig, .{
     .width = 1920,
     .height = 1080,
     .fps = 60,
 });
+defer config.deinit();
 
 // Modify resource
-config.fps = 120;
+var config_guard = config.lockWrite();
+defer config_guard.deinit();
+config_guard.get().fps = 120;
 
 // Get resource
 if (manager.getResource(GameConfig)) |cfg| {
-    std.debug.print("FPS: {d}\n", .{cfg.fps});
+    defer cfg.deinit();
+    var cfg_guard = cfg.lockRead();
+    defer cfg_guard.deinit();
+    std.debug.print("FPS: {d}\n", .{cfg_guard.get().fps});
 }
+
+// If you only want the Manager-owned resource and do not need the Ref,
+// use addResourceRetained(...).
+try manager.addResourceRetained(FrameCounter, .{ .value = 0 });
 
 // Check if resource exists
 const has_config = manager.hasResource(GameConfig);
@@ -1049,6 +1114,8 @@ while (i < count) : (i += 1) {
 
 The plugin system provides a modular way to organize and initialize features in your application. Plugins can register systems, resources, and perform setup tasks in a reusable manner.
 
+If you want plugin interface validation errors to report the registration site, use `plugin_manager.addAt(PluginType, plugin, @src())` or `plugin_manager.addBundleAt(BundleType, bundle, @src())`.
+
 #### Basic Plugin Usage
 
 ```zig
@@ -1185,10 +1252,10 @@ pub fn main() !void {
     scheduler.addSystem(&manager, zevy_ecs.Stage(zevy_ecs.Stages.Draw), renderSystem, zevy_ecs.DefaultParamRegistry);
 
     // Run all systems in a specific stage
-    try scheduler.runStage(&manager, zevy_ecs.Stage(zevy_ecs.Stages.Update));
+    _ = scheduler.runStage(&manager, zevy_ecs.Stage(zevy_ecs.Stages.Update));
 
     // Run all systems in a range of stages
-    try scheduler.runStages(&manager, zevy_ecs.Stage(zevy_ecs.Stages.First), zevy_ecs.Stage(zevy_ecs.Stages.Last));
+    _ = scheduler.runStages(&manager, zevy_ecs.Stage(zevy_ecs.Stages.First), zevy_ecs.Stage(zevy_ecs.Stages.Last));
 }
 
 fn movementSystem(
@@ -1250,7 +1317,7 @@ pub fn main() !void {
     scheduler.addSystem(&manager, zevy_ecs.Stage(HashStages.CustomLogic), customSystem, zevy_ecs.DefaultParamRegistry);
 
     // Run stages in a range (includes all custom stages in the range)
-    try scheduler.runStages(&manager, zevy_ecs.Stage(zevy_ecs.Stages.Update), zevy_ecs.Stage(zevy_ecs.Stages.PostUpdate));
+    _ = scheduler.runStages(&manager, zevy_ecs.Stage(zevy_ecs.Stages.Update), zevy_ecs.Stage(zevy_ecs.Stages.PostUpdate));
 }
 
 fn physicsSystem(
@@ -1299,7 +1366,7 @@ pub fn main() !void {
     try scheduler.registerState(&manager, GameState);
 
     // Set initial state (or use NextState in a startup system)
-    try scheduler.transitionTo(&manager, GameState, .MainMenu);
+    _ = scheduler.transitionTo(&manager, GameState, .MainMenu);
 
     // Add state-specific systems - pass raw functions and param registry
     // Systems run when entering/exiting states
@@ -1311,7 +1378,7 @@ pub fn main() !void {
     scheduler.addSystem(&manager, zevy_ecs.InState(GameState.Playing), gameplaySystem, zevy_ecs.DefaultParamRegistry);
 
     // In your game loop, run systems for the active state
-    try scheduler.runActiveStateSystems(&manager, GameState);
+    _ = scheduler.runActiveStateSystems(&manager, GameState);
 }
 
 fn menuSystem(
@@ -1321,7 +1388,7 @@ fn menuSystem(
     if (state.isActive(.MainMenu)) {
         // Handle menu input
         // Transition to playing when user presses start
-        next.set(.Playing); // Immediate transition - triggers OnExit/OnEnter
+        _ = next.set(.Playing); // Immediate transition - triggers OnExit/OnEnter
     }
 }
 
@@ -1366,7 +1433,7 @@ pub fn main() !void {
     scheduler.addSystem(&manager, zevy_ecs.Stage(zevy_ecs.Stages.Update), inputHandlerSystem, zevy_ecs.DefaultParamRegistry);
 
     // Run the stages - cleanup happens automatically in Last stage
-    try scheduler.runStages(&manager, zevy_ecs.Stage(zevy_ecs.Stages.First), zevy_ecs.Stage(zevy_ecs.Stages.Last));
+    _ = scheduler.runStages(&manager, zevy_ecs.Stage(zevy_ecs.Stages.First), zevy_ecs.Stage(zevy_ecs.Stages.Last));
 }
 
 fn inputSystem(

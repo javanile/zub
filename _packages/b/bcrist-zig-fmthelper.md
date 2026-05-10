@@ -13,9 +13,9 @@ keywords:
   - units
   - utilities
   - utility-library
-date: 2026-04-17
-updated_at: 2026-04-17T16:03:06+00:00
-last_sync: 2026-04-17T16:03:06Z
+date: 2026-05-06
+updated_at: 2026-05-06T03:53:46+00:00
+last_sync: 2026-05-06T03:53:46Z
 package_kind: library
 has_library: true
 has_binary: false

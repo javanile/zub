@@ -1,0 +1,132 @@
+---
+title: zigcli
+description: A toolkit for building command lines programs in Zig.
+license: MIT
+author: jiacai2050
+author_github: jiacai2050
+repository: https://github.com/jiacai2050/zigcli
+keywords:
+  - cli
+  - lines-of-code
+  - tree
+date: 2026-05-10
+category: tooling
+updated_at: 2026-05-10T08:47:27+00:00
+last_sync: 2026-05-10T08:47:27Z
+package_kind: hybrid
+has_library: true
+has_binary: true
+has_distributable_binary: true
+binary_count: 1
+distributable_binary_count: 1
+multiple_binaries: false
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
+permalink: /packages/jiacai2050/zigcli/
+---
+
+#+TITLE: Introduction
+#+DATE: 2023-10-21T12:09:48+0800
+#+LASTMOD: 2026-04-22T19:37:27+0800
+#+TYPE: docs
+#+author: Jiacai Liu
+
+[[https://github.com/jiacai2050/zigcli][https://img.shields.io/github/stars/jiacai2050/zigcli.svg]]
+[[https://github.com/jiacai2050/loc/actions/workflows/CI.yml][https://github.com/jiacai2050/loc/actions/workflows/CI.yml/badge.svg]]
+[[https://github.com/jiacai2050/loc/actions/workflows/release.yml][https://github.com/jiacai2050/loc/actions/workflows/release.yml/badge.svg]]
+[[https://img.shields.io/badge/zig%20version-0.16.0-F7A41D.svg]]
+
+#+begin_export html
+<img src="/images/logo.svg" alt="Zigcli logo" style="width: 350px;"/>
+#+end_export
+
+#+begin_quote
+[[https://zigcli.liujiacai.net/][Zigcli]] is a toolkit for building command line programs in Zig.
+#+end_quote
+
+=zigcli= has two faces:
+
+- a set of reusable Zig packages for building terminal applications
+- a collection of standalone CLI programs that can be installed and used directly
+
+This repository keeps both sides together. If you are writing your own Zig tool, add =zigcli= as
+a dependency and import the packages you need. If you only want ready-made binaries such as =tree=,
+=loc=, =pretty-csv=, =hexdump=, or =cowsay=, install the release package and run them directly.
+
+#+begin_quote
+The =main= branch targets *Zig 0.16.0*.
+#+end_quote
+
+* Packages
+
+The reusable packages are documented under [[https://zigcli.liujiacai.net/packages/][Packages]].
+
+- =structargs= turns a Zig struct into a command-line interface, including flags, defaults,
+  enums, subcommands, and help text.
+- =csv= parses delimited text into rows and fields for CSV- and TSV-style CLI workflows.
+- =pretty-table= prints aligned and formatted tables for terminal output.
+- =gitignore= parses and applies =.gitignore= rules in pure Zig.
+- =term= provides terminal styling and capability helpers such as ANSI colors and terminal width
+  detection.
+- =progress= renders progress bars and spinners with rate, ETA, and elapsed time display.
+
+The root import is =zigcli=:
+
+#+begin_src zig
+const zigcli = @import("zigcli");
+const structargs = zigcli.structargs;
+const pt = zigcli.pretty_table;
+#+end_src
+
+Generated API documentation for the exported packages is available at
+[[https://zigcli.liujiacai.net/apidocs/][apidocs]].
+
+* Programs
+
+The standalone tools are documented under [[https://zigcli.liujiacai.net/programs/][Programs]].
+
+Some highlights:
+
+- =loc= counts lines of code across languages
+- =tree= prints directory trees with optional filtering
+- =pretty-csv= renders CSV and TSV files as aligned tables
+- =hexdump= prints a color-coded hex dump of files or stdin, with optional C include output
+- =zfetch= prints system information
+- =cowsay=, =repeat=, and other small terminal utilities round out the collection
+
+The programs and packages are developed in the same repository, so the binaries can also serve as
+examples of how the reusable modules fit together.
+
+* Install
+
+See [[https://zigcli.liujiacai.net/install][INSTALL]] page.
+
+Two common paths are:
+
+- install prebuilt binaries with the shell installer
+- add =zigcli= as a Zig dependency and use the packages directly
+
+For binaries:
+
+#+begin_src bash
+curl -fsSL https://zigcli.liujiacai.net/install.sh | sh
+#+end_src
+
+For package use, see the install page and the package docs for the current =build.zig=
+integration pattern.
+
+* Repository layout
+
+- =src/= contains the Zig source code
+  - =src/bin/= standalone CLI programs
+  - =src/= reusable packages exported through the =zigcli= root module
+- =examples/= contains small demo programs
+- =docs/= contains this website and the package/program documentation
+
+* Who's Using
+
+If you're using =zigcli=, and would like to be added here, welcome to [[https://github.com/jiacai2050/zigcli/pulls][open a PR]].
+
+* License
+MIT, see [[https://github.com/jiacai2050/zigcli/blob/main/LICENSE][LICENSE]] for details.
