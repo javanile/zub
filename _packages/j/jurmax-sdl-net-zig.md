@@ -8,10 +8,10 @@ repository: https://github.com/JurMax/SDL_net_zig
 keywords:
   - sdl
   - sdl3
-date: 2026-04-14
+date: 2026-05-05
 category: game-development
-updated_at: 2026-04-14T05:07:57+00:00
-last_sync: 2026-04-14T05:07:57Z
+updated_at: 2026-05-05T14:13:24+00:00
+last_sync: 2026-05-05T14:13:24Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -42,12 +42,12 @@ zig fetch --save git+https://github.com/JurMax/SDL_net_zig
 Next, add it to your `build.zig`:
 
 ```zig
-const sdl_net_dependency = b.dependency("sdl_net_zig", .{
+const sdl_net_dependency = b.dependency("sdl_net", .{
     .target = target,
     .optimize = optimize,
     .build_sdl = false, // Set to true to also build SDL3 itself.
 });
-exe.linkLibrary(sdl_net_dependency.artifact("sdl_net"));
+exe.linkLibrary(sdl_net_dependency.artifact("SDL3_net"));
 ```
 
 This will add the SDL_net library and header to `exe`.

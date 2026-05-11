@@ -7,9 +7,9 @@ author_github: Kingrashy12
 repository: https://github.com/Kingrashy12/ziglet
 keywords:
   - cli-builder
-date: 2026-04-20
-updated_at: 2026-04-20T16:01:57+00:00
-last_sync: 2026-04-20T16:01:57Z
+date: 2026-05-05
+updated_at: 2026-05-05T13:59:01+00:00
+last_sync: 2026-05-05T13:59:01Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -62,16 +62,12 @@ const ziglet = @import("ziglet");
 const CommandContext = ziglet.BuilderTypes.CommandContext;
 const CLIBuilder = ziglet.CLIBuilder;
 
-pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}).init;
-    defer _ = gpa.deinit();
+pub fn main(init: std.process.Init) !void {
+    const arena = init.arena;
+    const allocator = init.gpa;
+    const args = try init.minimal.args.toSlice(arena.allocator());
 
-    const allocator = gpa.allocator();
-
-    const argv = try std.process.argsAlloc(allocator);
-    defer std.process.argsFree(allocator, argv);
-
-    var cli = CLIBuilder.init(allocator, "my-cli", "0.1.0", "A simple CLI example");
+    var cli = CLIBuilder.init(allocator, init, "my-cli", "0.1.0", "A simple CLI example");
     defer cli.deinit();
 
     // Add a command with options
@@ -88,7 +84,7 @@ pub fn main() !void {
         }}),
     });
 
-    try cli.parse(argv, null);
+    try cli.parse(args, null);
 }
 
 fn greet(ctx: CommandContext) !void {
@@ -107,7 +103,7 @@ Ziglet supports global options that apply to all commands:
 ```zig
 // ... (same setup as above)
 
-var cli = CLIBuilder.init(allocator, "example-cli", "1.0.0", "A CLI with global options");
+var cli = CLIBuilder.init(allocator, init, "example-cli", "1.0.0", "A CLI with global options");
 defer cli.deinit();
 
 // Enable global options (adds --help and --version automatically)
@@ -159,7 +155,7 @@ For a more fluent and readable way to build commands:
 ```zig
 // ... (same setup as above)
 
-var cli = CLIBuilder.init(allocator, "my-cli", "0.1.0", "Factory builder example");
+var cli = CLIBuilder.init(allocator, init,"my-cli", "0.1.0", "Factory builder example");
 defer cli.deinit();
 
 cli.setGlobalOptions();
@@ -208,7 +204,7 @@ _ = cli.command("status", "Show status")
     .finalize();
 
 // Parse with factory commands
-try cli.parse(argv, &.{ greet_cmd, calc_cmd });
+try cli.parse(args, &.{ greet_cmd, calc_cmd });
 
 fn greet(ctx: CommandContext) !void {
     const name = ctx.options.get("name");
