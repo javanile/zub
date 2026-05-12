@@ -13,10 +13,10 @@ keywords:
   - validation-zig
   - zigantic
   - zigantic-zig
-date: 2026-05-11
+date: 2026-05-12
 category: data-formats
-updated_at: 2026-05-11T10:36:09+00:00
-last_sync: 2026-05-11T10:36:09Z
+updated_at: 2026-05-12T10:52:33+00:00
+last_sync: 2026-05-12T10:52:33Z
 package_kind: hybrid
 has_library: true
 has_binary: true

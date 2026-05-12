@@ -10,10 +10,10 @@ keywords:
   - graph-algorithms
   - graph-theory
   - hypergraph
-date: 2026-05-04
+date: 2026-05-11
 category: data-formats
-updated_at: 2026-05-04T11:55:55+00:00
-last_sync: 2026-05-04T11:55:55Z
+updated_at: 2026-05-11T11:39:37+00:00
+last_sync: 2026-05-11T11:39:37Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -68,19 +68,26 @@ treated as the corresponding author, giving each hyperedge a natural direction.
 zig build example
 ```
 
-It walks through ten features of the library in sequence:
+It walks through seventeen features of the library in sequence:
 
-| Section                  | API                      | What it shows                                               |
-| ------------------------ | ------------------------ | ----------------------------------------------------------- |
-| Papers per researcher    | `getVertexHyperedges`    | reverse-index query                                         |
-| Research communities     | `getConnectedComponents` | two isolated groups with no cross-group papers              |
-| Betweenness centrality   | `computeCentrality`      | which researchers bridge the most collaboration paths       |
-| Degrees of separation    | `findShortestPath`       | 1–3 hops within a community; unreachable across communities |
-| Dual: paper-centric view | `getDual`                | swap vertices ↔ hyperedges to see each researcher's papers  |
-| Shared authorship        | `getIntersections`       | researchers present on every paper in a given set           |
-| Seniority ordering       | `topologicalSort`        | hierarchy implied by the authorship direction               |
-| Pairwise expansion       | `expandToGraph`          | 6 papers encode 11 directed pairs in a regular graph        |
-| Spectral view            | `toLaplacian`            | normalized Laplacian; block-diagonal under disjoint groups  |
+| Section                  | API                      | What it shows                                                |
+| ------------------------ | ------------------------ | ------------------------------------------------------------ |
+| Papers per researcher    | `getVertexHyperedges`    | reverse-index query                                          |
+| Research communities     | `getConnectedComponents` | two isolated groups with no cross-group papers               |
+| Betweenness centrality   | `computeCentrality`      | which researchers bridge the most collaboration paths        |
+| Degrees of separation    | `findShortestPath`       | 1–3 hops within a community; unreachable across communities  |
+| Dual: paper-centric view | `getDual`                | swap vertices ↔ hyperedges to see each researcher's papers   |
+| Shared authorship        | `getIntersections`       | researchers present on every paper in a given set            |
+| Seniority ordering       | `topologicalSort`        | hierarchy implied by the authorship direction                |
+| Pairwise expansion       | `expandToGraph`          | 6 papers encode 11 directed pairs in a regular graph         |
+| Spectral view            | `toLaplacian`            | normalized Laplacian; block-diagonal under disjoint groups   |
+| PageRank                 | `computePageRank`        | citation-weighted stationary distribution; sums to 1         |
+| Random walk              | `randomWalk`             | seeded weighted walk; stays inside the start's component     |
+| Star expansion           | `expandToStar`           | bipartite (researcher ↔ paper) projection; 2-uniform         |
+| Line graph               | `getLineGraph`           | papers as vertices, linked when they share an author         |
+| K-core decomposition     | `getCore`                | (s, t)-core peeling; trims the lone-paper researcher         |
+| Nestedness               | `getInclusions`          | strict-subset pairs across hyperedges; sized profile         |
+| Co-author neighborhoods  | `getVertexNeighborhood`  | undirected co-occurrence neighbors across all hyperedges     |
 
 ## Documentation
 

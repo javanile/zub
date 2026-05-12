@@ -11,9 +11,9 @@ keywords:
   - lambda
   - server
   - serverless
-date: 2026-04-17
-updated_at: 2026-04-17T16:17:06+00:00
-last_sync: 2026-04-17T16:17:06Z
+date: 2026-05-12
+updated_at: 2026-05-12T12:03:08+00:00
+last_sync: 2026-05-12T12:03:08Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -92,7 +92,7 @@ _Feel free to open an issue for additional integrations, or better contribute a 
 ### Build Script
 ```zig
 const std = @import("std");
-const lambda = @import("aws-lambda");
+const lambda = @import("aws_lambda");
 
 pub fn build(b: *std.Build) void {
     const optimize = b.standardOptimizeOption(.{
@@ -103,7 +103,7 @@ pub fn build(b: *std.Build) void {
     const target = lambda.resolveTargetQuery(b, lambda.archOption(b));
 
     // Import the runtime module
-    const runtime = b.dependency("aws-lambda", .{}).module("lambda");
+    const runtime = b.dependency("aws_lambda", .{}).module("lambda");
 
     // Create the handler’s module
     const mod = b.createModule(.{
@@ -136,7 +136,7 @@ pub fn main(init: std.process.Init) void {
     lambda.handle(init, handler, .{});
 }
 
-// Eeach event is processed separetly the handler function.
+// Each event is processed separetly the handler function.
 // The function must have the following signature:
 fn handler(
     ctx: lambda.Context,    // Metadata and utilities
@@ -166,7 +166,7 @@ It can then by set through `-Darch=x86` or `-Darch=arm` (defaults to _x86_ when 
 #### Example Build Script
 ```zig
 const std = @import("std");
-const lambda = @import("aws-lambda");
+const lambda = @import("aws_lambda");
 
 pub fn build(b: *std.Build) void {
     const optimize = b.standardOptimizeOption(.{
@@ -180,7 +180,7 @@ pub fn build(b: *std.Build) void {
     const target = lambda.resolveTargetQuery(b, arch);
 
     // Import the runtime module
-    const runtime = b.dependency("aws-lambda", .{}).module("lambda");
+    const runtime = b.dependency("aws_lambda", .{}).module("lambda");
 
     // Create the handler’s module
     const mod = b.createModule(.{
@@ -215,7 +215,7 @@ const std = @import("std");
 const lambda = @import("aws-lambda");
 
 // Entry point for the Lambda function.
-// Eeach event is processed separetly the handler function.
+// Each event is processed separetly the handler function.
 pub fn main(init: std.process.Init) void {
     // Bind the handler to the runtime:
     lambda.handle(init, handlerSync, .{});
@@ -344,7 +344,7 @@ pub fn main(init: std.process.Init) void {
     lambda.handleStream(init, handler, .{});
 }
 
-// Eeach event is processed separetly the handler function.
+// Each event is processed separetly the handler function.
 // The function must have the following signature:
 fn handler(
     ctx: lambda.Context,    // Metadata and utilities
@@ -362,7 +362,7 @@ fn handler(
     try stream.publish();
 
     // Wait for half a second.
-    std.Thread.sleep(500_000_000);
+    try ctx.io.sleep(.fromMilliseconds(500), .awake);
 
     // Send additional content to the client.
     try writer.writeAll("data: Message number 2\n\n");
@@ -370,8 +370,9 @@ fn handler(
     try stream.publish();
 
     // Optionally close the stream.
-    // Even after ending the response we can still do more work in the handler.
     try stream.close();
+
+    // Even after ending the stream we can still do more work in the handler...
 }
 ```
 
@@ -399,7 +400,7 @@ zig build demo:hello --release -Darch=ARCH_OPTION
 ```
 
 ### Debug
-🛑 _Deploy with caution! May expose sensitive data to the public._
+⚠️ _Deploy with caution! May expose sensitive data to the public._
 
 Returns the raw payload as-is:
 ```console
@@ -427,7 +428,7 @@ Force the Lambda function instance the terminate after returning a response:
 zig build demo:terminate --release -Darch=ARCH_OPTION
 ```
 
-🛑 Use with caution!
+⚠️ Use with caution!
 _Only use this method when you assume the function won’t behave as expected in the following invocation._
 
 ### Response Streaming
@@ -439,9 +440,11 @@ zig build demo:stream --release -Darch=ARCH_OPTION
 ```
 
 ### Lambda URLs
+⚠️ This is not a production-ready web server, don’t use it in production!
+
 Use Lambda URLs buffered invoke to serve dynamic web pages:
 ```console
-zig build demo:url --release -Darch=ARCH_OPTION
+zig build demo:url_buffer --release -Darch=ARCH_OPTION
 ```
 
 Use Lambda URLs response streaming to serve dynamic updates:
