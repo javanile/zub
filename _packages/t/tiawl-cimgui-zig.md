@@ -1,6 +1,6 @@
 ---
 title: cimgui.zig
-description: "dear imgui packaged for @ziglang"
+description: "@dearimgui packaged for @ziglang"
 license: Unlicense
 author: tiawl
 author_github: tiawl
@@ -9,14 +9,25 @@ keywords:
   - binding
   - cimgui
   - imgui
-date: 2026-04-06
+date: 2026-05-13
 category: game-development
-last_sync: 2026-04-06T10:55:12Z
+updated_at: 2026-05-13T12:25:59+00:00
+last_sync: 2026-05-13T12:25:59Z
+package_kind: library
+has_library: true
+has_binary: false
+has_distributable_binary: false
+binary_count: 0
+distributable_binary_count: 0
+multiple_binaries: false
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
 permalink: /packages/tiawl/cimgui.zig/
 ---
 
 > [!WARNING]
-> If you are using the `docking` branch it won't be updated anymore and there won't be more `*-docking` tags. Please use the `-Ddocking` option [instead](https://github.com/tiawl/cimgui.zig/tree/zig-stable?tab=readme-ov-file#cimguizig-as-a-library).
+> If you are using the `docking` branch it won't be updated anymore and there won't be more `*-docking` tags. Please use the `-Ddocking` option [instead](https://github.com/tiawl/cimgui.zig/tree/stable?tab=readme-ov-file#cimguizig-as-a-library).
 
 # cimgui.zig
 
@@ -33,7 +44,7 @@ The intention under this fork is to package [ocornut/imgui][1] for [Zig][2]. So:
 ## How to use it
 
 The goal of this repository is not to provide a [Zig][2] binding for [ocornut/imgui][1]. The point of this repository is to abstract the [ocornut/imgui][1] compilation process with [Zig][2] (which is not easy to maintain) to let you focus on your application. So you can use **cimgui.zig**:
-- as raw (see the [examples directory](https://github.com/tiawl/cimgui.zig/blob/zig-stable/examples)),
+- as raw (see the [examples directory](https://github.com/tiawl/cimgui.zig/blob/stable/examples)),
 - as a daily updated interface for your [Zig][2] binding of [ocornut/imgui][1]
 
 ### cimgui.zig as a library
@@ -45,6 +56,16 @@ Fetch this repository:
 $ zig fetch --save git+https://github.com/tiawl/cimgui.zig.git
 ```
 
+Add a `c.h` file with the header you need:
+```c
+#define GLFW_INCLUDE_VULKAN 1
+#define GLFW_INCLUDE_NONE 1
+#include "GLFW/glfw3.h"
+#include "dcimgui.h"
+#include "backends/dcimgui_impl_glfw.h"
+#include "backends/dcimgui_impl_vulkan.h"
+```
+
 Add it to your `build.zig` :
 ```diff
 const std = @import("std");
@@ -52,8 +73,28 @@ const std = @import("std");
 +const Renderer = cimgui.Renderer;
 +const Platform = cimgui.Platform;
 
++fn addIncludePathsToTranslateC(translate_c: *std.Build.Step.TranslateC, lib: *std.Build.Step.Compile) void {
++    for (lib.root_module.include_dirs.items) |*included| {
++        switch (included.*) {
++            .path => translate_c.addIncludePath(included.path),
++            .config_header_step => translate_c.addConfigHeader(included.config_header_step),
++            .path_system => translate_c.addSystemIncludePath(included.path_system),
++            .other_step => addIncludePathsToTranslateC(translate_c, included.other_step),
++            else => unreachable,
++        }
++    }
++}
+
 pub fn build(b: *std.Build) void {
     // -- snip --
+
++    translate_c = b.addTranslateC(.{
++        .root_source_file = b.path(b.pathJoin(&.{
++            entry.name, "c.h",
++        })),
++        .target = target,
++        .optimize = optimize,
++    });
 
 +    const cimgui_dep = b.dependency("cimgui_zig", .{
 +        .target = target,
@@ -61,9 +102,14 @@ pub fn build(b: *std.Build) void {
 +        .platforms = &[_]Platform{.GLFW},
 +        .renderers = &[_]Renderer{.Vulkan},
 +        // .docking = true, // Default value: false
++        // .no_renderer = true, // Default value: false. Comment `renderers` field if you use this one
++        // .no_platform = true, // Default value: false. Comment `platforms` field if you use this one
 +    });
 +
 +    const cimgui_lib = cimgui_dep.artifact("cimgui");
++    addIncludePathsToTranslateC(translate_c, cimgui_artifact);
++    const c_module = translate_c.createModule();
++    c_module.linkLibrary(cimgui_lib);
 
     // The following conditional is only necessary for OpenGL backends:
 +    if (cimgui_lib.root_module.import_table.get("gl")) |gl_module| {
@@ -71,7 +117,7 @@ pub fn build(b: *std.Build) void {
 +    }
 
     // Where `exe` represents your executable/library to link to
-+    exe.linkLibrary(cimgui_lib);
++    exe.root_module.addImport("c", c_module);
 
     // -- snip --
 }
@@ -97,10 +143,9 @@ The backends are separated in two categories: the platforms (handling windows, e
 
 ## Dependencies
 
-The [Zig][2] part of this package is relying on the latest [Zig][2] release (0.15.2) and will only be updated for the next one.
-It you use a more recent [Zig][2] version, please consider the `zig-nightly` branch and `*-nightly` tags.
+The [Zig][2] part of this package requires the latest (0.16.0) or the master (0.17.0-dev) [Zig][2] release.
 
-For other dependencies see [the build.zig.zon](https://github.com/tiawl/cimgui.zig/blob/zig-stable/build.zig.zon)
+For other dependencies see [the build.zig.zon](https://github.com/tiawl/cimgui.zig/blob/stable/build.zig.zon)
 
 ## `zig build` options
 
@@ -117,6 +162,8 @@ These additional options have been implemented to cover main usecases:
                                    SDL3
                                    SDLGPU3
   -Ddocking=[bool]             master or docking ocornut/imgui branch ?
+  -Dno_renderer=[bool]         Specify there no need for renderer backend. It returns an error if you use it with `renderers` option.
+  -Dno_platform=[bool]         Specify there no need for platform backend. It returns an error if you use it with `platforms` option.
 ```
 
 These additional options have mainly been implemented for maintainability tasks but they maybe could be useful for edge usecases:

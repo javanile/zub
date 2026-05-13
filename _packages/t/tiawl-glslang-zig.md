@@ -1,6 +1,6 @@
 ---
 title: glslang.zig
-description: "glslang packaged for @ziglang"
+description: "@KhronosGroup's glslang packaged for @ziglang"
 license: Unlicense
 author: tiawl
 author_github: tiawl
@@ -8,9 +8,9 @@ repository: https://github.com/tiawl/glslang.zig
 keywords:
   - binding
   - glslang
-date: 2026-04-26
-updated_at: 2026-04-26T10:13:48+00:00
-last_sync: 2026-04-26T10:13:48Z
+date: 2026-05-13
+updated_at: 2026-05-13T11:58:29+00:00
+last_sync: 2026-05-13T11:58:29Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -45,7 +45,7 @@ The goal of this repository is not to provide a [Zig][2] binding for [KhronosGro
 
 The [Zig][2] part of this package requires the latest (0.16.0) or the master (0.17.0-dev) [Zig][2] release.
 
-For other dependencies see [the build.zig.zon](https://github.com/tiawl/glslang.zig/blob/zig-stable/build.zig.zon)
+For other dependencies see [the build.zig.zon](https://github.com/tiawl/glslang.zig/blob/stable/build.zig.zon)
 
 ## `zig build` options
 

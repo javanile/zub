@@ -9,17 +9,17 @@ keywords:
   - json-serialization
   - parser
   - serde
-date: 2026-04-22
+date: 2026-05-09
 category: data-formats
-updated_at: 2026-04-22T11:34:27+00:00
-last_sync: 2026-04-22T11:34:27Z
+updated_at: 2026-05-09T19:02:24+00:00
+last_sync: 2026-05-09T19:02:24Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 1
-distributable_binary_count: 1
-multiple_binaries: false
+binary_count: 2
+distributable_binary_count: 2
+multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
 sync_source: zigistry
@@ -30,7 +30,7 @@ permalink: /packages/OrlovEvgeny/serde.zig/
 
 [![Build](https://github.com/OrlovEvgeny/serde.zig/actions/workflows/ci.yml/badge.svg)](https://github.com/OrlovEvgeny/serde.zig/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/OrlovEvgeny/serde.zig?label=release)](https://github.com/OrlovEvgeny/serde.zig/releases/latest)
-[![Zig](https://img.shields.io/badge/zig-0.15.2-blue)](https://ziglang.org/download/)
+[![Zig](https://img.shields.io/badge/zig-0.15.2%20%7C%200.16.0-blue)](https://ziglang.org/download/)
 
 Serialization framework for Zig
 
@@ -41,7 +41,6 @@ Uses Zig's comptime reflection (`@typeInfo`) to serialize and deserialize any Zi
 - [Why serde.zig?](#why-serdezig)
 - [Quick Start](#quick-start)
 - [Installation](#installation)
-- [Compatibility](#compatibility)
 - [Formats](#formats)
 - [Supported Types](#supported-types)
 - [Examples](#examples)
@@ -73,6 +72,7 @@ Uses Zig's comptime reflection (`@typeInfo`) to serialize and deserialize any Zi
 - [Out-of-Band Type Overrides](#out-of-band-type-overrides)
 - [Custom Serialization](#custom-serialization)
 - [Error Handling](#error-handling)
+- [Performance](#performance)
 - [Tests](#tests)
 - [License](#license)
 
@@ -122,7 +122,7 @@ zig fetch --save git+https://github.com/OrlovEvgeny/serde.zig
 Specific release:
 
 ```sh
-zig fetch --save https://github.com/OrlovEvgeny/serde.zig/archive/refs/tags/v1.0.2.tar.gz
+zig fetch --save https://github.com/OrlovEvgeny/serde.zig/archive/refs/tags/v1.0.3.tar.gz
 ```
 
 Then in your `build.zig`:
@@ -135,17 +135,15 @@ const serde_dep = b.dependency("serde", .{
 exe.root_module.addImport("serde", serde_dep.module("serde"));
 ```
 
-Requires Zig 0.15.2 or later. See [Compatibility](#compatibility).
+Requires Zig 0.15.2 or 0.16.0.
 
-## Compatibility
+Supported Zig versions:
 
-| serde.zig | Zig stable | Zig master |
-|-----------|------------|------------|
-| 1.0.x | 0.15.2 | tracked, non-blocking |
-
-**Policy.** serde.zig ships against the stable Zig release it currently supports and tracks `master` in CI as a signal. Today, `1.0.x` is pinned to Zig `0.15.2`; `master` failures are visible in CI but do not block merges. When a new Zig major is adopted, serde.zig cuts a `release/0.15.x` backport branch and the new Zig line ships as a new serde.zig major.
-
-Bump the `.minimum_zig_version` entry in your own `build.zig.zon` to match your target Zig version (currently `0.15.2`).
+| Zig version | Status |
+|-------------|--------|
+| `0.16.0` | current stable, required in docs CI |
+| `0.15.2` | previous stable, fully supported |
+| `master` | tracked in CI as non-blocking signal |
 
 ## Formats
 
@@ -864,8 +862,14 @@ Deserialization returns specific errors:
 - `error.MissingField` -- required struct field absent
 - `error.UnknownField` -- unexpected field (with `deny_unknown_fields`)
 - `error.InvalidNumber` -- number parse failure or overflow
+- `error.InvalidUnicode` -- malformed unicode escape (e.g. lone surrogate)
+- `error.InvalidControlCharacter` -- unescaped control char in JSON string
+- `error.MaxDepthExceeded` -- JSON nesting deeper than configured limit
 - `error.WrongType` -- input type doesn't match target type
 - `error.DuplicateField` -- same field appears twice
+- `error.FieldCountMismatch` -- CSV row has fewer fields than headers
+- `error.MalformedXml` -- structurally invalid XML (e.g. `--` inside comment)
+- `error.InvalidYaml` -- structurally invalid YAML
 
 ```zig
 const result = serde.json.fromSlice(Config, allocator, input) catch |err| switch (err) {
@@ -874,6 +878,114 @@ const result = serde.json.fromSlice(Config, allocator, input) catch |err| switch
     else => return err,
 };
 ```
+
+## Deserialize Options
+
+Each format exposes a `fromSliceWith` entry point taking format-specific options.
+
+### JSON (`serde.json.DeserializeOptions`)
+
+```zig
+const val = try serde.json.fromSliceWith(Config, allocator, input, .{
+    .lenient_null_to_zero = false,             // true: null -> 0 for int/float
+    .allow_unescaped_control_chars = false,    // true: accept raw 0x00..0x1f in strings
+    .max_depth = 256,                          // raise for very nested input
+});
+```
+
+Defaults reject behavior that violates RFC 8259. Set `lenient_null_to_zero` to opt
+back into pre-fix behavior where JSON `null` silently became `0` for non-optional
+numeric fields.
+
+### YAML (`serde.yaml.DeserializeOptions`)
+
+```zig
+const val = try serde.yaml.fromSliceWith(Config, allocator, input, .{
+    .yaml_11_booleans = false,   // true: yes/no/on/off recognized as booleans
+    .strict_indent = false,      // true: error on tab in indentation columns
+});
+```
+
+Default is YAML 1.2 behavior. Enabling `yaml_11_booleans` brings the "Norway
+problem" (`country: NO` -> `false`).
+
+### CSV (`Dialect.strict_field_count`)
+
+```zig
+const dialect = serde.csv.Dialect{ .strict_field_count = true };
+const rows = try serde.csv.fromSliceWith([]const Row, allocator, input, dialect);
+```
+
+Defaults to true: rows with fewer fields than headers produce
+`error.FieldCountMismatch`. Set to false to silently fill missing trailing
+fields with empty values.
+
+### JSON serializer (`serde.json.Options.escape_js_unsafe`)
+
+```zig
+const bytes = try serde.json.toSliceWith(allocator, value, .{ .escape_js_unsafe = true });
+```
+
+When true, U+2028 and U+2029 are escaped as ` ` / ` `. They are valid
+JSON characters but illegal in JavaScript string literals; escape when embedding
+output in HTML `<script>` tags.
+
+## Migration
+
+`serde.json.fromSlice` is now stricter by default and may reject inputs that
+previously parsed silently:
+
+- `null` for a non-optional `i32` / `f64` field now errors. Mark the field
+  optional (`?i32`) or pass `.lenient_null_to_zero = true`.
+- Trailing, missing, and double commas (`[1,2,]`, `[1 2 3]`, `[1,,2]`) now error.
+- Unescaped control characters (raw bytes `0x00..0x1f`) inside JSON strings now
+  error. Pass `.allow_unescaped_control_chars = true` to keep parsing them.
+- Nesting deeper than 256 levels errors with `error.MaxDepthExceeded`. Raise
+  `.max_depth` if you have legitimately deep input.
+- JSON `\uDC00` (lone low surrogate) and `\uD83D` (unpaired high surrogate)
+  in string escapes now error.
+
+CSV `fromSlice` is also stricter: a data row with fewer fields than the header
+errors. Pass a dialect with `.strict_field_count = false` to retain legacy
+behavior.
+
+## Performance
+
+Run the benchmark suite with:
+
+```sh
+zig build bench
+zig build bench -- --format json
+zig build bench -- --filter json
+zig build bench -- --compare std_json
+```
+
+Benchmark arguments are passed after `--` because Zig consumes build-step
+arguments before the project runner sees them. The runner defaults to
+`ReleaseFast` for the benchmark executable and the imported `serde` module.
+
+Metrics include `ns/op`, `allocations/op`, `bytes allocated/op`, throughput
+MB/s, average output size, warm runs, and selected cold runs. JSON output also
+records Zig version, target, optimize mode, implementation, format, case, and
+operation so CI artifacts can be compared over time.
+
+Representative local run, Apple Silicon macOS, Zig 0.16.0, `ReleaseFast`,
+April 24, 2026:
+
+| Case | Operation | Implementation | ns/op | allocs/op | bytes/op | MB/s |
+|------|-----------|----------------|-------|-----------|----------|------|
+| flat struct JSON | serialize | serde | 1916.44 | 1.00 | 132.00 | 25.88 |
+| flat struct JSON | serialize | std_json | 1608.86 | 1.00 | 132.00 | 30.82 |
+| flat struct JSON | deserialize | serde | 1633.18 | 1.00 | 70.00 | 30.37 |
+| flat struct JSON | deserialize | std_json | 1769.35 | 1.00 | 256.00 | 28.03 |
+| borrowed JSON strings | deserialize | serde | 78.17 | 0.00 | 0.00 | 817.44 |
+| array of structs JSON | roundtrip | serde | 5115.59 | 2.00 | 1888.00 | 78.11 |
+
+CI uploads benchmark baseline/result artifacts for Zig 0.15.2 and 0.16.0. On
+pull requests, CI compares the PR against the base SHA on the same runner when
+the base branch already has `zig build bench`; otherwise it falls back to the
+checked-in empty baseline. Regressions over the configured threshold are shown
+in the GitHub Actions summary without failing the PR.
 
 ## Tests
 

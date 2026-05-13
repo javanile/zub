@@ -6,8 +6,19 @@ author: allyourcodebase
 author_github: allyourcodebase
 repository: https://github.com/allyourcodebase/SDL3
 keywords:
-date: 2026-04-06
-last_sync: 2026-04-06T23:04:13Z
+date: 2026-05-09
+updated_at: 2026-05-09T00:07:19+00:00
+last_sync: 2026-05-09T00:07:19Z
+package_kind: hybrid
+has_library: true
+has_binary: true
+has_distributable_binary: true
+binary_count: 1
+distributable_binary_count: 1
+multiple_binaries: false
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
 permalink: /packages/allyourcodebase/SDL3/
 ---
 
@@ -19,9 +30,11 @@ SDL3 ported to the Zig build system.
 
 Supports cross compilation and custom platform configuration.
 
-# Zig Version
+# Versioning
 
-This repo currently targets Zig 0.15, but support for Zig 0.16 is in [#13](https://github.com/allyourcodebase/SDL3/pull/13) and will be merged into main when Zig 0.16 is released.
+See `build.zig.zon` for the current Zig version, see releases for support for previous Zig versions.
+
+The versions specified in `build.zig.zon` are split between the package version (before the plus) and the SDL version (after the plus). For example, version `1.0.0+3.4.4` is package version 1.0.0 with support for SDL 3.4.4.
 
 # Setup
 
@@ -36,7 +49,7 @@ const sdl = b.dependency("sdl", .{
     .optimize = optimize,
     .target = target,
 });
-exe.linkLibrary(sdl.artifact("SDL3"));
+exe.root_module.linkLibrary(sdl.artifact("SDL3"));
 ```
 
 Finally, you can use SDL's C API from Zig like this:

@@ -8,9 +8,9 @@ repository: https://github.com/thevilledev/zig-nn
 keywords:
   - learning
   - neural-networks
-date: 2026-05-03
-updated_at: 2026-05-03T08:39:21+00:00
-last_sync: 2026-05-03T08:39:21Z
+date: 2026-05-12
+updated_at: 2026-05-12T11:21:03+00:00
+last_sync: 2026-05-12T11:21:03Z
 package_kind: hybrid
 has_library: true
 has_binary: true
