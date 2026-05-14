@@ -7,9 +7,9 @@ author_github: sackosoft
 repository: https://github.com/sackosoft/zig-luajit-build
 keywords:
   - luajit
-date: 2026-05-05
-updated_at: 2026-05-05T16:27:47+00:00
-last_sync: 2026-05-05T16:27:47Z
+date: 2026-05-11
+updated_at: 2026-05-11T20:10:53+00:00
+last_sync: 2026-05-11T20:10:53Z
 package_kind: library
 has_library: true
 has_binary: false

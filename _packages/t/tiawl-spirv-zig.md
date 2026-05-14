@@ -1,6 +1,6 @@
 ---
 title: spirv.zig
-description: "spirv-tools packaged for @ziglang"
+description: "@KhronosGroup's SPIRV-Tools & SPIRV-Headers packaged for @ziglang"
 license: Unlicense
 author: tiawl
 author_github: tiawl
@@ -9,9 +9,9 @@ keywords:
   - binding
   - spirv
   - spirv-tools
-date: 2026-05-05
-updated_at: 2026-05-05T07:32:51+00:00
-last_sync: 2026-05-05T07:32:51Z
+date: 2026-05-14
+updated_at: 2026-05-14T11:29:16+00:00
+last_sync: 2026-05-14T11:29:16Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -43,7 +43,7 @@ However this repository has subtle differences for maintainability tasks:
 
 The [Zig][4] part of this package requires the latest (0.16.0) or the master (0.17.0-dev) [Zig][4] release.
 
-For other dependencies see [the build.zig.zon](https://github.com/tiawl/spirv.zig/blob/zig-stable/build.zig.zon)
+For other dependencies see [the build.zig.zon](https://github.com/tiawl/spirv.zig/blob/stable/build.zig.zon)
 
 ## `zig build` options
 
