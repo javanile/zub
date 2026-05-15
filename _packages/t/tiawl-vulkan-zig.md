@@ -1,17 +1,18 @@
 ---
-title: spirv.zig
-description: "@KhronosGroup's SPIRV-Tools & SPIRV-Headers packaged for @ziglang"
+title: vulkan.zig
+description: "@KhronosGroup's Vulkan-Headers packaged for @ziglang"
 license: Unlicense
 author: tiawl
 author_github: tiawl
-repository: https://github.com/tiawl/spirv.zig
+repository: https://github.com/tiawl/vulkan.zig
 keywords:
   - binding
-  - spirv
-  - spirv-tools
+  - vulkan
+  - vulkan-api
 date: 2026-05-15
-updated_at: 2026-05-15T09:40:52+00:00
-last_sync: 2026-05-15T09:40:52Z
+category: game-development
+updated_at: 2026-05-15T09:58:35+00:00
+last_sync: 2026-05-15T09:58:35Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -22,28 +23,28 @@ multiple_binaries: false
 is_sponsor: false
 sync_priority: normal
 sync_source: zigistry
-permalink: /packages/tiawl/spirv.zig/
+permalink: /packages/tiawl/vulkan.zig/
 ---
 
-# spirv.zig
+# vulkan.zig
 
-This is a fork of [hexops/spirv-tools][1] which itself is a fork of [KhronosGroup/SPIRV-Tools][2].
+This is a fork of [hexops/vulkan-headers][1] which is itself a fork of [KhronosGroup/Vulkan-Headers][2].
 
 ## Why this forkception ?
 
-The intention under this fork is the same as [hexops][5] had when they forked [KhronosGroup/SPIRV-Tools][2]: package the headers for [Zig][4]. So:
+The intention under this fork is the same as [hexops][4] had when they forked [KhronosGroup/Vulkan-Headers][2]: package the headers for [Zig][3]. So:
 * Unnecessary files have been deleted,
 * The build system has been replaced with `build.zig`.
 
 However this repository has subtle differences for maintainability tasks:
 * No shell scripting,
-* A cron runs every day to check [KhronosGroup/SPIRV-Tools][2], [KhronosGroup/SPIRV-Headers][3] and other dependencies. Then it updates this repository if a new release is available.
+* A cron runs every day to check [KhronosGroup/Vulkan-Headers][2] and other dependencies. Then it updates this repository if a new release is available.
 
 ## Dependencies
 
-The [Zig][4] part of this package requires the latest (0.16.0) or the master (0.17.0-dev) [Zig][4] release.
+The [Zig][3] part of this package requires the latest (0.16.0) or the master (0.17.0-dev) [Zig][3] release.
 
-For other dependencies see [the build.zig.zon](https://github.com/tiawl/spirv.zig/blob/stable/build.zig.zon)
+For other dependencies see [the build.zig.zon](https://github.com/tiawl/vulkan.zig/blob/stable/build.zig.zon)
 
 ## `zig build` options
 
@@ -61,8 +62,7 @@ The parts of this repository originated from this repository are dedicated to th
 
 **For other parts, it is subject to the License restrictions their respective owners choosed. By design, the public domain code is incompatible with the License notion. In this case, the License prevails. So if you have any doubt about a file property, open an issue.**
 
-[1]:https://github.com/hexops/spirv-tools
-[2]:https://github.com/KhronosGroup/SPIRV-Tools
-[3]:https://github.com/KhronosGroup/SPIRV-Headers
-[4]:https://codeberg.org/ziglang/zig
-[5]:https://github.com/hexops
+[1]:https://github.com/hexops/vulkan-headers
+[2]:https://github.com/KhronosGroup/Vulkan-Headers
+[3]:https://codeberg.org/ziglang/zig
+[4]:https://github.com/hexops

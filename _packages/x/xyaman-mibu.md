@@ -12,10 +12,10 @@ keywords:
   - cursor
   - terminal
   - tui
-date: 2026-04-16
+date: 2026-05-11
 category: tooling
-updated_at: 2026-04-16T14:20:26+00:00
-last_sync: 2026-04-16T14:20:26Z
+updated_at: 2026-05-11T08:10:10+00:00
+last_sync: 2026-05-11T08:10:10Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -72,7 +72,7 @@ const mibu = @import("mibu");
 const color = mibu.color;
 
 pub fn main() void {
-    std.debug.print("{s}Hello World in purple!\n", .{color.print.bgRGB(97, 37, 160)});
+    std.debug.print("{s}Hello World in purple!{s}\n", .{ color.fgRGB(.{ .r = 97, .g = 37, .b = 160 }), color.reset });
 }
 ```
 
@@ -89,7 +89,11 @@ zig build color
 # Prints what key you pressed, until you press `q` or `ctrl+c`
 zig build event
 
+# Switch to alternate screen
 zig build alternate_screen
+
+# Detect terminal background color
+zig build termbg
 ```
 
 ## TODO
@@ -98,6 +102,8 @@ zig build alternate_screen
 
 ## Projects that use `mibu`
 
-- [zigtris](https://github.com/ringtailsoftware/zigtris)
-- [chip8 emulator (wip)](https://github.com/xyaman/chip8)
-- [2048 in zig](https://codeberg.org/Vulwsztyn/2048_zig)
+- [gurgeous/tennis](https://github.com/gurgeous/tennis) — A small CLI for printing stylized CSV tables
+- [tornikegomareli/lumen](https://github.com/tornikegomareli/lumen) — Real-time hardware monitoring TUI for macOS
+- [lance0/ahab](https://github.com/lance0/ahab) — A Docker cleanup TUI
+- [zigtris](https://github.com/ringtailsoftware/zigtris) — A minimal terminal Tetris written in Zig
+- [2048 in zig](https://codeberg.org/Vulwsztyn/2048_zig) — 2048 implementation in Zig

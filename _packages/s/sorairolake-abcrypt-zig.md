@@ -18,9 +18,9 @@ keywords:
   - poly1305
   - xchacha20
   - xchacha20-poly1305
-date: 2026-04-17
-updated_at: 2026-04-17T15:18:25+00:00
-last_sync: 2026-04-17T15:18:25Z
+date: 2026-05-15
+updated_at: 2026-05-15T12:07:38+00:00
+last_sync: 2026-05-15T12:07:38Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -69,7 +69,7 @@ See the [documentation][docs-url] for more details.
 
 ## Zig version
 
-This library is compatible with Zig version 0.15.1.
+This library is compatible with Zig version 0.16.0.
 
 ## Source code
 

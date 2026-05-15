@@ -10,9 +10,9 @@ keywords:
   - lua
   - lua-bindings
   - package
-date: 2026-04-27
-updated_at: 2026-04-27T07:52:59+00:00
-last_sync: 2026-04-27T07:52:59Z
+date: 2026-05-13
+updated_at: 2026-05-13T07:56:30+00:00
+last_sync: 2026-05-13T07:56:30Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -41,14 +41,14 @@ In both cases, Ziglua will compile Lua from source and link against your Zig cod
 Ziglua `main` is kept up to date with Zig `master`. See the [`zig-0.15.2`](https://github.com/natecraddock/ziglua/tree/zig-0.15.2) branch for Zig 0.15.2 support.
 
 ## Documentation
-Docs are a work in progress and are automatically generated. Most functions and public declarations are documented:
+Docs are automatically generated and contain a guide on getting started with ziglua. Most functions and public declarations are documented:
 * [Ziglua Docs](https://natecraddock.github.io/ziglua/#zlua)
-
-See [docs.md](https://github.com/natecraddock/ziglua/blob/main/docs.md) for more general information on Ziglua and how it differs from the C API.
 
 Example code is included in the [examples](https://github.com/natecraddock/ziglua/tree/main/examples) directory.
 * Run an example with `zig build run-example-<name>`
 * Install an example with `zig build install-example-<name>`
+
+An additional example (`examples/lpeg`) shows how to compile and link a Lua module written in C like LPeg.
 
 ## Why use Ziglua?
 Ziglua is a simple wrapper around the C API. Ziglua aims to mirror the [Lua C API](https://www.lua.org/manual/5.5/manual.html#4) as closely as possible, while improving ergonomics using Zig's features. For example:
@@ -88,6 +88,8 @@ pub fn build(b: *std.Build) void {
 ```
 
 This will compile the Lua C sources and link with your project.
+
+You can also use `lua_dep.artifact("lua")` to access the compiled lua library.
 
 There are currently three additional options that can be passed to `b.dependency()`:
 

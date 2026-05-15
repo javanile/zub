@@ -9,10 +9,10 @@ keywords:
   - bgfx
   - bgfx-graphics-library
   - gamedev
-date: 2026-05-09
+date: 2026-05-11
 category: game-development
-updated_at: 2026-05-09T00:21:01+00:00
-last_sync: 2026-05-09T00:21:01Z
+updated_at: 2026-05-11T18:26:20+00:00
+last_sync: 2026-05-11T18:26:20Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -69,6 +69,9 @@ Minimal is `0.16.0`. But you know try your version and believe.
 - [BX](https://github.com/bkaradzic/bx/compare/cac72f6cfa0893393ea12692ebfacb4495f8c826...master)
 - [BImg](https://github.com/bkaradzic/bimg/compare/9114b47f532ce59cd0c6c9f8932df2c48888d4c1...master)
 - [BGFX](https://github.com/bkaradzic/bgfx/compare/8532b2c45d2f4332a9ac9734b85c2ea2253cb8d5...master)
+
+## Useful tools
+- [bgfx_shader_analyzer](https://github.com/r0ckHopper/bgfx_shader_analyzer) - LSP for bgfx shaders.
 
 ## Getting started
 
