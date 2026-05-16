@@ -6,9 +6,9 @@ author: akunaakwei
 author_github: akunaakwei
 repository: https://github.com/akunaakwei/zig-patch
 keywords:
-date: 2026-04-19
-updated_at: 2026-04-19T17:44:54+00:00
-last_sync: 2026-04-19T17:44:54Z
+date: 2026-05-10
+updated_at: 2026-05-10T18:08:46+00:00
+last_sync: 2026-05-10T18:08:46Z
 package_kind: hybrid
 has_library: true
 has_binary: true

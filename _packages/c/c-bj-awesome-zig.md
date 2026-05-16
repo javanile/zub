@@ -8,9 +8,9 @@ repository: https://github.com/C-BJ/awesome-zig
 keywords:
   - awesome
   - awesome-list
-date: 2026-04-25
-updated_at: 2026-04-25T08:46:31+00:00
-last_sync: 2026-04-25T08:46:31Z
+date: 2026-05-15
+updated_at: 2026-05-15T17:47:38+00:00
+last_sync: 2026-05-15T17:47:38Z
 package_kind: library
 has_library: false
 has_binary: false
@@ -140,6 +140,8 @@ permalink: /packages/C-BJ/awesome-zig/
   [zig-deploy🗒️Deploy your iOS apps written with Zig!](https://github.com/kubkon/zig-deploy) 
   - ![Star](https://img.shields.io/github/stars/tomhoule/zig-diff?color=orange)
   [zig-diff🗒️Text diffing in zig](https://github.com/tomhoule/zig-diff) 
+  - ![Star](https://img.shields.io/github/stars/ryo-zen/zig-docs-mcp?color=orange)
+  [zig-docs-mcp🗒️MCP server for Zig 0.16 language docs, stdlib references, and code examples](https://github.com/ryo-zen/zig-docs-mcp)
   - ![Star](https://img.shields.io/github/stars/kristoff-it/zig-doctest?color=orange)
   [zig-doctest🗒️A tool for testing snippets of code, useful for websites and books that talk about Zig](https://github.com/kristoff-it/zig-doctest) 
   - ![Star](https://img.shields.io/github/stars/shritesh/zigfmt-web?color=orange)
@@ -174,6 +176,8 @@ permalink: /packages/C-BJ/awesome-zig/
   [rheia🗒️A blockchain written in Zig](https://github.com/lithdew/rheia)
   - ![Star](https://img.shields.io/github/stars/Syndica/sig?color=orange)
   [Sig🗒️A Solana Zig validator client](https://github.com/Syndica/sig)
+  - ![Star](https://img.shields.io/github/stars/ryo-zen/zeicoin?color=orange)
+  [zeicoin🗒️A fast and lightweight Layer 1 blockchain written in Zig](https://github.com/ryo-zen/zeicoin)
   - ![Star](https://img.shields.io/github/stars/keep-starknet-strange/ziggy-starkdust?color=orange)
   [ziggy-starkdust🗒️Cairo VM in Zig](https://github.com/keep-starknet-strange/ziggy-starkdust)
 
@@ -481,6 +485,8 @@ permalink: /packages/C-BJ/awesome-zig/
   [zelda🗒️A simple HTTP client library for Zig](https://github.com/haze/zelda) 
   - ![Star](https://img.shields.io/github/stars/floscodes/zerve?color=orange)
   [zerve🗒️Simple framework for writing web services and web apps in zig](https://github.com/floscodes/zerve) 
+  - ![Star](https://img.shields.io/github/stars/ziex-dev/ziex?color=orange)
+  [ziex🗒️A full-stack web framework for Zig](https://github.com/ziex-dev/ziex) 
   - ![Star](https://img.shields.io/github/stars/haze/zig-libressl?color=orange)
   [zig-libressl🗒️LibreSSL stream wrappers for Zig](https://github.com/haze/zig-libressl)
   - ![Star](https://img.shields.io/github/stars/kubkon/zig-objdump?color=orange)

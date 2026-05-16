@@ -14,10 +14,10 @@ keywords:
   - wasm
   - webassembly
   - zero-dependency
-date: 2026-05-09
+date: 2026-05-16
 category: systems
-updated_at: 2026-05-09T09:40:27+00:00
-last_sync: 2026-05-09T09:40:27Z
+updated_at: 2026-05-16T11:23:18+00:00
+last_sync: 2026-05-16T11:23:18Z
 package_kind: hybrid
 has_library: true
 has_binary: true
