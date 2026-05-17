@@ -1,17 +1,30 @@
 ---
 title: zevy-reflect
-description: A reflection library in Zig with utilities covering change detection and interface validation and vtable generation using real structs.
+description: A reflection library in Zig with utilities covering change detection and interface validation and vtable generation using real structs. Mixin generation and generic Generator (OOP in zig)
 license: MIT
 author: captkirk88
 author_github: captkirk88
 repository: https://github.com/captkirk88/zevy-reflect
 keywords:
+  - mixin
+  - oop
   - reflection
   - zevy
   - zig-programming-language
-date: 2026-04-05
+date: 2026-05-15
 category: tooling
-last_sync: 2026-04-05T03:38:49Z
+updated_at: 2026-05-15T02:25:02+00:00
+last_sync: 2026-05-15T02:25:02Z
+package_kind: library
+has_library: true
+has_binary: false
+has_distributable_binary: false
+binary_count: 0
+distributable_binary_count: 0
+multiple_binaries: false
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
 permalink: /packages/captkirk88/zevy-reflect/
 ---
 
@@ -19,7 +32,7 @@ permalink: /packages/captkirk88/zevy-reflect/
 
 A lightweight reflection and change detection library for Zig.
 
-[![Zig Version](https://img.shields.io/badge/zig-0.15.1+-blue.svg)](https://ziglang.org/)
+[![Zig Version](https://img.shields.io/badge/zig-0.16.dev+-blue.svg)](https://ziglang.org/)
 
 ## Features
 
@@ -28,6 +41,8 @@ A lightweight reflection and change detection library for Zig.
     - **VTable Generation**: Create vtables for dynamic dispatch based on interfaces, with support for interface extension. Tested using std.mem.Allocation.VTable interface.
 - **Function Verification**: Compile-time validation of function signatures with dynamic error reporting for type mismatches
 - **Dynamic Error Types**: Utilities for creating error sets with dynamic names at comptime
+- **Code Generation Contracts**: Build reusable compile-time generators with typed input and config validation
+- **Mixin Generation**: Generate new types by mixing two existing types together (supports mixin types chaining), with configurable conflict resolution strategies
 - **Change Detection**: Track changes to struct fields with minimal memory overhead (8 bytes)
 - **Zero Dependencies**: Pure Zig implementation with no external dependencies
 
@@ -106,9 +121,15 @@ comptime {
 }
 ```
 
+### Code Generation
+
+See [MIXIN_CODEGEN.md](MIXIN_CODEGEN.md) for the mixin-specific API.
+
 ### Interface Validation and VTable
 
 `Template(...)` provides a compile-time validator and a typed vtable generator. Useful when you want an explicit interface and a vtable for dynamic dispatch. `Template(...).Interface` is the interface type.
+
+If you want validation errors to include the user callsite that triggered validation, use `Template(...).validateAt(Impl, @src())` or `validateVerboseAt(Impl, @src())`.
 
 ```zig
 

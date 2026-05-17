@@ -10,10 +10,10 @@ keywords:
   - graph-algorithms
   - graph-theory
   - hypergraph
-date: 2026-05-11
+date: 2026-05-17
 category: data-formats
-updated_at: 2026-05-11T11:39:37+00:00
-last_sync: 2026-05-11T11:39:37Z
+updated_at: 2026-05-17T10:20:54+00:00
+last_sync: 2026-05-17T10:20:54Z
 package_kind: hybrid
 has_library: true
 has_binary: true

@@ -13,10 +13,10 @@ keywords:
   - entity-component-system
   - systems
   - zevy
-date: 2026-05-05
+date: 2026-05-15
 category: game-development
-updated_at: 2026-05-05T23:43:08+00:00
-last_sync: 2026-05-05T23:43:08Z
+updated_at: 2026-05-15T02:58:03+00:00
+last_sync: 2026-05-15T02:58:03Z
 package_kind: library
 has_library: true
 has_binary: false
