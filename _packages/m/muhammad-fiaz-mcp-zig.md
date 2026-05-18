@@ -13,9 +13,9 @@ keywords:
   - zig-mcp
   - zig-model-context-protocol
   - ziglibrary
-date: 2026-04-20
-updated_at: 2026-04-20T19:37:00+00:00
-last_sync: 2026-04-20T19:37:00Z
+date: 2026-05-18
+updated_at: 2026-05-18T13:36:58+00:00
+last_sync: 2026-05-18T13:36:58Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -35,7 +35,7 @@ permalink: /packages/muhammad-fiaz/mcp.zig/
 # MCP.zig
 
 <a href="https://muhammad-fiaz.github.io/mcp.zig/"><img src="https://img.shields.io/badge/docs-muhammad--fiaz.github.io-blue" alt="Documentation"></a>
-<a href="https://ziglang.org/"><img src="https://img.shields.io/badge/Zig-0.15.2+-orange.svg?logo=zig" alt="Zig Version"></a>
+<a href="https://ziglang.org/"><img src="https://img.shields.io/badge/Zig-0.16.0+-orange.svg?logo=zig" alt="Zig Version"></a>
 <a href="https://github.com/muhammad-fiaz/mcp.zig/actions/workflows/ci.yml"><img src="https://github.com/muhammad-fiaz/mcp.zig/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
 <a href="https://github.com/muhammad-fiaz/mcp.zig"><img src="https://img.shields.io/github/stars/muhammad-fiaz/mcp.zig" alt="GitHub stars"></a>
 <a href="https://github.com/muhammad-fiaz/mcp.zig/issues"><img src="https://img.shields.io/github/issues/muhammad-fiaz/mcp.zig" alt="GitHub issues"></a>
@@ -117,7 +117,10 @@ Run the following command to add mcp.zig to your project:
 # Latest development branch
 zig fetch --save git+https://github.com/muhammad-fiaz/mcp.zig.git
 
-# Or specific release
+# Zig 0.16.x (recommended)
+zig fetch --save https://github.com/muhammad-fiaz/mcp.zig/archive/refs/tags/0.0.4.tar.gz
+
+# Zig 0.15.x
 zig fetch --save https://github.com/muhammad-fiaz/mcp.zig/archive/refs/tags/0.0.3.tar.gz
 ```
 
@@ -137,25 +140,17 @@ exe.root_module.addImport("mcp", mcp_dep.module("mcp"));
 const std = @import("std");
 const mcp = @import("mcp");
 
-pub fn main() void {
-    if (run()) {} else |err| {
+pub fn main(init: std.process.Init) void {
+    run(init.io, init.gpa) catch |err| {
         mcp.reportError(err);
-    }
+    };
 }
 
-fn run() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
-
-    // Check for updates
-    _ = mcp.report.checkForUpdates(allocator);
-
+fn run(io: std.Io, allocator: std.mem.Allocator) !void {
     // Create server
-    var server = mcp.Server.init(.{
+    var server: mcp.Server = .init(allocator, .{
         .name = "my-server",
         .version = "1.0.0",
-        .allocator = allocator,
     });
     defer server.deinit();
 
@@ -167,12 +162,14 @@ fn run() !void {
     });
 
     // Run with STDIO transport
-    try server.run(.stdio);
+    try server.run(io, allocator, .stdio);
 }
 
 fn greetHandler(
+    _: ?*anyopaque,
+    _: std.Io,
     allocator: std.mem.Allocator,
-    args: ?std.json.Value
+    args: ?std.json.Value,
 ) mcp.tools.ToolError!mcp.tools.ToolResult {
     const name = mcp.tools.getString(args, "name") orelse "World";
     const message = try std.fmt.allocPrint(allocator, "Hello, {s}!", .{name});
@@ -186,30 +183,25 @@ fn greetHandler(
 const std = @import("std");
 const mcp = @import("mcp");
 
-pub fn main() void {
-    if (run()) {} else |err| {
+pub fn main(init: std.process.Init) void {
+    run(init.io, init.gpa) catch |err| {
         mcp.reportError(err);
-    }
+    };
 }
 
-fn run() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
-
-    var client = mcp.Client.init(.{
+fn run(io: std.Io, allocator: std.mem.Allocator) !void {
+    var client: mcp.Client = .init(io, allocator, .{
         .name = "my-client",
         .version = "1.0.0",
-        .allocator = allocator,
     });
-    defer client.deinit();
+    defer client.deinit(allocator);
 
     // Enable capabilities
     client.enableSampling();
     client.enableRoots(true); // Supports list changed notifications
 
     // Add roots
-    try client.addRoot("file:///projects", "Projects");
+    try client.addRoot(allocator, "file:///projects", "Projects");
 }
 ```
 
@@ -307,7 +299,7 @@ Define filesystem boundaries:
 
 ```zig
 client.enableRoots(true);
-try client.addRoot("file:///projects", "Projects");
+try client.addRoot(allocator, "file:///projects", "Projects");
 ```
 
 ### Sampling

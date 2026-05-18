@@ -9,9 +9,9 @@ keywords:
   - pebble
   - pebble-sdk
   - pebble-watch
-date: 2026-05-08
-updated_at: 2026-05-08T08:29:49+00:00
-last_sync: 2026-05-08T08:29:49Z
+date: 2026-05-14
+updated_at: 2026-05-14T07:16:51+00:00
+last_sync: 2026-05-14T07:16:51Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -34,7 +34,7 @@ well as the Zig standard library.
 
 See the included [example watchface](example/) or follow the quickstart below.
 
-zig-pebble-sdk requires Zig version 0.15 and the Pebble SDK.
+zig-pebble-sdk requires Zig version 0.16 and the Pebble SDK.
 
 ## Quickstart
 
