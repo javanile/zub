@@ -14,9 +14,20 @@ keywords:
   - rollup-plugin
   - wasm
   - webpack-plugin
-date: 2026-04-09
+date: 2026-05-13
 category: systems
-last_sync: 2026-04-09T15:41:13Z
+updated_at: 2026-05-13T23:56:51+00:00
+last_sync: 2026-05-13T23:56:51Z
+package_kind: library
+has_library: false
+has_binary: false
+has_distributable_binary: false
+binary_count: 0
+distributable_binary_count: 0
+multiple_binaries: false
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
 permalink: /packages/chung-leong/zigar/
 ---
 

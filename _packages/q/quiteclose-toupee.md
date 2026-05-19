@@ -9,9 +9,9 @@ keywords:
   - html
   - template-engine
   - templates
-date: 2026-04-02
-updated_at: 2026-04-02T19:54:05+00:00
-last_sync: 2026-04-02T19:54:05Z
+date: 2026-05-13
+updated_at: 2026-05-13T20:12:21+00:00
+last_sync: 2026-05-13T20:12:21Z
 package_kind: hybrid
 has_library: true
 has_binary: true
