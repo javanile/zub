@@ -8,10 +8,10 @@ repository: https://github.com/theodore-s-beers/later
 keywords:
   - unicode
   - unicode-collation
-date: 2026-04-12
+date: 2026-05-12
 category: systems
-updated_at: 2026-04-12T05:35:00+00:00
-last_sync: 2026-04-12T05:35:00Z
+updated_at: 2026-05-12T20:03:46+00:00
+last_sync: 2026-05-12T20:03:46Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -72,7 +72,7 @@ test "sort multilingual list of names" {
         "صدام",
     };
 
-    std.mem.sortUnstable([]const u8, &input, &coll, later.collateComparator);
+    std.mem.sortUnstable([]const u8, &input, &coll, later.collateComparatorOrPanic);
     try std.testing.expectEqualSlices([]const u8, &expected, &input);
 }
 ```

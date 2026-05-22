@@ -22,10 +22,10 @@ keywords:
   - zig-cli
   - zig-programming-language
   - zig-tui
-date: 2026-05-21
+date: 2026-05-22
 category: tooling
-updated_at: 2026-05-21T11:33:36+00:00
-last_sync: 2026-05-21T11:33:36Z
+updated_at: 2026-05-22T09:58:55+00:00
+last_sync: 2026-05-22T09:58:55Z
 package_kind: library
 has_library: true
 has_binary: false

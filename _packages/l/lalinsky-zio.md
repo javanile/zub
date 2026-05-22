@@ -17,17 +17,17 @@ keywords:
   - kqueue
   - networking
   - poll
-date: 2026-05-10
+date: 2026-05-22
 category: networking
-updated_at: 2026-05-10T08:42:08+00:00
-last_sync: 2026-05-10T08:42:08Z
+updated_at: 2026-05-22T10:47:09+00:00
+last_sync: 2026-05-22T10:47:09Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 2
-distributable_binary_count: 2
-multiple_binaries: true
+binary_count: 1
+distributable_binary_count: 1
+multiple_binaries: false
 is_sponsor: false
 sync_priority: normal
 sync_source: zigistry
@@ -45,9 +45,12 @@ The project consists of a few high-level components:
 - Runtime for executing stackful coroutines (fibers, green threads) on one or more CPU threads.
 - Asynchronous I/O layer that makes it look like operations are blocking for easy state management, but using event-driven OS APIs under the hood.
 - Synchronization primitives that cooperate with this runtime.
-- Integration with standard library interfaces, like [`std.Io.Reader`] and [`std.Io.Writer`], and also [`std.Io`].
+- Full implementation of the [`std.Io`] interface, so that you can use any Zig 0.16+ networking library.
+- Seamless integration with standard library interfaces, like [`std.Io.Reader`] and [`std.Io.Writer`].
 
 It's similar to [goroutines] in Go, but with the pros and cons of being implemented in a language with manual memory management and without compiler support.
+
+> The main branch is for Zig 0.16 . For Zig master (0.17+), use the [`zig-0.17`](https://github.com/lalinsky/zio/tree/zig-0.17) branch.
 
 [`std.Io`]: https://ziglang.org/documentation/0.16.0/std/#std.Io
 [`std.Io.Reader`]: https://ziglang.org/documentation/0.16.0/std/#std.Io.Reader
@@ -67,22 +70,12 @@ It's similar to [goroutines] in Go, but with the pros and cons of being implemen
 - Synchronization primitives, including more advanced ones, like channels.
 - Low-level event loop access for integrating with existing C libraries.
 
-## Ecosystem
-
-The following libraries use zio for networking and concurrency:
-
-- [HTTP server and client](https://github.com/lalinsky/dusty)
-- [PostgreSQL client](https://github.com/lalinsky/pg.zig)
-- [Redis client](https://github.com/lalinsky/redis.zig)
-- [NATS client](https://github.com/lalinsky/nats.zig)
-- [Memcached client](https://github.com/lalinsky/memcached.zig)
-
 ## Installation
 
 1) Add zio as a dependency in your `build.zig.zon`:
 
 ```bash
-zig fetch --save "git+https://github.com/lalinsky/zio#v0.10.0"
+zig fetch --save "git+https://github.com/lalinsky/zio#v0.12.1"
 ```
 
 2) In your `build.zig`, add the `zio` module as a dependency to your program:
@@ -98,6 +91,10 @@ exe.root_module.addImport("zio", zio.module("zio"));
 ```
 
 ## Usage
+
+There are two main ways to use zio: the native API and the standard library's [`std.Io`] interface.
+For most cases, prefer the `std.Io` interface, especially if you are writing a library.
+The native API is more direct and has more features, but it ties you to the zio runtime.
 
 A minimal TCP echo server, using zio's native API:
 
@@ -202,6 +199,10 @@ zig build
 # Run tests
 zig build test
 ```
+
+## Contributing
+
+See [DEVELOPMENT.md](DEVELOPMENT.md).
 
 ## License
 
