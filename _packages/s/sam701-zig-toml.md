@@ -8,10 +8,10 @@ repository: https://github.com/sam701/zig-toml
 keywords:
   - parser
   - toml
-date: 2026-05-15
+date: 2026-05-22
 category: data-formats
-updated_at: 2026-05-15T06:47:22+00:00
-last_sync: 2026-05-15T06:47:22Z
+updated_at: 2026-05-22T04:53:55+00:00
+last_sync: 2026-05-22T04:53:55Z
 package_kind: hybrid
 has_library: true
 has_binary: true

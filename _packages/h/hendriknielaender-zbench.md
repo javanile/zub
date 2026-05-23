@@ -12,10 +12,10 @@ keywords:
   - performance
   - stdout
   - testing
-date: 2026-05-10
+date: 2026-05-23
 category: tooling
-updated_at: 2026-05-10T17:33:17+00:00
-last_sync: 2026-05-10T17:33:17Z
+updated_at: 2026-05-23T04:36:39+00:00
+last_sync: 2026-05-23T04:36:39Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -34,7 +34,7 @@ permalink: /packages/hendriknielaender/zBench/
 [![MIT license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/hendriknielaender/zbench/blob/HEAD/LICENSE)
 ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/hendriknielaender/zbench)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/hendriknielaender/zbench/blob/HEAD/CONTRIBUTING.md)
-<img src="logo.png" alt="zBench logo" align="right" width="20%"/>
+<img src="static/assets/logo.png" alt="zBench logo" align="right" width="20%"/>
 
 zBench is a benchmarking library for the Zig programming language. It is designed to provide easy-to-use functionality to measure and compare the performance of your code.
 

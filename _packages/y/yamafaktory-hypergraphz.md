@@ -1,6 +1,6 @@
 ---
 title: hypergraphz
-description: HypergraphZ - A Hypergraph Implementation in Zig
+description: HypergraphZ – directed hypergraph library in Zig with Python bindings
 license: MIT
 author: yamafaktory
 author_github: yamafaktory
@@ -10,10 +10,13 @@ keywords:
   - graph-algorithms
   - graph-theory
   - hypergraph
-date: 2026-05-17
+  - pipy
+  - pipy-package
+  - python
+date: 2026-05-19
 category: data-formats
-updated_at: 2026-05-17T10:20:54+00:00
-last_sync: 2026-05-17T10:20:54Z
+updated_at: 2026-05-19T22:09:46+00:00
+last_sync: 2026-05-19T22:09:46Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -27,25 +30,175 @@ sync_source: zigistry
 permalink: /packages/yamafaktory/hypergraphz/
 ---
 
-# HypergraphZ - A Hypergraph Implementation in Zig
+# HypergraphZ
 
 ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/yamafaktory/hypergraphz/ci.yml?branch=main&style=flat-square)
+![PyPI](https://img.shields.io/pypi/v/hypergraphz?style=flat-square)
 
-HypergraphZ is a directed hypergraph implementation in Zig (https://en.wikipedia.org/wiki/Hypergraph):
+A fast, directed [hypergraph](https://en.wikipedia.org/wiki/Hypergraph) library written in Zig, with Python bindings included.
 
-- Each hyperedge can contain zero, one (unary) or multiple vertices.
-- Each hyperedge can contain vertices directed to themselves one or more times.
+In a regular graph an edge connects exactly two nodes. A **hyperedge** connects *any number* of vertices at once — making hypergraphs a natural fit wherever relationships involve more than two parties:
 
-## Zig version
+| Domain | Vertices | Hyperedges |
+|---|---|---|
+| Academia | researchers | papers (all co-authors at once) |
+| Biology | proteins | complexes, metabolic pathways |
+| Chemistry | molecules | reactions (multiple reactants → products) |
+| Finance | accounts | transactions (split payments, settlements) |
+| Software | packages | commits, dependency sets |
+| Networks | devices | multicast groups, subnets |
+| Social | people | group chats, events, committees |
+| Knowledge | concepts | ontology relations, semantic clusters |
+| Logistics | locations | routes, shared shipments |
+| ML / AI | features | co-occurrence sets, hypergraph neural nets |
+
+HypergraphZ adds **directed** semantics on top: consecutive vertex pairs within a hyperedge define a direction, enabling shortest-path queries, topological sort, and reachability over the same structure.
+
+**Highlights**
+
+- Hyperedges can span zero, one, or many vertices — including self-loops and duplicates
+- Full algorithm suite: BFS/DFS, shortest path, PageRank, centrality, cut vertices, connected components, topological sort, transitive closure
+- Structural operations: dual, k-skeleton, line graph, star/clique expansion, incidence matrix, Laplacian
+- Python wheels ship a precompiled Zig core — no compiler needed at install time
+- Bulk insertion API (`create_vertices`, `create_hyperedges`) cuts Python FFI overhead ~10×
+
+---
+
+## For Python users
+
+### How it works
+
+The Python package is a thin binding over the same Zig core used by the native library — there is no Python reimplementation of the graph logic.
+
+```
+┌─────────────────────────────┐
+│  Python (hypergraphz)       │  high-level API — Hypergraph, VertexQuery, …
+├─────────────────────────────┤
+│  ctypes                     │  FFI bridge — no C extension, no compilation step for users
+├─────────────────────────────┤
+│  C ABI (hgz_c_api.zig)      │  flat exported functions — hgz_add_vertex, hgz_find_shortest_path, …
+├─────────────────────────────┤
+│  HypergraphZ (Zig core)     │  all algorithms, memory management, type-safe generics
+└─────────────────────────────┘
+```
+
+The shared library (`libhypergraphz.so` / `.dylib` / `.dll`) is compiled once and shipped inside the wheel. Data crosses the boundary as JSON (vertex and hyperedge payloads) and as plain integer ID arrays (all structural operations). For bulk insertion, `create_vertices` and `create_hyperedges` serialise an entire payload list in one call, reducing FFI crossings from N to 1 — see [Performance](#performance-1) below.
+
+### Installation
+
+```sh
+pip install hypergraphz
+# or with uv
+uv add hypergraphz
+```
+
+Pre-built wheels are available for Linux (x86\_64, aarch64), macOS (x86\_64, arm64), and Windows (x86\_64).
+
+### Quick start
+
+```python
+from hypergraphz import Hypergraph
+
+g = Hypergraph()
+
+# Add vertices and hyperedges
+alice = g.create_vertex({"name": "alice", "age": 30})
+bob   = g.create_vertex({"name": "bob",   "age": 25})
+carol = g.create_vertex({"name": "carol", "age": 35})
+
+collab = g.create_hyperedge({"type": "project"})
+g.append_vertices(collab, [alice, bob, carol])
+
+# Build the reverse index before querying
+g.build()
+
+# Shortest path
+path = g.find_shortest_path(alice, carol)
+
+# Fluent query builders
+active = (
+    g.vertices()
+     .where(lambda d: d["age"] > 28)
+     .data()
+)
+
+# Structural algorithms
+scores, _, _ = g.compute_page_rank()
+centrality    = g.compute_centrality()
+components    = g.get_connected_components()
+
+# Sub-graph operations return independent Hypergraph objects
+sub  = g.get_vertex_induced_subhypergraph([alice, bob])
+dual = g.get_dual()
+```
+
+### API summary
+
+| Category | Methods |
+|---|---|
+| Lifecycle | `build()`, `clear()`, `save()`, `load()`, `clone()` |
+| Vertices | `create_vertex()`, `get_vertex()`, `update_vertex()`, `delete_vertex()`, `count_vertices()`, `get_all_vertex_ids()` |
+| Hyperedges | `create_hyperedge()`, `get_hyperedge()`, `update_hyperedge()`, `delete_hyperedge()`, `count_hyperedges()`, `get_all_hyperedge_ids()` |
+| Relations | `append_vertices()`, `prepend_vertices()`, `insert_vertex()`, `insert_vertices()`, `delete_vertex_from_hyperedge()`, `delete_vertex_at_index()` |
+| Degree | `get_vertex_indegree()`, `get_vertex_outdegree()` |
+| Queries | `get_hyperedge_vertices()`, `get_vertex_hyperedges()`, `get_vertex_neighborhood()`, `get_intersections()`, `get_hyperedges_connecting()`, `get_endpoints()`, `get_orphan_vertices()`, `get_orphan_hyperedges()` |
+| Boolean | `is_connected()`, `is_reachable()`, `has_cycle()`, `is_k_uniform()` |
+| Traversal | `find_shortest_path()`, `find_all_paths()`, `bfs()`, `dfs()`, `random_walk()` |
+| Algorithms | `get_connected_components()`, `topological_sort()`, `find_cut_vertices()`, `compute_centrality()`, `compute_page_rank()`, `get_inclusions()`, `get_nestedness_profile()` |
+| Matrices | `to_incidence_matrix()`, `to_incidence_matrix_coo()`, `to_laplacian()` |
+| Sub-graphs | `get_dual()`, `get_k_skeleton()`, `get_vertex_induced_subhypergraph()`, `get_edge_induced_subhypergraph()`, `get_core()`, `expand_to_graph()`, `expand_to_star()`, `get_line_graph()`, `get_transitive_closure()` |
+| Fluent builders | `vertices()` → `VertexQuery`, `hyperedges()` → `HyperedgeQuery` |
+
+### Exceptions
+
+All errors map to typed exceptions from `hypergraphz`:
+
+| Exception | When raised |
+|---|---|
+| `NotBuiltError` | Query requires `build()` first |
+| `VertexNotFoundError` | Vertex ID does not exist |
+| `HyperedgeNotFoundError` | Hyperedge ID does not exist |
+| `CycleDetectedError` | Operation requires a DAG |
+| `NoPathError` | No directed path exists |
+| `IndexOutOfBoundsError` | Insertion index out of range |
+| `NotEnoughVerticesError` | Operation needs more vertices |
+
+### Performance
+
+Benchmarks run with `pytest-benchmark` on an **Intel Core i9-13900H, 64 GB RAM, CachyOS Linux (kernel 7.0.5)**, `ReleaseFast` shared library, Python 3.14.
+
+#### Insertion — 1,000 hyperedges × 1,000 vertices
+
+| API | Mean | vs atomic |
+|---|---|---|
+| `create_vertex` per vertex (atomic) | ~4,095 ms | 1× |
+| `create_vertex` per vertex + `append_vertices` (batch append) | ~2,554 ms | 1.6× |
+| `create_hyperedges` + `create_vertices` (bulk, single FFI call each) | **~415 ms** | **~10×** |
+
+The dominant cost in the atomic and batch cases is ctypes call overhead (~1–2 µs per crossing). `create_hyperedges` and `create_vertices` each replace a per-item loop with a single FFI call, serialising the entire payload list as one JSON array.
+
+#### Queries (chain / shared-vertex graphs, after `build()`)
+
+| Operation | Mean |
+|---|---|
+| `find_shortest_path` — chain of 1,000 vertices | ~148 µs |
+| `find_cut_vertices` — chain of 1,000 vertices | ~351 µs |
+| `get_vertex_indegree` × 100 — each vertex in 1,000 hyperedges | ~4.7 ms |
+
+---
+
+## For Zig users
+
+### Zig version
 
 HypergraphZ currently requires **Zig 0.17.0-dev.242+5d55999d2**.
 
-## Usage
+### Usage
 
 Add `hypergraphz` as a dependency to your `build.zig.zon`:
 
 ```sh
-zig fetch --save https://github.com/yamafaktory/hypergraphz/archive/<commit-hash>.tar.gz
+zig fetch --save https://github.com/yamafaktory/hypergraphz/archive/v0.1.0.tar.gz
 ```
 
 Add `hypergraphz` as a dependency to your `build.zig`:
@@ -58,7 +211,7 @@ const hypergraphz = b.dependency("hypergraphz", .{
 exe.root_module.addImport("hypergraphz", hypergraphz.module("hypergraphz"));
 ```
 
-## Example
+### Example
 
 `examples/coauthorship.zig` models a small research community as a directed hypergraph
 where vertices are researchers and hyperedges are papers. The first listed author is
@@ -88,6 +241,29 @@ It walks through seventeen features of the library in sequence:
 | K-core decomposition     | `getCore`                | (s, t)-core peeling; trims the lone-paper researcher         |
 | Nestedness               | `getInclusions`          | strict-subset pairs across hyperedges; sized profile         |
 | Co-author neighborhoods  | `getVertexNeighborhood`  | undirected co-occurrence neighbors across all hyperedges     |
+
+### Performance
+
+Benchmarks run with `zig build bench -Doptimize=ReleaseFast` on an **Intel Core i9-13900H, 64 GB RAM, CachyOS Linux (kernel 7.0.5)**.
+
+#### Insertion — 1,000 hyperedges × 1,000 vertices
+
+| API | Time |
+|---|---|
+| `createVertex` per vertex (atomic) | 77.7 ms |
+| `createVertex` per vertex + `appendVerticesToHyperedge` (batch append) | 70.4 ms |
+| `createHyperedges` + `createVertices` (bulk, single call each) | **47.6 ms** |
+| `build()` — construct reverse index over all 1,000,000 vertices | 227.8 ms |
+
+#### Queries (chain / shared-vertex graphs, after `build()`)
+
+| Operation | Time |
+|---|---|
+| `getVertexIndegree` × 100 — each vertex in 1,000 hyperedges | 422 µs |
+| `findShortestPath` — chain of 1,000 vertices | 232 µs |
+| `findCutVertices` — chain of 1,000 vertices | 414 µs |
+
+---
 
 ## Documentation
 

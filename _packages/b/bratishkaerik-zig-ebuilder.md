@@ -8,9 +8,9 @@ repository: https://github.com/BratishkaErik/zig-ebuilder
 keywords:
   - ebuild
   - gentoo
-date: 2026-05-05
-updated_at: 2026-05-05T01:28:13+00:00
-last_sync: 2026-05-05T01:28:13Z
+date: 2026-05-17
+updated_at: 2026-05-17T19:17:15+00:00
+last_sync: 2026-05-17T19:17:15Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -74,7 +74,7 @@ Supported formats are ebuilds for Gentoo-based distros with
 For compilation you need Zig 0.14 .
 
 For using at runtime you can use Zig 0.14, 0.15, 0.16 or latest master commit
-(tested with `0.17.0-dev.261+3d1fb4fac`).
+(tested with `0.17.0-dev.305+bdfbf432d`).
 
 ```console
 $ zig build

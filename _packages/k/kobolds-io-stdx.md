@@ -8,9 +8,9 @@ repository: https://github.com/kobolds-io/stdx
 keywords:
   - data-structures-and-algorithms
   - std
-date: 2026-04-20
-updated_at: 2026-04-20T02:16:56+00:00
-last_sync: 2026-04-20T02:16:56Z
+date: 2026-05-17
+updated_at: 2026-05-17T04:26:04+00:00
+last_sync: 2026-05-17T04:26:04Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -76,7 +76,7 @@ fn main(init: std.process.Init) !void {
     // your code
     // ....
 
-    const memory_pool = try stdx.MemoryPool(i32).init(allocator, io, 200);
+    var memory_pool = try stdx.MemoryPool(i32).init(allocator, io, 200);
     defer memory_pool.deinit();
 
     // your code
