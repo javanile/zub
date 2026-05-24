@@ -10,10 +10,10 @@ keywords:
   - raylib-zig
   - zevy
   - zevy-ecs
-date: 2026-05-18
+date: 2026-05-24
 category: game-development
-updated_at: 2026-05-18T12:03:10+00:00
-last_sync: 2026-05-18T12:03:10Z
+updated_at: 2026-05-24T11:07:24+00:00
+last_sync: 2026-05-24T11:07:24Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -46,6 +46,8 @@ permalink: /packages/captkirk88/zevy-raylib/
 - [Introduction](#introduction)
 - [Quick Start](#quick-start)
 - [Contributing](#contributing)
+- [Projects](#projects)
+- [License](#license)
 
 ---
 
@@ -70,3 +72,7 @@ zig build examples
 - Follow existing Zig patterns
 - Register new plugins in `src/root.zig` by adding them to `plug()`
 - Add unit tests beside features in the `src/*` directory. Prefer tests to be named `*_tests.zig`.
+
+## Projects
+- [zevy-alloy](https://github.com/captkirk88/zevy-alloy)
+- [zevy-ecs](https://github.com/captkirk88/zevy-ecs)

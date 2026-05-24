@@ -8,10 +8,10 @@ repository: https://github.com/mnemnion/ztap
 keywords:
   - tap
   - testing
-date: 2026-04-14
+date: 2026-05-22
 category: tooling
-updated_at: 2026-04-14T05:08:54+00:00
-last_sync: 2026-04-14T05:08:54Z
+updated_at: 2026-05-22T16:19:54+00:00
+last_sync: 2026-05-22T16:19:54Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -35,7 +35,7 @@ format.
 
 ## Compatibility
 
-ZTAP requires Zig 0.15.2.
+ZTAP requires Zig 0.16.0.
 
 ## Use
 
@@ -46,7 +46,7 @@ former case.
 Add to `build.zig.zon` in the usual fashion:
 
 ```sh
-zig fetch --save "https://github.com/mnemnion/ztap/archive/refs/tags/v0.9.2.tar.gz"
+zig fetch --save "https://github.com/mnemnion/ztap/archive/refs/tags/v0.9.6.tar.gz"
 ```
 You'll need a test runner.  A default one is included, and looks like this:
 
@@ -58,8 +58,8 @@ const ztap = @import("ztap");
 // This gives TAP-compatible panic handling
 pub const panic = std.debug.FullPanic(ztap.ztap_panic);
 
-pub fn main() !void {
-    ztap.ztap_test(builtin);
+pub fn main(init: std.process.Init) !void {
+    ztap.ztap_test(init.io, builtin);
     std.process.exit(0);
 }
 ```

@@ -13,10 +13,10 @@ keywords:
   - entity-component-system
   - systems
   - zevy
-date: 2026-05-15
+date: 2026-05-24
 category: game-development
-updated_at: 2026-05-15T02:58:03+00:00
-last_sync: 2026-05-15T02:58:03Z
+updated_at: 2026-05-24T11:05:58+00:00
+last_sync: 2026-05-24T11:05:58Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -53,6 +53,12 @@ Good question.  The std API has changed to the point I don't even know anymore. 
 - **Component serialization**: Built-in support for serializing/deserializing components, resources, and entities
 - **Extensible parameter system**: Create custom system parameters by implementing `matches`, `apply`, and optional `deinit` functions
 - **Zero runtime overhead**: All system parameter resolution happens at compile time
+
+## Build Modules
+- `zevy_ecs` - Main ECS functionality (entities, components, queries, systems, resources, events, relations)
+- `plugins` - Plugin system for modular functionality
+- `app` - Application framework with lifecycle management and plugin support
+- `benchmark` - Benchmarking for performance testing
 
 ## Table of Contents
 
@@ -1493,6 +1499,11 @@ See [BENCHMARK.md](BENCHMARK.md) for detailed benchmark results.
 ## Dependencies
 - [zevy-reflect](https://github.com/captkirk88/zevy-reflect) - Reflection utilities for Zig.
 - [zevy-mem](https://github.com/captkirk88/zevy-mem) - Memory allocators and utilities for Zig.
+
+
+## Projects
+- [zevy-raylib](https://github.com/captkirk88/zevy-raylib)
+- [zevy-alloy](https://github.com/captkirk88/zevy-alloy)
 
 ## Contributing
 
