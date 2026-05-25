@@ -1,0 +1,156 @@
+---
+title: zjot
+description: djot parser written in Zig
+license: MIT
+author: QuiteClose
+author_github: QuiteClose
+repository: https://github.com/QuiteClose/zjot
+keywords:
+  - djot
+  - markdown
+date: 2026-05-21
+updated_at: 2026-05-21T20:22:09+00:00
+last_sync: 2026-05-21T20:22:09Z
+package_kind: hybrid
+has_library: true
+has_binary: true
+has_distributable_binary: true
+binary_count: 1
+distributable_binary_count: 1
+multiple_binaries: false
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
+permalink: /packages/QuiteClose/zjot/
+---
+
+# zjot
+
+[![CI](https://github.com/QuiteClose/zjot/actions/workflows/ci.yml/badge.svg)](https://github.com/QuiteClose/zjot/actions/workflows/ci.yml)
+
+A [Djot](https://djot.net/) parser written in Zig. Produces HTML or AST output from Djot markup.
+
+zjot passes all 261 test cases from the canonical [djot.js](https://github.com/jgm/djot.js) test suite.
+
+## Build
+
+Requires Zig 0.15 or later.
+
+```
+zig build
+```
+
+## CLI usage
+
+```
+zjot [OPTIONS] [FILE]
+```
+
+If `FILE` is omitted, reads from stdin.
+
+**Options:**
+
+| Flag | Description |
+| --- | --- |
+| `--ast` | Output AST instead of HTML |
+| `--sourcepos` | Include source positions in AST output |
+| `-h`, `--help` | Show help |
+
+**Examples:**
+
+```sh
+# Render Djot to HTML
+echo 'Hello *world*' | zjot
+
+# Render a file
+zjot document.dj
+
+# View the AST
+echo '# Heading' | zjot --ast
+
+# AST with source positions
+zjot --ast --sourcepos document.dj
+```
+
+## Library usage
+
+### Adding zjot as a dependency
+
+Fetch the package and save it to your `build.zig.zon`:
+
+```sh
+zig fetch --save git+https://github.com/quiteclose/zjot.git
+```
+
+Then in your `build.zig`, import the dependency and add it to your module:
+
+```zig
+const zjot_dep = b.dependency("zjot", .{
+    .target = target,
+    .optimize = optimize,
+});
+
+// For an executable:
+const exe = b.addExecutable(.{
+    .name = "my-app",
+    .root_module = b.createModule(.{
+        .root_source_file = b.path("src/main.zig"),
+        .target = target,
+        .optimize = optimize,
+        .imports = &.{
+            .{ .name = "zjot", .module = zjot_dep.module("zjot") },
+        },
+    }),
+});
+```
+
+### API
+
+Once the dependency is wired up, import and use it:
+
+```zig
+const zjot = @import("zjot");
+
+// Render Djot to HTML
+const html = try zjot.toHtml(allocator, "Hello *world*");
+
+// Render Djot to AST text
+const ast_text = try zjot.toAst(allocator, "Hello *world*");
+
+// AST with source positions
+const ast_pos = try zjot.toAstOpts(allocator, input, true);
+```
+
+| Function | Description |
+| --- | --- |
+| `toHtml(allocator, input) ![]const u8` | Parse Djot and render to HTML |
+| `toAst(allocator, input) ![]const u8` | Parse Djot and render to AST text |
+| `toAstOpts(allocator, input, sourcepos) ![]const u8` | Parse Djot and render to AST text with optional source positions |
+
+All functions return owned slices that should be freed by the caller.
+
+## Tests
+
+```
+zig build test
+```
+
+Runs 261 test cases vendored from the djot.js test suite, covering attributes, block quotes, code blocks, definition lists, emphasis, escapes, fenced divs, footnotes, headings, insert/delete/mark, links and images, lists, math, paragraphs, raw content, regressions, smart punctuation, spans, source positions, super/subscript, symbols, tables, task lists, thematic breaks, and verbatim.
+
+## Architecture
+
+zjot is a single-phase recursive descent parser. One pass through the input builds an AST (`Node` tree) directly, without an intermediate event stream.
+
+```
+src/
+  root.zig           Public API
+  main.zig           CLI binary
+  node.zig           AST types (Node, Tag, Attr, SourcePos)
+  Parser.zig         Block parsing + list helpers + position tracking
+  inline.zig         Inline parsing (emphasis, links, smart quotes, etc.)
+  attributes.zig     Attribute parser ({#id .class key=value})
+  html.zig           HTML renderer
+  ast.zig            AST renderer
+  LineMap.zig        Source position mapping for joined inline text
+  test_runner.zig    Test harness
+```

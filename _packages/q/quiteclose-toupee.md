@@ -9,9 +9,9 @@ keywords:
   - html
   - template-engine
   - templates
-date: 2026-05-13
-updated_at: 2026-05-13T20:12:21+00:00
-last_sync: 2026-05-13T20:12:21Z
+date: 2026-05-21
+updated_at: 2026-05-21T20:36:03+00:00
+last_sync: 2026-05-21T20:36:03Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -179,7 +179,7 @@ const html = try toupee.render(allocator, source, &ctx, resolver.loader(), .{});
 
 ```
 zig build test    # over 500 tests (integration + unit)
-zig build bench   # parse/render benchmarks (ReleaseFast)
+zig build bench   # performance smoke test (ReleaseFast, silent on success)
 zig build fuzz    # fuzz testing for parser and renderer
 ```
 
