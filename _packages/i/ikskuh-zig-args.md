@@ -8,9 +8,9 @@ repository: https://github.com/ikskuh/zig-args
 keywords:
   - option-parser
   - option-parsing
-date: 2026-04-17
-updated_at: 2026-04-17T09:04:52+00:00
-last_sync: 2026-04-17T09:04:52Z
+date: 2026-05-23
+updated_at: 2026-05-23T15:28:21+00:00
+last_sync: 2026-05-23T15:28:21Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -88,7 +88,7 @@ const Options = struct {
 };
 
 pub fn main(init: std.process.Init) !u8 {
-    const options = argsParser.parseForCurrentProcess(, argsAllocator, .print) catch return 1;
+    const options = argsParser.parseForCurrentProcess(Options, init, .print) catch return 1;
     defer options.deinit();
 
     std.debug.print("executable name: {?s}\n", .{options.executable_name});

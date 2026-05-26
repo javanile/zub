@@ -9,10 +9,10 @@ keywords:
   - json-serialization
   - parser
   - serde
-date: 2026-05-09
+date: 2026-05-26
 category: data-formats
-updated_at: 2026-05-09T19:02:24+00:00
-last_sync: 2026-05-09T19:02:24Z
+updated_at: 2026-05-26T12:58:42+00:00
+last_sync: 2026-05-26T12:58:42Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -30,11 +30,11 @@ permalink: /packages/OrlovEvgeny/serde.zig/
 
 [![Build](https://github.com/OrlovEvgeny/serde.zig/actions/workflows/ci.yml/badge.svg)](https://github.com/OrlovEvgeny/serde.zig/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/OrlovEvgeny/serde.zig?label=release)](https://github.com/OrlovEvgeny/serde.zig/releases/latest)
-[![Zig](https://img.shields.io/badge/zig-0.15.2%20%7C%200.16.0-blue)](https://ziglang.org/download/)
+[![Zig](https://img.shields.io/badge/zig-0.15.2%20%7C%200.16.0%20%7C%200.17--dev-blue)](https://ziglang.org/download/)
 
 Serialization framework for Zig
 
-Uses Zig's comptime reflection (`@typeInfo`) to serialize and deserialize any Zig type across JSON, MessagePack, TOML, YAML, XML, ZON, and CSV without macros, code generation, or runtime type information.
+Uses Zig's comptime reflection (`@typeInfo`) to serialize and deserialize any Zig type across JSON, MessagePack, TOML, YAML, XML, ZON, TOON, and CSV without macros, code generation, or runtime type information.
 
 ## Table of Contents
 
@@ -56,6 +56,7 @@ Uses Zig's comptime reflection (`@typeInfo`) to serialize and deserialize any Zi
   - [YAML](#yaml)
   - [XML](#xml)
   - [ZON](#zon)
+  - [TOON](#toon)
 - [Serde Options](#serde-options)
   - [Field renaming](#field-renaming)
   - [Asymmetric renaming](#asymmetric-renaming)
@@ -122,7 +123,7 @@ zig fetch --save git+https://github.com/OrlovEvgeny/serde.zig
 Specific release:
 
 ```sh
-zig fetch --save https://github.com/OrlovEvgeny/serde.zig/archive/refs/tags/v1.0.3.tar.gz
+zig fetch --save https://github.com/OrlovEvgeny/serde.zig/archive/refs/tags/v1.0.5.tar.gz
 ```
 
 Then in your `build.zig`:
@@ -135,7 +136,7 @@ const serde_dep = b.dependency("serde", .{
 exe.root_module.addImport("serde", serde_dep.module("serde"));
 ```
 
-Requires Zig 0.15.2 or 0.16.0.
+Requires Zig 0.15.2 or later, including current Zig 0.17 development builds.
 
 Supported Zig versions:
 
@@ -143,7 +144,7 @@ Supported Zig versions:
 |-------------|--------|
 | `0.16.0` | current stable, required in docs CI |
 | `0.15.2` | previous stable, fully supported |
-| `master` | tracked in CI as non-blocking signal |
+| `0.17-dev` / `master` | supported against current development snapshots and tracked in CI |
 
 ## Formats
 
@@ -155,6 +156,7 @@ Supported Zig versions:
 | YAML | `serde.yaml` | + | + |
 | XML | `serde.xml` | + | + |
 | ZON | `serde.zon` | + | + |
+| TOON | `serde.toon` | + | + |
 | CSV | `serde.csv` | + | + |
 
 Every format exposes the same API:
@@ -213,6 +215,7 @@ const json = try serde.json.toSlice(allocator, person);
 const msgpack = try serde.msgpack.toSlice(allocator, person);
 const yaml = try serde.yaml.toSlice(allocator, person);
 const xml = try serde.xml.toSlice(allocator, person);
+const toon = try serde.toon.toSlice(allocator, person);
 ```
 
 ### Arena allocator (recommended for deserialization)
@@ -394,6 +397,23 @@ const bytes = try serde.zon.toSlice(allocator, Config{
 //         .name = "mydb",
 //     },
 // }
+```
+
+### TOON
+
+Produces compact TOON documents for the JSON data model:
+
+```zig
+const bytes = try serde.toon.toSlice(allocator, Config{
+    .title = "myapp",
+    .port = 3000,
+    .database = .{ .host = "localhost", .name = "mydb" },
+});
+// title: myapp
+// port: 3000
+// database:
+//   host: localhost
+//   name: mydb
 ```
 
 ## Serde Options
@@ -981,11 +1001,12 @@ April 24, 2026:
 | borrowed JSON strings | deserialize | serde | 78.17 | 0.00 | 0.00 | 817.44 |
 | array of structs JSON | roundtrip | serde | 5115.59 | 2.00 | 1888.00 | 78.11 |
 
-CI uploads benchmark baseline/result artifacts for Zig 0.15.2 and 0.16.0. On
-pull requests, CI compares the PR against the base SHA on the same runner when
-the base branch already has `zig build bench`; otherwise it falls back to the
-checked-in empty baseline. Regressions over the configured threshold are shown
-in the GitHub Actions summary without failing the PR.
+CI uploads benchmark baseline/result artifacts for Zig 0.15.2 and 0.16.0. The
+test matrix also runs Zig master, which currently tracks 0.17 development
+snapshots. On pull requests, CI compares the PR against the base SHA on the same
+runner when the base branch already has `zig build bench`; otherwise it falls
+back to the checked-in empty baseline. Regressions over the configured threshold
+are shown in the GitHub Actions summary without failing the PR.
 
 ## Tests
 
