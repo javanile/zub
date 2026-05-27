@@ -1,0 +1,147 @@
+---
+title: z-toml
+description: TOML v1.1.0 parser for Zig 0.16. Single-pass, no dependencies, corpus-validated.
+license: MIT
+author: eneskemalergin
+author_github: eneskemalergin
+repository: https://github.com/eneskemalergin/z-toml
+keywords:
+  - toml-parser
+date: 2026-05-24
+updated_at: 2026-05-24T20:54:48+00:00
+last_sync: 2026-05-24T20:54:48Z
+package_kind: hybrid
+has_library: true
+has_binary: true
+has_distributable_binary: true
+binary_count: 6
+distributable_binary_count: 6
+multiple_binaries: true
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
+permalink: /packages/eneskemalergin/z-toml/
+---
+
+<!-- markdownlint-disable MD033 MD041 -->
+<p align="center">
+  <img src="assets/z-toml-icon_v2.svg" alt="z-toml logo" width="90">
+</p>
+
+<h1 align="center">z-toml</h1>
+
+<p align="center">
+  TOML v1.1.0 parser and rewrite toolkit for Zig 0.16.
+</p>
+
+<p align="center">
+  <a href="https://github.com/eneskemalergin/z-toml/actions/workflows/ci.yml">
+    <img src="https://github.com/eneskemalergin/z-toml/actions/workflows/ci.yml/badge.svg?style=flat-square" alt="CI">
+  </a>
+  <img src="https://img.shields.io/badge/version-v0.4.0-2C8EBB?style=flat-square" alt="v0.4.0">
+  <img src="https://img.shields.io/badge/zig-0.16.0-F7A41D?style=flat-square&logo=zig&logoColor=white" alt="Zig 0.16.0">
+  <img src="https://img.shields.io/badge/TOML-v1.1.0-9C4221?style=flat-square" alt="TOML v1.1.0">
+  <img src="https://img.shields.io/badge/license-MIT-4B9D6E?style=flat-square" alt="MIT">
+</p>
+
+<p align="center">
+  Typed parse. Dynamic trees. Zero-copy views. Faithful output. Byte-local rewrites.
+</p>
+
+---
+
+z-toml is built for tools that need more than parse-and-print. It gives you a single-pass TOML parser, a zero-copy read path, profile-based writers, and structured-path rewrites that preserve untouched bytes around the edit.
+
+## Highlights
+
+- `parseInto(T)` maps TOML directly onto Zig structs.
+- `parseSlice` gives you a dynamic tree for unknown document shapes.
+- `parseSliceView` borrows strings from the input buffer for zero-copy reads.
+- `writeTomlWithProfile` supports `compact`, `preserve`, `canonical`, and `faithful` output modes.
+- `rewriteValueAtPath`, `setValueAtPath`, and `rewriteValues` perform structured-path edits without reserializing the whole file.
+- `toJson`, `writeToml`, and `writeTomlView` cover export, roundtrip, and view-based output flows.
+- The core is zero-dependency, corpus-validated, and backed by explicit `test`, `validate`, and `fuzz` gates.
+
+## Quick Look
+
+```zig
+const std = @import("std");
+const toml = @import("toml");
+
+pub fn main() !void {
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+    const gpa = arena.allocator();
+
+    const src =
+        \\title = "My App"
+        \\[server]
+        \\port = 8080
+    ;
+
+    const root = try toml.parseSlice(gpa, src, null);
+    defer toml.deinit(root, gpa);
+
+    const port = root.get("server").?.table.get("port").?.integer.value;
+    _ = port;
+}
+```
+
+```zig
+try toml.rewriteValueAtPath(
+    src,
+    &[_]toml.PathSegment{ .{ .key = "server" }, .{ .key = "port" } },
+    .{ .integer = .{ .value = 9090 } },
+    &writer,
+    gpa,
+);
+```
+
+## Install
+
+Requires Zig `0.16.0` or later.
+
+```sh
+zig fetch --save https://github.com/eneskemalergin/z-toml/archive/refs/tags/v0.4.0.tar.gz
+```
+
+```zig
+.dependencies = .{
+    .z_toml = .{
+        .url = "https://github.com/eneskemalergin/z-toml/archive/refs/tags/v0.4.0.tar.gz",
+        .hash = "<run zig fetch to get the hash>",
+    },
+};
+```
+
+```zig
+const z_toml = b.dependency("z_toml", .{
+    .target = target,
+    .optimize = optimize,
+});
+exe.root_module.addImport("toml", z_toml.module("toml"));
+```
+
+## Validation
+
+- `zig build test` runs the package suite and corpus-backed checks.
+- `zig build validate` runs the end-to-end real-document validation gate.
+- `zig build fuzz` runs the 5000-iteration fuzz harness.
+
+## Roadmap
+
+- `v0.4.0`: faithful output, structured-path rewrites, spans, and real-document validation.
+- `v0.4.1`: detailed documentation, guides, and reference material.
+- `v0.5.0`: CLI with `to-json`, `fmt`, `lint`, and `rewrite` commands.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
+
+---
+
+<p align="center"><em>
+Keys nest in the deep,<br>
+One pass clears the tangled brush,<br>
+The value remains.
+</em></p>

@@ -10,9 +10,9 @@ keywords:
   - lua
   - lua-bindings
   - package
-date: 2026-05-13
-updated_at: 2026-05-13T07:56:30+00:00
-last_sync: 2026-05-13T07:56:30Z
+date: 2026-05-27
+updated_at: 2026-05-27T12:38:26+00:00
+last_sync: 2026-05-27T12:38:26Z
 package_kind: hybrid
 has_library: true
 has_binary: true

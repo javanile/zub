@@ -7,9 +7,9 @@ author_github: insolor
 repository: https://github.com/insolor/zig-itertools
 keywords:
   - zigang
-date: 2026-04-21
-updated_at: 2026-04-21T18:48:51+00:00
-last_sync: 2026-04-21T18:48:51Z
+date: 2026-05-20
+updated_at: 2026-05-20T17:27:07+00:00
+last_sync: 2026-05-20T17:27:07Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -27,7 +27,6 @@ unsafe_reason: "contains a URL pointing to a .zip file"
 
 # Zig Itertools
 
-[![Zig 0.14.0, 0.14.1, 0.15.1, 0.15.2, 0.16.0, master](https://img.shields.io/badge/Zig-0.14.0%20%7C%200.14.1%20%7C%200.15.1%20%7C%200.15.2%20%7C%200.16.0%20%7C%20master-color?logo=zig&color=%23f3ab20)](https://ziglang.org/download/) <!-- see zig tag examples at https://github.com/KurtWagner/what-the-zig -->
 [![zig build test](https://github.com/insolor/zig-collections/actions/workflows/zig-build-test.yml/badge.svg)](https://github.com/insolor/zig-collections/actions/workflows/zig-build-test.yml)
 
 > [!WARNING]  
@@ -40,6 +39,16 @@ Implemented so far:
 - `ChainIterator` - "glues" two iterator in one, returns their elements in succession
 - `SliceIterator` - iterates over a slice
 - `EmptyIterator` - emits no elements. Implemented only for testing purposes.
+
+Supported zig versions:
+
+| Version | Support |
+| :-----: | :-----: |
+| 0.14.0  | ✅      |
+| 0.14.1  | ✅      |
+| 0.15.1  | ✅      |
+| 0.15.2  | ✅      |
+| 0.16.0  | ✅      |
 
 ## Installation
 

@@ -8,8 +8,19 @@ repository: https://github.com/zPSP-Dev/Zig-PSP
 keywords:
   - psp
   - psp-sdk
-date: 2026-04-08
-last_sync: 2026-04-08T20:46:50Z
+date: 2026-05-24
+updated_at: 2026-05-24T18:50:39+00:00
+last_sync: 2026-05-24T18:50:39Z
+package_kind: hybrid
+has_library: true
+has_binary: true
+has_distributable_binary: true
+binary_count: 8
+distributable_binary_count: 8
+multiple_binaries: true
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
 permalink: /packages/zPSP-Dev/Zig-PSP/
 ---
 
@@ -26,7 +37,7 @@ Special thanks is given to the [Rust-PSP team](https://github.com/overdrivenpota
 
 ## Requirements
 
-- **Zig 0.16.0-dev** nightly (see `build.zig.zon` for the exact fingerprint)
+- **Zig 0.16.0**
 
 No legacy PSPSDK or external C toolchain is required. All build tools (`zPRXGen`, `zSFOTool`, `zPBPTool`) are written in Zig and built automatically.
 
@@ -49,7 +60,7 @@ const pspsdk = @import("pspsdk");
 pub fn build(b: *std.Build) void {
     const optimize = b.standardOptimizeOption(.{});
 
-    pspsdk.buildPspEboot(b, .{
+    _ = pspsdk.buildPspEboot(b, .{
         .name             = "my_app",
         .root_source_file = b.path("src/main.zig"),
         .title            = "My App Title",
@@ -170,7 +181,7 @@ Copy the output to your memory stick:
 PSP/GAME/MyAppName/EBOOT.PBP
 ```
 
-The application will appear under **Game -> Memory Stick** in the XMB. Custom firmware (CFW) is required.
+The application will appear under **Game -> Memory Stick** in the XMB. A custom firmware (CFW) is required by default, but it's possible to encrypt your application for an official firmware (OFW) as well, just make sure to set `.encrypt = true` in `PspEbootOptions`.
 
 ## Examples
 
