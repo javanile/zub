@@ -8,10 +8,10 @@ repository: https://github.com/JurMax/SDL_net_zig
 keywords:
   - sdl
   - sdl3
-date: 2026-05-05
+date: 2026-05-26
 category: game-development
-updated_at: 2026-05-05T14:13:24+00:00
-last_sync: 2026-05-05T14:13:24Z
+updated_at: 2026-05-26T06:28:45+00:00
+last_sync: 2026-05-26T06:28:45Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -27,7 +27,7 @@ permalink: /packages/JurMax/SDL_net_zig/
 
 # SDL_net_zig
 
-This is a port of [SDL3_net](https://github.com/libsdl-org/SDL_net) to the [Zig](https://ziglang.org/) build system.
+This is a port of [SDL3_net](https://github.com/libsdl-org/SDL_net) to the [Zig](https://ziglang.org/) build system. It does not provide any Zig bindings.
 
 ## How to use it
 
@@ -47,7 +47,19 @@ const sdl_net_dependency = b.dependency("sdl_net", .{
     .optimize = optimize,
     .build_sdl = false, // Set to true to also build SDL3 itself.
 });
-exe.linkLibrary(sdl_net_dependency.artifact("SDL3_net"));
+exe.root_module.linkLibrary(sdl_net_dependency.artifact("SDL3_net"));
 ```
 
 This will add the SDL_net library and header to `exe`.
+
+### Running the examples
+
+You can run the SDL_net examples by running any of the following commands.
+
+```sh
+zig build voipchat
+zig build simple-http-get
+zig build resolve-hostnames
+zig build get-local-addrs
+zig build echo-server
+```

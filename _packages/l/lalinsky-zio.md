@@ -17,10 +17,10 @@ keywords:
   - kqueue
   - networking
   - poll
-date: 2026-05-27
+date: 2026-05-28
 category: networking
-updated_at: 2026-05-27T12:56:13+00:00
-last_sync: 2026-05-27T12:56:13Z
+updated_at: 2026-05-28T12:16:17+00:00
+last_sync: 2026-05-28T12:16:17Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -63,8 +63,9 @@ It's similar to [goroutines] in Go, but with the pros and cons of being implemen
 - User-mode coroutine context switching for `x86_64`, `aarch64`, `arm`, `thumb`, `riscv32`, `riscv64`, `loongarch64` and `powerpc64` architectures.
 - Growable stacks for the coroutines implemented by auto-extending virtual memory reservations.
 - Single-threaded or multi-threaded coroutine scheduler.
-- Fully asynchronous network I/O on all systems. Supports TCP, UDP, Unix sockets, raw IP sockets. DNS lookups.
-- Fully asynchronous file I/O on Linux, partially (read/write) on Windows, simulated using auxiliary thread pool on other systems.
+- Fully asynchronous network I/O on all systems. Supports TCP, UDP, Unix sockets, raw IP sockets, etc.
+- Fully asynchronous file I/O on Linux, partially asynchronous (read/write) on Windows. Using blocking syscalls in a thread pool on other systems.
+- Fully asynchronous DNS resolver on Linux, Windows and macOS. Using `getaddrinfo` in a thread pool on other systems.
 - Safe cancelation support for all operations.
 - Structured concurrency using task groups.
 - Synchronization primitives, including more advanced ones, like channels.

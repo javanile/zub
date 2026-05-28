@@ -7,10 +7,10 @@ author_github: rockorager
 repository: https://github.com/rockorager/libvaxis
 keywords:
   - tui
-date: 2026-04-17
+date: 2026-05-27
 category: tooling
-updated_at: 2026-04-17T06:01:15+00:00
-last_sync: 2026-04-17T06:01:15Z
+updated_at: 2026-05-27T22:36:25+00:00
+last_sync: 2026-05-27T22:36:25Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -35,7 +35,7 @@ It begins with them, but ends with me. Their son, Vaxis
 Libvaxis _does not use terminfo_. Support for vt features is detected through
 terminal queries.
 
-Vaxis uses zig `0.15.1`.
+Vaxis uses zig `0.16.0`.
 
 ## Features
 
@@ -98,20 +98,56 @@ or for ZLS support
         .target = target,
         .optimize = optimize,
     });
-    
+
     // add vaxis dependency to module
     const vaxis = b.dependency("vaxis", .{
         .target = target,
         .optimize = optimize,
     });
     exe_mod.addImport("vaxis", vaxis.module("vaxis"));
-    
+
     //create executable
     const exe = b.addExecutable(.{
         .name = "project_foo",
         .root_module = exe_mod,
     });
     // install exe below
+```
+
+#### Sharing `uucode` with your application
+
+By default, libvaxis pulls in
+[`uucode`](https://github.com/jacobsandlund/uucode) with a fixed set of fields
+it needs (see [build.zig](./build.zig)). If your application also uses
+`uucode`, you can build libvaxis against your own `uucode` module so that
+everyone shares one table (or set of tables, based on your `uucode`
+configuration).
+
+Pass `.external_uucode = true` to the libvaxis dependency and wire your
+`uucode` module into the `vaxis` module yourself:
+
+```zig
+    const uucode = b.dependency("uucode", .{
+        .target = target,
+        .optimize = optimize,
+        .fields = @as([]const []const u8, &.{
+            // Add any fields your application needs, plus the fields libvaxis
+            // requires. The compiler will tell you which fields are missing
+            // (you only need the libvaxis fields for the parts of libvaxis you
+            // actually use). See `build.zig` in libvaxis for the full set it
+            // uses internally.
+        }),
+    });
+
+    const vaxis = b.dependency("vaxis", .{
+        .target = target,
+        .optimize = optimize,
+        .external_uucode = true,
+    });
+    vaxis.module("vaxis").addImport("uucode", uucode.module("uucode"));
+
+    exe.root_module.addImport("vaxis", vaxis.module("vaxis"));
+    exe.root_module.addImport("uucode", uucode.module("uucode"));
 ```
 
 ### vxfw (Vaxis framework)
@@ -240,19 +276,18 @@ const Model = struct {
     }
 };
 
-pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
+pub fn main(init: std.process.Init) !void {
+    const io = init.io;
+    const alloc = init.gpa;
 
-    const allocator = gpa.allocator();
-
-    var app = try vxfw.App.init(allocator);
+    var buffer: [1024]u8 = undefined;
+    var app: vxfw.App = try .init(io, alloc, init.environ_map, &buffer);
     defer app.deinit();
 
     // We heap allocate our model because we will require a stable pointer to it in our Button
     // widget
-    const model = try allocator.create(Model);
-    defer allocator.destroy(model);
+    const model = try alloc.create(Model);
+    defer alloc.destroy(model);
 
     // Set the initial state of our button
     model.* = .{
@@ -304,24 +339,17 @@ const Event = union(enum) {
     foo: u8,
 };
 
-pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer {
-        const deinit_status = gpa.deinit();
-        //fail test; can't try in defer as defer is executed after we return
-        if (deinit_status == .leak) {
-            std.log.err("memory leak", .{});
-        }
-    }
-    const alloc = gpa.allocator();
+pub fn main(init: std.process.Init) !void {
+    const io = init.io;
+    const alloc = init.gpa;
 
     // Initialize a tty
     var buffer: [1024]u8 = undefined;
-    var tty = try vaxis.Tty.init(&buffer);
+    var tty = try vaxis.Tty.init(io, &buffer);
     defer tty.deinit();
 
     // Initialize Vaxis
-    var vx = try vaxis.init(alloc, .{});
+    var vx = try vaxis.init(io, alloc, init.environ_map, .{});
     // deinit takes an optional allocator. If your program is exiting, you can
     // choose to pass a null allocator to save some exit time.
     defer vx.deinit(alloc, tty.writer());
@@ -332,11 +360,7 @@ pub fn main() !void {
     // installs a signal handler for SIGWINCH on posix TTYs
     //
     // This event loop is thread safe. It reads the tty in a separate thread
-    var loop: vaxis.Loop(Event) = .{
-      .tty = &tty,
-      .vaxis = &vx,
-    };
-    try loop.init();
+    var loop: vaxis.Loop(Event) = .init(io, &tty, &vx);
 
     // Start the read loop. This puts the terminal in raw mode and begins
     // reading user input
@@ -356,11 +380,11 @@ pub fn main() !void {
 
     // Sends queries to terminal to detect certain features. This should always
     // be called after entering the alt screen, if you are using the alt screen
-    try vx.queryTerminal(tty.writer(), 1 * std.time.ns_per_s);
+    try vx.queryTerminal(tty.writer(), .fromSeconds(1));
 
     while (true) {
         // nextEvent blocks until an event is in the queue
-        const event = loop.nextEvent();
+        const event = try loop.nextEvent();
         // exhaustive switching ftw. Vaxis will send events if your Event enum
         // has the fields for those events (ie "key_press", "winsize")
         switch (event) {

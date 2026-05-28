@@ -8,8 +8,8 @@ repository: https://github.com/RomaricKc1/raylib-lists
 keywords:
   - raylib-zig
 date: 2026-05-25
-updated_at: 2026-05-25T12:01:10+00:00
-last_sync: 2026-05-25T12:01:10Z
+updated_at: 2026-05-25T20:16:47+00:00
+last_sync: 2026-05-25T20:16:47Z
 package_kind: hybrid
 has_library: true
 has_binary: true
