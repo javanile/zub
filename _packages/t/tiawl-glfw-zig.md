@@ -8,9 +8,9 @@ repository: https://github.com/tiawl/glfw.zig
 keywords:
   - binding
   - glfw3
-date: 2026-05-18
-updated_at: 2026-05-18T13:28:05+00:00
-last_sync: 2026-05-18T13:28:05Z
+date: 2026-05-29
+updated_at: 2026-05-29T13:12:04+00:00
+last_sync: 2026-05-29T13:12:04Z
 package_kind: library
 has_library: true
 has_binary: false

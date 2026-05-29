@@ -9,9 +9,9 @@ keywords:
   - programming-languages
   - toolchain
   - version-manager
-date: 2026-05-25
-updated_at: 2026-05-25T13:08:55+00:00
-last_sync: 2026-05-25T13:08:55Z
+date: 2026-05-28
+updated_at: 2026-05-28T14:45:33+00:00
+last_sync: 2026-05-28T14:45:33Z
 package_kind: library
 has_library: false
 has_binary: false

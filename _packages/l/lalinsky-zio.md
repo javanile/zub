@@ -17,10 +17,10 @@ keywords:
   - kqueue
   - networking
   - poll
-date: 2026-05-28
+date: 2026-05-29
 category: networking
-updated_at: 2026-05-28T12:16:17+00:00
-last_sync: 2026-05-28T12:16:17Z
+updated_at: 2026-05-29T13:31:45+00:00
+last_sync: 2026-05-29T13:31:45Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -87,7 +87,6 @@ const zio = b.dependency("zio", .{
     .optimize = optimize,
 });
 
-// the executable from your call to b.addExecutable(...)
 exe.root_module.addImport("zio", zio.module("zio"));
 ```
 
@@ -194,11 +193,11 @@ See `examples/*.zig` for more examples.
 ## Building
 
 ```bash
-# Build the library and examples
-zig build
-
 # Run tests
 zig build test
+
+# Build examples
+zig build examples
 ```
 
 ## Contributing
