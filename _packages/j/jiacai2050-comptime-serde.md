@@ -7,16 +7,16 @@ author_github: jiacai2050
 repository: https://github.com/jiacai2050/comptime-serde
 keywords:
   - serde
-date: 2026-05-17
-updated_at: 2026-05-17T23:32:19+00:00
-last_sync: 2026-05-17T23:32:19Z
+date: 2026-05-24
+updated_at: 2026-05-24T03:39:25+00:00
+last_sync: 2026-05-24T03:39:25Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 1
-distributable_binary_count: 1
-multiple_binaries: false
+binary_count: 2
+distributable_binary_count: 2
+multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
 sync_source: zigistry

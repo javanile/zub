@@ -14,10 +14,10 @@ keywords:
   - net
   - runtime
   - tardy
-date: 2026-05-15
+date: 2026-05-28
 category: networking
-updated_at: 2026-05-15T17:24:09+00:00
-last_sync: 2026-05-15T17:24:09Z
+updated_at: 2026-05-28T20:04:10+00:00
+last_sync: 2026-05-28T20:04:10Z
 package_kind: hybrid
 has_library: true
 has_binary: true
