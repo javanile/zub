@@ -11,10 +11,10 @@ keywords:
   - reflection
   - zevy
   - zig-programming-language
-date: 2026-05-24
+date: 2026-05-27
 category: tooling
-updated_at: 2026-05-24T11:06:10+00:00
-last_sync: 2026-05-24T11:06:10Z
+updated_at: 2026-05-27T23:41:59+00:00
+last_sync: 2026-05-27T23:41:59Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -130,6 +130,8 @@ See [MIXIN_CODEGEN.md](MIXIN_CODEGEN.md) for the mixin-specific API.
 `Template(...)` provides a compile-time validator and a typed vtable generator. Useful when you want an explicit interface and a vtable for dynamic dispatch. `Template(...).Interface` is the interface type.
 
 If you want validation errors to include the user callsite that triggered validation, use `Template(...).validateAt(Impl, @src())` or `validateVerboseAt(Impl, @src())`.
+
+Templates may also declare required `pub const` and `pub var` members. Non-type declarations on the template, other than `Name`, must also exist on the implementation or validation fails at compile time.
 
 ```zig
 

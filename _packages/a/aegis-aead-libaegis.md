@@ -15,9 +15,9 @@ keywords:
   - cipher
   - cryptography
   - libaegis
-date: 2026-04-14
-updated_at: 2026-04-14T14:19:11+00:00
-last_sync: 2026-04-14T14:19:11Z
+date: 2026-05-31
+updated_at: 2026-05-31T11:32:06+00:00
+last_sync: 2026-05-31T11:32:06Z
 package_kind: hybrid
 has_library: true
 has_binary: true

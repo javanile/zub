@@ -13,16 +13,16 @@ keywords:
   - zig-mcp
   - zig-model-context-protocol
   - ziglibrary
-date: 2026-05-18
-updated_at: 2026-05-18T13:36:58+00:00
-last_sync: 2026-05-18T13:36:58Z
+date: 2026-05-27
+updated_at: 2026-05-27T23:32:09+00:00
+last_sync: 2026-05-27T23:32:09Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 4
-distributable_binary_count: 4
-multiple_binaries: true
+binary_count: 1
+distributable_binary_count: 1
+multiple_binaries: false
 is_sponsor: false
 sync_priority: normal
 sync_source: zigistry
@@ -118,7 +118,7 @@ Run the following command to add mcp.zig to your project:
 zig fetch --save git+https://github.com/muhammad-fiaz/mcp.zig.git
 
 # Zig 0.16.x (recommended)
-zig fetch --save https://github.com/muhammad-fiaz/mcp.zig/archive/refs/tags/0.0.4.tar.gz
+zig fetch --save https://github.com/muhammad-fiaz/mcp.zig/archive/refs/tags/0.0.5.tar.gz
 
 # Zig 0.15.x
 zig fetch --save https://github.com/muhammad-fiaz/mcp.zig/archive/refs/tags/0.0.3.tar.gz
@@ -215,6 +215,7 @@ The `examples/` directory contains several example implementations:
 | **simple_client.zig**     | Basic client setup                    |
 | **weather_server.zig**    | Weather information server            |
 | **calculator_server.zig** | Calculator with arithmetic operations |
+| **advanced_server.zig**   | Advanced schemas and task support     |
 
 Run examples:
 
@@ -226,6 +227,7 @@ zig build
 zig build run-server
 zig build run-weather
 zig build run-calc
+zig build run-advanced
 ```
 
 ## Architecture
@@ -325,6 +327,16 @@ zig build test-compile -Dtarget=x86_64-linux
 zig build test-compile -Dtarget=x86_64-windows
 zig build test-compile -Dtarget=x86_64-macos
 ```
+
+## Generating Documentation
+
+Generate native, interactive HTML API documentation for the library:
+
+```bash
+zig build docs
+```
+
+The generated files (including `index.html`, `main.js`, and `main.wasm`) will be located in the `zig-out/docs/` directory. You can view them using any standard web browser.
 
 ## Protocol Version
 

@@ -12,10 +12,10 @@ keywords:
   - stdout
   - termcolor
   - terminal
-date: 2026-04-17
+date: 2026-05-28
 category: tooling
-updated_at: 2026-04-17T16:02:48+00:00
-last_sync: 2026-04-17T16:02:48Z
+updated_at: 2026-05-28T16:10:16+00:00
+last_sync: 2026-05-28T16:10:16Z
 package_kind: hybrid
 has_library: true
 has_binary: true

@@ -13,10 +13,10 @@ keywords:
   - entity-component-system
   - systems
   - zevy
-date: 2026-05-24
+date: 2026-05-31
 category: game-development
-updated_at: 2026-05-24T11:05:58+00:00
-last_sync: 2026-05-24T11:05:58Z
+updated_at: 2026-05-31T11:36:23+00:00
+last_sync: 2026-05-31T11:36:23Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -147,7 +147,7 @@ pub fn main() !void {
     const allocator = std.heap.page_allocator;
 
     // Create the ECS manager
-    var manager = try zevy_ecs.Manager.init(allocator);
+    var manager = try zevy_ecs.Manager.init(allocator, io);
     defer manager.deinit();
 
     // Create entities with components
@@ -408,7 +408,7 @@ fn spawnSystem(
 
 // Create and run system directly
 pub fn main() !void {
-    var manager = try zevy_ecs.Manager.init(allocator);
+    var manager = try zevy_ecs.Manager.init(allocator,io);
     defer manager.deinit();
 
     // Add a resource
@@ -568,7 +568,7 @@ fn collisionResponseSystem(
 
 // Initialize event store for your event types
 pub fn main() !void {
-    var manager = try zevy_ecs.Manager.init(allocator);
+    var manager = try zevy_ecs.Manager.init(allocator,io);
     defer manager.deinit();
 
     // Create event store
@@ -627,7 +627,7 @@ fn positionChangeSystem(
 }
 
 pub fn main() !void {
-    var manager = try zevy_ecs.Manager.init(allocator);
+    var manager = try zevy_ecs.Manager.init(allocator,io);
     defer manager.deinit();
 
     // Create and cache systems
@@ -730,7 +730,7 @@ fn setupHierarchy(
 pub fn main() !void {
     const allocator = std.heap.page_allocator;
 
-    var manager = try zevy_ecs.Manager.init(allocator);
+    var manager = try zevy_ecs.Manager.init(allocator,io);
     defer manager.deinit();
 
     const setup_system = manager.cacheSystem(zevy_ecs.ToSystem(setupHierarchy, zevy_ecs.DefaultParamRegistry));
@@ -1157,7 +1157,7 @@ const InputPlugin = zevy_plugin.FnPlugin("Input", struct {
 pub fn main() !void {
     const allocator = std.heap.page_allocator;
 
-    var manager = try zevy_ecs.Manager.init(allocator);
+    var manager = try zevy_ecs.Manager.init(allocator,io);
     defer manager.deinit();
 
     // Create scheduler and add as resource so plugins can access it
@@ -1218,6 +1218,10 @@ The Scheduler manages system execution order through stages. Systems are organiz
 > [!NOTE]
 > The Scheduler runs stage work internally using `io.async`. If you need a specific set of systems to run synchronously and in-order within a stage, wrap them with `chain(...)` and register that chained system instead of registering those systems separately.
 
+When a `zevy_app.FixedTimestepAccumulator` resource exists, `App.run()` drives `Stages.PreFixedUpdate -> Stages.FixedUpdate -> Stages.PostFixedUpdate` in a fixed-step catch-up loop between `Stages.PreUpdate` and `Stages.Update`. These fixed-step stages run synchronously so each fixed tick is completed deterministically before the next tick or render work begins.
+
+The accumulator exposes per-frame overload diagnostics through `accumulator.diagnostics`, including the measured frame time, accepted catch-up time, dropped simulation time, fixed steps run, whether the update cap was hit, and cumulative overload counters.
+
 #### Predefined Stages
 
 zevy_ecs comes with the following predefined stages (in execution order) but these are not required and you can create your own custom stages with any priority:
@@ -1226,6 +1230,9 @@ zevy_ecs comes with the following predefined stages (in execution order) but the
 - `Stages.Startup` - Initial setup and initialization
 - `Stages.First` - First stage of the main loop
 - `Stages.PreUpdate` - Before main update logic
+- `Stages.PreFixedUpdate` - Before fixed-step game logic
+- `Stages.FixedUpdate` - Fixed-step game logic
+- `Stages.PostFixedUpdate` - After fixed-step game logic
 - `Stages.Update` - Main game/app logic
 - `Stages.PostUpdate` - After main update logic
 - `Stages.PreDraw` - Before rendering
@@ -1247,7 +1254,7 @@ const zevy_ecs = @import("zevy_ecs");
 pub fn main() !void {
     const allocator = std.heap.page_allocator;
 
-    var manager = try zevy_ecs.Manager.init(allocator);
+    var manager = try zevy_ecs.Manager.init(allocator,io);
     defer manager.deinit();
 
     var scheduler = try zevy_ecs.Scheduler.init(allocator);
@@ -1292,7 +1299,7 @@ const zevy_ecs = @import("zevy_ecs");
 pub fn main() !void {
     const allocator = std.heap.page_allocator;
 
-    var manager = try zevy_ecs.Manager.init(allocator);
+    var manager = try zevy_ecs.Manager.init(allocator,io);
     defer manager.deinit();
 
     var scheduler = try zevy_ecs.Scheduler.init(allocator);
@@ -1362,7 +1369,7 @@ const GameState = enum {
 pub fn main() !void {
     const allocator = std.heap.page_allocator;
 
-    var manager = try zevy_ecs.Manager.init(allocator);
+    var manager = try zevy_ecs.Manager.init(allocator,io);
     defer manager.deinit();
 
     var scheduler = try zevy_ecs.Scheduler.init(allocator);
@@ -1423,7 +1430,7 @@ const InputEvent = struct {
 pub fn main() !void {
     const allocator = std.heap.page_allocator;
 
-    var manager = try zevy_ecs.Manager.init(allocator);
+    var manager = try zevy_ecs.Manager.init(allocator,io);
     defer manager.deinit();
 
     var scheduler = try zevy_ecs.Scheduler.init(allocator);
@@ -1468,7 +1475,7 @@ const zevy_ecs = @import("zevy_ecs");
 pub fn main() !void {
     const allocator = std.heap.page_allocator;
 
-    var manager = try zevy_ecs.Manager.init(allocator);
+    var manager = try zevy_ecs.Manager.init(allocator,io);
     defer manager.deinit();
 
     var scheduler = try zevy_ecs.Scheduler.init(allocator);
