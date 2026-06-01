@@ -13,10 +13,10 @@ keywords:
   - spirv
   - zevy
   - zevy-ecs
-date: 2026-05-19
+date: 2026-05-27
 category: game-development
-updated_at: 2026-05-19T12:36:30+00:00
-last_sync: 2026-05-19T12:36:30Z
+updated_at: 2026-05-27T19:07:31+00:00
+last_sync: 2026-05-27T19:07:31Z
 package_kind: hybrid
 has_library: true
 has_binary: true
