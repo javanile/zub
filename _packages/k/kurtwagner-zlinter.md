@@ -8,10 +8,10 @@ repository: https://github.com/KurtWagner/zlinter
 keywords:
   - linter
   - linters
-date: 2026-05-17
+date: 2026-06-03
 category: tooling
-updated_at: 2026-05-17T10:22:33+00:00
-last_sync: 2026-05-17T10:22:33Z
+updated_at: 2026-06-03T12:42:59+00:00
+last_sync: 2026-06-03T12:42:59Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -25,13 +25,16 @@ sync_source: zigistry
 permalink: /packages/KurtWagner/zlinter/
 ---
 
+> [!WARNING]
+>  Latest on master / 0.17.x branch will be broken until we (and dependencies) migrate to the reworked build system [#149](https://github.com/KurtWagner/zlinter/issues/149). 0.16, 0.15 and 0.14 branches are still ok.
+
 <div align=center>
 
 <img width="128" height="128" src="icon_512.png" alt="Zlinter icon">
 
 # Zlinter - Linter for Zig
 
-[![Zig support](https://img.shields.io/badge/Zig-0.14.x%20%7C%200.15.x%20%7C%20master-%23f3ab20?logo=zig&style=flat)](http://github.com/kurtwagner/what-the-zig)
+[![Zig support](https://img.shields.io/badge/Zig-0.14.x%20%7C%200.15.x%20%7C%200.16.x%20%7C%20master-%23f3ab20?logo=zig&style=flat)](http://github.com/kurtwagner/what-the-zig)
 [![linux](https://img.shields.io/github/actions/workflow/status/KurtWagner/zlinter/linux.yml?branch=master&label=linux&style=flat)](https://github.com/KurtWagner/zlinter/actions/workflows/linux.yml)
 [![windows](https://img.shields.io/github/actions/workflow/status/KurtWagner/zlinter/windows.yml?branch=master&label=windows&style=flat)](https://github.com/KurtWagner/zlinter/actions/workflows/windows.yml)
 [![Coverage Status](https://img.shields.io/coveralls/github/KurtWagner/zlinter/master?style=flat)](https://coveralls.io/github/KurtWagner/zlinter?branch=master)

@@ -7,9 +7,9 @@ author_github: omkar-foss
 repository: https://github.com/omkar-foss/zebra
 keywords:
   - config-loader
-date: 2026-04-10
-updated_at: 2026-04-10T02:16:57+00:00
-last_sync: 2026-04-10T02:16:57Z
+date: 2026-05-30
+updated_at: 2026-05-30T05:48:59+00:00
+last_sync: 2026-05-30T05:48:59Z
 package_kind: hybrid
 has_library: true
 has_binary: true

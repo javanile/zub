@@ -9,9 +9,9 @@ keywords:
   - binding
   - spirv
   - spirv-tools
-date: 2026-05-27
-updated_at: 2026-05-27T13:25:01+00:00
-last_sync: 2026-05-27T13:25:01Z
+date: 2026-06-03
+updated_at: 2026-06-03T14:50:26+00:00
+last_sync: 2026-06-03T14:50:26Z
 package_kind: library
 has_library: true
 has_binary: false

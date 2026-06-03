@@ -8,9 +8,9 @@ repository: https://github.com/tiawl/shaderc.zig
 keywords:
   - binding
   - shaderc
-date: 2026-05-17
-updated_at: 2026-05-17T18:17:12+00:00
-last_sync: 2026-05-17T18:17:12Z
+date: 2026-06-03
+updated_at: 2026-06-03T14:33:50+00:00
+last_sync: 2026-06-03T14:33:50Z
 package_kind: library
 has_library: true
 has_binary: false
