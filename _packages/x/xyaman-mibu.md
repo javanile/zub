@@ -12,10 +12,10 @@ keywords:
   - cursor
   - terminal
   - tui
-date: 2026-05-11
+date: 2026-05-29
 category: tooling
-updated_at: 2026-05-11T08:10:10+00:00
-last_sync: 2026-05-11T08:10:10Z
+updated_at: 2026-05-29T09:02:28+00:00
+last_sync: 2026-05-29T09:02:28Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -35,7 +35,7 @@ permalink: /packages/xyaman/mibu/
 
 **Status:** This library is in beta. Breaking changes may occur.
 
-> Tested with zig version `0.15.2` on Linux and Windows
+> Tested with zig version `0.16.0` on Linux and Windows
 
 ## Features
 

@@ -8,15 +8,15 @@ repository: https://github.com/felixuxx/zsdl3
 keywords:
   - gamedev
   - sdl3
-date: 2026-05-26
+date: 2026-06-02
 category: game-development
-updated_at: 2026-05-26T12:56:15+00:00
-last_sync: 2026-05-26T12:56:15Z
+updated_at: 2026-06-02T02:57:18+00:00
+last_sync: 2026-06-02T02:57:18Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 8
+binary_count: 12
 distributable_binary_count: 1
 multiple_binaries: true
 is_sponsor: false
@@ -25,7 +25,7 @@ sync_source: zigistry
 permalink: /packages/felixuxx/zsdl3/
 ---
 
-# ZSDL3 — Pure Zig bindings for SDL3
+# ZSDL3 — Zig bindings for SDL3
 
 [![Zig](https://img.shields.io/badge/Zig-0.16.0+-orange.svg)](https://ziglang.org)
 [![SDL3](https://img.shields.io/badge/SDL-3.2.0+-blue.svg)](https://www.libsdl.org/)
@@ -46,11 +46,11 @@ sudo apt install libsdl3-dev
 # Linux (Arch)
 sudo pacman -S sdl3
 # Linux (Fedora)
-sudo dnf install SDL3-devel
+sudo dnf install SDL3-devel SDL3_image SDL3_ttf
 # Windows — download from https://github.com/libsdl-org/SDL/releases
 ```
 
-Or build SDL3 from source (requires Zig 0.16.0+).
+Or build SDL3 from source.
 
 ## Depend on it
 
