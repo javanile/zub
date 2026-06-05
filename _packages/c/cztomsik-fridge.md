@@ -9,10 +9,10 @@ keywords:
   - database
   - sqlite
   - sqlite3
-date: 2026-05-27
+date: 2026-06-02
 category: data-formats
-updated_at: 2026-05-27T17:09:50+00:00
-last_sync: 2026-05-27T17:09:50Z
+updated_at: 2026-06-02T20:56:43+00:00
+last_sync: 2026-06-02T20:56:43Z
 package_kind: library
 has_library: true
 has_binary: false
