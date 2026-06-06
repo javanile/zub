@@ -17,9 +17,9 @@ keywords:
   - web
   - web-assembly
   - web-framework
-date: 2026-06-03
-updated_at: 2026-06-03T12:30:34+00:00
-last_sync: 2026-06-03T12:30:34Z
+date: 2026-06-06
+updated_at: 2026-06-06T11:37:34+00:00
+last_sync: 2026-06-06T11:37:34Z
 package_kind: hybrid
 has_library: true
 has_binary: true

@@ -6,9 +6,9 @@ author: keton-id
 author_github: keton-id
 repository: https://github.com/keton-id/cora
 keywords:
-date: 2026-06-05
-updated_at: 2026-06-05T13:28:27+00:00
-last_sync: 2026-06-05T13:28:27Z
+date: 2026-06-06
+updated_at: 2026-06-06T11:08:24+00:00
+last_sync: 2026-06-06T11:08:24Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -29,6 +29,26 @@ unsafe_reason: "contains a URL pointing to a .zip file"
 [![CI](https://github.com/keton-id/cora/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/keton-id/cora/actions/workflows/ci.yml)
 [![License: AGPL-3.0-only](https://img.shields.io/badge/License-AGPL--3.0--only-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/keton-id/cora/pulls)
+
+**Stable latest**
+
+[![macOS](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/keton-id/cora/main/.github/badges/stable-macos.json)](https://github.com/keton-id/cora/releases?q=cora-macos-)
+[![Linux](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/keton-id/cora/main/.github/badges/stable-linux.json)](https://github.com/keton-id/cora/releases?q=cora-linux-)
+[![Windows](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/keton-id/cora/main/.github/badges/stable-windows.json)](https://github.com/keton-id/cora/releases?q=cora-windows-)
+
+**Pre-release latest**
+
+[![macOS](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/keton-id/cora/main/.github/badges/prerelease-macos.json)](https://github.com/keton-id/cora/releases?q=cora-macos-)
+[![Linux](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/keton-id/cora/main/.github/badges/prerelease-linux.json)](https://github.com/keton-id/cora/releases?q=cora-linux-)
+[![Windows](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/keton-id/cora/main/.github/badges/prerelease-windows.json)](https://github.com/keton-id/cora/releases?q=cora-windows-)
+
+<!--
+Per-OS version badges auto-update from repo-managed JSON files. The release
+workflow regenerates both `stable` and `pre-release` lanes from the GitHub
+Releases API after each publish, so badges follow the real latest release
+per OS instead of whichever tag happened to trigger the workflow.
+-->
+
 
 > *"He never let anyone hear his true voice."*
 
@@ -88,11 +108,11 @@ checksum, and installs to `/usr/local/bin` (or `~/.local/bin` without sudo).
 Flags:
 
 ```bash
-# Pin a specific tag
+# Pin a specific tag (per-OS form — the script auto-prefixes if you pass plain X.Y.Z)
 curl -fsSL https://raw.githubusercontent.com/keton-id/cora/main/install.sh \
-    | sh -s -- --version {{VERSION}}
+    | sh -s -- --version 1.0.0
 
-# Track a prerelease channel
+# Track a prerelease channel for your OS
 curl -fsSL https://raw.githubusercontent.com/keton-id/cora/main/install.sh \
     | sh -s -- --channel alpha
 ```
@@ -143,11 +163,21 @@ Or one-shot via `npx`:
 npx @keton-id/cora --help
 ```
 
-Ships a single npm package that bundles prebuilt `cr` binaries for
-every supported platform — macOS x64/arm64, Linux x64/arm64, Windows
-x64/arm64. A tiny JS launcher (`bin/cr.js`) picks the matching binary
-at runtime. No postinstall download, no native node addon. Only
-stable releases publish to npm; alphas stay on GitHub Releases.
+The meta `@keton-id/cora` package is a tiny ESM launcher with six
+`optionalDependencies` — one per `<platform>-<arch>` subpackage. npm
+uses each subpackage's `os`/`cpu` fields at install time to silently
+skip the five that don't match your host, so only the matching prebuilt
+`cr` binary lands on disk. No postinstall download, no native node
+addon, no `vendor/` bundle. Only stable releases publish to npm;
+alphas stay on GitHub Releases.
+
+`@keton-id/cora`'s version tracks the upstream release semver. Each
+subpackage is versioned by its own mirror tag and pinned in the meta's
+`optionalDependencies` to its actual current version on the registry
+(queried live at publish time), so an out-of-step per-OS release
+(e.g. a Windows-only fix that does not retag macOS) ships cleanly —
+the meta still re-publishes and points each OS at the right subpackage
+version.
 
 </details>
 
@@ -158,13 +188,18 @@ Grab the archive for your platform from the
 [Releases page](https://github.com/keton-id/cora/releases) and verify
 the checksum yourself.
 
+Each OS has its own tag prefix — pick the one for your host:
+`cora-macos-v<X.Y.Z>`, `cora-linux-v<X.Y.Z>`, or `cora-windows-v<X.Y.Z>`.
+
 POSIX (tarball):
 
 ```bash
+OS=macos                    # or linux
 VERSION=1.0.0
 TARGET=aarch64-macos        # or x86_64-macos / x86_64-linux / aarch64-linux
-curl -fsSLO "https://github.com/keton-id/cora/releases/download/v${VERSION}/cr-${VERSION}-${TARGET}.tar.gz"
-curl -fsSLO "https://github.com/keton-id/cora/releases/download/v${VERSION}/cr-${VERSION}-${TARGET}.tar.gz.sha256"
+TAG="cora-${OS}-v${VERSION}"
+curl -fsSLO "https://github.com/keton-id/cora/releases/download/${TAG}/cr-${VERSION}-${TARGET}.tar.gz"
+curl -fsSLO "https://github.com/keton-id/cora/releases/download/${TAG}/cr-${VERSION}-${TARGET}.tar.gz.sha256"
 shasum -a 256 -c <(echo "$(cat cr-${VERSION}-${TARGET}.tar.gz.sha256)  cr-${VERSION}-${TARGET}.tar.gz")
 tar xzf "cr-${VERSION}-${TARGET}.tar.gz"
 sudo install -m 0755 cr /usr/local/bin/
@@ -175,7 +210,8 @@ Windows (zip):
 ```powershell
 $VERSION = "1.0.0"
 $TARGET  = "x86_64-windows"   # or aarch64-windows
-Invoke-WebRequest "https://github.com/keton-id/cora/releases/download/v$VERSION/cr-$VERSION-$TARGET.zip" -OutFile cr.zip
+$TAG     = "cora-windows-v$VERSION"
+Invoke-WebRequest "https://github.com/keton-id/cora/releases/download/$TAG/cr-$VERSION-$TARGET.zip" -OutFile cr.zip
 Expand-Archive cr.zip -DestinationPath $Env:LOCALAPPDATA\cora\bin
 $Env:PATH += ";$Env:LOCALAPPDATA\cora\bin"
 cr version

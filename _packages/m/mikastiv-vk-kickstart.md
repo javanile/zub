@@ -10,10 +10,10 @@ keywords:
   - initialization
   - vulkan
   - vulkan-library
-date: 2026-05-30
+date: 2026-06-04
 category: game-development
-updated_at: 2026-05-30T17:28:59+00:00
-last_sync: 2026-05-30T17:28:59Z
+updated_at: 2026-06-04T14:52:37+00:00
+last_sync: 2026-06-04T14:52:37Z
 package_kind: library
 has_library: true
 has_binary: false

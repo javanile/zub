@@ -11,10 +11,10 @@ keywords:
   - reflection
   - zevy
   - zig-programming-language
-date: 2026-05-27
+date: 2026-06-06
 category: tooling
-updated_at: 2026-05-27T23:41:59+00:00
-last_sync: 2026-05-27T23:41:59Z
+updated_at: 2026-06-06T11:50:12+00:00
+last_sync: 2026-06-06T11:50:12Z
 package_kind: library
 has_library: true
 has_binary: false
