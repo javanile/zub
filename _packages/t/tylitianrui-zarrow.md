@@ -12,10 +12,10 @@ keywords:
   - columnar-format
   - serialization
   - zarrow
-date: 2026-05-30
+date: 2026-06-07
 category: data-formats
-updated_at: 2026-05-30T03:29:38+00:00
-last_sync: 2026-05-30T03:29:38Z
+updated_at: 2026-06-07T11:34:55+00:00
+last_sync: 2026-06-07T11:34:55Z
 package_kind: hybrid
 has_library: true
 has_binary: true

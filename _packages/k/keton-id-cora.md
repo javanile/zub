@@ -6,9 +6,9 @@ author: keton-id
 author_github: keton-id
 repository: https://github.com/keton-id/cora
 keywords:
-date: 2026-06-06
-updated_at: 2026-06-06T11:08:24+00:00
-last_sync: 2026-06-06T11:08:24Z
+date: 2026-06-07
+updated_at: 2026-06-07T11:02:20+00:00
+last_sync: 2026-06-07T11:02:20Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -98,6 +98,8 @@ Pick whichever fits your trust model — click to expand.
 <details>
 <summary><strong>A. Pre-built binary via install script</strong> &nbsp;<em>(recommended)</em></summary>
 
+**macOS / Linux:**
+
 ```bash
 curl -fsSL https://raw.githubusercontent.com/keton-id/cora/main/install.sh | sh
 ```
@@ -115,6 +117,30 @@ curl -fsSL https://raw.githubusercontent.com/keton-id/cora/main/install.sh \
 # Track a prerelease channel for your OS
 curl -fsSL https://raw.githubusercontent.com/keton-id/cora/main/install.sh \
     | sh -s -- --channel alpha
+```
+
+**Windows (PowerShell):**
+
+```powershell
+irm https://raw.githubusercontent.com/keton-id/cora/main/install.ps1 | iex
+```
+
+Fetches the latest stable `cora-windows-v*` release for your arch
+(AMD64 / ARM64), verifies the SHA256 checksum, installs to
+`%LOCALAPPDATA%\Programs\cora\cr.exe`, and appends that directory to
+your user `PATH`. Open a new shell to pick up the `PATH` change.
+
+Flags (pass via a scriptblock so PowerShell can forward args through `iex`):
+
+```powershell
+# Pin a specific version
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/keton-id/cora/main/install.ps1))) -Version 1.0.0
+
+# Track a prerelease channel
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/keton-id/cora/main/install.ps1))) -Channel alpha
+
+# Custom install dir, skip PATH mutation
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/keton-id/cora/main/install.ps1))) -BinDir C:\tools\cora -NoPath
 ```
 
 </details>

@@ -8,10 +8,10 @@ repository: https://github.com/castholm/zigglgen
 keywords:
   - bindings
   - opengl
-date: 2026-04-25
+date: 2026-06-07
 category: systems
-updated_at: 2026-04-25T14:23:08+00:00
-last_sync: 2026-04-25T14:23:08Z
+updated_at: 2026-06-07T10:44:06+00:00
+last_sync: 2026-06-07T10:44:06Z
 package_kind: binary
 has_library: false
 has_binary: true
@@ -38,8 +38,8 @@ The only Zig OpenGL binding generator you need.
 
 zigglgen currently supports the following versions of the Zig compiler:
 
-- `0.15.2`
-- `0.16.0-dev` (master)
+- `0.16.0`
+- `0.17.0-dev` (master)
 
 Older or more recent versions of the compiler are not guaranteed to be compatible.
 
@@ -58,7 +58,7 @@ pub fn build(b: *std.Build) void {
     const exe_mod = b.createModule(...);
 
     // Choose the OpenGL API, version, profile and extensions you want to generate bindings for.
-    const gl_bindings = @import("zigglgen").generateBindingsModule(b, .{
+    const gl_bindings = @import("zigglgen").generateModule(b, .{
         .api = .gl,
         .version = .@"4.1",
         .profile = .core,

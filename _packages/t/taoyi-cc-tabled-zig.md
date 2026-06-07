@@ -8,10 +8,10 @@ repository: https://github.com/taoyi-cc/tabled-zig
 keywords:
   - command-line
   - table
-date: 2026-05-14
+date: 2026-06-07
 category: tooling
-updated_at: 2026-05-14T11:52:09+00:00
-last_sync: 2026-05-14T11:52:09Z
+updated_at: 2026-06-07T10:42:41+00:00
+last_sync: 2026-06-07T10:42:41Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -25,18 +25,11 @@ sync_source: zigistry
 permalink: /packages/taoyi-cc/tabled-zig/
 ---
 
-# tabled-zig
+# A library that can format command-line output into tables
+- Supports 4 styles
+- Simple and easy to use
+- For usage instructions, see **/example.zig**
 
-Formatting command line output as a table
-
-## Installation
-
-Add to your `build.zig.zon`:
-
-```zig
-.dependencies = .{
-    .tabled_zig = .{
-        .url = "https://github.com/taoyi-cc/tabled-zig/archive/refs/heads/master.tar.gz",
-    },
-},
+```
+zig fetch --save git+https://github.com/taoyi-cc/tabled-zig.git#master
 ```

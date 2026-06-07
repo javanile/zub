@@ -17,9 +17,9 @@ keywords:
   - web
   - web-assembly
   - web-framework
-date: 2026-06-06
-updated_at: 2026-06-06T11:37:34+00:00
-last_sync: 2026-06-06T11:37:34Z
+date: 2026-06-07
+updated_at: 2026-06-07T09:32:08+00:00
+last_sync: 2026-06-07T09:32:08Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -204,10 +204,10 @@ You can view our current progress and planned features here:
 **[Check out the Ziex Issue Tracker →](https://github.com/ziex-dev/ziex/issues)**
 
 ## Versions
-| Zig         | Ziex              | Branch            | Status         |
-|-------------|-------------------|-------------------|----------------|
-| `0.16.0`    | `0.1.0-dev.1050+` | `main`            | Unstable (dev) |
-| `0.15.2`    | `0.1.0-dev-1050`  | `zig-0.15`        | Stable (dev)   |
+| Zig         | Ziex                | Branch            | Status         |
+|-------------|---------------------|-------------------|----------------|
+| `0.16.0`    | `0.1.0-dev.1068`-*  | `main`            | Stable (dev)   |
+| `0.15.2`    | `0.1.0-dev-1050`    | `zig-0.15`        | Stable (dev)   |
 
 
 ## Editor Support
