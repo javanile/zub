@@ -13,9 +13,9 @@ keywords:
   - zig-mcp
   - zig-model-context-protocol
   - ziglibrary
-date: 2026-05-31
-updated_at: 2026-05-31T20:13:13+00:00
-last_sync: 2026-05-31T20:13:13Z
+date: 2026-06-08
+updated_at: 2026-06-08T07:58:10+00:00
+last_sync: 2026-06-08T07:58:10Z
 package_kind: hybrid
 has_library: true
 has_binary: true

@@ -9,9 +9,9 @@ keywords:
   - binding
   - wayland
   - wayland-protocol
-date: 2026-06-04
-updated_at: 2026-06-04T13:36:12+00:00
-last_sync: 2026-06-04T13:36:12Z
+date: 2026-06-08
+updated_at: 2026-06-08T13:23:57+00:00
+last_sync: 2026-06-08T13:23:57Z
 package_kind: library
 has_library: true
 has_binary: false

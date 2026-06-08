@@ -19,10 +19,10 @@ keywords:
   - reinforcement-learning
   - retrocomputing
   - windows-xp
-date: 2026-06-07
+date: 2026-06-08
 category: game-development
-updated_at: 2026-06-07T09:25:09+00:00
-last_sync: 2026-06-07T09:25:09Z
+updated_at: 2026-06-08T13:37:40+00:00
+last_sync: 2026-06-08T13:37:40Z
 package_kind: binary
 has_library: false
 has_binary: true

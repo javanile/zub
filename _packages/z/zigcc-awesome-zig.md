@@ -11,9 +11,9 @@ keywords:
   - awesome-list
   - bun
   - mach
-date: 2026-05-28
-updated_at: 2026-05-28T13:55:07+00:00
-last_sync: 2026-05-28T13:55:07Z
+date: 2026-06-08
+updated_at: 2026-06-08T13:22:45+00:00
+last_sync: 2026-06-08T13:22:45Z
 package_kind: library
 has_library: false
 has_binary: false
@@ -152,6 +152,7 @@ If you find a well-maintained library that is not yet included here, welcome to 
 
 - [kristoff-it/zig-doctest](https://github.com/kristoff-it/zig-doctest) - A tool for testing snippets of code, useful for websites and books that talk about Zig.
 - [ryo-zen/zig-docs-mcp](https://github.com/ryo-zen/zig-docs-mcp) - MCP server providing access to Zig language docs, stdlib references, and working code examples.
+- [sb2bg/marionette](https://github.com/sb2bg/marionette) - Deterministic simulation testing for Zig with a `std.Io` implementation, letting you inject faults and replay failures from seeds.
 
 ### Package and Version Manager
 
@@ -263,6 +264,7 @@ If you find a well-maintained library that is not yet included here, welcome to 
 ### String Processing
 
 - [atman/zg](https://codeberg.org/atman/zg) - Provides Unicode text processing for Zig projects. It works correctly with the Russian language and other languages.
+- [shaik-abdul-thouhid/ezi-code](https://github.com/shaik-abdul-thouhid/ezi-code) - A comprehensive Unicode library for Zig covering UTF-8/16/32 encoding, normalization (NFC/NFD/NFKC/NFKD), segmentation (grapheme/word/sentence/line), casing, BiDi, collation (UCA/DUCET), and character properties. No dependencies.
 - [JakubSzark/zig-string](https://github.com/JakubSzark/zig-string) - Zig String (A UTF-8 String Library). This library is a UTF-8 compatible string library for the Zig programming language.
 - [jecolon/zigstr](https://github.com/jecolon/zigstr) - Zigstr is a UTF-8 string type for Zig programs.
 - [ziglibs/string-searching](https://github.com/ziglibs/string-searching) - String(not limited to []const u8)-searching algorithms in Zig.
@@ -286,6 +288,7 @@ If you find a well-maintained library that is not yet included here, welcome to 
 
 - [ziglibs/known-folders](https://github.com/ziglibs/known-folders) - Provides access to well-known folders across several operating systems.
 - [tiehuis/zig-regex](https://github.com/tiehuis/zig-regex) - A regex implementation for the Zig programming language.
+- [shaik-abdul-thouhid/ezi-gex](https://github.com/shaik-abdul-thouhid/ezi-gex) - Unicode-aware regex engine for Zig with runtime and comptime compilation, full \p{} Unicode property support, named captures, and custom pluggable backends (engines).
 - [xcaeser/glob.zig](https://github.com/xcaeser/glob.zig) - Fast and reliable glob pattern matching in pure Zig.
 - [jecolon/ziglyph](https://github.com/jecolon/ziglyph) - Unicode text processing for the Zig programming language.
 - [kubkon/zig-yaml](https://github.com/kubkon/zig-yaml) - YAML parser for Zig.
@@ -314,6 +317,7 @@ If you find a well-maintained library that is not yet included here, welcome to 
 - [travisstaloch/protobuf-zig](https://github.com/travisstaloch/protobuf-zig) - A protocol buffers implementation in Zig.
 - [Arwalk/zig-protobuf](https://github.com/Arwalk/zig-protobuf) - A protobuf 3 implementation for Zig.
 - [mattnite/protobuf](https://github.com/mattnite/protobuf) - A pure-Zig Protocol Buffers library with a standalone .proto parser, build-time code generator, and transport-agnostic RPC stub generation. Supports proto2 and proto3.
+- [nDimensional/zig-flatbuffers](https://github.com/nDimensional/zig-flatbuffers) - FlatBuffers codegen for Zig, in Zig.
 
 ### Date, Time and Timezones
 
@@ -506,6 +510,7 @@ If you find a well-maintained library that is not yet included here, welcome to 
 - [im-ng/zero](https://github.com/im-ng/zero) - Simple and opinionated web framework written in Zig and aims to make microservices development in Zig easier.
 - [GuneshRaj/zigar](https://github.com/GuneshRaj/zigar) - Zigar is a web application framework for Zig that supports ASP / JSP-like template syntax with ASP-style tags.
 - [llllOllOOll/spider](https://github.com/llllOllOOll/spider) - A web framework for Zig with a focus on ergonomics and performance.
+- [brmassa/liquidz](https://gitlab.com/brmassa/liquidz) - A [Liquid template language](https://shopify.github.io/liquid/) implementation in Zig.
 
 ### Web3 Framework
 
@@ -518,6 +523,7 @@ If you find a well-maintained library that is not yet included here, welcome to 
 - [StrobeLabs/eth.zig](https://github.com/StrobeLabs/eth.zig) - Pure Zig Ethereum client library. Zero dependencies, comptime-first.
 - [ch4r10t33r/zigeth](https://github.com/ch4r10t33r/zigeth) - Zig package to interact with Ethereum (inspired from alloy-rs).
 - [gballet/zevem](https://github.com/gballet/zevem/) - Ethereum Virtual Machine written in Zig.
+- [cryptuon/zig-evm](https://github.com/cryptuon/zig-evm) - A high-performance, embeddable EVM with wave-based parallel transaction execution, work-stealing thread pool, 96+ opcodes, and precompiles (blake2f, BN254, ripemd160). Targets L2/Rollup execution with C/Python/Rust/JS FFI bindings.
 - [blockblaz/ssz.zig](https://github.com/blockblaz/ssz.zig) - A Zig implementation of the [SSZ serialization protocol](https://github.com/ethereum/eth2.0-specs/blob/dev/ssz/simple-serialize.md).
 - [blockblaz/zeam](https://github.com/blockblaz/zeam) - A [Beam Chain](https://github.com/blockblaz/zeam/blob/main/resources/beam.md) written in Zig.
 - [blockblaz/hash-zig](https://github.com/blockblaz/hash-zig) - A pure Zig implementation of hash based signatures inspired from the rust implementation.
@@ -594,13 +600,14 @@ If you find a well-maintained library that is not yet included here, welcome to 
 - [cgbur/LLaMa2.zig](https://github.com/cgbur/llama2.zig) - Inference LLaMA 2 in one file of pure Zig.
 - [clebert/LLaMa2.zig](https://github.com/clebert/llama2.zig) - Inference LLaMA 2 in pure Zig.
 - [CogitatorTech/zigformer](https://github.com/CogitatorTech/zigformer) - ZigFormer is a transformer-based LLM implemented in pure Zig.
+- [cognisoc/zigllm](https://github.com/cognisoc/zigllm) - Educational: build an LLM in Zig from scratch — tensors to text generation.
 - [EugenHotaj/zig_gpt2](https://github.com/EugenHotaj/zig_gpt2) - Neural Network Inference Engine in Zig. GPT2 inference engine written in Zig. The inference engine can run [NanoGPT](https://github.com/karpathy/nanoGPT).
 - [nullclaw/nullclaw](https://github.com/nullclaw/nullclaw) - Fastest, smallest, and fully autonomous AI assistant infrastructure written in Zig.
 - [ollama-zig](https://github.com/dravenk/ollama-zig) - Ollama Zig library.
 - [renerocksai/gpt4all.zig](https://github.com/renerocksai/gpt4all.zig) - Zig build for a terminal-based chat client for an assistant-style large language model with ~800k GPT-3.5-Turbo Generations based on LLaMA.
 - [SMC17/faiss-zig](https://github.com/SMC17/faiss-zig) - Pure-Zig vector similarity search; Flat + HNSW + IVFFlat + IVFPQ. AGPL-3.0.
-- [SMC17/safetensors-zig](https://github.com/SMC17/safetensors-zig) - Pure-Zig HuggingFace safetensors reader; ~5x faster than the Rust upstream on Llama-shape parse fixtures. AGPL-3.0.
-- [SMC17/tokenizers-zig](https://github.com/SMC17/tokenizers-zig) - Pure-Zig HuggingFace tokenizers covering BPE / WordPiece / Unigram with full HF Encoding parity, sub-token offsets, and a 600-iter property fuzz. AGPL-3.0.
+- [SMC17/safetensors-zig](https://github.com/SMC17/safetensors-zig) - Pure-Zig Hugging Face safetensors reader; ~5x faster than the Rust upstream on Llama-shape parse fixtures. AGPL-3.0.
+- [SMC17/tokenizers-zig](https://github.com/SMC17/tokenizers-zig) - Pure-Zig Hugging Face tokenizers covering BPE / WordPiece / Unigram with full HF Encoding parity, sub-token offsets, and a 600-iter property fuzz. AGPL-3.0.
 - [SMC17/vllm-zig](https://github.com/SMC17/vllm-zig) - LLM serving substrate. Real TinyLlama forward pass through Zig kernels: RoPE + GQA + KV cache + multi-thread SIMD matmul + streaming. AGPL-3.0.
 
 ### Machine Learning
