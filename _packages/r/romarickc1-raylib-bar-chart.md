@@ -7,9 +7,9 @@ author_github: RomaricKc1
 repository: https://github.com/RomaricKc1/raylib-bar_chart
 keywords:
   - raylib-zig
-date: 2026-05-25
-updated_at: 2026-05-25T12:08:01+00:00
-last_sync: 2026-05-25T12:08:01Z
+date: 2026-05-31
+updated_at: 2026-05-31T18:36:12+00:00
+last_sync: 2026-05-31T18:36:12Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -29,7 +29,7 @@ Bar chart widget for [Raylib-zig](https://github.com/Not-Nik/raylib-zig).
 
 Example usage here -> [ZISTORY](https://github.com/RomaricKc1/zistory).
 
-Tested on Zig version `0.16.0`.
+Tested on Zig version `0.16.0` and `0.17.0-dev.387+31f157d80`.
 
 > [!NOTE]
 > This is configured to work on `wayland`. If you are on `x11`, you'll need to

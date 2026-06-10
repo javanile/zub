@@ -24,9 +24,20 @@ keywords:
   - secp256k1
   - web3
   - zig-ethereum
-date: 2026-04-08
+date: 2026-06-10
 category: systems
-last_sync: 2026-04-08T19:47:34Z
+updated_at: 2026-06-10T13:43:30+00:00
+last_sync: 2026-06-10T13:43:30Z
+package_kind: hybrid
+has_library: true
+has_binary: true
+has_distributable_binary: true
+binary_count: 4
+distributable_binary_count: 4
+multiple_binaries: true
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
 permalink: /packages/StrobeLabs/eth.zig/
 ---
 
@@ -35,7 +46,7 @@ permalink: /packages/StrobeLabs/eth.zig/
 [![CI](https://github.com/strobelabs/eth.zig/actions/workflows/ci.yml/badge.svg)](https://github.com/strobelabs/eth.zig/actions/workflows/ci.yml)
 [![Docs](https://img.shields.io/badge/docs-ethzig.org-blue)](https://ethzig.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Zig](https://img.shields.io/badge/Zig-%E2%89%A5%200.15.2-orange)](https://ziglang.org/)
+[![Zig](https://img.shields.io/badge/Zig-%E2%89%A5%200.16.0-orange)](https://ziglang.org/)
 
 **The fastest Ethereum library.** Beats Rust's alloy.rs on 23 out of 26 benchmarks.
 
@@ -119,6 +130,25 @@ const name = try token.name();
 defer allocator.free(name);
 ```
 
+### Simulate eth_call with state overrides
+
+Lets searchers answer "what if?" questions without forking a node: what if this token balance were larger, what if this storage slot held a different value, what if this address ran alternative bytecode? Maps to the geth-style third argument to `eth_call`.
+
+```zig
+const eth = @import("eth");
+
+var overrides = eth.state_overrides.StateOverrides.init(allocator);
+defer overrides.deinit();
+
+// Pretend this account is rich, has nonce 0, and the pool has a hand-tuned reserve.
+try overrides.setBalance(searcher_addr, 1_000_000 * std.math.pow(u256, 10, 18));
+try overrides.setNonce(searcher_addr, 0);
+try overrides.setStorageAt(pool_addr, reserves_slot, new_reserves_word);
+
+const result = try provider.callWithOverrides(target_contract, calldata, &overrides);
+defer allocator.free(result);
+```
+
 ### Function selectors and event topics
 
 ```zig
@@ -150,6 +180,60 @@ const key = try eth.hd_wallet.deriveEthAccount(seed, 0);
 const addr = key.toAddress();
 ```
 
+### Resilient WebSocket subscriptions (production bots)
+
+`ws_client.WsClient` wraps `ws_transport` with three features bots need: transparent reconnect with exponential backoff + jitter, multiplexed subscriptions on a single socket, and an application-layer ping keepalive. Subscription handles stay valid across reconnects -- the underlying server-side sub-id is swapped automatically.
+
+```zig
+const eth = @import("eth");
+
+const client = try eth.ws_client.WsClient.connect(allocator, "wss://mainnet.example.com/ws", .{});
+defer client.deinit();
+
+const heads = try client.subscribe(.{ .new_heads = {} });
+const transfers = try client.subscribe(.{ .logs = .{
+    .address = usdc_address,
+    .topics = &.{transfer_event_topic},
+} });
+// MEV searchers: stream full pending transactions (geth-style).
+const pending = try client.subscribe(.{ .new_pending_transactions = .{ .full = true } });
+
+while (true) {
+    const event = try client.next();
+    defer allocator.free(event.payload);
+    if (event.sub == heads) {
+        const header = try eth.subscription.parseBlockFromNotification(allocator, event.payload);
+        // ... handle new block
+    } else if (event.sub == transfers) {
+        const log = try eth.subscription.parseLogFromNotification(allocator, event.payload);
+        // ... handle Transfer log
+    } else if (event.sub == pending) {
+        const tx = try eth.subscription.parseTransactionFromNotification(allocator, event.payload);
+        defer eth.rpc_transaction.freeRpcTransaction(allocator, tx);
+        // ... evaluate the pending tx (sandwich, backrun, ...)
+    }
+}
+```
+
+Lower-level building blocks remain available: `ws_transport.WsTransport` for raw frames and `ws_transport.connectWithReconnect()` for a callback-style reconnect loop without subscription state.
+
+### Block-scoped log watching (keepers and searchers)
+
+`log_watcher.LogWatcher` packages the canonical bot loop -- on each new head, fetch filtered logs for that block -- on top of `WsClient` + `eth_getLogs`. Blocks missed across reconnects are back-filled and reorged ranges are re-fetched automatically:
+
+```zig
+var watcher = try eth.log_watcher.LogWatcher.init(allocator, &provider, client, .{
+    .address = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+}, .{});
+defer watcher.deinit();
+
+while (true) {
+    const logs = try watcher.pollOnce(); // blocks until the next head
+    defer eth.log_watcher.freeLogs(allocator, logs);
+    for (logs) |log| { /* liquidate, arb, ... */ }
+}
+```
+
 ## Built with eth.zig
 
 Real production bots and SDKs built on eth.zig:
@@ -172,7 +256,7 @@ Built something with eth.zig? Open a PR to add it here.
 **One-liner:**
 
 ```bash
-zig fetch --save git+https://github.com/StrobeLabs/eth.zig.git#v0.2.2
+zig fetch --save git+https://github.com/StrobeLabs/eth.zig.git#v0.5.0
 ```
 
 **Or add manually** to your `build.zig.zon`:
@@ -180,7 +264,7 @@ zig fetch --save git+https://github.com/StrobeLabs/eth.zig.git#v0.2.2
 ```zig
 .dependencies = .{
     .eth = .{
-        .url = "git+https://github.com/StrobeLabs/eth.zig.git#v0.2.2",
+        .url = "git+https://github.com/StrobeLabs/eth.zig.git#v0.5.0",
         .hash = "...", // run `zig build` and it will tell you the expected hash
     },
 },
@@ -225,7 +309,7 @@ cd examples && zig build && ./zig-out/bin/01_derive_address
 | **Crypto** | `secp256k1`, `signer`, `signature`, `keccak`, `eip155` | ECDSA signing (RFC 6979), Keccak-256, EIP-155 |
 | **Types** | `transaction`, `receipt`, `block`, `blob`, `access_list` | Legacy, EIP-2930, EIP-1559, EIP-4844 transactions |
 | **Accounts** | `mnemonic`, `hd_wallet` | BIP-32/39/44 HD wallets and mnemonic generation |
-| **Transport** | `http_transport`, `ws_transport`, `sse_transport`, `json_rpc`, `provider`, `subscription` | HTTP, WebSocket, and SSE transports |
+| **Transport** | `http_transport`, `ws_transport`, `sse_transport`, `json_rpc`, `provider`, `subscription`, `ws_client` | HTTP, WebSocket, and SSE transports; resilient WS client with auto-reconnect |
 | **ENS** | `ens_namehash`, `ens_resolver`, `ens_reverse` | ENS name resolution and reverse lookup |
 | **Client** | `wallet`, `contract`, `multicall`, `event`, `erc20`, `erc721` | Signing wallet, contract interaction, Multicall3, token wrappers |
 | **Standards** | `eip712`, `abi_json` | EIP-712 typed data signing, Solidity JSON ABI parsing |
@@ -248,6 +332,7 @@ cd examples && zig build && ./zig-out/bin/01_derive_address
 | BIP-32/39/44 HD wallets | Complete |
 | HTTP transport | Complete |
 | WebSocket transport (with TLS) | Complete |
+| Resilient WS client (auto-reconnect + resubscribe + keepalive) | Complete |
 | JSON-RPC provider (24+ methods) | Complete |
 | ENS resolution (forward + reverse) | Complete |
 | Contract read/write helpers | Complete |
@@ -293,7 +378,7 @@ cd examples && zig build && ./zig-out/bin/01_derive_address
 
 ## Requirements
 
-- Zig >= 0.15.2
+- Zig >= 0.16.0
 
 ## Running Tests
 

