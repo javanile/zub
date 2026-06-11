@@ -11,8 +11,8 @@ keywords:
   - vulkan-api
 date: 2026-06-04
 category: game-development
-updated_at: 2026-06-04T13:21:16+00:00
-last_sync: 2026-06-04T13:21:16Z
+updated_at: 2026-06-04T13:52:36+00:00
+last_sync: 2026-06-04T13:52:36Z
 package_kind: hybrid
 has_library: true
 has_binary: true

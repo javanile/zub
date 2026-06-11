@@ -9,10 +9,10 @@ keywords:
   - argument-parser
   - cli
   - command-line
-date: 2026-05-21
+date: 2026-06-11
 category: tooling
-updated_at: 2026-05-21T09:01:27+00:00
-last_sync: 2026-05-21T09:01:27Z
+updated_at: 2026-06-11T13:59:11+00:00
+last_sync: 2026-06-11T13:59:11Z
 package_kind: hybrid
 has_library: true
 has_binary: true

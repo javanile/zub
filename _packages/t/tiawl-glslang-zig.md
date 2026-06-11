@@ -8,9 +8,9 @@ repository: https://github.com/tiawl/glslang.zig
 keywords:
   - binding
   - glslang
-date: 2026-06-03
-updated_at: 2026-06-03T14:58:26+00:00
-last_sync: 2026-06-03T14:58:26Z
+date: 2026-06-04
+updated_at: 2026-06-04T13:49:18+00:00
+last_sync: 2026-06-04T13:49:18Z
 package_kind: hybrid
 has_library: true
 has_binary: true

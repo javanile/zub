@@ -6,9 +6,9 @@ author: loftafi
 author_github: loftafi
 repository: https://github.com/loftafi/engine
 keywords:
-date: 2026-05-24
-updated_at: 2026-05-24T22:25:55+00:00
-last_sync: 2026-05-24T22:25:55Z
+date: 2026-06-11
+updated_at: 2026-06-11T13:19:01+00:00
+last_sync: 2026-06-11T13:19:01Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -27,7 +27,10 @@ permalink: /packages/loftafi/engine/
 This zig module provides a lightweight GUI api based around SDL3
 and SDL3 TTF.
 
-This code is released under the terms of the MIT license. This
+This module is released under the terms of the MIT license. This
 code is useful for my purposes. No warrantee is given or implied
 that this library will be suitable for your purpose and no warantee
 is given or implied that this code is free from defects.
+
+This module depends on other libraries and modules. Known dependencies
+are included in src/License.zig.

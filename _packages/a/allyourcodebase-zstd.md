@@ -6,9 +6,9 @@ author: allyourcodebase
 author_github: allyourcodebase
 repository: https://github.com/allyourcodebase/zstd
 keywords:
-date: 2026-04-22
-updated_at: 2026-04-22T16:32:55+00:00
-last_sync: 2026-04-22T16:32:55Z
+date: 2026-06-03
+updated_at: 2026-06-03T21:04:22+00:00
+last_sync: 2026-06-03T21:04:22Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -35,7 +35,7 @@ First, update your `build.zig.zon`:
 ```
 # Initialize a `zig build` project if you haven't already
 zig init
-zig fetch --save git+https://github.com/allyourcodebase/zstd.git#1.5.7-1
+zig fetch --save git+https://github.com/allyourcodebase/zstd.git#1.5.7-2
 ```
 
 You can then import `zstd` in your `build.zig` with:

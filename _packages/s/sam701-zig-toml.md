@@ -8,10 +8,10 @@ repository: https://github.com/sam701/zig-toml
 keywords:
   - parser
   - toml
-date: 2026-05-22
+date: 2026-06-11
 category: data-formats
-updated_at: 2026-05-22T04:53:55+00:00
-last_sync: 2026-05-22T04:53:55Z
+updated_at: 2026-06-11T13:56:48+00:00
+last_sync: 2026-06-11T13:56:48Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -28,7 +28,7 @@ permalink: /packages/sam701/zig-toml/
 # zig-toml
 [![Zig Docs](https://img.shields.io/badge/docs-zig-%23f7a41d)](https://sam701.github.io/zig-toml)
 
-Zig [TOML v1.0.0](https://toml.io/en/v1.0.0) parser.
+Zig [TOML v1.1.0](https://toml.io/en/v1.1.0) parser.
 
 This is a top-down LL parser that parses directly into Zig structs.
 

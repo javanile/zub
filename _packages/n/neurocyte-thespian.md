@@ -8,9 +8,9 @@ repository: https://github.com/neurocyte/thespian
 keywords:
   - actor-model
   - cpp
-date: 2026-05-14
-updated_at: 2026-05-14T11:28:57+00:00
-last_sync: 2026-05-14T11:28:57Z
+date: 2026-06-11
+updated_at: 2026-06-11T13:54:22+00:00
+last_sync: 2026-06-11T13:54:22Z
 package_kind: library
 has_library: true
 has_binary: false
