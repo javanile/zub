@@ -20,9 +20,9 @@ keywords:
   - zig-bindings
   - zig-python
   - zig-python-bindings
-date: 2026-05-23
-updated_at: 2026-05-23T10:44:45+00:00
-last_sync: 2026-05-23T10:44:45Z
+date: 2026-06-12
+updated_at: 2026-06-12T13:17:14+00:00
+last_sync: 2026-06-12T13:17:14Z
 package_kind: library
 has_library: false
 has_binary: false

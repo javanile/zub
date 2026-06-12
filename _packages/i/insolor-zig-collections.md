@@ -6,9 +6,9 @@ author: insolor
 author_github: insolor
 repository: https://github.com/insolor/zig-collections
 keywords:
-date: 2026-05-20
-updated_at: 2026-05-20T17:25:29+00:00
-last_sync: 2026-05-20T17:25:29Z
+date: 2026-06-03
+updated_at: 2026-06-03T07:47:36+00:00
+last_sync: 2026-06-03T07:47:36Z
 package_kind: library
 has_library: true
 has_binary: false

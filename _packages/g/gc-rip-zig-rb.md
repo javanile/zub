@@ -10,10 +10,10 @@ keywords:
   - microzig
   - ring-buffer
   - stm32f103rb
-date: 2026-05-07
+date: 2026-06-12
 category: data-formats
-updated_at: 2026-05-07T12:02:32+00:00
-last_sync: 2026-05-07T12:02:32Z
+updated_at: 2026-06-12T13:10:38+00:00
+last_sync: 2026-06-12T13:10:38Z
 package_kind: library
 has_library: true
 has_binary: false

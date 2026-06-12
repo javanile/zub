@@ -15,10 +15,10 @@ keywords:
   - zig-logging
   - zig-logging-package
   - zig-logs
-date: 2026-06-05
+date: 2026-06-12
 category: tooling
-updated_at: 2026-06-05T11:53:22+00:00
-last_sync: 2026-06-05T11:53:22Z
+updated_at: 2026-06-12T13:19:53+00:00
+last_sync: 2026-06-12T13:19:53Z
 package_kind: hybrid
 has_library: true
 has_binary: true
