@@ -1,6 +1,6 @@
 ---
 title: ezi-gex
-description: "Unicode aware regex engine for Zig — runtime and comptime. Thompson NFA: linear-time, ReDoS-safe. Full \\p{} Unicode properties, named captures, case folding, pluggable backends. Zero allocation per match. WASM-compatible."
+description: "Unicode aware regex engine for Zig — runtime and comptime. Thompson NFA: linear-time, ReDoS-safe; Literal Prefilter; Backtrack; Lazy Dfa; Full \\p{} Unicode properties, named captures, case folding, pluggable backends. Zero allocation per match. WASM-compatible."
 license: NOASSERTION
 author: shaik-abdul-thouhid
 author_github: shaik-abdul-thouhid
@@ -13,10 +13,10 @@ keywords:
   - unicode
   - unicode-characters
   - zero-allocation
-date: 2026-06-08
+date: 2026-06-13
 category: systems
-updated_at: 2026-06-08T13:07:05+00:00
-last_sync: 2026-06-08T13:07:05Z
+updated_at: 2026-06-13T11:00:28+00:00
+last_sync: 2026-06-13T11:00:28Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -46,8 +46,11 @@ a **pluggable backend** architecture.
   the program lands in `ro_data`, the matcher runs in `comptime`. (The C++ `ctre`
   trick, in Zig, with full Unicode.)
 - **Pluggable.** Matching lives behind a small, vtable-free **backend contract**.
-  The library ships four backends and a dispatcher; you can write your own and
-  drop it into the same front door. See [`docs/architecture.md`](docs/architecture.md).
+  The library ships six backends and a dispatcher; you can write your own and
+  drop it into the same front door. See [`docs/architecture.md`](docs/architecture.md)
+  for the contract, and the step-by-step
+  [*write your own backend*](docs/usage-guide.md#8-writing-your-own-backend) walkthrough
+  in the usage guide.
 - **Target-agnostic.** Pure computation over caller-provided memory — no syscalls,
   no global allocator, no platform assumptions in the library code. Imports and
   compiles anywhere Zig (plus `ezi_code`) does: native, `wasm32-freestanding` /
@@ -55,44 +58,66 @@ a **pluggable backend** architecture.
 
 ## Status
 
-Version `0.1.0` — the first tagged release. With `0.2.0-dev` under development. Pre-1.0, so the API may still change,
-but everything in the public surface is annotated `@stable-since: v0.1.0` and is
-covered by SemVer from this tag on. Tracks a recent Zig dev build (`0.17.0-dev`); it
-will not compile on stable 0.16.
+Version `0.3.0` — the current tagged release; **`0.4.0-dev` is now under
+development** on `main`. Pre-1.0, so the API may still change, but everything in the
+public surface is annotated `@stable-since: vX.Y.Z` and is covered by SemVer. Tracks a
+recent Zig dev build (`0.17.0-dev`); it will not compile on stable 0.16.
 
-**What works is tested** (≈210 tests: per-module behaviour, cross-backend
-conformance, runtime + comptime parity). The **first prefilter tier is now wired**:
-the `literal` backend scans with `std.mem.indexOf` (SIMD `memchr` + Boyer–Moore–
-Horspool) and `auto` reads the HIR `Analysis` to skip work on NFA patterns — a
-leading-literal `memchr` prefilter, a `^`/`\A` start short-circuit, and a min-length
-gate. There is still **no lazy-DFA backend**, so on general (non-prefixable) patterns
-throughput is below RE2/Rust; the architecture absorbs a DFA without API changes —
-see the *Performance* section.
+**What works is tested** (**311 tests**, all passing: per-module behaviour, cross-backend
+conformance — including a wide differential corpus where every backend must agree with
+the Pike VM — and runtime + comptime parity). `0.2.0` added full case folding, grapheme
+`\X`, a two-tier `Options` (semantic + results-invariant strategy), `(?x)` verbose
+mode, ASCII mode, dead-on-invalid UTF-8, and the **byte-NFA lowering + `ByteMap`
+equivalence classes** (`engine/byte.zig`): the zero-decode UTF-8 automaton substrate,
+executed by the `bytepike` reference backend.
+
+`0.3.0-dev` makes the **byte DFA the default span engine, on by default** — and the
+primary engine is the **eager DFA** (`engine/backends/edfa.zig`): it **fully determinizes
+the byte automaton at build time** into a frozen `states × byte_classes` table, so the
+matcher is a bare table walk with **no per-search state**, and — unlike the lazy DFA, whose
+cache mutates while matching — it runs at **comptime as well as runtime** (so the default
+`auto` now bakes a real frozen DFA into `ro_data` for *tiny* patterns at comptime — the
+genuine CTRE-lane — while a big Unicode class stays on the Pike VM at comptime but still gets
+the eager DFA at runtime). Its `find` is **O(input) on every pattern**, via a
+static, build-time strategy choice (`program.prone`): a pattern whose consuming loop is
+itself accepting (`\w+`, `\d+`, `[A-Za-z]+`) gets a single greedy **anchored restart**; a
+*prone* pattern that can consume an unbounded run before it can accept (e.g. `\w+@\w+`'s
+pre-`@` word run) gets the **reverse-DFA two-pass** (a forward pass locates the match end, a
+frozen reverse DFA the start) — no Θ(n²) anchored restart. It now also supports **`$`/`\z`**
+(`text_end`), so it is broader than the lazy DFA. The **lazy DFA**
+(`engine/backends/dfa.zig`) is now the **fallback** — it determinizes the byte automaton on
+the fly (one cached DFA state per input byte) and serves patterns whose full eager table
+overflows the state bound. Both are span-only (the Pike VM still fills captures and `\b`)
+and leftmost-first, conformance-proven against the Pike VM. The **first prefilter tier is
+also wired** (`literal` scans with `std.mem.indexOf`, and a literal *alternation* skips with
+a single SIMD `indexOfAny` pass; `auto` reads the HIR `Analysis` for a leading-literal
+`memchr` prefilter, a `^`/`\A` start short-circuit, and a min-length gate). The architecture
+absorbs all of this without API changes — see *Performance*.
 
 ## Installing
 
 Via git ref (resolves the tag at fetch time):
 
 ```sh
-zig fetch --save git+https://github.com/shaik-abdul-thouhid/ezi-gex.git#v0.1.0
+zig fetch --save git+https://github.com/shaik-abdul-thouhid/ezi-gex.git#v0.3.0
 ```
 
 Or via plain HTTP tarball (pins the content hash in `build.zig.zon`):
 
 ```sh
-zig fetch --save https://github.com/shaik-abdul-thouhid/ezi-gex/archive/refs/tags/v0.1.0.tar.gz
+zig fetch --save https://github.com/shaik-abdul-thouhid/ezi-gex/archive/refs/tags/v0.3.0.tar.gz
 ```
 
-**Tracking `main` (unreleased `0.2.0-dev`)** — if you want the latest, in-development
-surface before they're tagged, fetch the branch instead of a tag. This resolves
-`main`'s current commit and pins its hash in `build.zig.zon`; re-run it to move up:
+**Tracking `main` (unreleased `0.4.0-dev`)** — if you want the latest, in-development
+surface before it's tagged, fetch the branch instead of a tag. This resolves `main`'s
+current commit and pins its hash in `build.zig.zon`; re-run it to move up:
 
 ```sh
 zig fetch --save git+https://github.com/shaik-abdul-thouhid/ezi-gex.git#main
 ```
 
 `main` is the development branch: it builds and is tested, but APIs there are not yet
-covered by a tag, so they can still change before `0.2.0`. For reproducible builds,
+covered by a tag, so they can still change before `0.4.0`. For reproducible builds,
 prefer a tagged release; reach for `main` only when you specifically need unreleased work.
 
 Then in `build.zig` (the `ezi_code` dependency is resolved transitively — you only
@@ -104,6 +129,9 @@ exe.root_module.addImport("ezi_gex", ezi_gex.module("ezi_gex"));
 ```
 
 ## Quick look
+
+> For the full hands-on tour — every op, the pipeline from lexing, comptime paths,
+> and writing your own backend — see [`docs/usage-guide.md`](docs/usage-guide.md).
 
 ```zig
 const gex = @import("ezi_gex");
@@ -152,12 +180,15 @@ const year = comptime cap.groupSlice(1).?;              // "2026", a ro_data sli
 >    eval-branch quota and compiler memory; a large, deeply-nested, or pathological pattern
 >    can blow the quota or make builds slow and memory-heavy. **Prefer `compileRuntime` for
 >    big or user-supplied patterns** — runtime compilation has no such ceiling.
-> 2. **Embedding many comptime programs bloats the binary.** Each `compileComptime` adds its
->    program tables to `ro_data`, and Unicode classes are large: one `\w` ≈ 800 ranges ≈ 6 KB
->    *per occurrence*, and counted repetition multiplies it — a single `\w{3,32}` is ~200 KB.
->    *Measured:* 30 realistic patterns added **~625 KB**; ~100 can be **2 MB+** (tens of MB if
->    they use counted Unicode-class repeats). The matching *code* is shared across all of
->    them, so the cost is almost entirely data.
+> 2. **Each comptime program adds *its* ranges to `ro_data`.** A `compileComptime` regex
+>    bakes its class ranges in: ~6.3 KB per *distinct* `\w` (~800 ranges), ~5.3 KB per
+>    `\p{L}`, ≤0.5 KB for ASCII classes. **Identical classes within a pattern are interned
+>    to one range-block**, so a counted repeat like `\w{3,32}` costs *one* `\w`, not one
+>    per copy — repetition no longer multiplies the table. The cost is one block per
+>    *distinct* class per comptime pattern; `compileRuntime` adds nothing to the binary.
+>    The Unicode *tables* themselves are a fixed one-time cost, **not** per-pattern — see
+>    [§ Binary size](#binary-size). Stacking many *different* Unicode classes across many
+>    comptime programs is the only thing that grows `ro_data`; check the delta then.
 
 ## Matching & captures
 
@@ -165,6 +196,11 @@ Everything below uses the default `auto` engine — `compileRuntime` /
 `compileComptime`. The shape never changes: **compile once → make a `Scratch` →
 run searches**. The compiled regex is immutable and shareable; the `Scratch` is the
 single piece of mutable per-search state.
+
+> Prefer copy-paste? The usage guide has a runnable recipe for each op below in
+> [§3 Front-door recipes](docs/usage-guide.md#3-front-door-recipes), plus the
+> [`Options`](docs/usage-guide.md#options) reference and the
+> [comptime / no-allocator](docs/usage-guide.md#4-comptime--no-allocator-usage) paths.
 
 ### 1. The `Scratch` — the engine only needs *a* scratch
 
@@ -188,8 +224,9 @@ defer sc.deinit(gpa);
 ```
 
 If the backend implements the **buffer convention** (its `Scratch` exposes
-`Buf` / `bufferLen` / `initBuffer` — all four built-ins do), you can hand it
-caller-owned storage instead, with no allocator and no allocation *during* a search:
+`Buf` / `bufferLen` / `initBuffer` — every built-in except the runtime-only lazy `dfa`
+does), you can hand it caller-owned storage instead, with no allocator and no allocation
+*during* a search:
 
 ```zig
 // Fixed buffer — `bufferLen` reports how many `Buf` words this program needs.
@@ -331,10 +368,10 @@ const year = comptime Re.capturesComptime("y2026-06").?.namedSlice("year").?; //
 | Classes `[...]`, `[^...]`, ranges, `\d \w \s` (+ negations) | ✅ |
 | Unicode `\p{L}` `\P{…}` `\p{Script=…}`, `\pL` | ✅ |
 | Anchors `^ $ \A \z`, word boundary `\b \B`, multiline `(?m)` | ✅ |
-| Inline flags `(?i)` `(?m)` `(?s)`, scoped `(?i:…)` | ✅ |
-| Escapes `\n \t \xHH \x{…} \u{…} \cX`, comments `(?#…)` | ✅ |
+| Inline flags `(?i)` `(?m)` `(?s)` `(?x)`, scoped `(?i:…)` | ✅ |
+| Escapes `\n \t \xHH \x{…} \u{…} \cX`, comments `(?#…)`, verbose `(?x)` | ✅ |
+| `\X` grapheme cluster (UAX #29) | ✅ (matched by `backtrack`/`auto`) |
 | Backreferences, lookaround, atomic/conditional, recursion, `\Q…\E` | ❌ rejected with a precise error |
-| `\X` grapheme | ⚠️ parses, not yet executable |
 
 Anchors are JS/RE2-style: `$` without `(?m)` is end-of-input (`\z`), and `\Z` is
 treated as `\z`. See [`docs/architecture.md`](docs/architecture.md) §Caveats.
@@ -347,9 +384,21 @@ treated as `\z`. See [`docs/architecture.md`](docs/architecture.md) §Caveats.
 | `pikevm` | breadth-first NFA | ✅ | ✅ | general, large inputs |
 | `backtrack` | bounded depth-first NFA | ✅ | ✅ | small inputs |
 | `literal` | substring / literal-alternation | whole-match | ✅ | pure-literal patterns |
+| `bytepike` | byte-stepping Pike VM (zero-decode) | ✅ | ✅ | byte-automaton substrate (no `\X`/`\b`) |
+| `edfa` *(default span engine)* | **eager** DFA — frozen `states × byte_classes` table | span-only | ✅ | fast span scan; O(n) `find`; `auto` prefers it |
+| `dfa` | lazy DFA over the byte automaton (cached transitions) | span-only | ✗ (runtime-only) | the fallback when the eager DFA overflows its state bound |
 
-`compileRuntime`/`compileComptime` use `auto`. Force one with the `*With` variants:
+`compileRuntime`/`compileComptime` use `auto`, which now **prefers the eager DFA**
+(`edfa`) for the span scan on an eligible pattern (no `\b`/`\X`/`(?m)` line anchors — but
+`$`/`\z` *is* fine), falling back to the lazy `dfa` only when the eager table overflows its
+state bound, then to the NFA; the Pike VM fills captures anchored at the DFA span. The DFA
+is **on by default** (`byte_engine = .auto`/`.enabled`); `.disabled` opts back to the
+NFA-only program. Force a specific backend with the `*With` variants:
 `gex.compileRuntimeWith(gex.backends.pikevm, gpa, pat, &diag, .{})`.
+
+The usage guide covers [choosing a backend](docs/usage-guide.md#choosing-a-specific-backend)
+and walks the whole [*write your own backend*](docs/usage-guide.md#8-writing-your-own-backend)
+process end to end.
 
 ## When to use comptime — honest advice
 
@@ -386,13 +435,17 @@ Use it when **all three** are true:
    `@compileError`, not a runtime error path you have to handle.
 3. The pattern is light on Unicode classes.
 
-That third one is the catch. This engine resolves Unicode classes to sorted code-point
-ranges at HIR time, and those ranges bake into `ro_data` *per occurrence*. One `\w` is
-already ~6 KB. A counted repeat like `\w{3,32}` is ~200 KB — the inline expansion
-multiplies the table. Thirty real-world patterns with `\w`/`\s`/`\p{...}` added ~625 KB
-to a test binary; a hundred can push 2 MB+. If your pattern is ASCII-heavy (`\d`, `[a-z]`,
-explicit ranges), the cost is negligible. If it leans on Unicode classes or counted
-repetitions of them, check the binary size delta before committing.
+That third one is the catch — though a much smaller one than it used to be. This engine
+resolves Unicode classes to sorted code-point ranges at HIR time, and a
+`compileComptime` program bakes its ranges into `ro_data`. One `\w` is ~6.3 KB
+(802 ranges × 8 B), `\p{L}` ~5.3 KB, `\d` ~0.5 KB, `\s` ~80 B. **Identical classes
+inside a pattern are interned to a single range-block**, so a counted repeat like
+`\w{3,32}` costs *one* `\w` (~6.3 KB), not one per copy — repetition no longer
+multiplies the table. The remaining cost is one block per *distinct* class per
+comptime pattern. If your pattern is ASCII-heavy (`\d`, `[a-z]`, explicit ranges) the
+cost is negligible; if it stacks many *different* Unicode classes, check the delta.
+See [§ Binary size](#binary-size) for the whole picture (the Unicode tables themselves
+are a fixed one-time cost, not a per-pattern one).
 
 ### When the `*Comptime` match methods make sense
 
@@ -426,7 +479,8 @@ rather than any hidden internal one — the front door allocates nothing during 
 - A **buffer-backed `Scratch`** (`initBuffer`) and the **`pikevm`** backend allocate
   nothing at all while matching, sidestepping that entirely.
 
-Full details in [`docs/architecture.md`](docs/architecture.md) §11.
+Full details in [`docs/architecture.md`](docs/architecture.md) §11 and the usage guide's
+[§9 Thread-safety](docs/usage-guide.md#9-thread-safety).
 
 ## Performance
 
@@ -437,28 +491,125 @@ wired:**
    one-byte needle, Boyer–Moore–Horspool with a skip table for longer ones — instead
    of an `eql` at every byte position. On memchr-friendly needles that is **~20×** the
    old position-by-position scan; it is never slower.
-2. `auto` consumes the HIR `Analysis` on NFA patterns: when every match must begin
+2. `auto` consumes the HIR [`Analysis`](docs/usage-guide.md#7-the-analysis-prefilter-facts)
+   on NFA patterns: when every match must begin
    with a fixed literal, its first byte drives a `memchr` that skips straight to each
    candidate start (each confirmed with an *anchored* NFA run); a `^`/`\A` pattern
-   skips the leftward scan entirely; and a min-length gate rejects inputs too short to
-   hold any match. Every `Analysis` fact is a sound one-sided bound, so the prefilter
-   never drops a real match — it only avoids running the NFA where one cannot start.
+   skips the leftward scan entirely; the **rarest required byte** drives a sound
+   fast-reject (no `@` in the input ⇒ no `\w+@\w+` match, return at once); and a
+   min-length gate rejects inputs too short to hold any match. Every `Analysis` fact is a
+   sound one-sided bound, so the prefilter never drops a real match — it only avoids
+   running the engine where one cannot start. Toggle with `strategy.prefilter`.
 
-**Still open (additive, no API change):** a one-pass NFA capture path, and a lazy-DFA
-backend (the RE2/Rust core — runtime-only, since it mutates state at match time). The
-backend contract is exactly the seam to drop a DFA in without disturbing the comptime
-path or the API. See [`docs/architecture.md`](docs/architecture.md) for the planned tiers.
+**Tier 3 — the byte DFA — is wired and now ON BY DEFAULT, with the *eager* DFA as the
+primary span engine** (`backends/edfa.zig`, reached through `auto`). On an eligible pattern
+(no `\b`/`\X`/`(?m)` line anchors — but `$`/`\z` *is* eligible), `auto` builds the eager
+DFA, a fully-determinized frozen `states × byte_classes` table, and uses it for
+`isMatch`/`find`; captures are filled by the Pike VM **anchored at the DFA span** (the
+capture handoff). The lazy DFA (`backends/dfa.zig`) is the **fallback** — used only when the
+eager table overflows its state bound — and it took a hot-loop perf pass (cached raw table
+pointers refreshed only on a cold transition; `\w+` ~336 → ~517 MiB/s). The default is **at Rust parity (~1.1×–1.3×) on every class scan**
+and **≥ the code-point Pike VM in every cell** (5–10× on character-class scans), and it is
+**results-invariant** (`conformance.zig` pins the span and captures to the Pike VM, and
+fuzzes the strategy knobs). `strategy.byte_engine = .disabled` opts back to the compact
+NFA-only program.
+
+**`find` is O(n) on every pattern — via a build-time strategy choice.** `computeProne`
+detects, at build, whether the anchored DFA has a **non-accepting cycle reachable from a
+start** (it can consume an unbounded run without ever accepting):
+
+- **Non-prone** (`\w+`, `\d+`, `[A-Za-z]+` — the consuming loop is itself accepting) →
+  **anchored restart**: one greedy frozen-table walk per match. O(input) because no start
+  can scan far without hitting an accepting state (~1.1 GiB/s).
+- **Prone** (`\w+@\w+` on long word runs, `[ab]*c`) → the **reverse-DFA two-pass**: a
+  forward one-pass (`utrans` `.*?`-prefix table) locates the match **end**, a frozen
+  **reverse** DFA (determinized at comptime *and* runtime) the leftmost **start**. O(input),
+  replacing the old Θ(n²) anchored restart on this begins-everywhere-completes-rarely class.
+
+There is **no per-search probing** — the arm is fixed at build. A **trailing-`$`** pattern
+(`\w+@\w+$`, `[ab]*c$`, `\w+$`: every match ends at input end) takes a third O(input) arm —
+the end is pinned to `input.len`, so a single **reverse-DFA pass from the end** finds the
+leftmost start (no anchored restart, which would be Θ(n²) on these begin-but-don't-complete
+shapes). The eager DFA also **builds only the tables it will use**: `utrans` and the reverse
+table are built **only for prone or trailing-`$` patterns**, so a non-prone `\w+` stores just
+its forward `trans` table (~141 KB) instead of all three (~1 MB). Leftmost-first,
+conformance-pinned to the Pike VM.
+
+**Still open (additive, no API change):** an interior-literal `memmem`/Teddy prefilter
+(multi-substring SIMD for literal alternations — the single biggest remaining gap), DFA
+**Hopcroft minimization + a sparse table encoding** (to shrink the Unicode-class eager
+tables that *are* kept), line anchors `(?m)` / `\b` in the DFA, and a one-pass NFA capture
+path. See [`docs/architecture.md`](docs/architecture.md) §10 for the tier roadmap.
+
+## Binary size
+
+All Unicode work is delegated to `ezi_code`'s **enumerable range tables** — the HIR
+resolves every class (`\d \w \s`, `\p{…}`, scripts, `[...]`) to sorted code-point
+ranges, and the matcher and `\b` consult those same tables. ezi_gex links **none** of
+`ezi_code`'s per-code-point page tries.
+
+This makes the Unicode contribution to your binary a **fixed constant, not a growing
+one**:
+
+| What | Cost | Grows with…? |
+|---|---|---|
+| `ezi_code` range tables (General_Category, DerivedCoreProperties, Script, simple case-fold) | **~135 KB, linked once** | **nothing** — same for 1 pattern or 10 000 |
+| per-code-point page tries | **0** — not linked | — |
+| a runtime-compiled regex (`compileRuntime`) | on the **heap**, not the binary | the pattern |
+| a comptime-compiled regex (`compileComptime`), per pattern | one program in `ro_data`; ~6.3 KB per *distinct* `\w`, ~5.3 KB per `\p{L}`, ≤0.5 KB for ASCII classes | the pattern's distinct classes |
+
+So once a program touches the regex engine at all, the Unicode tables are paid for
+**once** and never again — adding more patterns, longer patterns, or more Unicode
+classes cannot push that ~135 KB any higher. The only size that scales with your code
+is `ro_data` for the `compileComptime` programs you choose to bake in, and even there
+**identical classes are interned** (a class used N times in one pattern is stored once;
+`\w{3,32}` costs one `\w`, not 35). `compileRuntime` adds nothing to the binary beyond
+the shared tables.
+
+> **The byte engine** (on by default; `byte_engine = .disabled` opts out) builds a
+> separate *byte* automaton on the **heap** — never linked into the binary — and it is
+> larger than the code-point program because a Unicode class becomes automaton structure
+> rather than a flat table. Two passes keep it bounded: **UTF-8 suffix sharing** (a
+> `(lo,hi,next)` cache that emits each class's shared continuation tails once) and
+> **single-copy `x+`** compilation. Measured: `\w+` is ~3.9 k instructions (down from
+> ~11 k), `\w+@\w+` ~7.9 k (down from ~23 k); ASCII patterns are unchanged. A
+> `byteWorthLowering` cost-gate keeps a pathological pattern (a big class repeated dozens
+> of times) on the compact code-point engine entirely. The **lazy** DFA (the fallback)
+> never builds the whole automaton — it materializes only the states an input visits (a
+> handful over ordinary text), so the NFA's bulk is build-time, not per-search, memory.
+> The **eager** DFA (`backends.edfa`, the default span engine) *does* freeze the whole DFA
+> into a `states × byte_classes` table — into `ro_data` at comptime — and is also the
+> CTRE/bake-it-in path: tiny for literal/ASCII patterns (`abc` is 5 states / ~100 B), a
+> few hundred states for a Unicode class. It now **builds only the tables it uses** (a
+> non-prone `\w+` keeps just its forward table, ~141 KB, not the forward + `.*?`-prefix +
+> reverse trio, ~1 MB). See [`docs/architecture.md`](docs/architecture.md) → *The byte
+> substrate* / *The eager DFA*.
+>
+> **Build-time note — determinization is ~O(states) (hash-interned).** The forward and reverse
+> determinizers intern DFA states through an open-addressing hash, so building a *big Unicode
+> class* DFA is ~linear in its state count. (Was an O(states²) scan — `\w+@\w+`, `\w+@\w+$`,
+> `\p{L}+$` took ~seconds to *compile*; now milliseconds.) It is a **one-time build cost; match
+> time is O(input), unaffected.** ASCII-class and literal patterns build instantly.
+
+Reference point: the bundled `main.zig` demo (which exercises runtime *and* comptime
+compilation, classes, captures, replace, split, and `\p{L}`) is **~2.76 MB** in `Debug`
+on macOS arm64 — the rest is the Zig `Debug` runtime (DWARF self-unwind, UBSan, the
+allocator), not regex data. `ReleaseSmall` is far smaller.
 
 ## Documentation
 
+- [`docs/usage-guide.md`](docs/usage-guide.md) — **the hands-on guide**: copy-paste
+  recipes for every front-door op, the full pipeline used **from lexing** (scan → AST
+  → HIR → backend), comptime/no-allocator paths, and a complete, runnable, step-by-step
+  **"write your own backend"** walkthrough. Start here if you want to *do* something.
 - [`docs/architecture.md`](docs/architecture.md) — architecture, data flow,
   **how to write your own backend** (with a complete tiny example), caveats, and
   the implicit assumptions backends rely on.
 - [`src/core/README.md`](src/core/README.md) — the frontend (scanner → AST → HIR).
 - [`src/engine/README.md`](src/engine/README.md) — the contract, the NFA, the
   backends, the front door, and a backend quickstart.
-- [`src/engine/backends/README.md`](src/engine/backends/README.md) — the four
-  backends and how `auto` chooses.
+- [`src/engine/backends/README.md`](src/engine/backends/README.md) — the built-in
+  backends (incl. `bytepike`/`dfa`/`edfa`) and how `auto` chooses.
 
 ## License
 
