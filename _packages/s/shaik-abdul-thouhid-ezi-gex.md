@@ -1,11 +1,13 @@
 ---
 title: ezi-gex
-description: "Unicode aware regex engine for Zig — runtime and comptime. Thompson NFA: linear-time, ReDoS-safe; Literal Prefilter; Backtrack; Lazy Dfa; Full \\p{} Unicode properties, named captures, case folding, pluggable backends. Zero allocation per match. WASM-compatible."
+description: "Unicode aware regex engine for Zig — runtime and comptime. Thompson NFA: linear-time, ReDoS-safe; Literal Prefilter; Backtrack; Lazy Dfa; Eager Dfa; Full \\p{} Unicode properties, named captures, case folding, pluggable backends. Zero allocation per match. WASM-compatible."
 license: NOASSERTION
 author: shaik-abdul-thouhid
 author_github: shaik-abdul-thouhid
 repository: https://github.com/shaik-abdul-thouhid/ezi-gex
 keywords:
+  - dfa-regex
+  - lazy-dfa
   - pluggable-backends
   - regex
   - regex-engine
@@ -13,10 +15,10 @@ keywords:
   - unicode
   - unicode-characters
   - zero-allocation
-date: 2026-06-13
+date: 2026-06-14
 category: systems
-updated_at: 2026-06-13T11:00:28+00:00
-last_sync: 2026-06-13T11:00:28Z
+updated_at: 2026-06-14T11:44:17+00:00
+last_sync: 2026-06-14T11:44:17Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -58,14 +60,15 @@ a **pluggable backend** architecture.
 
 ## Status
 
-Version `0.3.0` — the current tagged release; **`0.4.0-dev` is now under
+Version `0.3.1` — the current tagged release; **`0.4.0-dev` is now under
 development** on `main`. Pre-1.0, so the API may still change, but everything in the
 public surface is annotated `@stable-since: vX.Y.Z` and is covered by SemVer. Tracks a
 recent Zig dev build (`0.17.0-dev`); it will not compile on stable 0.16.
 
-**What works is tested** (**311 tests**, all passing: per-module behaviour, cross-backend
+**What works is tested** (**318 tests**, all passing: per-module behaviour, cross-backend
 conformance — including a wide differential corpus where every backend must agree with
-the Pike VM — and runtime + comptime parity). `0.2.0` added full case folding, grapheme
+the Pike VM, and a dedicated **ReDoS-immunity suite** (`engine/redos.zig`) — and runtime +
+comptime parity). `0.2.0` added full case folding, grapheme
 `\X`, a two-tier `Options` (semantic + results-invariant strategy), `(?x)` verbose
 mode, ASCII mode, dead-on-invalid UTF-8, and the **byte-NFA lowering + `ByteMap`
 equivalence classes** (`engine/byte.zig`): the zero-decode UTF-8 automaton substrate,
@@ -99,13 +102,13 @@ absorbs all of this without API changes — see *Performance*.
 Via git ref (resolves the tag at fetch time):
 
 ```sh
-zig fetch --save git+https://github.com/shaik-abdul-thouhid/ezi-gex.git#v0.3.0
+zig fetch --save git+https://github.com/shaik-abdul-thouhid/ezi-gex.git#v0.3.1
 ```
 
 Or via plain HTTP tarball (pins the content hash in `build.zig.zon`):
 
 ```sh
-zig fetch --save https://github.com/shaik-abdul-thouhid/ezi-gex/archive/refs/tags/v0.3.0.tar.gz
+zig fetch --save https://github.com/shaik-abdul-thouhid/ezi-gex/archive/refs/tags/v0.3.1.tar.gz
 ```
 
 **Tracking `main` (unreleased `0.4.0-dev`)** — if you want the latest, in-development

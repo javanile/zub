@@ -18,10 +18,10 @@ keywords:
   - zig-args
   - zig-cli
   - zig-library-args
-date: 2026-06-13
+date: 2026-06-14
 category: tooling
-updated_at: 2026-06-13T10:30:14+00:00
-last_sync: 2026-06-13T10:30:14Z
+updated_at: 2026-06-14T08:57:00+00:00
+last_sync: 2026-06-14T08:57:00Z
 package_kind: hybrid
 has_library: true
 has_binary: true

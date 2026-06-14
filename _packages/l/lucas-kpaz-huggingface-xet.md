@@ -16,10 +16,10 @@ keywords:
   - storage
   - xet
   - xorb
-date: 2026-06-09
+date: 2026-06-14
 category: networking
-updated_at: 2026-06-09T13:20:46+00:00
-last_sync: 2026-06-09T13:20:46Z
+updated_at: 2026-06-14T12:17:09+00:00
+last_sync: 2026-06-14T12:17:09Z
 package_kind: hybrid
 has_library: true
 has_binary: true

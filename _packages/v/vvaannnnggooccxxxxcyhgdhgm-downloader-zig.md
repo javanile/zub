@@ -16,10 +16,10 @@ keywords:
   - zig-http
   - zig-http-client
   - zig-programming-language
-date: 2026-06-13
+date: 2026-06-14
 category: networking
-updated_at: 2026-06-13T10:26:14+00:00
-last_sync: 2026-06-13T10:26:14Z
+updated_at: 2026-06-14T08:52:40+00:00
+last_sync: 2026-06-14T08:52:40Z
 package_kind: hybrid
 has_library: true
 has_binary: true
