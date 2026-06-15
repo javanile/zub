@@ -12,10 +12,10 @@ keywords:
   - cursor
   - terminal
   - tui
-date: 2026-05-29
+date: 2026-06-10
 category: tooling
-updated_at: 2026-05-29T09:02:28+00:00
-last_sync: 2026-05-29T09:02:28Z
+updated_at: 2026-06-10T19:23:21+00:00
+last_sync: 2026-06-10T19:23:21Z
 package_kind: hybrid
 has_library: true
 has_binary: true

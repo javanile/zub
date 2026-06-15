@@ -9,10 +9,10 @@ keywords:
   - serial
   - serial-port
   - uart
-date: 2026-05-30
+date: 2026-06-11
 category: embedded
-updated_at: 2026-05-30T07:35:46+00:00
-last_sync: 2026-05-30T07:35:46Z
+updated_at: 2026-06-11T08:24:29+00:00
+last_sync: 2026-06-11T08:24:29Z
 package_kind: hybrid
 has_library: true
 has_binary: true

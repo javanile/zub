@@ -12,9 +12,9 @@ keywords:
   - zig-compress
   - zig-compression
   - zig-compression-lib
-date: 2026-06-14
-updated_at: 2026-06-14T09:13:50+00:00
-last_sync: 2026-06-14T09:13:50Z
+date: 2026-06-15
+updated_at: 2026-06-15T15:47:00+00:00
+last_sync: 2026-06-15T15:47:00Z
 package_kind: hybrid
 has_library: true
 has_binary: true
