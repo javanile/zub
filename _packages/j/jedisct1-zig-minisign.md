@@ -9,10 +9,10 @@ keywords:
   - crypto
   - minisign
   - signatures
-date: 2026-05-27
+date: 2026-06-17
 category: systems
-updated_at: 2026-05-27T13:36:33+00:00
-last_sync: 2026-05-27T13:36:33Z
+updated_at: 2026-06-17T12:33:03+00:00
+last_sync: 2026-06-17T12:33:03Z
 package_kind: hybrid
 has_library: true
 has_binary: true

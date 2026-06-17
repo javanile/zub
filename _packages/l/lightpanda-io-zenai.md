@@ -10,9 +10,9 @@ keywords:
   - gemini-api
   - openai-api
   - tavily-api
-date: 2026-06-04
-updated_at: 2026-06-04T11:04:32+00:00
-last_sync: 2026-06-04T11:04:32Z
+date: 2026-06-17
+updated_at: 2026-06-17T13:32:07+00:00
+last_sync: 2026-06-17T13:32:07Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -28,7 +28,7 @@ permalink: /packages/lightpanda-io/zenai/
 
 # zenai
 
-Zig client for AI APIs, supporting [Google Gemini](https://ai.google.dev/gemini-api/docs), [OpenAI](https://platform.openai.com/docs/api-reference), and [Anthropic](https://docs.anthropic.com/en/docs/about-claude/models). Ported from the official [Go Gen AI SDK](https://github.com/googleapis/go-genai), [openai-go](https://github.com/openai/openai-go), and [anthropic-sdk-go](https://github.com/anthropics/anthropic-sdk-go). Also ships an `agent infrastructure` namespace under `zenai.search` — currently [Tavily](https://docs.tavily.com/), with room for sibling providers.
+Zig client for AI APIs, supporting [Google Gemini](https://ai.google.dev/gemini-api/docs), [OpenAI](https://platform.openai.com/docs/api-reference), and [Anthropic](https://docs.anthropic.com/en/docs/about-claude/models). OpenAI-compatible endpoints — [Ollama](https://github.com/ollama/ollama/blob/main/docs/openai.md), [Hugging Face Inference](https://huggingface.co/docs/inference-providers/index), and [llama.cpp](https://github.com/ggml-org/llama.cpp/tree/master/tools/server) (`llama-server`) — are supported through the OpenAI client. Ported from the official [Go Gen AI SDK](https://github.com/googleapis/go-genai), [openai-go](https://github.com/openai/openai-go), and [anthropic-sdk-go](https://github.com/anthropics/anthropic-sdk-go). Also ships an `agent infrastructure` namespace under `zenai.search` — currently [Tavily](https://docs.tavily.com/), with room for sibling providers.
 
 <img width="1024" height="1024" alt="Meditating panda with incense smoke" src="https://github.com/user-attachments/assets/b9c82960-05ec-4aa1-b171-092ee2126551" />
 
@@ -322,6 +322,20 @@ const ai: zenai.provider.Client = .{ .gemini = &gemini_client };
 // var anthropic_client = zenai.anthropic.Client.init(allocator, anthropic_key, .{});
 // const ai: zenai.provider.Client = .{ .anthropic = &anthropic_client };
 
+// Or Hugging Face (OpenAI-compatible). Token comes from HF_TOKEN. Defaults to the
+// serverless router; pass `.base_url` for a dedicated Inference Endpoint:
+// var hf_client = zenai.huggingface.Client.init(allocator, hf_token, .{
+//     .base_url = "https://router.huggingface.co/v1",
+// });
+// const ai: zenai.provider.Client = .{ .huggingface = &hf_client };
+
+// Or a local llama.cpp `llama-server` (OpenAI-compatible). No key needed;
+// defaults to http://localhost:8080/v1 — override with `.base_url`:
+// var llama_client = zenai.llama_cpp.Client.init(allocator, "llama.cpp", .{
+//     .base_url = "http://localhost:8080/v1",
+// });
+// const ai: zenai.provider.Client = .{ .llama_cpp = &llama_client };
+
 var result = try ai.generateContent("gemini-2.5-flash", &.{
     .{ .role = .user, .content = "What is Zig?" },
 }, .{});
@@ -373,6 +387,8 @@ switch (ai) {
 
 **Provider abstraction:**
 - Unified text generation, streaming, and embeddings
+- OpenAI-compatible backends: Ollama, Hugging Face, and llama.cpp (`llama-server`)
+- `lastError()` to surface the status and message behind a failed request
 - Escape hatches to provider-specific APIs
 
 ## License

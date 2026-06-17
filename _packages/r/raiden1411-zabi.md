@@ -13,9 +13,9 @@ keywords:
   - optimism
   - web3
   - zabi
-date: 2026-05-10
-updated_at: 2026-05-10T21:42:27+00:00
-last_sync: 2026-05-10T21:42:27Z
+date: 2026-05-26
+updated_at: 2026-05-26T21:32:44+00:00
+last_sync: 2026-05-26T21:32:44Z
 package_kind: hybrid
 has_library: true
 has_binary: true

@@ -16,16 +16,16 @@ keywords:
   - libp2p-transport
   - multistream
   - quic
-date: 2026-04-21
+date: 2026-06-17
 category: networking
-updated_at: 2026-04-21T10:03:32+00:00
-last_sync: 2026-04-21T10:03:32Z
+updated_at: 2026-06-17T09:01:49+00:00
+last_sync: 2026-06-17T09:01:49Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 2
-distributable_binary_count: 2
+binary_count: 6
+distributable_binary_count: 6
 multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
@@ -41,7 +41,7 @@ Zig implementation of the Ethereum peer-to-peer stack, built on top of the [libp
 
 ## Project scope
 
-- Transport: QUIC (lsquic-backed) is the only supported transport. TCP, WebRTC, WebTransport, and other stacks are intentionally out of scope.
+- Transport: QUIC (quiche-backed) is the only supported transport. TCP, WebRTC, WebTransport, and other stacks are intentionally out of scope.
 - PubSub: Gossipsub v1.0 router is available today; additional Ethereum networking protocols will be layered on top in subsequent milestones.
 - Platform: Zig 0.15.2 toolchain targeting modern desktop/server environments. Browser runtimes are not supported.
 

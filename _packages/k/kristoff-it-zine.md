@@ -8,9 +8,9 @@ repository: https://github.com/kristoff-it/zine
 keywords:
   - ssg
   - static-site-generator
-date: 2026-05-09
-updated_at: 2026-05-09T03:31:00+00:00
-last_sync: 2026-05-09T03:31:00Z
+date: 2026-06-17
+updated_at: 2026-06-17T13:13:42+00:00
+last_sync: 2026-06-17T13:13:42Z
 package_kind: binary
 has_library: false
 has_binary: true
@@ -41,3 +41,9 @@ If you plan to build your website with GitHub Actions, take a look at [kristoff-
 GitHub Action to get access to Zine in your runner.
 
 We also have more complete guides at https://zine-ssg.io/docs/.
+
+
+## Contributing
+
+- Ask before embarking on doing complicated work that might not be upstreamed.
+- No LLMs, thank you.

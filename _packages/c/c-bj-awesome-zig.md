@@ -8,9 +8,9 @@ repository: https://github.com/C-BJ/awesome-zig
 keywords:
   - awesome
   - awesome-list
-date: 2026-05-15
-updated_at: 2026-05-15T17:47:38+00:00
-last_sync: 2026-05-15T17:47:38Z
+date: 2026-06-14
+updated_at: 2026-06-14T20:42:12+00:00
+last_sync: 2026-06-14T20:42:12Z
 package_kind: library
 has_library: false
 has_binary: false
@@ -200,13 +200,15 @@ permalink: /packages/C-BJ/awesome-zig/
   - ![Star](https://img.shields.io/github/stars/ekzhang/redis-rope?color=orange)
   [redis-rope🗒️A fast native data type for manipulating large strings in Redis](https://github.com/ekzhang/redis-rope) 
   - ![Star](https://img.shields.io/github/stars/kubkon/zcoff?color=orange)
-  [zcoff🗒️Like dumpbin.exe but cross-platform](https://github.com/kubkon/zcoff) 
+  [zcoff🗒️Like dumpbin.exe but cross-platform](https://github.com/kubkon/zcoff)
+  - ![Star](https://img.shields.io/github/stars/mjgil-zig/zdu?color=orange)
+  [zdu🗒️A fast, low-memory TUI disk usage analyzer written in Zig](https://github.com/mjgil-zig/zdu) 
   - ![Star](https://img.shields.io/github/stars/nektro/zig-inquirer?color=orange)
   [zig-inquirer🗒️A collection of utilities for prompting information from the user on the CLI](https://github.com/nektro/zig-inquirer) 
   - ![Star](https://img.shields.io/github/stars/ratfactor/zigish?color=orange)
   [zigish🗒️A toy Unix shell written in Zig](https://github.com/ratfactor/zigish) 
   - ![Star](https://img.shields.io/github/stars/here-leslie-lau/zlist?color=orange)
-  [zlist🗒️A simple, colorful alternative to ls built with Zig](https://github.com/here-Leslie-Lau/zlist) 
+  [zlist🗒️A simple, colorful alternative to ls built with Zig](https://github.com/here-Leslie-Lau/zlist)
 
 - ### Compiler & Parser & Interpreter
 
