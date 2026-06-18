@@ -6,9 +6,9 @@ author: judofyr
 author_github: judofyr
 repository: https://github.com/judofyr/zini
 keywords:
-date: 2026-05-24
-updated_at: 2026-05-24T18:50:16+00:00
-last_sync: 2026-05-24T18:50:16Z
+date: 2026-06-18
+updated_at: 2026-06-18T04:27:04+00:00
+last_sync: 2026-06-18T04:27:04Z
 package_kind: hybrid
 has_library: true
 has_binary: true

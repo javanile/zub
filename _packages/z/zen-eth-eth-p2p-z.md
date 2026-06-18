@@ -16,10 +16,10 @@ keywords:
   - libp2p-transport
   - multistream
   - quic
-date: 2026-06-17
+date: 2026-06-18
 category: networking
-updated_at: 2026-06-17T09:01:49+00:00
-last_sync: 2026-06-17T09:01:49Z
+updated_at: 2026-06-18T10:08:08+00:00
+last_sync: 2026-06-18T10:08:08Z
 package_kind: hybrid
 has_library: true
 has_binary: true

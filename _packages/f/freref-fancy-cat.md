@@ -8,10 +8,10 @@ repository: https://github.com/freref/fancy-cat
 keywords:
   - cli
   - pdf-viewer
-date: 2026-05-28
+date: 2026-06-15
 category: tooling
-updated_at: 2026-05-28T15:53:00+00:00
-last_sync: 2026-05-28T15:53:00Z
+updated_at: 2026-06-15T10:35:59+00:00
+last_sync: 2026-06-15T10:35:59Z
 package_kind: binary
 has_library: false
 has_binary: true

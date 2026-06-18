@@ -10,10 +10,10 @@ keywords:
   - mariadb
   - mysql
   - sql
-date: 2026-05-25
+date: 2026-06-18
 category: embedded
-updated_at: 2026-05-25T05:18:34+00:00
-last_sync: 2026-05-25T05:18:34Z
+updated_at: 2026-06-18T12:44:30+00:00
+last_sync: 2026-06-18T12:44:30Z
 package_kind: library
 has_library: true
 has_binary: false

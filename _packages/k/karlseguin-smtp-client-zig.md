@@ -7,9 +7,9 @@ author_github: karlseguin
 repository: https://github.com/karlseguin/smtp_client.zig
 keywords:
   - smtp-client
-date: 2026-05-01
-updated_at: 2026-05-01T19:22:25+00:00
-last_sync: 2026-05-01T19:22:25Z
+date: 2026-06-05
+updated_at: 2026-06-05T18:53:04+00:00
+last_sync: 2026-06-05T18:53:04Z
 package_kind: hybrid
 has_library: true
 has_binary: true

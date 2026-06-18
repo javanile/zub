@@ -8,9 +8,9 @@ repository: https://github.com/karlseguin/zul
 keywords:
   - uuidv4
   - uuidv7
-date: 2026-05-29
-updated_at: 2026-05-29T14:42:17+00:00
-last_sync: 2026-05-29T14:42:17Z
+date: 2026-06-17
+updated_at: 2026-06-17T10:12:24+00:00
+last_sync: 2026-06-17T10:12:24Z
 package_kind: library
 has_library: true
 has_binary: false

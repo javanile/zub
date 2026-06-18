@@ -11,10 +11,10 @@ keywords:
   - gui-library
   - qt
   - qt6
-date: 2026-05-25
+date: 2026-06-18
 category: systems
-updated_at: 2026-05-25T12:14:17+00:00
-last_sync: 2026-05-25T12:14:17Z
+updated_at: 2026-06-18T12:24:14+00:00
+last_sync: 2026-06-18T12:24:14Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -258,7 +258,7 @@ sudo apt install gcc libstdc++-14-dev-$(dpkg --print-architecture)-cross qt6-bas
 #### Fedora-based distributions
 
 ```bash
-sudo dnf install gcc libstdc++-devel qt6-qtbase-devel qt6-qtcharts-devel qt6-qtconnectivity-devel qt6-qtlocation-devel qt6-qtmultimedia-devel qt6-qtpdf-devel qt6-qtpositioning-devel qt6-qtscxml-devel qt6-qtspeech-devel qt6-qtsvg-devel qt6-qttools-devel qt6-qtwebchannel-devel qt6-qtwebengine-devel qt6-qtwebsockets-devel kcolorpicker-qt6-devel kf6-attica-devel kf6-karchive-devel kf6-kbookmarks-devel kf6-kcodecs-devel kf6-kcolorscheme-devel kf6-kcompletion-devel kf6-kconfig-devel kf6-kconfigwidgets-devel kf6-kcoreaddons-devel kf6-kcrash-devel kf6-kfilemetadata-devel kf6-kglobalaccel-devel kf6-kguiaddons-devel kf6-ki18n-devel kf6-kiconthemes-devel kf6-kidletime-devel kf6-kio-devel kf6-kitemmodels-devel kf6-kitemviews-devel kf6-kjobwidgets-devel kf6-knewstuff-devel kf6-knotifications-devel kf6-kparts-devel kf6-kplotting-devel kf6-kservice-devel kf6-kstatusnotifieritem-devel kf6-ksvg-devel kf6-ktexteditor-devel kf6-ktextwidgets-devel kf6-kunitconversion-devel kf6-kwidgetsaddons-devel kf6-kwindowsystem-devel kf6-kxmlgui-devel kf6-solid-devel kf6-sonnet-devel kf6-syntax-highlighting-devel kimageannotator-qt6-devel ktextaddons-devel layer-shell-qt-devel libaccounts-qt6-devel qcustomplot-qt6-devel qscintilla-qt6-devel qtermwidget-devel qtkeychain-qt6-devel kf6-sonnet-aspell PackageKit-Qt6-devel poppler-qt6-devel signon-qt6-devel
+sudo dnf install gcc libstdc++-devel qt6-qtbase-devel qt6-qtcharts-devel qt6-qtconnectivity-devel qt6-qtlocation-devel qt6-qtmultimedia-devel qt6-qtpdf-devel qt6-qtpositioning-devel qt6-qtscxml-devel qt6-qtspeech-devel qt6-qtsvg-devel qt6-qttools-devel qt6-qtwebchannel-devel qt6-qtwebengine-devel qt6-qtwebsockets-devel kcolorpicker-qt6-devel kf6-attica-devel kf6-karchive-devel kf6-kbookmarks-devel kf6-kcodecs-devel kf6-kcolorscheme-devel kf6-kcompletion-devel kf6-kconfig-devel kf6-kconfigwidgets-devel kf6-kcoreaddons-devel kf6-kcrash-devel kf6-kfilemetadata-devel kf6-kglobalaccel-devel kf6-kguiaddons-devel kf6-ki18n-devel kf6-kiconthemes-devel kf6-kidletime-devel kf6-kio-devel kf6-kitemmodels-devel kf6-kitemviews-devel kf6-kjobwidgets-devel kf6-knewstuff-devel kf6-knotifications-devel kf6-kparts-devel kf6-kplotting-devel kf6-kservice-devel kf6-kstatusnotifieritem-devel kf6-ksvg-devel kf6-ktexteditor-devel kf6-ktextwidgets-devel kf6-kunitconversion-devel kf6-kwidgetsaddons-devel kf6-kwindowsystem-devel kf6-kxmlgui-devel kf6-solid-devel kf6-sonnet-devel kf6-syntax-highlighting-devel kimageannotator-qt6-devel ktextaddons-qt6-devel layer-shell-qt-devel libaccounts-qt6-devel qcustomplot-qt6-devel qscintilla-qt6-devel qtermwidget-devel qtkeychain-qt6-devel kf6-sonnet-aspell PackageKit-Qt6-devel poppler-qt6-devel signon-qt6-devel
 ```
 
 > [!NOTE]
@@ -313,7 +313,7 @@ brew install qt6 karchive ki18n qscintilla2 qtkeychain
 >
 > This is currently not necessary for the additional third-party module frameworks.
 
-The official Qt installer is also supported but will require manually creating the symlinks as above and using the `extra-paths` option described below, using the root of the include directory as the path value.
+The official Qt installer is also supported but will require manually creating the symlinks as above and using the `extra-paths` option described above, using the root of the include directory as the path value.
 
 > [!NOTE]
 > The `zig` package will need to be downloaded and installed separately if the latest stable version is not available via Homebrew.
@@ -487,6 +487,10 @@ exe.root_module.addImport("libqt6zig", qt6zig.module("libqt6zig"));
 // qt_lib_name is the name of the library file containing the class definition
 // minus the "lib" prefix and file extension suffix, e.g. qapplication, qwidget, etc.
 exe.root_module.linkLibrary(qt6zig.artifact(qt_lib_name));
+
+// Use the library-provided convenience method to configure much of the exe
+const configureQtExeRootModule = @import("libqt6zig").configureQtExeRootModule;
+try configureQtExeRootModule(b, exe, .{});
 ```
 
 - Use the library in your code:
@@ -507,7 +511,7 @@ const qnamespace_enums = qt6.qnamespace_enums;
 const qt = qnamespace_enums;
 ```
 
-Full examples of the build system and sample applications can be found in the [`libqt6zig-examples`](https://github.com/rcalixte/libqt6zig-examples) repository.
+Full examples of the build system and sample applications can be found in the [`libqt6zig-examples`](https://github.com/rcalixte/libqt6zig-examples) repository. For a simpler build system and a single demo application, visit the [`libqt6zig-demo`](https://github.com/rcalixte/libqt6zig-demo) repository.
 
 FAQ
 ---

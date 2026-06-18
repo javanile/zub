@@ -8,9 +8,9 @@ repository: https://github.com/zPSP-Dev/Zig-PSP
 keywords:
   - psp
   - psp-sdk
-date: 2026-05-24
-updated_at: 2026-05-24T18:50:39+00:00
-last_sync: 2026-05-24T18:50:39Z
+date: 2026-06-14
+updated_at: 2026-06-14T13:28:09+00:00
+last_sync: 2026-06-14T13:28:09Z
 package_kind: hybrid
 has_library: true
 has_binary: true
