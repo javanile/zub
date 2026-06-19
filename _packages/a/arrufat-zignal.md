@@ -14,10 +14,10 @@ keywords:
   - wasm
   - webassembly
   - zero-dependency
-date: 2026-06-03
+date: 2026-06-19
 category: systems
-updated_at: 2026-06-03T12:36:22+00:00
-last_sync: 2026-06-03T12:36:22Z
+updated_at: 2026-06-19T07:49:22+00:00
+last_sync: 2026-06-19T07:49:22Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -48,8 +48,8 @@ Zignal is a zero-dependency image processing library inspired by [dlib](https://
 
 ## Status
 
-Zignal is under active development and powers production workloads at [Ameli](https://ameli.co.kr/) for their makeup virtual try-on.
-The API continues to evolve, so expect occasional breaking changes between minor releases.
+Zignal is under active development and the API continues to evolve.
+Expect occasional breaking changes between minor releases.
 
 <img src="https://github.com/arrufat/zignal/blob/master/assets/liza.jpg" width=400>
 
@@ -117,12 +117,14 @@ zig-out/bin/zignal <command> [options]
 - [Feature matching](https://arrufat.github.io/zignal/examples/feature_matching.html) - ORB feature detection and matching between images
 - [Hough transform animation](https://arrufat.github.io/zignal/examples/hough-animation.html) - Real-time visualization of line detection
 - [Metrics analyzer](https://arrufat.github.io/zignal/examples/metrics.html) - PSNR and SSIM comparison for reference vs. distorted images
+- [Global optimization](https://arrufat.github.io/zignal/examples/global-optimization.html) - Type a JavaScript function and watch the MaxLIPO+TR optimizer search for its optimum
+
 
 ## Sponsors
 
 Special thanks to **[B Factory, Inc](https://www.bfactory.ai/)**, the **Founding Sponsor** of Zignal.
-I originally developed this library internally for our virtual makeup try-on system, and B Factory
-graciously transferred ownership to the community to ensure its long-term maintenance and growth.
+I originally developed this library internally for [Ameli](https://ameli.co.kr/)'s virtual makeup try-on system,
+and B Factory graciously transferred ownership to the community to ensure its long-term maintenance and growth.
 
 <br></br>
 [![Star History Chart](https://api.star-history.com/svg?repos=arrufat/zignal&type=Date)](https://www.star-history.com/#arrufat/zignal&Date)

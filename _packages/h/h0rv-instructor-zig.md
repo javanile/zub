@@ -8,9 +8,9 @@ repository: https://github.com/h0rv/instructor.zig
 keywords:
   - instructor
   - llm
-date: 2026-05-04
-updated_at: 2026-05-04T15:35:09+00:00
-last_sync: 2026-05-04T15:35:09Z
+date: 2026-06-06
+updated_at: 2026-06-06T15:25:40+00:00
+last_sync: 2026-06-06T15:25:40Z
 package_kind: hybrid
 has_library: true
 has_binary: true

@@ -6,9 +6,13 @@ author: oswalpalash
 author_github: oswalpalash
 repository: https://github.com/oswalpalash/zit
 keywords:
-date: 2026-06-18
-updated_at: 2026-06-18T13:23:58+00:00
-last_sync: 2026-06-18T13:23:58Z
+  - tui
+  - zig-build
+  - zig-language
+date: 2026-06-19
+category: tooling
+updated_at: 2026-06-19T13:47:00+00:00
+last_sync: 2026-06-19T13:47:00Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -110,7 +114,7 @@ _ = try app.addAnimation(.{
         fn update(progress: f32, ctx: ?*anyopaque) void {
             const widget = @as(*zit.widget.Sparkline, @ptrCast(@alignCast(ctx.?)));
             const value: f32 = 20 + progress * 80;
-            widget.push(value) catch {};
+            widget.push(value) catch |err| std.debug.print("sparkline update failed: {s}\n", .{@errorName(err)});
         }
     }.update,
     .context = @ptrCast(spark),
@@ -119,7 +123,7 @@ _ = try app.addAnimation(.{
 _ = try app.scheduleTimer(1000, 1000, struct {
     fn tick(ctx: ?*anyopaque) void {
         const widget = @as(*zit.widget.Sparkline, @ptrCast(@alignCast(ctx.?)));
-        widget.push(42) catch {};
+        widget.push(42) catch |err| std.debug.print("sparkline tick failed: {s}\n", .{@errorName(err)});
     }
 }.tick, spark);
 ```
@@ -189,7 +193,7 @@ pub fn main() !void {
     const allocator = gpa.allocator();
 
     var term = try zit.terminal.init(allocator);
-    defer term.deinit() catch {};
+    defer term.deinit() catch |err| zit.terminal.reportCleanupError("term.deinit", err);
     var renderer = try zit.render.Renderer.init(allocator, term.width, term.height);
     defer renderer.deinit();
     var input = zit.input.InputHandler.init(allocator, &term);
@@ -199,9 +203,9 @@ pub fn main() !void {
     app.bindResize(&renderer, null);
 
     try term.enableRawMode();
-    defer term.disableRawMode() catch {};
+    defer term.disableRawMode() catch |err| zit.terminal.reportCleanupError("term.disableRawMode", err);
     try term.hideCursor();
-    defer term.showCursor() catch {};
+    defer term.showCursor() catch |err| zit.terminal.reportCleanupError("term.showCursor", err);
 
     var para = try zit.widget.Paragraph.init(allocator, "Hello from Zit! Press q to quit.");
     defer para.deinit();
@@ -260,12 +264,12 @@ Real-world interactive examples
 
 Benchmarks
 - `zig build render-bench` (`examples/benchmarks/render_bench.zig`): micro-benchmark for renderer throughput.
-- `zig build bench` (`examples/benchmarks/bench_suite.zig`): suite covering layout, widgets, and input decoding costs.
+- `zig build bench` (`examples/benchmarks/bench_suite.zig`): suite covering layout, widgets, input decoding, and memory-retention costs; it fails on conservative performance-budget regressions.
 
-Documentation: `docs/API.md`, `docs/WIDGET_CATALOG.md`, `docs/WIDGET_GUIDE.md`, `docs/APP_LOOP_TUTORIAL.md`, `docs/ARCHITECTURE.md`, `docs/TERMINAL_COMPAT.md`, `docs/INTEGRATION.md`, `docs/STABILITY.md`.
+Documentation starts at [docs/README.md](docs/README.md). The maintained human-facing docs are Markdown guides, not generated Zig docs: [docs/COOKBOOK.md](docs/COOKBOOK.md), [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md), [docs/API.md](docs/API.md), [docs/WIDGET_CATALOG.md](docs/WIDGET_CATALOG.md), [docs/WIDGET_GUIDE.md](docs/WIDGET_GUIDE.md), [docs/APP_LOOP_TUTORIAL.md](docs/APP_LOOP_TUTORIAL.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/TERMINAL_COMPAT.md](docs/TERMINAL_COMPAT.md), [docs/INTEGRATION.md](docs/INTEGRATION.md), and [docs/STABILITY.md](docs/STABILITY.md).
 
 ## Development Notes
 - Widgets follow `init`/`deinit` plus `setTheme` for themed variants and surface errors instead of panicking.
 - Use `zig fmt --check src/ examples/ build.zig` and `zig build quality` locally before opening a PR.
-- Full release verification is `zig build release-check`; it runs quality, formatting, docs generation, public build steps, cross-target smoke, interactive PTY smoke, resize PTY smoke over the input probe and every public interactive example, memory cleanup checks, and visual repeat captures.
+- Full release verification is `zig build release-check`; it runs quality, formatting, docs generation/link checks, public build steps, cross-target smoke, interactive PTY smoke, resize PTY smoke requiring every public interactive example to survive rapid tiny-size stress and redraw a live `resize: WxH` marker, accessibility metadata checks, mouse coordinate-contract and hit-test coverage checks, memory cleanup checks, and visual repeat captures.
 - For TUI-facing changes, run `python3 scripts/visual_repeat_check.py --count 4`; it executes real-world and gallery binaries in `--snapshot` mode and writes a contact sheet for alignment, spacing, hierarchy, clipped or overlapping text, and frame-to-frame drift.

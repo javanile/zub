@@ -6,9 +6,9 @@ author: nektro
 author_github: nektro
 repository: https://github.com/nektro/zig-git
 keywords:
-date: 2026-05-10
-updated_at: 2026-05-10T23:45:36+00:00
-last_sync: 2026-05-10T23:45:36Z
+date: 2026-06-19
+updated_at: 2026-06-19T01:09:05+00:00
+last_sync: 2026-06-19T01:09:05Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -27,7 +27,7 @@ permalink: /packages/nektro/zig-git/
 ![loc](https://sloc.xyz/github/nektro/zig-git)
 [![license](https://img.shields.io/github/license/nektro/zig-git.svg)](https://github.com/nektro/zig-git/blob/master/LICENSE)
 [![nektro @ github sponsors](https://img.shields.io/badge/sponsors-nektro-purple?logo=github)](https://github.com/sponsors/nektro)
-[![Zig](https://img.shields.io/badge/Zig-0.14-f7a41d)](https://ziglang.org/)
+[![Zig](https://img.shields.io/badge/Zig-0.16-f7a41d)](https://ziglang.org/)
 [![Zigmod](https://img.shields.io/badge/Zigmod-latest-f7a41d)](https://github.com/nektro/zigmod)
 
 Inspect into the depths of your .git folder purely from Zig.

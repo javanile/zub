@@ -10,9 +10,9 @@ keywords:
   - gui
   - gui-library
   - retained-mode-gui
-date: 2026-05-06
-updated_at: 2026-05-06T17:33:27+00:00
-last_sync: 2026-05-06T17:33:27Z
+date: 2026-06-05
+updated_at: 2026-06-05T18:07:10+00:00
+last_sync: 2026-06-05T18:07:10Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -47,19 +47,16 @@ ZUIL (Zig UI Library)
 
 retained mode gui framework written in zig
 
-using `zglfw`, `zopengl`, `plutosvg`, `harfbuzz` and `freetype` libs
+using `sdl3`, `zopengl`, `plutosvg`, `harfbuzz` and `freetype` libs
 
 ---
 
 <img src="./screenshot.png">
 
-### current features/progress
+### current plan
 
-- asset/file registry
-- resource system
-- input system (keyboard and mouse only)
-- rendering abstraction (shaders are written in GLSL)
-- text rendering (WIP)
+rendering:\
+replace renderer with a painter interface system and allow casting to the actual backend if its a know type for more advanced stuff
 
 ## examples
 
@@ -109,13 +106,13 @@ there is a test/example project in the `test` directory
 
 keybinds:
 
-- `space`: change the layout
-- `F1`: spawn a new window (currently broken see comment in render function inside src/app/window.zig)
+- `space`: change the background color
+- `F1`: spawn a new window
 
 ## project structure
 
 directories in `src` dir:
 
 - `core` has the base widget system
-- `app` has glfw specific things and can be used to create windows that use the core widget system
-- `widgets` has the default widgets/shaders
+- `app` has sdl3 specific things and can be used to create windows that use the core widget system
+- `widgets` has the default widgets

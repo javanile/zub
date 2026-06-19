@@ -8,9 +8,9 @@ repository: https://github.com/privkeyio/wisp
 keywords:
   - nostr
   - nostr-relay
-date: 2026-06-13
-updated_at: 2026-06-13T12:04:52+00:00
-last_sync: 2026-06-13T12:04:52Z
+date: 2026-06-19
+updated_at: 2026-06-19T00:37:07+00:00
+last_sync: 2026-06-19T00:37:07Z
 package_kind: binary
 has_library: false
 has_binary: true
@@ -32,8 +32,8 @@ A fast, lightweight [nostr](https://github.com/nostr-protocol/nostr) relay writt
 
 ## Why Wisp?
 
-- **Fast**: 2x higher throughput than strfry, 10x lower latency
-- **Small**: Single 1.2MB binary, ~15MB RAM at idle
+- **Fast**: ~9x higher throughput than strfry, sub-millisecond p99 latency
+- **Small**: Single binary, ~11MB RAM at idle
 - **Simple**: One command to run your personal relay with your feed
 - **Spider Mode**: Automatically syncs events from people you follow
 
@@ -50,7 +50,7 @@ docker run -d -p 7777:7777 -v wisp-data:/data ghcr.io/privkeyio/wisp --spider-ad
 Download the [latest release](https://github.com/privkeyio/wisp/releases) or build from source:
 
 ```sh
-# 1. Install dependencies (requires Zig 0.15+)
+# 1. Install dependencies (requires Zig 0.16.0)
 sudo apt install -y liblmdb-dev libsecp256k1-dev libssl-dev
 
 # 2. Build
@@ -89,13 +89,13 @@ it there or at your reverse proxy/firewall if you don't want it public.
 
 ## Configuration
 
-Copy `wisp.toml.example` to `wisp.toml` and customize, or use environment variables with `WISP_` prefix:
+Copy `wisp.toml.example` to `wisp.toml` and customize, or use environment variables with the `WISP_` prefix:
 
 ```sh
 WISP_PORT=8080 ./zig-out/bin/wisp
 ```
 
-See `wisp.toml.example` for all options.
+Environment variables override the config file. See the **[Configuration reference](docs/configuration.md)** for every setting, its environment variable, default, and meaning.
 
 ## Deploy (wss://)
 
@@ -126,12 +126,15 @@ Your relay is now live at `wss://relay.yourdomain.com`.
 
 ## Benchmarks
 
-| Relay | Events/sec | p50 Latency | p99 Latency |
-|-------|-----------|-------------|-------------|
-| Wisp | 1,993 | 0.55ms | 0.82ms |
-| strfry | 872 | 4.28ms | 9.92ms |
+Peak write throughput, all relays at 100% delivery:
 
-*4 concurrent workers, 1k events. [Full results](https://github.com/privkeyio/nostr-bench/blob/main/reports/BENCHMARK_RESULTS.md)*
+| Relay | Events/sec | p99 Latency | Memory (RSS) |
+|-------|-----------:|------------:|-------------:|
+| **Wisp** | **25,600** | **0.28 ms** | 11 MB |
+| nostr-rs-relay | 5,400 | 5.9 ms | 20 MB |
+| strfry | 2,800 | 2.9 ms | 3 MB |
+
+*[nostr-bench](https://github.com/privkeyio/nostr-bench), 5,000 events x 4 workers at peak rate (`--rate 0`), native release builds on a 16-core Linux host, with the event-rate limit raised. `RssAnon` sampled during the run. These are peak figures with Wisp in `sync = none` (non-durable); Wisp's default is `sync = meta` (durable, never corrupts), which trades raw throughput for crash safety. strfry and nostr-rs-relay write durably by default, so a fair durable comparison runs Wisp in `meta`/`full` (see [benchmarks](docs/benchmarks.md)). Wisp leads on throughput (~9x strfry, ~5x nostr-rs-relay) and p99 latency; strfry stays smallest in memory.*
 
 ## Contributing
 

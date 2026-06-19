@@ -9,10 +9,10 @@ keywords:
   - pattern-matching
   - regex
   - regular-expressions
-date: 2026-05-13
+date: 2026-06-19
 category: systems
-updated_at: 2026-05-13T21:27:56+00:00
-last_sync: 2026-05-13T21:27:56Z
+updated_at: 2026-06-19T05:23:14+00:00
+last_sync: 2026-06-19T05:23:14Z
 package_kind: library
 has_library: true
 has_binary: false

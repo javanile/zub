@@ -8,16 +8,17 @@ repository: https://github.com/CogitatorTech/zodd
 keywords:
   - datalog
   - deductive-database-system
-date: 2026-04-21
-updated_at: 2026-04-21T16:30:15+00:00
-last_sync: 2026-04-21T16:30:15Z
+  - logic-programming
+date: 2026-06-18
+updated_at: 2026-06-18T05:01:46+00:00
+last_sync: 2026-06-18T05:01:46Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 1
-distributable_binary_count: 1
-multiple_binaries: false
+binary_count: 2
+distributable_binary_count: 2
+multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
 sync_source: zigistry
@@ -26,7 +27,7 @@ permalink: /packages/CogitatorTech/zodd/
 
 <div align="center">
   <picture>
-    <img alt="Zodd Logo" src="logo.svg" height="15%" width="15%">
+    <img alt="Zodd Logo" src="logo.svg" height="25%" width="25%">
   </picture>
 <br>
 
@@ -35,7 +36,8 @@ permalink: /packages/CogitatorTech/zodd/
 [![Tests](https://img.shields.io/github/actions/workflow/status/CogitatorTech/zodd/tests.yml?label=tests&style=flat&labelColor=282c34&logo=github)](https://github.com/CogitatorTech/zodd/actions/workflows/tests.yml)
 [![License](https://img.shields.io/badge/license-MIT-007ec6?label=license&style=flat&labelColor=282c34&logo=open-source-initiative)](https://github.com/CogitatorTech/zodd/blob/main/LICENSE)
 [![Examples](https://img.shields.io/badge/examples-view-green?style=flat&labelColor=282c34&logo=zig)](https://github.com/CogitatorTech/zodd/tree/main/examples)
-[![Docs](https://img.shields.io/badge/docs-read-blue?style=flat&labelColor=282c34&logo=read-the-docs)](https://CogitatorTech.github.io/zodd/)
+[![API Docs](https://img.shields.io/badge/docs-read-blue?style=flat&labelColor=282c34&logo=read-the-docs)](https://cogitatortech.github.io/zodd/api/#zodd.lib)
+[![Web Frontend](https://img.shields.io/badge/web_frontend-try-orange?style=flat&labelColor=282c34&logo=webassembly)](https://CogitatorTech.github.io/zodd/)
 [![Zig](https://img.shields.io/badge/zig-0.16.0-F7A41D?style=flat&labelColor=282c34&logo=zig)](https://ziglang.org/download/)
 [![Release](https://img.shields.io/github/release/CogitatorTech/zodd.svg?label=release&style=flat&labelColor=282c34&logo=github)](https://github.com/CogitatorTech/zodd/releases/latest)
 
@@ -45,7 +47,16 @@ A small embeddable Datalog engine in Zig
 
 ---
 
-Zodd is a small [Datalog](https://en.wikipedia.org/wiki/Datalog) engine written in pure Zig.
+**You can try Zodd in your web browser [here](https://CogitatorTech.github.io/zodd/).**
+
+You can download and use the latest pre-built Docker image for the web version of Zodd from the
+[GHCR](https://github.com/CogitatorTech/zodd/pkgs/container/zodd-web) and run it with the following command:
+
+```bash
+docker run -d -p 8085:80 --rm ghcr.io/cogitatortech/zodd-web:latest
+```
+
+Then open http://localhost:8085 in your browser.
 
 ### What is Datalog?
 
@@ -105,6 +116,7 @@ For example:
 - Implements semi-naive evaluation for efficient recursive query processing
 - Uses immutable, sorted, and deduplicated relations as core data structures
 - Provides primitives for multi-way joins, anti-joins, secondary indexes, and aggregation
+- Includes a Datalog frontend with a parser, a builder API, stratified negation, aggregates, and comparison operators
 
 See [ROADMAP.md](ROADMAP.md) for the list of implemented and planned features.
 
@@ -202,12 +214,9 @@ pub fn main() !void {
 
 ### Documentation
 
-You can find the API documentation for the latest release of Zodd [here](https://CogitatorTech.github.io/zodd/).
+You can find the API documentation for the latest release of Zodd [here](https://cogitatortech.github.io/zodd/api/#zodd.lib).
 
-Alternatively, you can use the `make docs` command to generate the documentation for the current version of Zodd.
-This will generate HTML documentation in the `docs/api` directory, which you can serve locally with `make docs-serve` and view in a web browser.
-
-### Examples
+#### Examples
 
 Check out the [examples](examples) directory for example usages of Zodd.
 
@@ -223,7 +232,7 @@ Zodd is licensed under the MIT License (see [LICENSE](LICENSE)).
 
 ### Acknowledgements
 
-* The logo is from [SVG Repo](https://www.svgrepo.com/svg/469003/gravity) with some modifications.
-* This project uses the [Minish](https://github.com/CogitatorTech/minish) framework for property-based testing and
-  the [Ordered](https://github.com/CogitatorTech/ordered) library for B-tree indices.
+* The logo shows a directed graph that edges form a Z, with a dashed arc for the derived fact `path(a, d)`.
+* This project uses the [Minish](https://github.com/CogitatorTech/minish) for property-based testing and
+  the [Ordered](https://github.com/CogitatorTech/ordered) for B-tree indices.
 * Zodd is inspired and modeled after the [Datafrog](https://github.com/frankmcsherry/blog/blob/master/posts/2018-05-19.md) Datalog engine for Rust.
