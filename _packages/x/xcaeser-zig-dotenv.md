@@ -6,9 +6,9 @@ author: xcaeser
 author_github: xcaeser
 repository: https://github.com/xcaeser/zig-dotenv
 keywords:
-date: 2026-06-02
-updated_at: 2026-06-02T22:48:24+00:00
-last_sync: 2026-06-02T22:48:24Z
+date: 2026-06-18
+updated_at: 2026-06-18T04:58:03+00:00
+last_sync: 2026-06-18T04:58:03Z
 package_kind: library
 has_library: true
 has_binary: false

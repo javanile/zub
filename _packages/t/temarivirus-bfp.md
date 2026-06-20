@@ -8,9 +8,9 @@ repository: https://github.com/TemariVirus/BFP
 keywords:
   - bignum
   - floating-point
-date: 2026-05-28
-updated_at: 2026-05-28T12:25:41+00:00
-last_sync: 2026-05-28T12:25:41Z
+date: 2026-06-20
+updated_at: 2026-06-20T08:36:30+00:00
+last_sync: 2026-06-20T08:36:30Z
 package_kind: hybrid
 has_library: true
 has_binary: true

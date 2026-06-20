@@ -6,9 +6,9 @@ author: dasimmet
 author_github: dasimmet
 repository: https://github.com/dasimmet/zig-awk
 keywords:
-date: 2026-06-15
-updated_at: 2026-06-15T06:45:24+00:00
-last_sync: 2026-06-15T06:45:24Z
+date: 2026-06-20
+updated_at: 2026-06-20T07:30:08+00:00
+last_sync: 2026-06-20T07:30:08Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -27,6 +27,8 @@ permalink: /packages/dasimmet/zig-awk/
 awk interpreter built with zig.
 
 <https://invisible-island.net/mawk>
+
+to build it:
 
 ```
 zig build

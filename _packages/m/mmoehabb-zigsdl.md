@@ -10,16 +10,16 @@ keywords:
   - game-development
   - graphics
   - sdl3
-date: 2026-05-31
+date: 2026-06-20
 category: game-development
-updated_at: 2026-05-31T17:51:06+00:00
-last_sync: 2026-05-31T17:51:06Z
+updated_at: 2026-06-20T10:02:45+00:00
+last_sync: 2026-06-20T10:02:45Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 6
-distributable_binary_count: 6
+binary_count: 7
+distributable_binary_count: 7
 multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
@@ -96,13 +96,11 @@ I bet if you gave the code a look, you'd already know how to extend it and make 
 const zigsdl = @import("zigsdl");
 const std = @import("std");
 
-pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    const allocator = gpa.allocator();
-    defer {
-        const deinit_status = gpa.deinit();
-        if (deinit_status == .leak) std.debug.panic("Memory leak detected!", .{});
-    }
+pub fn main(init: std.process.Init) !void {
+    const allocator = init.gpa;
+
+    try zigsdl.modules.Globals.init(allocator, init.io);
+    defer zigsdl.modules.Globals.deinit();
 
     // Create a drawable object
     var rect = zigsdl.drawables.Rect.new(
@@ -129,7 +127,7 @@ pub fn main() !void {
     try scene.addObject(&obj);
 
     // Create a screen, attach the scene to it, and open it
-    var screen = zigsdl.modules.Screen.init(allocator, .{
+    var screen = try zigsdl.modules.Screen.init(.{
         .title = "Simple Game",
         .width = 320,
         .height = 320,
@@ -365,8 +363,8 @@ For detailed instructions or troubleshooting, visit the [SDL3 documentation](htt
 - [x] Make scenes behave like cameras; they can zoom in and out, and move in the four directions.
 
 #### Drawables
-- [ ] Implement a drawable for each common geometric shape.
-- [ ] Implement interactive UI drawables: Button, TextInput, Select, and Checkbox.
+- [x] Implement a drawable for each common geometric shape.
+- [x] Implement interactive UI drawables: Button, TextInput, Select, and Checkbox.
 - [x] Implement SVG Drawable.
 
 #### Refactor
@@ -386,6 +384,6 @@ carries the source, and another carries the listener).
 
 #### Examples
 - [x] Write SVG Example.
-- [ ] Write MainMenu/UI Example.
+- [x] Write UI Example.
 - [ ] Develop a [Pong game](https://www.ponggame.org/).
 - [ ] Develop a Sokoban game.

@@ -8,10 +8,10 @@ repository: https://github.com/KurtWagner/zlinter
 keywords:
   - linter
   - linters
-date: 2026-06-10
+date: 2026-06-20
 category: tooling
-updated_at: 2026-06-10T13:40:41+00:00
-last_sync: 2026-06-10T13:40:41Z
+updated_at: 2026-06-20T04:54:46+00:00
+last_sync: 2026-06-20T04:54:46Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -62,6 +62,7 @@ A **linter** is a tool that automatically checks source code for style issues, b
   - [no_comment_out_code](RULES.md#no_comment_out_code)
   - [no_deprecated](RULES.md#no_deprecated)
   - [no_empty_block](RULES.md#no_empty_block)
+  - [no_global_vars](RULES.md#no_global_vars)
   - [no_hidden_allocations](RULES.md#no_hidden_allocations)
   - [no_inferred_error_unions](RULES.md#no_inferred_error_unions)
   - [no_literal_args](RULES.md#no_literal_args)

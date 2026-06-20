@@ -13,10 +13,10 @@ keywords:
   - web
   - webframework
   - zero
-date: 2026-06-07
+date: 2026-06-17
 category: networking
-updated_at: 2026-06-07T15:12:02+00:00
-last_sync: 2026-06-07T15:12:02Z
+updated_at: 2026-06-17T11:25:16+00:00
+last_sync: 2026-06-17T11:25:16Z
 package_kind: hybrid
 has_library: true
 has_binary: true

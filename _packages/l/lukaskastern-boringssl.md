@@ -6,9 +6,9 @@ author: LukasKastern
 author_github: LukasKastern
 repository: https://github.com/LukasKastern/boringssl
 keywords:
-date: 2026-05-10
-updated_at: 2026-05-10T18:53:40+00:00
-last_sync: 2026-05-10T18:53:40Z
+date: 2026-06-20
+updated_at: 2026-06-20T12:11:19+00:00
+last_sync: 2026-06-20T12:11:19Z
 package_kind: hybrid
 has_library: true
 has_binary: true

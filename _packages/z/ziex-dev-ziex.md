@@ -17,15 +17,15 @@ keywords:
   - web
   - web-assembly
   - web-framework
-date: 2026-06-12
-updated_at: 2026-06-12T13:40:51+00:00
-last_sync: 2026-06-12T13:40:51Z
+date: 2026-06-20
+updated_at: 2026-06-20T10:27:15+00:00
+last_sync: 2026-06-20T10:27:15Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 5
-distributable_binary_count: 5
+binary_count: 6
+distributable_binary_count: 6
 multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
@@ -206,6 +206,7 @@ You can view our current progress and planned features here:
 ## Versions
 | Zig         | Ziex                | Branch            | Status         |
 |-------------|---------------------|-------------------|----------------|
+| `0.17.0`    |                     | `zig-0.17`        | Unstable (dev) |
 | `0.16.0`    | `0.1.0-dev.1068`-*  | `main`            | Stable (dev)   |
 | `0.15.2`    | `0.1.0-dev-1050`    | `zig-0.15`        | Stable (dev)   |
 
