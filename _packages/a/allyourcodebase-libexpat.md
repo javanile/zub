@@ -6,9 +6,9 @@ author: allyourcodebase
 author_github: allyourcodebase
 repository: https://github.com/allyourcodebase/libexpat
 keywords:
-date: 2026-04-16
-updated_at: 2026-04-16T22:54:37+00:00
-last_sync: 2026-04-16T22:54:37Z
+date: 2026-06-06
+updated_at: 2026-06-06T13:43:12+00:00
+last_sync: 2026-06-06T13:43:12Z
 package_kind: hybrid
 has_library: true
 has_binary: true

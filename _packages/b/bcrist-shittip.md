@@ -9,10 +9,10 @@ keywords:
   - http
   - http-server
   - server
-date: 2026-04-18
+date: 2026-06-07
 category: networking
-updated_at: 2026-04-18T16:02:55+00:00
-last_sync: 2026-04-18T16:02:55Z
+updated_at: 2026-06-07T00:43:48+00:00
+last_sync: 2026-06-07T00:43:48Z
 package_kind: hybrid
 has_library: true
 has_binary: true

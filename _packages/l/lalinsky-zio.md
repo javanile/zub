@@ -17,10 +17,10 @@ keywords:
   - kqueue
   - networking
   - poll
-date: 2026-06-03
+date: 2026-06-21
 category: networking
-updated_at: 2026-06-03T14:34:03+00:00
-last_sync: 2026-06-03T14:34:03Z
+updated_at: 2026-06-21T09:54:16+00:00
+last_sync: 2026-06-21T09:54:16Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -45,8 +45,10 @@ The project consists of a few high-level components:
 - Runtime for executing stackful coroutines (fibers, green threads) on one or more CPU threads.
 - Asynchronous I/O layer that makes it look like operations are blocking for easy state management, but using event-driven OS APIs under the hood.
 - Synchronization primitives that cooperate with this runtime.
-- Full implementation of the [`std.Io`] interface, so that you can use any Zig 0.16+ networking library.
-- Seamless integration with standard library interfaces, like [`std.Io.Reader`] and [`std.Io.Writer`].
+- Seamless integration with standard library interfaces:
+    * Full implementation of the [`std.Io`] interface, so that you can use any Zig 0.16+ networking library.
+    * All streams implement the [`std.Io.Reader`] and [`std.Io.Writer`] interfaces.
+    * Integration with `std.log` and `std.debug.print` via custom `debug_io`.
 
 It's similar to [goroutines] in Go, but with the pros and cons of being implemented in a language with manual memory management and without compiler support.
 
@@ -76,7 +78,7 @@ It's similar to [goroutines] in Go, but with the pros and cons of being implemen
 1) Add zio as a dependency in your `build.zig.zon`:
 
 ```bash
-zig fetch --save "git+https://github.com/lalinsky/zio#v0.13.0"
+zig fetch --save "git+https://github.com/lalinsky/zio#v0.14.0"
 ```
 
 2) In your `build.zig`, add the `zio` module as a dependency to your program:
@@ -102,8 +104,12 @@ A minimal TCP echo server, using zio's native API:
 const std = @import("std");
 const zio = @import("zio");
 
+pub const std_options_debug_io = zio.debug_io;
+
 fn handleClient(stream: zio.net.Stream) !void {
     defer stream.close();
+
+    std.log.info("Client connected from {f}", .{stream.socket.address});
 
     var read_buffer: [1024]u8 = undefined;
     var reader = stream.reader(&read_buffer);
@@ -128,6 +134,8 @@ pub fn main() !void {
     const addr = try zio.net.IpAddress.parseIp4("127.0.0.1", 8080);
     const server = try addr.listen(.{});
     defer server.close();
+
+    std.log.info("TCP echo server listening on {f}", .{server.socket.address});
 
     var group: zio.Group = .init;
     defer group.cancel();
@@ -156,7 +164,7 @@ fn handleClient(io: Io, stream: Io.net.Stream) Io.Cancelable!void {
 
     var write_buffer: [1024]u8 = undefined;
     var writer = stream.writer(io, &write_buffer);
-z
+
     while (true) {
         const line = reader.interface.takeDelimiterInclusive('\n') catch |err| switch (err) {
             error.EndOfStream => break,

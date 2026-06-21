@@ -10,10 +10,10 @@ keywords:
   - test
   - testing-library
   - unit-test
-date: 2026-05-17
+date: 2026-06-10
 category: tooling
-updated_at: 2026-05-17T02:47:04+00:00
-last_sync: 2026-05-17T02:47:04Z
+updated_at: 2026-06-10T09:38:30+00:00
+last_sync: 2026-06-10T09:38:30Z
 package_kind: library
 has_library: true
 has_binary: false

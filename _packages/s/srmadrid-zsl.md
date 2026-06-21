@@ -7,9 +7,9 @@ author_github: srmadrid
 repository: https://github.com/srmadrid/zsl
 keywords:
   - math
-date: 2026-06-10
-updated_at: 2026-06-10T12:38:18+00:00
-last_sync: 2026-06-10T12:38:18Z
+date: 2026-06-21
+updated_at: 2026-06-21T11:21:53+00:00
+last_sync: 2026-06-21T11:21:53Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -78,7 +78,8 @@ Zsl lets you write numerical code once and run it over whatever numeric type you
   - BLAS routines (`blas`)
   - Select LAPACK routines (`lapack`)
 - Automatic Differentiation (`autodiff`):
-  - Dual numbers
+  - Dual numbers (forward)
+  - Tape and Var numbers (backward)
 - Symbolic System:
   - Nothing implemented yet
 

@@ -13,15 +13,15 @@ keywords:
   - tz
   - tzdata
   - tzinfo
-date: 2026-04-17
-updated_at: 2026-04-17T16:00:22+00:00
-last_sync: 2026-04-17T16:00:22Z
+date: 2026-06-06
+updated_at: 2026-06-06T23:05:39+00:00
+last_sync: 2026-06-06T23:05:39Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 2
-distributable_binary_count: 1
+binary_count: 4
+distributable_binary_count: 4
 multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
@@ -30,45 +30,1241 @@ permalink: /packages/bcrist/tempora/
 ---
 
 # Tempora
-### Simple Zig Dates/Times/Timezones
+### Simple Zig Dates, Times, and Timezones
 
 ## Features
 * Efficient storage (32b `Time`, 32b `Date`, 64b `Date_Time`)
+* Conversion to/from unix timestamps
 * Composition and decomposition (year, ordinal day/week, month, day, weekday, hour, minute, second, ms)
     * Uses Ben Joffe's [fast calendar algorithm](https://www.benjoffe.com/fast-date-64)
+* Find next/previous weekday/day/ordinal day
 * Add/subtract days/hours/minutes/seconds/ms
-* Advance to the next weekday/day/ordinal day
-* Convert to/from unix timestamps
-* Embedded IANA timezone database and modified version of [zig-tzif](https://github.com/leroycep/zig-tzif) (adds about 200k to binary size when used)
-* Query current timezone on both unix and Windows systems
-* Moment.js style formatting and parsing (through `std.fmt`)
+    * With or without timezone offset correction
+    * With or without leap second correction
+* Compute duration between two dates/times
+    * With or without timezone offset correction
+    * With or without leap second correction
+* String formatting and parsing with custom formats (similar to moment.js and Java's SimpleDateFormat style)
+* Query current timezone on both posix and Windows systems
+* Embedded IANA timezone database (adds about 100k to binary size when the full database is referenced)
+    * If only specific timezones or regions are needed, only a subset of the database needs to be embedded
+    * Timezones can also be loaded from a filesystem zoneinfo database or the timezone database in the Windows registry
+    * Regenerating the embedded database does not rely on `zic.c` or any system dependencies (just run `zig build -Dcodegen`)
+* No dependencies
+    * Except when using `zig build -Dcodegen` or `zig build -Dbenchmarks`
 
 ## Limitations
-* It's not possible to store most "out of bounds" dates/times (e.g. Jan 32).
-* Localized month and weekday names are not supported; only English.
-* Non-Gregorian calendars are not supported.
-* Date/time values directly correspond to timestamps, so accurate durations that take leap seconds into account are not possible (but leap seconds are being abolished in 2035 anyway).
+* Times are only accurate to millisecond resolution
+* It's not possible to store most "out of bounds" dates/times (e.g. Jan 32)
+* Localized month and weekday names are not supported; only English
+* Non-Gregorian calendars are not supported
 
-## Comparison with Zeit
-[Zeit](https://github.com/rockorager/zeit) is another Zig date/time library which provides a similar feature set to Tempora, but there are very few exact equivalents between the tempora and zeit APIs.
-* `tempora.Time` does not have an equivalent in Zeit
-* `tempora.Date` is roughly equivalent to `zeit.Days`, but the latter is a simple alias for `i32` and thus is not type safe or ergonomic for doing anything other than converting into a `zeit.Instant` or `zeit.Date`.  Note tempora also uses a different epoch date.
-* `tempora.Year`: Zeit just uses `i32`
-* `tempora.Year.Info` does not have an equivalent in Zeit
-* `tempora.Month` <=> `zeit.Month`
-* `tempora.Week_Day` <=> `zeit.Weekday`
-* `tempora.Ordinal_Day` and `tempora.Ordinal_Week` do not have an equivalent in Zeit
-* `tempora.Date.YMD` <=> `zeit.Date`
-* `zeit.Time` and `zeit.Instant` do not have exact equivalents in Tempora, but similar functionality can be achieved with `tempora.Date_Time.With_Offset`, `tempora.Date.YMD`, `tempora.Date.Info`, etc.
-* `zeit.Duration` does not have an equivalent in Tempora.  The closest you can get is converting to timestamps, subtracting, and then constructing a `Time` from the result.
-* Tempora's formatting functionality works out-of-the-box with `std.Io.Writer`, while Zeit only has a custom `bufPrint`.
-* Tempora's string parsing is more generic and uses the same format strings as for output.  Zeit cannot parse arbitrary string formats, only specific RFC-defined formats.
-* Zeit provides a function which closely mirror's C's `strftime` while tempora does not. 
-* Zeit assumes the filesystem will contain a zoneinfo database containing all the standard IANA timezone names (except on windows).  Tempora embeds a database directly in the app, allowing timezone operations to work on freestanding targets.
-* There are a lot of API differences that just boil down to personal preference:
-    * `zeit.instant(.{ ... })` covers a lot of ground that tempora uses many different functions for, e.g. `Date_Time.With_Offset.from_timestamp_ms()`, `Date_Time.With_Offset.from_string()` and `tempora.now()`
-    * Zeit uses free functions for a bunch of things that are methods in tempora.
-        * `zeit.daysFromCivil()` <=> `tempora.Date.from_ymd()`
-        * `zeit.civilFromDays()` <=> `tempora.Date.ymd()`
-        * `zeit.weekdayFromDays()` <=> `tempora.Date.week_day()`
-        * `zeit.isLeapYear()` <=> `tempora.Year.is_leap()`, `tempora.Year.Info.is_leap`
+## Why another zig date/time library?
+There are a bunch of [other zig date/time libraries](readme.md#comparison-with-other-zig-date-time-libraries), so why did I decide to build a new one?  I was motivated to create tempora because the main data structures for other zig date/time libraries generally contain many separate decomposed fields.  In addition to having many opportunities for non-canonical representations, the large memory footprint makes it very hard to stomache using these types inside structs or arrays, particularly when following data-oriented-design principles.
+Instead, I wanted something where the main data structures only provided a slight decomposition over timestamps - just separating the date and time parts.  Any further decomposition can be done on demand, or using auxiliary temporary data structures.  And ideally the solution should not use significantly more memory than a timestamp.
+
+It turns out that "rata die" encoded dates stored in a 32 bit integer have enough range to cover over 10 million years.  Ideally then, I wanted to fit a packed time-of-day representation into a 32 bit integer as well.  Unfortunately, this is a little trickier, and I had to compromise on the resolution.  A nanosecond-resolution time-of-day would require at least 47 bits to span 24 hours.  Even a microsecond-resolution time-of-day would require 37 bits.  While I would have preferred to support resolutions smaller than a millisecond, I think it's probably fine for almost all use cases.  If you need more resolution, it's probably better to just process and store nanosecond timestamps and convert to rounded human-centric types only for display.
+
+My second requirement was good support for timezones, including the ability to embed an IANA timezone database directly into the executable.  Other than tempora, only [zdt](https://codeberg.org/FObersteiner/zdt) comes close to this, but I wanted even more flexibility in deciding how and when to load timezones, and I wanted a pure-zig solution to automatically updating the embedded timezone database.
+
+## API/Examples
+
+### `Date`
+Dates are represented as a signed 32b number of days since 1 January 2000, embedded in an enum for type safety.  This type of representation is sometimes referred to as "rata die" (although that name usually connotes a different epoch date) and it makes it impossible to represent invalid dates like January 32 or November 31.
+
+Using this packed representation makes composition and decomposition slower, but greatly simplifies most other operations on dates, like modification and comparison.
+
+#### Construction
+```zig
+const y: i32 = 1984
+const m: i32 = 3
+const d: i32 = 1
+const date: Date = .from_ymd_numbers(y, m, d);
+```
+```zig
+const ymd: Date.YMD = .from_numbers(1984, 3, 1);
+const date: Date = .from_ymd(ymd);
+```
+```zig
+const y: Year = .epoch;
+const od: Ordinal_Day = .first;
+const date: Date = .from_yod(y, od);
+```
+```zig
+const yi: Year.Info = .from_year(.epoch);
+const od: Ordinal_Day = .first;
+const date: Date = .from_yiod(yi, od);
+```
+```zig
+const y: Year = .epoch;
+const iw: ISO_Week = .first;
+const wd: Week_Day = .sunday;
+const date: Date = .from_ywd(y, iw, wd);
+```
+```zig
+const yi: Year.Info = .from_year(.epoch);
+const iw: ISO_Week = .first;
+const wd: Week_Day = .sunday;
+const date: Date = .from_yiwd(yi, iw, wd);
+```
+```zig
+const y: Year = .epoch;
+const starting_date: Date = .from_year(y);
+```
+
+#### Convenience Decls
+```zig
+var d: Date = .epoch; // 2000-01-01
+d = .unix_epoch; // 1970-01-01
+d = .ntp_epoch; // 1900-01-01
+d = .ntfs_epoch; // 1601-01-01
+```
+
+#### Decomposition & Conversion
+```zig
+const date: Date = .epoch;
+
+const y: Year = date.year();
+const yi: Year_Info = date.year_info();
+const m: Month = date.month();
+const d: Day = date.day();
+const od: Ordinal_Day = date.ordinal_day();
+const ow: Ordinal_Week = date.ordinal_week();
+const wd: Week_Day = date.week_day();
+const iw: ISO_Week = date.iso_week();
+const iwd: ISO_Week_Date = date.iso_week_date();
+const di: Date.Info = date.info();
+const ymd: Date.YMD = date.ymd();
+
+const time: Time = .midnight;
+const dt: Date_Time = date.with_time(time);
+```
+
+#### Comparison
+```zig
+const date1: Date = .epoch;
+const date2: Date = Date.next(.epoch);
+
+std.debug.assert(date1.is_before(date2));
+std.debug.assert(!date1.is_before(date1));
+std.debug.assert(date2.is_after(date1));
+std.debug.assert(!date2.is_after(date2));
+```
+
+#### Modification
+```zig
+var date: Date = .epoch;
+
+const days: i32 = 10;
+date = date.plus_days(days);
+
+date = date.next();
+date = date.prev();
+
+const wd: Week_Day = .sunday;
+date = date.next_week_day(wd);
+date = date.prev_week_day(wd);
+
+const d: Day = .@"15";
+date = date.next_day_of_month(d);
+date = date.prev_day_of_month(d);
+
+const m: Month = .january;
+date = date.next_month_and_day(m, d);
+date = date.prev_month_and_day(m, d);
+```
+
+#### Formatting
+```zig
+const date: Date = Date.next(.epoch);
+
+writer.print("{f}", .{ date.fmt(Date.iso8601) });       // 2000-01-02
+writer.print("{f}", .{ date.fmt(Date.rfc2822) });       // Sun, 02 Jan 2000
+writer.print("{f}", .{ date.fmt(Date.us) });            // January 2, 2000
+writer.print("{f}", .{ date.fmt(Date.uk) });            // 2 January 2000
+writer.print("{f}", .{ date.fmt(Date.us_numeric) });    // 1/2/2000
+writer.print("{f}", .{ date.fmt(Date.uk_numeric) });    // 2/1/2000
+writer.print("{f}", .{ date.fmt("MMMM YYYY") });        // January 2000
+writer.print("{f}", .{ date.fmt("YY") });               // 00
+```
+
+#### Parsing
+```zig
+var date: Date = undefined;
+
+date = try .from_string(Date.iso8601, "2025-10-01");
+date = try .from_string("YYYY", "2025"); // 2025-01-01
+```
+
+### `Date.YMD`
+This struct represents a decomposed date, consisting of a year, month, and day of the month.  In some cases it may be more convenient or efficient to use this over `Date`, but it requires twice as much memory, and some operations are not defined for this struct.
+
+#### Construction
+```zig
+const y: i32 = 1984
+const m: i32 = 3
+const d: i32 = 1
+const ymd: Date.YMD = .from_numbers(y, m, d);
+```
+```zig
+const y: Year = .epoch;
+const m: Month = .january;
+const d: Day = .first;
+const ymd: Date.YMD = .init(y, m, d);
+```
+```zig
+const date: Date = .epoch;
+const ymd: Date.YMD = .from_date(date);
+```
+
+#### Decomposition/Conversion
+```zig
+const ymd: Date.YMD = .from_date(.epoch);
+
+const y: Year = ymd.year;
+const m: Month = ymd.month;
+const d: Day = ymd.day;
+const yi: Year.Info = ymd.year_info();
+const date: Date = ymd.date();
+const di: Date.Info = ymd.info();
+const iwd: ISO_Week_Date = ymd.iso_week_date();
+```
+
+#### Comparison
+```zig
+const ymd1: Date.YMD = .from_date(.epoch);
+const ymd2: Date.YMD = .from_date(.next(.epoch));
+
+std.debug.assert(ymd1.is_before(ymd2));
+std.debug.assert(!ymd1.is_before(ymd1));
+std.debug.assert(ymd2.is_after(ymd1));
+std.debug.assert(!ymd2.is_after(ymd2));
+```
+
+#### Modification
+```zig
+var ymd: Date.YMD = .from_date(.epoch);
+
+ymd = ymd.next();
+ymd = ymd.prev();
+
+const d: Day = .@"15";
+ymd = ymd.next_day_of_month(d);
+ymd = ymd.prev_day_of_month(d);
+
+const m: Month = .january;
+ymd = ymd.next_month_and_day(m, d);
+ymd = ymd.prev_month_and_day(m, d);
+```
+
+### `Date.Info`
+This struct is similar to `Date.YMD`, but also includes some more decomposed information:
+    * The raw date as an integer, i.e. `@intFromEnum(date)`
+    * The day of the week
+    * The ordinal day (day of year)
+    * Whether or not the current year is a leap year
+    * A `Date` representing the start of the current week
+    * A `Date` representing the start of the current month
+    * A `Date` representing the start of the current year
+
+#### Construction
+```zig
+const date: Date = .epoch;
+const di: Date.Info = .from_date(date);
+```
+```zig
+const ymd: Date.YMD = .from_date(.epoch);
+const di: Date.Info = .from_ymd(ymd);
+```
+```zig
+const yi: Year.Info = .from_year(.epoch);
+const m: Month = .january;
+const d: Day = .first;
+const di: Date.Info = .from_yimd(yi, m, d);
+```
+
+#### Decomposition/Conversion
+```zig
+const di: Date.Info = .from_date(.epoch);
+
+const raw: i32 = di.raw;
+const start_of_year: Date = di.start_of_year;
+const start_of_month: Date = di.start_of_month;
+const start_of_week: Date = di.start_of_week;
+const is_leap_year: bool = di.is_leap_year;
+const year: Year = di.year;
+const month: Month = di.month;
+const day: Day = di.day;
+const week_day: Week_Day = di.week_day;
+const ordinal_day: Ordinal_Day = di.ordinal_day;
+const yi: Year.Info = di.year_info();
+const ymd: Date.YMD = di.ymd();
+const date: Date = di.date();
+const iwd: ISO_Week_Date = di.iso_week_date();
+```
+
+### `Time`
+The `Time` enum represents a millisecond-resolution offset from midnight (the start of an arbitrary day).  It is backed by `i32` which provides a range of around +/- 24 days, but canonical `Time` values (especially when combined with a `Date`) should be between 0 and 85,399,999.
+
+A `Time` value may represent a time under the [UTC](https://en.wikipedia.org/wiki/Coordinated_Universal_Time) or [TAI](https://en.wikipedia.org/wiki/International_Atomic_Time) standards, a fixed offset from UTC, or a wall-clock time in a specific local timezone.  If this information cannot be inferred from context, you may want to use `Time.With_Offset` instead.
+
+#### Construction
+```zig
+const ms: i32 = 1234;
+const t: Time = .from_ms(ms); // 1.234 seconds after midnight
+```
+```zig
+const s: i32 = 1234;
+const t: Time = .from_seconds(s); // 20 minutes and 34 seconds after midnight
+```
+```zig
+const m: i32 = -2;
+const t: Time = .from_minutes(m); // 2 minutes before midnight (non-canonical time; refers to the previous day)
+```
+```zig
+const h: i32 = 12;
+const t: Time = .from_hours(h); // noon
+```
+```zig
+const h: u31 = 20;
+const m: u8 = 30;
+const s: u8 = 0;
+const ms: u10 = 0;
+const t: Time = .from_hmsm(h, m, s, ms); // 8:30 pm
+```
+
+#### Hourly Convenience Decls
+```zig
+const start_of_day: Time = .midnight;
+const wakeup: Time = .@"7am";
+const lunch: Time = .noon;
+const bedtime: Time = .@"10pm";
+const end_of_day: Time = .midnight_eod;
+```
+
+#### Decomposition & Conversion
+```zig
+const t: Time = .@"1pm";
+
+const whole_hours_since_midnight: i32 = t.hours();
+const whole_minutes_since_hour: i32 = t.minutes();
+const whole_seconds_since_minute: i32 = t.seconds();
+const milliseconds_since_second: i32 = t.ms();
+const whole_minutes_since_midnight: i32 = t.minutes_since_midnight();
+const whole_seconds_since_midnight: i32 = t.seconds_since_midnight();
+const milliseconds_since_midnight: i32 = t.ms_since_midnight();
+const dt: Date_Time = time.with_date(date);
+const to1: Time.With_Offset = time.with_offset(utc_offset_ms);
+const to2: Time.With_Offset = time.with_timezone(tz, utc_offset_ms);
+```
+
+#### Comparison
+```zig
+const t1: Time = .noon;
+const t2: Time = .@"1pm";
+// assuming times from the same date:
+std.debug.assert(t1.is_before(t2));
+std.debug.assert(!t1.is_before(t1));
+std.debug.assert(t2.is_after(t1));
+std.debug.assert(!t2.is_after(t2));
+```
+
+#### Modification
+```zig
+var t: Time = .noon;
+
+const duration: std.Io.Duration = .fromSeconds(1);
+t = t.plus_duration(duration);
+t = t.minus_duration(duration);
+
+const ms: i32 = 1234;
+t = t.plus_ms(ms);
+
+const s: i32 = 1;
+t = t.plus_seconds(s);
+
+const m: i32 = 12
+t = t.plus_minutes(m);
+
+const h: i32 = -3;
+t = t.plus_hours(h);
+```
+
+### `Date_Time`
+This struct simply combines a `Date` and `Time`, representing a single instant, but without specifying whether that date and time is based on UTC, TAI, or some local time zone (see `Date_Time.With_Offset` for that).
+
+#### Convenience Decls
+```zig
+var dt: Date_Time = .epoch; // 2000-01-01T00:00:00.000
+dt = .unix_epoch; // 1970-01-01T00:00:00.000
+dt = .ntp_epoch; // 1900-01-01T00:00:00.000
+dt = .ntfs_epoch; // 1601-01-01T00:00:00.000
+```
+
+#### Decomposition & Conversion
+```zig
+const dt: Date_Time = .epoch;
+
+const date: Date = dt.date;
+const t: Time = dt.time;
+
+const utc_offset_ms: i32 = 0;
+const dto1: Date_Time.With_Offset = dt.with_offset(utc_offset_ms);
+
+const tz: *const Timezone = &Timezone.utc;
+const dto2: Date_Time.With_Offset = dt.with_timezone(tz);
+```
+
+#### Comparison
+```zig
+const dt1: Date_Time = .epoch;
+const dt2: Date_Time = Date_Time.next(.epoch);
+
+std.debug.assert(dt1.is_before(dt2));
+std.debug.assert(!dt1.is_before(dt1));
+std.debug.assert(dt2.is_after(dt1));
+std.debug.assert(!dt2.is_after(dt2));
+
+// These do not account for leap seconds; see `Date_Time.With_Offset` versions of these functions
+const duration: std.Io.Duration = dt2.duration_since(dt1);
+const ms: i32 = dt2.ms_since(dt1);
+```
+
+#### Modification
+```zig
+var dt: Date_Time = .epoch;
+
+// This does not account for leap seconds; see `Date_Time.With_Offset` versions of these functions
+const days: i32 = 10;
+const ms: i32 = 1234;
+dt = dt.plus_days_and_ms(days, ms);
+
+// This does not account for leap seconds; see `Date_Time.With_Offset` versions of these functions
+const duration: std.Io.Duration = .fromSeconds(60);
+dt = dt.plus_duration(duration);
+dt = dt.minus_duration(duration);
+```
+
+### `Date_Time.With_Offset`
+This struct combines a `Date_Time` with a UTC offset, allowing for conversions to/from unix timestamps.  Optionally, it can also include a pointer to a `Timezone`, which can be helpful when formatting, parsing, and modifying the instant.
+
+#### Construction
+```zig
+const io: std.Io = ...
+const dto: Date_Time.With_Offset = tempora.now_utc(io);
+```
+```zig
+const io: std.Io = ...
+const tzdb: *const TZDB = ...
+const dto: Date_Time.With_Offset = tempora.now_local(io, tzdb);
+```
+```zig
+const io: std.Io = ...
+const tz: *const Timezone = &Timezone.utc;
+const dto: Date_Time.With_Offset = tempora.now(io, tz);
+```
+```zig
+const ts: std.Io.Timestamp = .fromNanoseconds(0);
+const tz: ?*const Timezone = null;
+const dto: Date_Time.With_Offset = .from_timestamp(ts, tz);
+```
+```zig
+const ts: i64 = 0;
+const tz: ?*const Timezone = null;
+const dto: Date_Time.With_Offset = .from_timestamp_ms(ts, tz);
+```
+```zig
+const ts: i64 = 0;
+const tz: ?*const Timezone = null;
+const dto: Date_Time.With_Offset = .from_timestamp_s(ts, tz);
+```
+
+#### Decomposition/Conversion
+```zig
+const io: std.Io = ...
+const dto: Date_Time.With_Offset = tempora.now_utc(io);
+
+const ts: std.Io.Timestamp = dto.timestamp();
+const ts_ms: i64 = dto.timestamp_ms();
+const ts_s: i64 = dto.timestamp_s();
+```
+
+#### Conversion Between Timezones
+```zig
+const io: std.Io = ...
+var dto: Date_Time.With_Offset = tempora.now_utc(io);
+
+const other_tz: Timezone = .fixed(1, 0);
+dto = dto.in_timezone(&other_tz);
+```
+
+#### Comparison
+```zig
+const dto1: Date_Time.With_Offset = .from_timestamp_s(0, null);
+const dto2: Date_Time.With_Offset = .from_timestamp_s(1, null);
+std.debug.assert(dto1.is_before(dto2));
+std.debug.assert(!dto1.is_before(dto1));
+std.debug.assert(dto2.is_after(dto1));
+std.debug.assert(!dto2.is_after(dto2));
+
+// These *do* provide accurate durations across leap second discontinuities in UTC:
+const duration: std.Io.Duration = dto2.duration_since(dto1);
+const ms: i32 = dto2.ms_since(dto1);
+
+// These *do not* provide accurate durations across leap second discontinuities in UTC:
+const duration: std.Io.Duration = dto2.duration_since_ignore_leap_seconds(dto1);
+const ms: i32 = dto2.ms_since_ignore_leap_seconds(dto1);
+```
+
+#### Modification
+```zig
+var dto: Date_Time.With_Offset = .from_timestamp_s(0, null);
+
+dto.dt.time = dto.dt.time.plus_hours(25);
+dto = dto.canonical();
+
+// This *does* account for leap second discontinuities in UTC:
+const days: i32 = 10;
+const ms: i32 = 1234;
+dto = dto.plus_days_and_ms(days, ms);
+
+// This *does* account for leap second discontinuities in UTC:
+const duration: std.Io.Duration = .fromSeconds(60);
+dto = dto.plus_duration(duration);
+dto = dto.minus_duration(duration);
+
+// This *does not* account for leap second discontinuities in UTC:
+const days: i32 = 10;
+const ms: i32 = 1234;
+dto = dto.plus_days_and_ms_ignore_leap_seconds(days, ms);
+
+// This *does not* account for leap second discontinuities in UTC:
+const duration: std.Io.Duration = .fromSeconds(60);
+dto = dto.plus_duration_ignore_leap_seconds(duration);
+dto = dto.minus_duration_ignore_leap_seconds(duration);
+```
+
+#### Formatting
+```zig
+const dto: Date_Time.With_Offset = .from_timestamp_s(0, &Timezone.utc);
+
+writer.print("{f}", .{ dto.fmt(Date_Time.With_Offset.iso8601) });           // 1970-01-01T00:00:00.000+00:00
+writer.print("{f}", .{ dto.fmt(Date_Time.With_Offset.iso8601_local) });     // 1970-01-01T00:00:00.000
+writer.print("{f}", .{ dto.fmt(Date_Time.With_Offset.rfc2822) });           // Thu, 01 Jan 1970 00:00:00 +0000
+writer.print("{f}", .{ dto.fmt(Date_Time.With_Offset.http) });              // Thu, 01 Jan 1970 00:00:00 GMT
+writer.print("{f}", .{ dto.fmt(Date_Time.With_Offset.sql_ms) });            // 1970-01-01 00:00:00.000 UTC
+writer.print("{f}", .{ dto.fmt(Date_Time.With_Offset.sql_ms_local) });      // 1970-01-01 00:00:00.000
+writer.print("{f}", .{ dto.fmt(Date_Time.With_Offset.sql) });               // 1970-01-01 00:00:00 UTC
+writer.print("{f}", .{ dto.fmt(Date_Time.With_Offset.sql_local) });         // 1970-01-01 00:00:00
+```
+
+#### Parsing
+```zig
+var dto: Date_Time.With_Offset = undefined;
+
+dto = try .from_string(Date.iso8601, "2025-10-01T12:12:12.000+00:00");
+dto = try .from_string("YYYY", "2025"); // 2025-01-01T00:00:00.000+00:00
+
+const tz: Timezone = Timezone.fixed(-1, 0);
+dto = try .from_string_tz(Date.iso8601_local, "2025-10-01T12:12:12.000", &tz);
+
+const tzdb: *const TZDB = ...
+dto = try .from_string_tzdb("YYYY-MM-DD HH:mm:ss z", "2025-10-01 12:12:12 CDT", tzdb);
+```
+
+### `Time.With_Offset`
+This struct is like `Date_Time.With_Offset` except without any `Date`.  It is mostly only useful for formatting and parsing strings that do not contain date information.  Otherwise you should prefer to work with `Date_Time.With_Offset` instead.
+
+#### Conversion Between Timezones
+```zig
+const to: Time.With_Offset = (Time.midnight).with_offset(0);
+
+const other_tz: Timezone = .fixed(1, 0);
+to = to.in_timezone(&other_tz);
+```
+
+#### Decomposition/Conversion
+```zig
+const to: Time.With_Offset = (Time.midnight).with_offset(0);
+
+const date: Date = .epoch;
+const dto: Date_Time.With_Offset = to.with_date(date);
+```
+
+#### Formatting
+```zig
+const to: Time.With_Offset = (Time.midnight).with_offset(0);
+
+writer.print("{f}", .{ cst.fmt(Time.With_Offset.iso8601) });        // 00:00:00.000-00:00
+writer.print("{f}", .{ cst.fmt(Time.With_Offset.iso8601_local) });  // 00:00:00.000
+writer.print("{f}", .{ cst.fmt(Time.With_Offset.rfc2822) });        // 00:00:00 +0000
+writer.print("{f}", .{ ct.fmt("h:mm a") });                         // 00:00 am
+```
+
+#### Parsing
+```zig
+var parsed_time: Time.With_Offset = undefined;
+parsed_time = try .from_string("h:mm a", "1:00 pm");
+parsed_time = try .from_string_tz(Time.With_Offset.iso8601, "13:00:00.000-06:00", tz);
+parsed_time = try .from_string_tzdb("05:05:05 CDT", tzdb);
+```
+
+### `Timezone`
+A `Timezone` struct contains all the information required to convert between UTC and local wall clock times for a particular local time zone.
+
+There are two built-in timezone constants, `Timezone.utc` and `Timezone.tai`.  Neither of these "timezones" include any DST rules or UTC offset information, however `Timezone.tai` includes leap-second adjustment information which is needed when trying to work with durations that are accurate to the second or better (see `Date_Time.With_Offset.duration_since`, `Date_Time.With_Offset.plus_duration`, etc.)
+
+
+### `TZDB`
+Most of the time it's convenient to use IANA-style timezone names (`Region/City_Name` or `Region/Sub_Region/City_Name`) to refer to timezones, but this means there needs to be something in your program that can map these strings to the actual `Timezone` data.  In tempora you do this by initializing a `TZDB` struct, typically when your program starts:
+```zig
+pub fn main(init: std.process.Init) !void {
+    var tzdb: tempora.TZDB = .init(init);
+    defer tzdb.deinit();
+    try tzdb.add(init.io, tempora.tz.all, .system_or_embedded(init.environ_map));
+    try tzdb.add_current(init.io, .system_link(init.environ_map));
+    // your program here ...
+}
+```
+This will load all of the timezones from the embedded IANA timezone database, but any timezones it can find on the system will be preferred, on the assumption that they're likely to be newer.
+
+If you want to avoid bloating your executable, you can force all timezones to be loaded from the system:
+```zig
+pub fn main(init: std.process.Init) !void {
+    var tzdb: tempora.TZDB = .init(init);
+    defer tzdb.deinit();
+    try tzdb.add(init.io, tempora.tz.all, .system(init.environ_map));
+    try tzdb.add_current(init.io, .system(init.environ_map));
+    // your program here ...
+}
+```
+
+Alternatively, you can include just a portion of the IANA database:
+```zig
+const tz = tempora.tz;
+try tzdb.add(init.io, .{ tz.america, tz.europe, tz.pacific.honolulu }, .system_or_embedded(init.environ_map));
+```
+
+You can also force tempora to use *only* the embedded IANA database:
+```zig
+try tzdb.add(init.io, tempora.tz.all, .embedded);
+```
+
+Normally each TZif blob in the embedded IANA database is compressed with zlib, but you can embed it uncompressed instead by using the `tempora.tz.uncompressed` namespace instead of `tempora.tz.all`.
+Similarly, if you want to exclude all the timezone IDs which are simply aliases to other zones, you can use `tempora.tz.canonical` or `tempora.tz.canonical_uncompressed`.  This won't significantly affect binary size, but may reduce startup time slightly.
+
+Some programs may want to avoid loading the timezone database at startup entirely (e.g. CLI tools, where even minor startup delays can be highly noticeable).  In this case, `TZDB` can be instructed to only load/parse the timezone data lazily, the first time it is accessed:
+```zig
+try tzdb.add_lazy(tempora.tz.all, &.system_or_embedded(init.environ_map));
+```
+Note that for `add_lazy`, you must pass a pointer to the the add options, and it must remain valid for the lifetime of the `TZDB`.
+
+You may also want to support lazily loading TZif files from the filesystem that were never specified by `add` or `add_lazy`, to allow usage of new zones that didn't exist when the program was built:
+```zig
+tzdb.default_lazy_options = &.system_or_embedded(init.environ_map);
+```
+Note however, that both of the two above examples have a downside: the `TZDB` can no longer be used concurrently from multiple threads unless external synchronization is provided, or each thread/task has its own separate `TZDB`.
+
+#### Timezone offset designations
+If you want to be able to parse date/time strings that contain colloquial timezone offset designators like PST/PDT, you'll need to initialize these in the `TZDB`:
+```zig
+try tzdb.add_designations(tempora.tz.designations.common);
+```
+In addition to the `common` namespace, there are a variety of other collections:
+   * `nato` (military-style single-letter designations)
+   * `north_america`
+   * `cuba`
+   * `europe`
+   * `africa`
+   * `middle_east`
+   * `asia`
+   * `oceania` (Australia, NZ, and Pacific Islands)
+
+You can add several of these collections, however there are a few designations that have different meanings in different regions, like "IST".  The `common` namespace includes almost everything except those ambiguous designations, and the `nato` collection.
+You can also add custom designations if you like, but you'll have to specify the UTC offset (in seconds) manually.
+
+When parsing, make sure you use `.from_string_tzdb()` instead of `.from_string()` so that the parser can find your designations.
+
+
+### `Year`
+A non-exhaustive enum for representing a year number in a type-safe way.  The underlying integer value directly corresponds to years in the AD era.
+
+`Year.Info` is a struct with mostly the same capabilities as `Year`, except that the starting date and leap year status is precomputed and stored as fields.  This can be useful for performance optimization if these would otherwise end up being recomputed multiple times.
+
+`Year.Dominical_Letter` is used internally for ISO Week Date computations, but is exposed publicly in case it's useful for [other purposes](https://en.wikipedia.org/wiki/Dominical_letter).
+
+#### Construction
+```zig
+const y: i32 = 1970;
+const year: Year = .from_number(y);
+```
+
+#### Convenience Decls
+```zig
+var y: Year = .epoch; // 2000
+y = .unix_epoch; // 1970
+y = .ntp_epoch; // 1900
+y = .ntfs_epoch; // 1601
+y = .min; // -5877610 -- lowest value where `.starting_date()` and `.ending_date()` are both valid
+y = .max; // 5881609 -- highest year where .starting_date() and .ending_date() are both valid
+```
+
+#### Parsing
+```zig
+var year: Year = undefined;
+year = .from_string("1968", .{});
+year = .from_string("68", .{ .allow_two_digit_year = true }); // 1968
+year = .from_string("49", .{ .allow_two_digit_year = true }); // 2049
+year = .from_string("168 AD", .{}); // 168
+year = .from_string("1 BC", .{}); // 0
+year = .from_string("10000 BC", .{}); // -9999
+```
+
+#### Decomposition/Conversion
+```zig
+const year: Year = .epoch;
+
+const y_i32: i32 = year.as_number();
+const y_u32: u32 = year.as_unsigned();
+const leap: bool = year.is_leap();
+const yi: Year.Info = year.info();
+const dc: Year.Dominical_Letter = year.dominical_letter();
+const starting_date: Date = year.starting_date();
+const ending_date: Date = year.ending_date();
+
+const m: Month = .january;
+const d: Day = .@"10";
+const date: Date = year.date(m, d);
+const di: Date.Info = year.date_info(m, d);
+consy ymd: Date.YMD = year.ymd(m, d);
+```
+
+#### Comparison
+```zig
+const y1: Year = .epoch;
+const y2: Year = .from_number(2001);
+std.debug.assert(y1.is_before(y2));
+std.debug.assert(!y1.is_before(y1));
+std.debug.assert(y2.is_after(y1));
+std.debug.assert(!y2.is_after(y2));
+```
+
+#### Modification
+```zig
+var y: Year = .epoch;
+
+const years: i32 = 12;
+y = y.plus(years);
+
+y = y.next();
+y = y.prev();
+```
+
+### `Month`
+An enum representing each of the months in the gregorian calendar.  Underlying integer values correspond to the traditional 1-based counting where January is 1 and December is 12.
+
+#### Construction
+```zig
+const month: Month = .january;
+```
+```zig
+const m: i32 = 12;
+const month: Month = .from_number(m);
+```
+```zig
+const y: Year = .epoch;
+const od: Ordinal_Day = .from_number(60);
+const month: Month = .from_yod(y, od);
+```
+```zig
+const yi: Year.Info = .from_number(2020);
+const od: Ordinal_Day = .from_number(60);
+const month: Month = .from_yiod(yi, od);
+```
+```zig
+const od: Ordinal_Day = .from_number(60);
+const is_leap_year = true;
+const month: Month = .from_od(od, is_leap_year);
+```
+
+#### Parsing
+```zig
+var month: Month = undefined;
+month = .from_string("January", .{});
+month = .from_string("Jan", .{});
+month = .from_string("1", .{});
+```
+
+#### Decomposition/Conversion
+```zig
+const month: Month = .march;
+
+const m_i32: i32 = month.as_number();
+const m_u32: u32 = month.as_unsigned();
+const name: []const u8 = month.name();
+const short: []const u8 = month.short_name();
+
+const y: Year = .epoch;
+const yi: Year.Info = year.info();
+var days: u16 = month.days(y);
+days = month.days_from_yi(yi);
+days = month.days_assume_non_leap_year();
+days = month.days_assume_leap_year();
+var od: Ordinal_Day = month.starting_ordinal_day(y);
+od = month.starting_ordinal_day_assume_non_leap_year();
+od = month.starting_ordinal_day_assume_leap_year();
+const starting_date: Date = month.starting_date(y);
+```
+
+#### Comparison
+```zig
+const m1: Month = .january;
+const m2: Month = .february;
+std.debug.assert(m1.is_before(m2));
+std.debug.assert(!m1.is_before(m1));
+std.debug.assert(m2.is_after(m1));
+std.debug.assert(!m2.is_after(m2));
+```
+
+#### Modification
+```zig
+var m: Month = .june;
+
+const months: i32 = 3;
+m = m.plus(months);
+
+m = m.next();
+m = m.prev();
+```
+
+### `Day` of month
+A non-exhaustive enum representing a day-of-the-month.  Underlying integer values correspond to the traditional 1-based counting where each month starts with day 1 and ends with day 28-31.
+
+#### Construction
+```zig
+const d: Day = .first;
+```
+```zig
+const d: i32 = 11;
+const day: Day = .from_number(d);
+```
+```zig
+const y: Year = .epoch;
+const od: Ordinal_Day = .from_number(60);
+const day: Day = .from_yod(y, od);
+```
+```zig
+const yi: Year.Info = .from_number(2020);
+const od: Ordinal_Day = .from_number(60);
+const day: Day = .from_yiod(yi, od);
+```
+```zig
+const od: Ordinal_Day = .from_number(60);
+const is_leap_year = true;
+const day: Day = .from_od(od, is_leap_year);
+```
+
+#### Convenience Decls
+```zig
+var d: Day = .@"1";
+d = .@"2";
+d = .@"3";
+d = .@"4";
+d = .@"5";
+//...
+d = .@"28";
+d = .@"29";
+d = .@"30";
+d = .@"31";
+```
+
+#### Decomposition/Conversion
+```zig
+const day: Day = .@"15";
+
+const d_i32: i32 = day.as_number();
+const d_u32: u32 = day.as_unsigned();
+
+const date: Date = .epoch;
+var new_date: Date = day.on_or_after(date);
+new_date = day.on_or_before(date);
+
+const ymd: Date.YMD = .from_numbers(1234, 11, 1);
+new_date = day.on_or_after_ymd(ymd);
+new_date = day.on_or_before_ymd(ymd);
+```
+
+#### Comparison
+```zig
+const d1: Day = .first;
+const d2: Day = .@"2";
+std.debug.assert(d1.is_before(d2));
+std.debug.assert(!d1.is_before(d1));
+std.debug.assert(d2.is_after(d1));
+std.debug.assert(!d2.is_after(d2));
+```
+
+#### Modification
+```zig
+var d: Day = .first;
+
+const days: i32 = 3;
+d = d.plus(days);
+
+d = d.next();
+d = d.prev();
+```
+
+### `Week_Day`
+An enum representing each of the days of the week.
+
+#### Construction
+```zig
+const wd: Week_Day = .sunday;
+```
+```zig
+const num: i32 = 7;
+const wd: Week_Day = .from_number(num); // sunday = 1, saturday = 7
+const wd: Week_Day = .from_iso(num); // monday = 1, sunday = 7
+```
+
+#### Parsing
+```zig
+var wd: Week_Day = undefined;
+wd = .from_string("Tuesday", .{});
+wd = .from_string("Tue", .{});
+wd = .from_string("Tu", .{});
+wd = .from_string("3", .{});
+```
+
+#### Decomposition/Conversion
+```zig
+const wd: Week_Day = .march;
+
+const wd_i32: i32 = wd.as_number();
+const wd_u32: u32 = wd.as_unsigned();
+const iso: u3 = wd.as_iso();
+const name: []const u8 = wd.name();
+const short: []const u8 = wd.short_name();
+
+const date: Date = .epoch;
+var new_date: Date = wd.on_or_after(date);
+new_date = wd.on_or_before(date);
+```
+
+#### Comparison
+```zig
+const wd1: Week_Day = .thursday;
+const wd2: Week_Day = .friday;
+std.debug.assert(wd1.is_before(wd2));
+std.debug.assert(!wd1.is_before(wd1));
+std.debug.assert(wd2.is_after(wd1));
+std.debug.assert(!wd2.is_after(wd2));
+```
+
+#### Modification
+```zig
+var wd: Week_Day = .monday;
+
+const days: i32 = 3;
+wd = wd.plus(days);
+
+wd = wd.next();
+wd = wd.prev();
+```
+
+### `Ordinal_Day` of year
+A non-exhaustive enum corresponding to the day-of-the-year.  When combined with a year, it forms what is sometimes [colloquially called a "Julian date"](https://en.wikipedia.org/wiki/Ordinal_date#Nomenclature).
+
+#### Construction
+```zig
+const od: Ordinal_Day = .first;
+```
+```zig
+const d: i32 = 11;
+const od: Ordinal_Day = .from_number(d);
+```
+```zig
+const ymd: Date.YMD = .from_date(.epoch);
+const od: Ordinal_Day = .from_ymd(ymd);
+```
+```zig
+const yi: Year.Info = .from_number(2020);
+const m: Month = .february;
+const d: Day = .@"5";
+const od: Ordinal_Day = .from_yimd(yi, m, d);
+```
+```zig
+const m: Month = .february;
+const d: Day = .@"5";
+const od: Ordinal_Day = .from_md_assume_non_leap_year(m, d);
+```
+
+#### Convenience Decls
+```zig
+var od: Ordinal_Day = .first;   // 1
+od = .leap_day;                 // 60
+od = .last_no_leap;             // 365
+od = .last_leap;                // 366
+```
+
+#### Decomposition/Conversion
+```zig
+const od: Ordinal_Day = .@"15";
+
+const od_i32: i32 = od.as_number();
+const od_u32: u32 = od.as_unsigned();
+const ow: Ordinal_Week = od.ordinal_week();
+
+const y: Year = .epoch;
+var date: Date = od.date_from_year(y);
+
+const yi: Year.Info = .from_number(1999);
+date = od.date_from_yi(yi);
+```
+
+#### Comparison
+```zig
+const od1: Ordinal_Day = .first;
+const od2: Ordinal_Day = .@"2";
+std.debug.assert(od1.is_before(od2));
+std.debug.assert(!od1.is_before(od1));
+std.debug.assert(od2.is_after(od1));
+std.debug.assert(!od2.is_after(od2));
+```
+
+#### Modification
+```zig
+var od: Ordinal_Day = .first;
+
+const days: i32 = 3;
+od = od.plus(days);
+
+od = od.next();
+od = od.prev();
+```
+
+### `Ordinal_Week` of year
+This non-exhaustive enum corresponds to the number of full or partial weeks that have passed since the start of the calendar year.  Note that this is _not_ the same as the [ISO week number](https://en.wikipedia.org/wiki/ISO_week_date) and it is not necessarily aligned with the Sunday-Saturday or Monday-Sunday calendar weeks; rather the 1st through 7th of January is always in ordinal week 1, the 8th through 14th is always ordinal week 2, etc.
+
+#### Construction
+```zig
+const ow: Ordinal_Week = .first;
+```
+```zig
+const w: i32 = 11;
+const ow: Ordinal_Week = .from_number(w);
+```
+```zig
+const od: Ordinal_Day = .first;
+const ow: Ordinal_Week = .from_od(od);
+```
+
+#### Decomposition/Conversion
+```zig
+const ow: Ordinal_Week = .first;
+
+const w_i32: i32 = ow.as_number();
+const w_u32: u32 = ow.as_unsigned();
+const od: Ordinal_Day = ow.starting_day();
+```
+
+#### Comparison
+```zig
+const ow1: Ordinal_Week = .from_number(3);
+const ow2: Ordinal_Week = .from_number(4);
+std.debug.assert(ow1.is_before(ow2));
+std.debug.assert(!ow1.is_before(ow1));
+std.debug.assert(ow2.is_after(ow1));
+std.debug.assert(!ow2.is_after(ow2));
+```
+
+#### Modification
+```zig
+var ow: Ordinal_Week = .first;
+
+const weeks: i32 = 3;
+ow = ow.plus(weeks);
+
+ow = ow.next();
+ow = ow.prev();
+```
+
+### `ISO_Week`
+A non-exhaustive enum which corresponds to the [ISO week number](https://en.wikipedia.org/wiki/ISO_week_date)
+
+#### Construction
+```zig
+const iw: ISO_Week = .first;
+```
+```zig
+const w: i32 = 11;
+const iw: ISO_Week = .from_number(w);
+```
+```zig
+const y: Year = .epoch;
+const iw: ISO_Week = .last(y); // the last valid ISO week in a particular year; either the 52nd 53rd week
+```
+```zig
+const dc: Year.Dominical_Letter = .a;
+const iw: ISO_Week = .last_from_dc(dc);
+```
+
+#### Decomposition/Conversion
+```zig
+const iw: ISO_Week = .first;
+
+const w_i32: i32 = iw.as_number();
+const w_u32: u32 = iw.as_unsigned();
+```
+
+#### Comparison
+```zig
+const iw1: ISO_Week = .from_number(3);
+const iw2: ISO_Week = .from_number(4);
+std.debug.assert(iw1.is_before(iw2));
+std.debug.assert(!iw1.is_before(iw1));
+std.debug.assert(iw2.is_after(iw1));
+std.debug.assert(!iw2.is_after(iw2));
+```
+
+#### Modification
+```zig
+var iw: ISO_Week = .first;
+
+const weeks: i32 = 3;
+iw = iw.plus(weeks);
+
+iw = iw.next();
+iw = iw.prev();
+```
+
+### `ISO_Week_Date`
+A decomposed date (like Date.YMD) that uses the ISO year, week number, and day-of-week instead of year, month, and day-of-month.  Note that while the years in this struct use the same `Year` type as normal calendar dates, the ISO year
+begins on the monday of W01 and ends on the sunday of W52 or W53, so the corresponding calendar year may be different at the beginning/end of year.
+
+#### Construction
+```zig
+const date: Date = .epoch;
+const iwd: ISO_Week_Date = .from_date(date);
+```
+```zig
+const yi: Year.Info = .from_number(2005);
+const od: Ordinal_Day = .first;
+const wd: Week_Day = .saturday; // note this is assumed to be the correct day-of-week for the given year/OD
+const iwd: ISO_Week_Date = .from_yiodwd(yi, od, wd);
+```
+
+#### Decomposition/Conversion
+```zig
+const iwd: ISO_Week_Date = .from_date(date);
+
+const y: Year = iwd.year;
+const iw: ISO_Week = iwd.week;
+const wd: Week_Day = iwd.day;
+const date: Date = iwd.date();
+```
+
+#### Comparison
+```zig
+const iwd1: ISO_Week_Date = .from_date(.epoch);
+const iwd2: ISO_Week_Date = .from_date(.next(.epoch));
+
+std.debug.assert(iwd1.is_before(iwd2));
+std.debug.assert(!iwd1.is_before(iwd1));
+std.debug.assert(iwd2.is_after(iwd1));
+std.debug.assert(!iwd2.is_after(iwd2));
+```
+
+#### Modification
+```zig
+var iwd: ISO_Week_Date = .from_date(.epoch);
+
+const days: i32 = 3;
+iwd = iwd.plus_days(days);
+
+iwd = iwd.next();
+iwd = iwd.prev();
+```
+
+#### Formatting
+```zig
+const iwd: ISO_Week_Date = .from_date(.from_year(2005));
+
+writer.print("{f}", .{ iwd.fmt(ISO_Week_Date.iso8601_week_date) }); // 2004-W53-6
+writer.print("{f}", .{ iwd.fmt(ISO_Week_Date.iso8601_week) });      // 2004-W53
+writer.print("{f}", .{ iwd.fmt(ISO_Week_Date.datecode) });          // 0453
+```
+
+#### Parsing
+```zig
+var iwd: ISO_Week_Date = undefined;
+
+iwd = try .from_string(ISO_Week_Date.iso8601_week_date, "2004-W53-6");
+iwd = try .from_string(ISO_Week_Date.iso8601_week, "2000-W01");
+iwd = try .from_string(ISO_Week_Date.datecode, "2511");
+```
+
+## The `dump` tool
+A small demo/tool is provided that prints out the current time in one or more timezones and the last/next time a DST change will happen for that zone:
+```
+$ zig build dump -- America/Chicago Africa/Maputo
+Current Time: 2026-06-02 21:03:49 CDT  offset=-18000s  dst=dst  source=posix_tz
+    DST began: 2026-03-08 03:00:00 CDT
+    DST ends:  2026-11-01 01:00:00 CST
+Current Time: 2026-06-02 28:03:49 CAT  offset=7200s  dst=std  source=posix_tz
+    This timezone has permanent standard time
+    The current time rules for this zone began on 1908-12-31 23:49:42 CAT
+```
+You can pass the `--debug` command line option to additionally print out all the internal timezone data in a format similar to TZif, but human-readable.
+
+By default, `dump` will only use it's internal IANA timezone database, but if you use the `--system` command line option it will instead look for a system-provided timezone.
+
+## Comparison with other Zig date/time libraries
+
+|                                 | tempora                                                     | [Zeit](https://github.com/rockorager/zeit)                     | [zdt](https://codeberg.org/FObersteiner/zdt)                                  | [zig-datetime](https://github.com/frmdstryr/zig-datetime) |
+| ------------------------------- | ----------------------------------------------------------- | -------------------------------------------------------------- | ----------------------------------------------------------------------------- | --------------------------------------------------------- |
+| Supported zig versions          | 0.15.1 - 0.17.0-dev                                         | 0.13.0 - 0.17.0-dev                                            | 0.15.1 - 0.17.0-dev                                                           | 0.14.0 - 0.15.2                                           |
+| Time Resolution                 | 1 millisecond                                               | 1 nanosecond                                                   | 1 nanosecond                                                                  | 1 nanosecond                                              |
+| Minimum representable date      | 22 June 5,877,612 BC                                        | 1 January 2,147,483,649 BC                                     | 1 January 1 BC                                                                | 1 January 0001                                            |
+| Maximum representable date      | 11 July 5,881,610                                           | 31 December 2,147,483,647                                      | 31 December 9999                                                              | 31 December 9999                                          |
+| Gregorian Calendar algorithm    | Joffe                                                       | Joffe                                                          | Hinnant/Neri-Schneider                                                        | unknown                                                   |
+| Packed date/time epoch          | 1 January 2000                                              | 1 January 1970                                                 | 1 January 1970                                                                | 1 January 0001                                            |
+| Packed date                     | `Date`                                                      | -                                                              | -                                                                             | `u32` (`Date.fromOrdinal()`, `Date.toOrdinal()`)          |
+| Decomposed date                 | `Date.YMD`, `Date.Info`                                     | `Date`                                                         | -                                                                             | `datetime.Date`                                           |
+| Packed datetime                 | `Date_Time`                                                 | `Nanoseconds` (`i128`)                                         | `i128`                                                                        | `i128`                                                    |
+| Decomposed datetime             | -                                                           | -                                                              | -                                                                             | -                                                         |
+| Packed datetime (localized)     | `Date_Time.With_Offset`                                     | `Instant`                                                      | -                                                                             | -                                                         |
+| Decomposed datetime (localized) | -                                                           | `Time`                                                         | `Datetime`                                                                    | `datetime.Datetime`                                       |
+| Packed time                     | `Time`                                                      | -                                                              | -                                                                             | -                                                         |
+| Decomposed time                 | -                                                           | -                                                              | -                                                                             | `datetime.Time`                                           |
+| Packed time (localized)         | `Time.With_Offset`                                          | -                                                              | -                                                                             | -                                                         |
+| Decomposed time (localized)     | -                                                           | -                                                              | -                                                                             | -                                                         |
+| Packed duration                 | `std.Io.Duration`                                           | -                                                              | `Duration`                                                                    | -                                                         |
+| Decomposed duration             | -                                                           | `Duration`                                                     | `RelativeDelta`                                                               | `datetime.Datetime.Delta`                                 |
+| Year                            | `Year`, `Year.Info`                                         | `i32`                                                          | `i16`                                                                         | `u16`                                                     |
+| Month                           | `Month`                                                     | `Month`                                                        | `Datetime.Month`                                                              | `datetime.Month`                                          |
+| Day of month                    | `Day`                                                       | `u5`                                                           | `u8`                                                                          | `u8`                                                      |
+| Day of week                     | `Week_Day`                                                  | `Weekday`                                                      | `Datetime.Weekday`                                                            | `datetime.Weekday`                                        |
+| Day of year                     | `Ordinal_Day`                                               | -                                                              | `u16` (`Datetime.dayOfYear()`)                                                | `u8`                                                      |
+| Week of year                    | `Ordinal_Week`                                              | -                                                              | -                                                                             | -                                                         |
+| ISO week date                   | `ISO_Week`, `ISO_Week_Date`                                 | -                                                              | `Datetime.ISOCalendar`                                                        | `datetime.ISOCalendar`                                    |
+| Month/Week name localization    | English only                                                | English only                                                   | English or current locale (Linux, MacOS, Windows)                             | English only                                              |
+| Parsed input formats            | moment.js/`SimpleDateFormat` style                          | ISO8601, RFC3339, RFC5322, RFC2822, RFC1123                    | `strptime` style                                                              | ISO8601, RFC1123                                          |
+| Formatted output formats        | moment.js/`SimpleDateFormat` style                          | `strftime` style, `gofmt` style                                | `strftime` style                                                              | ISO8601, RFC1123                                          |
+| Current date/time               | `now_utc(io)`, `now_local(io, tzdb)`, `now(io, tz)`         | `instant(io, .{...})`                                          | `Datetime.nowUTC(io)`, `Datetime.nowTAI(io)`, `Datetime.now(io, .{...})`      | `datetime.Datetime.now()`                                 |
+| Timezone                        | `Timezone`                                                  | `TimeZone`                                                     | `Timezone`                                                                    | `datetime.Timezone`                                       |
+| Timezone Database               | `TZDB`                                                      | -                                                              | internal                                                                      | `timezones`                                               |
+| Current timezone                | `TZDB.local` (Posix via fs, Windows via registry/ntdll.dll) | `local(alloc, io, env)` (Posix via fs, Windows via advapi.dll) | `Timezone.tzLocal(io, alloc)` (Posix via fs, Windows via registry/advapi.dll) | -                                                         |
+| Embedded IANA tzdb?             | yes (configurable)                                          | no                                                             | yes                                                                           | partial (no TZif support)                                 |
+| Filesystem tzdb?                | yes                                                         | yes                                                            | yes                                                                           | no                                                        |
+| Windows tzdb?                   | yes (via registry/ntdll.dll)                                | yes (via advapi.dll)                                           | no                                                                            | no                                                        |
+| Leap second database?           | `Timezone.data.leap_seconds`                                | no                                                             | internal                                                                      | no                                                        |
+
+Other zig date/time libraries include:
+* [zig-time](https://github.com/nektro/zig-time) - requires `zigmod`
+* [datetime](https://github.com/clickingbuttons/datetime)
+* [tempus](https://github.com/jnordwick/tempus)
+* [chrono-zig](https://codeberg.org/geemili/chrono-zig)
+
+None of these other libraries support zig 0.15.x or newer, so they are excluded from the above comparison.

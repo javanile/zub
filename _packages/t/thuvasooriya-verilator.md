@@ -14,9 +14,9 @@ keywords:
   - verilator
   - verilog
   - verilog-simulator
-date: 2026-04-07
-updated_at: 2026-04-07T05:08:36+00:00
-last_sync: 2026-04-07T05:08:36Z
+date: 2026-06-06
+updated_at: 2026-06-06T09:53:44+00:00
+last_sync: 2026-06-06T09:53:44Z
 package_kind: binary
 has_library: false
 has_binary: true
@@ -53,7 +53,7 @@ zig build -Doptimize=ReleaseFast
 
 | dependency  | notes                         |
 | ----------- | ----------------------------- |
-| zig 0.15.2+ | build system and c++ compiler |
+| zig 0.16.0+ | build system and c++ compiler |
 | python 3    | wrapper scripts               |
 | bison 2.3+  | parser generator              |
 
