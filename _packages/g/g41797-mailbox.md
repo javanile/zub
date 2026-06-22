@@ -13,9 +13,9 @@ keywords:
   - inter-thread-communication
   - mailbox
   - thread-safe
-date: 2026-05-27
-updated_at: 2026-05-27T22:24:25+00:00
-last_sync: 2026-05-27T22:24:25Z
+date: 2026-06-10
+updated_at: 2026-06-10T03:30:34+00:00
+last_sync: 2026-06-10T03:30:34Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -193,6 +193,7 @@ In fact Mailbox is a queue(FIFO) of Envelope(s).
 ## APIs
 
 MailBox supports following operations:
+- **init** - store Io required for internal synchronization primitives, may be _null_
 - **send** *Envelope* to MailBox (*enqueue*) and wakeup waiting receiver(s)
 - **receive** *Envelope* from Mailbox (*dequeue*) with time-out
 - **interrupt** - wake-up receiver thread
@@ -251,7 +252,7 @@ Example:
         node: Node = .{},
     };
 
-    var mbox: Mbx = .init(io);
+    var mbox: Mbx = .init(null); // used std.Io.Threaded.global_single_threaded.*.io()
 
     var msg: Msg = .{
         .value = 1,

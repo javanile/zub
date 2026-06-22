@@ -11,10 +11,10 @@ keywords:
   - parser-combinators
   - parser-library
   - parsers
-date: 2026-04-29
+date: 2026-06-22
 category: data-formats
-updated_at: 2026-04-29T08:15:23+00:00
-last_sync: 2026-04-29T08:15:23Z
+updated_at: 2026-06-22T13:51:09+00:00
+last_sync: 2026-06-22T13:51:09Z
 package_kind: library
 has_library: true
 has_binary: false

@@ -6,9 +6,9 @@ author: tiawl
 author_github: tiawl
 repository: https://github.com/tiawl/toolbox
 keywords:
-date: 2026-06-04
-updated_at: 2026-06-04T08:25:59+00:00
-last_sync: 2026-06-04T08:25:59Z
+date: 2026-06-22
+updated_at: 2026-06-22T14:06:32+00:00
+last_sync: 2026-06-22T14:06:32Z
 package_kind: hybrid
 has_library: true
 has_binary: true
