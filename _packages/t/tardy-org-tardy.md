@@ -14,10 +14,10 @@ keywords:
   - net
   - runtime
   - tardy
-date: 2026-05-28
+date: 2026-06-22
 category: networking
-updated_at: 2026-05-28T20:04:10+00:00
-last_sync: 2026-05-28T20:04:10Z
+updated_at: 2026-06-22T07:44:51+00:00
+last_sync: 2026-06-22T07:44:51Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -40,7 +40,7 @@ Most of the code for this project originated in [zzz](https://github.com/tardy-o
 - tardy natively supports Linux, Mac, BSD, and Windows.
 - tardy is configurable, allowing you to optimize the runtime for your specific use-case.
 
-[![Discord](https://img.shields.io/discord/1294761432922980392?logo=discord)](https://discord.gg/FP9Xb7WGPK)
+[![Discord](https://img.shields.io/discord/1294761432922980392?logo=discord)](https://discord.gg/HNEszT7qSR)
 
 ## Summary
 tardy is a thread-local, I/O driven runtime for Zig, providing the core implementation for asynchronous libraries and services.
@@ -50,11 +50,11 @@ tardy is a thread-local, I/O driven runtime for Zig, providing the core implemen
 - Coroutines (internally called Frames).
 
 ## Installing
-Compatible Zig Version: `0.15.2`
+Compatible Zig Version: `0.16.0`
 
-Latest Release: `0.3.1`
+Latest Release: `0.3.2`
 ```
-zig fetch --save git+https://github.com/tardy-org/tardy#v0.3.1
+zig fetch --save git+https://github.com/tardy-org/tardy#v0.3.2
 ```
 
 You can then add the dependency in your `build.zig` file:
@@ -94,17 +94,18 @@ A basic multi-threaded TCP echo server.
 ```zig
 const std = @import("std");
 
-const AcceptResult = @import("tardy").AcceptResult;
-const Cross = @import("tardy").Cross;
-const Pool = @import("tardy").Pool;
-const RecvResult = @import("tardy").RecvResult;
-const Runtime = @import("tardy").Runtime;
-const SendResult = @import("tardy").SendResult;
-const Socket = @import("tardy").Socket;
-const Task = @import("tardy").Task;
-const Timer = @import("tardy").Timer;
+const tardy = @import("tardy");
+const AcceptResult = tardy.AcceptResult;
+const Cross = tardy.Cross;
+const Pool = tardy.Pool;
+const RecvResult = tardy.RecvResult;
+const Runtime = tardy.Runtime;
+const SendResult = tardy.SendResult;
+const Socket = tardy.Socket;
+const Task = tardy.Task;
+const Timer = tardy.Timer;
 
-const Tardy = @import("tardy").Tardy(.auto);
+const Tardy = tardy.Tardy(.auto);
 const log = std.log.scoped(.@"tardy/example/echo");
 
 fn echo_frame(rt: *Runtime, server: *const Socket) !void {
@@ -118,9 +119,10 @@ fn echo_frame(rt: *Runtime, server: *const Socket) !void {
     const sock_w = &sock_writer.interface;
     defer sock_w.flush() catch unreachable;
 
-    log.debug(
-        "{d} - accepted socket [{f}]",
-        .{ std.time.milliTimestamp(), socket.addr },
+    const time: std.Io.Timestamp = .now(rt.io, .awake);
+    log.info(
+        "{f} - accepted socket [{f}]",
+        .{ time.untilNow(rt.io, .awake), socket.addr },
     );
 
     // spawn off a new frame.
@@ -140,31 +142,29 @@ fn echo_frame(rt: *Runtime, server: *const Socket) !void {
             break;
         };
 
-        log.debug("Echoed: {s}", .{buffer[0..recv_length]});
+        log.info("Echoed: {s}", .{buffer[0..recv_length]});
     }
 }
 
-pub fn main() !void {
-    var gpa: std.heap.DebugAllocator(.{}) = .init;
-    const allocator = gpa.allocator();
-    defer _ = gpa.deinit();
+pub fn main(init: std.process.Init) !void {
+    const host = "0.0.0.0";
+    const port = 9862;
 
-    var tardy: Tardy = try .init(allocator, .{
-        .threading = .single,
+    const server: Socket = try .init(init.io, .{ .tcp = .{ .host = host, .port = port } });
+    try server.bind();
+    try server.listen(501);
+
+    // tardy by default is
+    // - multithreaded
+    // - unbounded in terms of spawnable tasks
+    var td: Tardy = try .init(init.gpa, init.io, .{
         .pooling = .static,
         .size_tasks_initial = 256,
         .size_aio_reap_max = 256,
     });
-    defer tardy.deinit();
+    defer td.deinit();
 
-    const host = "0.0.0.0";
-    const port = 9862;
-
-    const server: Socket = try .init(.{ .tcp = .{ .host = host, .port = port } });
-    try server.bind();
-    try server.listen(1024);
-
-    try tardy.entry(
+    try td.entry(
         &server,
         struct {
             fn start(rt: *Runtime, tcp_server: *const Socket) !void {

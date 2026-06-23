@@ -13,10 +13,10 @@ keywords:
   - websocket
   - websocket-client
   - websocket-server
-date: 2026-05-26
+date: 2026-06-13
 category: networking
-updated_at: 2026-05-26T04:14:18+00:00
-last_sync: 2026-05-26T04:14:18Z
+updated_at: 2026-06-13T15:32:21+00:00
+last_sync: 2026-06-13T15:32:21Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -46,6 +46,7 @@ The server API is inspired by Karl Seguin's [http.zig](https://github.com/karlse
 - WebSocket support (RFC 6455)
 - HTTP/HTTPS client with connection pooling
 - Unix domain socket support for client connections
+- Optional TLS support in both client and server (via [tls.zig](https://github.com/ianic/tls.zig))
 
 ## Installation
 

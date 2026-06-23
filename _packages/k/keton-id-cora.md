@@ -6,9 +6,9 @@ author: keton-id
 author_github: keton-id
 repository: https://github.com/keton-id/cora
 keywords:
-date: 2026-06-07
-updated_at: 2026-06-07T11:02:20+00:00
-last_sync: 2026-06-07T11:02:20Z
+date: 2026-06-22
+updated_at: 2026-06-22T12:27:52+00:00
+last_sync: 2026-06-22T12:27:52Z
 package_kind: hybrid
 has_library: true
 has_binary: true

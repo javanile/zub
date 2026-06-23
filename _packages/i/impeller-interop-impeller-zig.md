@@ -8,10 +8,10 @@ repository: https://github.com/impeller-interop/impeller-zig
 keywords:
   - bindings
   - graphics
-date: 2026-05-21
+date: 2026-06-23
 category: systems
-updated_at: 2026-05-21T14:30:02+00:00
-last_sync: 2026-05-21T14:30:02Z
+updated_at: 2026-06-23T05:18:11+00:00
+last_sync: 2026-06-23T05:18:11Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -55,7 +55,7 @@ Add the dependency in `build.zig`:
 
 ```zig
 // ...
-const impeller_dep = b.dependency("zig_impeller", .{
+const impeller_dep = b.dependency("impeller_zig", .{
     .target = target,
     .optimize = optimize,
 });
@@ -110,11 +110,9 @@ try surface.present();
 
 Runnable examples now live in the separate `impeller-zig-examples` repository so this package stays a pure library dependency with no windowing requirement.
 
-## Status
+## API notes
 
-- All of `impeller.h` is wrapped
-- `zig build test` runs unit tests
-- `FragmentProgram` is wrapped, but shader packaging is not documented here yet
+See [API.md](docs/API.md) for the API guide.
 
 ## Developer Tools
 

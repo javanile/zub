@@ -9,10 +9,10 @@ keywords:
   - tui
   - zig-build
   - zig-language
-date: 2026-06-21
+date: 2026-06-23
 category: tooling
-updated_at: 2026-06-21T12:18:16+00:00
-last_sync: 2026-06-21T12:18:16Z
+updated_at: 2026-06-23T07:21:45+00:00
+last_sync: 2026-06-23T07:21:45Z
 package_kind: hybrid
 has_library: true
 has_binary: true
