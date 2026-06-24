@@ -12,10 +12,10 @@ keywords:
   - performance
   - stdout
   - testing
-date: 2026-05-23
+date: 2026-06-24
 category: tooling
-updated_at: 2026-05-23T04:36:39+00:00
-last_sync: 2026-05-23T04:36:39Z
+updated_at: 2026-06-24T11:30:14+00:00
+last_sync: 2026-06-24T11:30:14Z
 package_kind: hybrid
 has_library: true
 has_binary: true

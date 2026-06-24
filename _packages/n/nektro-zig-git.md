@@ -6,9 +6,9 @@ author: nektro
 author_github: nektro
 repository: https://github.com/nektro/zig-git
 keywords:
-date: 2026-06-19
-updated_at: 2026-06-19T01:09:05+00:00
-last_sync: 2026-06-19T01:09:05Z
+date: 2026-06-24
+updated_at: 2026-06-24T10:57:10+00:00
+last_sync: 2026-06-24T10:57:10Z
 package_kind: library
 has_library: true
 has_binary: false

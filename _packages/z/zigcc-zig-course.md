@@ -8,9 +8,9 @@ repository: https://github.com/zigcc/zig-course
 keywords:
   - tutorial
   - tutorials
-date: 2026-06-23
-updated_at: 2026-06-23T02:33:11+00:00
-last_sync: 2026-06-23T02:33:11Z
+date: 2026-06-24
+updated_at: 2026-06-24T08:30:29+00:00
+last_sync: 2026-06-24T08:30:29Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -36,9 +36,11 @@ permalink: /packages/zigcc/zig-course/
 >
 > Zig 是一种通用的编程语言和工具链，用于维护健壮、最优和可重用的软件
 
-![Cover Image](./course/public/cover_image.png "Cover Image")
+<p align="center">
+  <img src="./course/.vitepress/epub/cover.png" alt="Zig 语言圣经" width="320" />
+</p>
 
-**Zig 语言圣经** 是一份开源的 Zig 语言综合教程，旨在为中文 Zig 爱好者提供一份高质量的学习资源，内容涵盖从基础语法到高级特性的方方面面。
+**Zig 语言圣经**（The Zig Programming Bible）是一份开源的 Zig 语言综合中文教程，内容涵盖从基础语法到 `comptime`、异步、内存管理等高级特性，旨在为中文 Zig 爱好者提供一份高质量、系统化的学习资源。除在线阅读外，还提供 PDF 与 EPUB 电子书，方便离线学习。
 
 ## 📖 在线阅读
 

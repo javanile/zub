@@ -7,9 +7,9 @@ author_github: ziglibs
 repository: https://github.com/ziglibs/lscolors
 keywords:
   - ls-colors
-date: 2026-04-10
-updated_at: 2026-04-10T14:52:37+00:00
-last_sync: 2026-04-10T14:52:37Z
+date: 2026-06-19
+updated_at: 2026-06-19T22:56:49+00:00
+last_sync: 2026-06-19T22:56:49Z
 package_kind: hybrid
 has_library: true
 has_binary: true

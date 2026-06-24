@@ -8,9 +8,9 @@ repository: https://github.com/hendriknielaender/ulid.zig
 keywords:
   - ulid
   - ulid-generator
-date: 2026-04-17
-updated_at: 2026-04-17T10:30:13+00:00
-last_sync: 2026-04-17T10:30:13Z
+date: 2026-06-24
+updated_at: 2026-06-24T11:32:22+00:00
+last_sync: 2026-06-24T11:32:22Z
 package_kind: hybrid
 has_library: true
 has_binary: true
