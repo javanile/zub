@@ -24,10 +24,10 @@ keywords:
   - secp256k1
   - web3
   - zig-ethereum
-date: 2026-06-11
+date: 2026-06-23
 category: systems
-updated_at: 2026-06-11T14:08:40+00:00
-last_sync: 2026-06-11T14:08:40Z
+updated_at: 2026-06-23T14:57:06+00:00
+last_sync: 2026-06-23T14:57:06Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -256,12 +256,15 @@ Built something with eth.zig? Open a PR to add it here.
 
 **One-liner:**
 
+<!-- x-release-please-start-version -->
 ```bash
 zig fetch --save git+https://github.com/StrobeLabs/eth.zig.git#v0.7.0
 ```
+<!-- x-release-please-end -->
 
 **Or add manually** to your `build.zig.zon`:
 
+<!-- x-release-please-start-version -->
 ```zig
 .dependencies = .{
     .eth = .{
@@ -270,6 +273,7 @@ zig fetch --save git+https://github.com/StrobeLabs/eth.zig.git#v0.7.0
     },
 },
 ```
+<!-- x-release-please-end -->
 
 Then import in your `build.zig`:
 
@@ -308,7 +312,7 @@ cd examples && zig build && ./zig-out/bin/01_derive_address
 |-------|---------|-------------|
 | **Primitives** | `primitives`, `uint256`, `hex` | Address, Hash, Bytes32, u256, hex encoding |
 | **Encoding** | `rlp`, `abi_encode`, `abi_decode`, `abi_types` | RLP and ABI encoding/decoding |
-| **Crypto** | `secp256k1`, `signer`, `signature`, `keccak`, `eip155` | ECDSA signing (RFC 6979), Keccak-256, EIP-155 |
+| **Crypto** | `secp256k1`, `signer`, `signature`, `keccak`, `eip155`, `kzg` | ECDSA signing (RFC 6979), Keccak-256, EIP-155, EIP-4844 KZG |
 | **Types** | `transaction`, `receipt`, `block`, `blob`, `access_list` | Legacy, EIP-2930, EIP-1559, EIP-4844 transactions |
 | **Accounts** | `mnemonic`, `hd_wallet` | BIP-32/39/44 HD wallets and mnemonic generation |
 | **Transport** | `http_transport`, `ws_transport`, `sse_transport`, `json_rpc`, `provider`, `subscription`, `ws_client` | HTTP, WebSocket, and SSE transports; resilient WS client with auto-reconnect |
@@ -327,6 +331,7 @@ cd examples && zig build && ./zig-out/bin/01_derive_address
 | Keccak-256 hashing | Complete |
 | secp256k1 ECDSA signing (RFC 6979, EIP-2 low-S) | Complete |
 | Transaction types (Legacy, EIP-2930, EIP-1559, EIP-4844) | Complete |
+| EIP-4844 KZG (blob commitments/proofs, vendored c-kzg-4844 + blst) | Complete |
 | EIP-155 replay protection | Complete |
 | EIP-191 personal message signing | Complete |
 | EIP-712 typed structured data signing | Complete |

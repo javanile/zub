@@ -12,10 +12,10 @@ keywords:
   - gui-library
   - qt
   - qt6
-date: 2026-06-03
+date: 2026-06-23
 category: systems
-updated_at: 2026-06-03T20:43:43+00:00
-last_sync: 2026-06-03T20:43:43Z
+updated_at: 2026-06-23T20:34:12+00:00
+last_sync: 2026-06-23T20:34:12Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -265,7 +265,7 @@ sudo dnf install sysroot-$(uname -m)-fc$(lsb_release -rs)-glibc gcc libstdc++-de
 #### Arch-based distributions
 
 ```bash
-sudo pacman -S gcc clang qt6-base qt6-charts qt6-connectivity qt6-location qt6-multimedia qt6-positioning qt6-scxml qt6-speech qt6-svg qt6-webchannel qt6-webengine qt6-websockets qt6-tools attica karchive kbookmarks kcodecs kcolorpicker kcolorscheme kcompletion kconfig kconfigwidgets kcoreaddons kcrash kfilemetadata kglobalaccel kguiaddons ki18n kiconthemes kidletime kimageannotator kio kitemmodels kitemviews kjobwidgets knewstuff knotifications kparts kplotting kservice kstatusnotifieritem ksvg ktextaddons ktexteditor ktextwidgets kunitconversion kwidgetsaddons kwindowsystem kxmlgui layer-shell-qt libaccounts-qt packagekit-qt6 poppler-qt6 qcustomplot-qt6 qscintilla-qt6 qtermwidget qtkeychain-qt6 signond solid sonnet syntax-highlighting
+sudo pacman -S gcc clang qt6-base qt6-charts qt6-connectivity qt6-location qt6-multimedia qt6-positioning qt6-scxml qt6-speech qt6-svg qt6-webchannel qt6-webengine qt6-websockets qt6-tools attica karchive kbookmarks kcodecs kcolorpicker kcolorscheme kcompletion kconfig kconfigwidgets kcoreaddons kcrash kfilemetadata kglobalaccel kguiaddons ki18n kiconthemes kidletime kimageannotator kio kitemmodels kitemviews kjobwidgets knewstuff knotifications kparts kplotting kservice kstatusnotifieritem ksvg ktextaddons ktexteditor ktextwidgets kunitconversion kwidgetsaddons kwindowsystem kxmlgui layer-shell-qt libaccounts-qt packagekit-qt6 poppler-qt6 qscintilla-qt6 qtermwidget qtkeychain-qt6 signond solid sonnet syntax-highlighting
 ```
 
 Users of Arch-based distributions need to __make sure that all packages are up-to-date__.
@@ -311,7 +311,7 @@ brew install qt6 karchive ki18n qscintilla2 qtkeychain
 >
 > This is currently not necessary for the additional third-party module frameworks.
 
-The official Qt installer is also supported but will require manually creating the symlinks as above and using the `extra-paths` option described below, using the root of the include directory as the path value.
+The official Qt installer is also supported but will require manually creating the symlinks as above and using the `extra-paths` option described above, using the root of the include directory as the path value.
 
 > [!NOTE]
 > The `zig` package will need to be downloaded and installed separately if the latest stable version is not available via Homebrew.
@@ -485,6 +485,10 @@ exe.root_module.addIncludePath(qt6c.path("include"));
 // qt_lib_name is the name of the target library without prefix and suffix,
 // e.g. qapplication, qwidget, etc.
 exe.root_module.linkLibrary(qt6c.artifact(qt_lib_name));
+
+// Use the library-provided convenience method to configure much of the exe
+const configureQtExeRootModule = @import("libqt6c").configureQtExeRootModule;
+try configureQtExeRootModule(b, exe, .{});
 ```
 
 - Use the library in your code:
@@ -494,7 +498,7 @@ exe.root_module.linkLibrary(qt6c.artifact(qt_lib_name));
 #include <libqt6c.h>
 ```
 
-Full examples of the build system and sample applications can be found in the [`libqt6c-examples`](https://github.com/rcalixte/libqt6c-examples) repository.
+Full examples of the build system and sample applications can be found in the [`libqt6c-examples`](https://github.com/rcalixte/libqt6c-examples) repository. For a simpler build system and a single demo application, visit the [`libqt6c-demo`](https://github.com/rcalixte/libqt6c-demo) repository.
 
 FAQ
 ---

@@ -9,9 +9,9 @@ keywords:
   - pebble
   - pebble-sdk
   - pebble-watch
-date: 2026-06-23
-updated_at: 2026-06-23T06:34:58+00:00
-last_sync: 2026-06-23T06:34:58Z
+date: 2026-06-24
+updated_at: 2026-06-24T23:40:43+00:00
+last_sync: 2026-06-24T23:40:43Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -220,7 +220,7 @@ The translated Pebble C API can be inspected in the Zig cache with: `less $(find
 The `.pebble` substructure in the options of
 `pebble_sdk.addPebbleApplication()` mirrors the JSON [Pebble App
 Metadata](https://developer.repebble.com/guides/tools-and-resources/app-metadata/).
-See its [definition](build.zig#L422-L441) for an exhaustive list of options.
+See its [definition](build.zig#L427-L446) for an exhaustive list of options.
 
 The `uuid` field should be unique for every application, and can be generated
 with the `uuidgen` command.
@@ -249,6 +249,10 @@ incorporate custom JavaScript build flows to produce these files.
 See the [Pebble App
 Configuration](https://developer.repebble.com/guides/user-interfaces/app-configuration-static/)
 page for basic instructions on how to build a configuration page.
+
+See the [Heartburn
+Watchface](https://github.com/vsergeev/pebble-watchface-heartburn) for an
+example of a TypeScript + esbuild build flow.
 
 ## Important Notes
 
