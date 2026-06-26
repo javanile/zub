@@ -14,9 +14,9 @@ keywords:
   - pcx
   - png
   - png-decoder
-date: 2026-06-23
-updated_at: 2026-06-23T20:12:34+00:00
-last_sync: 2026-06-23T20:12:34Z
+date: 2026-06-26
+updated_at: 2026-06-26T02:16:44+00:00
+last_sync: 2026-06-26T02:16:44Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -466,7 +466,7 @@ pub fn example(allocator: std.mem.Allocator, io: std.Io) !void {
     try image.writeToFilePath(allocator, io, "my_new_image.png", write_buffer[0..], .{ .png = .{} });
 
     // Or with encoder options
-    try image.writeToFilePath(allocator, io, "my_new_image.png", write_buffer[0..]. .{ .png = .{ .interlaced = true } });
+    try image.writeToFilePath(allocator, io, "my_new_image.png", write_buffer[0..], .{ .png = .{ .interlaced = true } });
 }
 ```
 

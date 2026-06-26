@@ -9,10 +9,10 @@ keywords:
   - database
   - sqlite
   - sqlite3
-date: 2026-06-02
+date: 2026-06-26
 category: data-formats
-updated_at: 2026-06-02T20:56:43+00:00
-last_sync: 2026-06-02T20:56:43Z
+updated_at: 2026-06-26T09:30:29+00:00
+last_sync: 2026-06-26T09:30:29Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -27,6 +27,9 @@ permalink: /packages/cztomsik/fridge/
 ---
 
 # Fridge
+
+> I've been doing some breaking changes recently and I'm not done yet so maybe
+> consider staying on `7731bfd7a220482827f7006e0ac6ab641fc41381` for now
 
 A small, batteries-included database library for Zig. It offers a type-safe
 query builder, connection pooling, shorthands for common tasks, migrations, and

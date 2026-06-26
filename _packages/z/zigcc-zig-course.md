@@ -9,8 +9,8 @@ keywords:
   - tutorial
   - tutorials
 date: 2026-06-24
-updated_at: 2026-06-24T08:30:29+00:00
-last_sync: 2026-06-24T08:30:29Z
+updated_at: 2026-06-24T18:05:13+00:00
+last_sync: 2026-06-24T18:05:13Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -55,7 +55,7 @@ permalink: /packages/zigcc/zig-course/
 - **基础入门**: 包括变量、类型、流程控制、错误处理等基础知识
 - **高级主题**: 深入探讨 `comptime`、异步、内存管理、C 语言交互等高级特性
 - **工程实践**: 涵盖构建系统、包管理、单元测试和代码风格指南
-- **版本兼容**: 提供与 Zig 0.11-0.15 版本相对应的代码示例
+- **版本兼容**: 提供与 Zig 0.11-0.16 版本相对应的代码示例
 - **实战案例**: 包含 TCP 服务器等实际项目示例
 
 ## 📁 项目结构

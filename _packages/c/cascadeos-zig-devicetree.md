@@ -1,7 +1,7 @@
 ---
 title: zig-devicetree
 description: A read-only Flattened Device Tree (DTB) API.
-license: BSD-2-Clause
+license: BSD-3-Clause
 author: CascadeOS
 author_github: CascadeOS
 repository: https://github.com/CascadeOS/zig-devicetree
@@ -10,9 +10,10 @@ keywords:
   - devicetree
   - dtb
   - fdt
-date: 2026-04-20
-updated_at: 2026-04-20T11:32:07+00:00
-last_sync: 2026-04-20T11:32:07Z
+  - osdev
+date: 2026-06-24
+updated_at: 2026-06-24T18:39:53+00:00
+last_sync: 2026-06-24T18:39:53Z
 package_kind: library
 has_library: true
 has_binary: false

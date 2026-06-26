@@ -8,10 +8,10 @@ repository: https://github.com/impeller-interop/impeller-zig
 keywords:
   - bindings
   - graphics
-date: 2026-06-23
+date: 2026-06-24
 category: systems
-updated_at: 2026-06-23T05:18:11+00:00
-last_sync: 2026-06-23T05:18:11Z
+updated_at: 2026-06-24T19:08:41+00:00
+last_sync: 2026-06-24T19:08:41Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -27,13 +27,13 @@ permalink: /packages/impeller-interop/impeller-zig/
 
 # impeller-zig
 
-Zig bindings for Impeller's standalone `impeller.h` API.
+Zig wrapper for Impeller's standalone `impeller.h` API.
 
 Standalone SDK artifacts are packaged in [`impeller-sdk`](https://github.com/impeller-interop/impeller-sdk).
 
 <p align="left">
-  <img src="https://github.com/user-attachments/assets/938615ee-55aa-4a76-a106-c778151ede53" height="300">
-  <img src="https://github.com/user-attachments/assets/07dd8543-4f0a-4dc1-ab9f-76c4e3a9a3ad" height="300"/>
+  <img src="https://github.com/user-attachments/assets/490aced2-7c7a-4a00-84ad-bdac6e7cb9ea" height="300"/>
+  <img src="https://github.com/user-attachments/assets/f5cb1140-2d40-42cd-b9a0-0d9366a72ce7" height="300"/>
 </p>
 
 > Examples [here](https://github.com/impeller-interop/impeller-zig-examples).
@@ -44,6 +44,7 @@ Standalone SDK artifacts are packaged in [`impeller-sdk`](https://github.com/imp
 - macOS + Metal
 - Windows + Vulkan
 - Zig wrappers for contexts, surfaces, paints, paths, textures, display lists, typography, and basic geometry
+- Flat domain modules such as `impeller.geometry`, `impeller.paint`, `impeller.path`, and `impeller.text`
 
 ## Install
 
@@ -55,6 +56,8 @@ Add the dependency in `build.zig`:
 
 ```zig
 // ...
+const impeller_pkg = @import("impeller_zig");
+
 const impeller_dep = b.dependency("impeller_zig", .{
     .target = target,
     .optimize = optimize,
@@ -72,7 +75,13 @@ const exe = b.addExecutable(.{
     .name = "app",
     .root_module = exe_mod,
 });
-exe.root_module.linkLibrary(impeller_dep.artifact("impeller"));
+
+// Link libimpeller and copy it beside the executable.
+impeller_pkg.linkRuntime(exe, impeller_dep);
+b.getInstallStep().dependOn(impeller_pkg.installRuntime(.{
+    .compile_step = exe,
+    .dependency = impeller_dep,
+}));
 // ...
 ```
 
@@ -81,6 +90,32 @@ Then import it:
 ```zig
 const impeller = @import("impeller");
 ```
+
+The main API is Zig-first:
+
+```zig
+var paint = try impeller.Paint.init();
+defer paint.deinit();
+
+paint.setColor(impeller.srgb(1.0, 0.2, 0.1, 1.0));
+```
+
+Common types are re-exported at the root for concise call sites. The same API is also split into flat domain modules:
+
+```zig
+const geometry = impeller.geometry;
+const paint = impeller.paint;
+
+const bounds = geometry.rect(0.0, 0.0, 640.0, 480.0);
+var fill = try paint.Paint.init();
+defer fill.deinit();
+```
+
+Use the `impeller.c` namespace only when you need raw C functions that are not wrapped yet.
+
+The runtime link step is explicit so projects that only import the package without using Impeller do not load `libimpeller`.
+
+For custom runtime install layouts and rpath setup, see [BUILD.md](docs/BUILD.md).
 
 ## Minimal drawing
 

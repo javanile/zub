@@ -6,9 +6,9 @@ author: D-Berg
 author_github: D-Berg
 repository: https://github.com/D-Berg/zalloc
 keywords:
-date: 2026-04-21
-updated_at: 2026-04-21T13:59:49+00:00
-last_sync: 2026-04-21T13:59:49Z
+date: 2026-06-26
+updated_at: 2026-06-26T06:36:41+00:00
+last_sync: 2026-06-26T06:36:41Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -25,6 +25,9 @@ permalink: /packages/D-Berg/zalloc/
 # Zalloc
 
 Replace malloc, calloc, realloc and free in a c module with a zig allocator. 
+Usefull in order to use zigs debug allocator when interacting with C code to check for memory leaks,
+double frees and all its features. In Release modes it is probably just unnecessary if you pass it 
+the gpa from juice main.
 
 ## Usage
 

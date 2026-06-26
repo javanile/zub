@@ -17,15 +17,15 @@ keywords:
   - web
   - web-assembly
   - web-framework
-date: 2026-06-21
-updated_at: 2026-06-21T04:15:25+00:00
-last_sync: 2026-06-21T04:15:25Z
+date: 2026-06-26
+updated_at: 2026-06-26T11:28:18+00:00
+last_sync: 2026-06-26T11:28:18Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 6
-distributable_binary_count: 6
+binary_count: 7
+distributable_binary_count: 7
 multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
@@ -207,15 +207,17 @@ const zx = @import("zx");
 ## Versions
 | Zig         | Ziex                | Branch            | Status         |
 |-------------|---------------------|-------------------|----------------|
-| `0.17.x`    |                     | `zig-0.17`        | Development    |
-| `0.16.x`    | `0.1.0-dev.1068`-*  | `main`            | **Latest**     |
+| `0.17.x`    |                     | `main`            | Development    |
+| `0.16.x`    | `0.1.0-dev.1259`    | `zig-0.16`        | **Latest**     |
 | `0.15.x`    | `0.1.0-dev-1050`    | `zig-0.15`        | Latest (`Zig 0.15.x`)        |
 
 
 ## Roadmap
-[Ziex 0.1.0](https://github.com/ziex-dev/ziex/milestone/2) is targeted after `Zig 0.17.0` release. You can see the [roadmap](https://github.com/ziex-dev/ziex/milestone) to learn more.
+[Ziex 0.1.0](https://github.com/ziex-dev/ziex/milestone/2) is planned for release after `Zig 0.17.0` is available. You can view the [roadmap](https://github.com/ziex-dev/ziex/milestone) to learn more.
 
-`0.1.0` release will indicate that Ziex is production ready with all majore features fully baked and will receive patch releases for bug fixes.
+The `0.1.0` release will indicate that Ziex is production-ready, with all major features fully implemented, and will receive patch releases for bug fixes.
+
+The `1.0.0` release will signify long-term support for that major version, receiving bug fixes and minor updates.
 
 ## Editor Support
 
