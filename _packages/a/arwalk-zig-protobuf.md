@@ -7,10 +7,10 @@ author_github: Arwalk
 repository: https://github.com/Arwalk/zig-protobuf
 keywords:
   - protobuf
-date: 2026-06-01
+date: 2026-06-27
 category: data-formats
-updated_at: 2026-06-01T15:06:28+00:00
-last_sync: 2026-06-01T15:06:28Z
+updated_at: 2026-06-27T09:40:19+00:00
+last_sync: 2026-06-27T09:40:19Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -86,8 +86,9 @@ pub fn build(b: *std.Build) !void {
     const protoc_step = protobuf.RunProtocStep.create(protobuf_dep.builder, target, .{
         // out directory for the generated zig files
         .destination_directory = b.path("src/proto"),
-        // Optional custom generator, otherwise it will use the built-in generator + google's protoc
-        // .generator = protobuf_dep.artifact("protoc-gen-zig"),
+        // Optional LazyPath to `protoc`. If null, zig-protobuf will download Google's release of
+        // the compiler.
+        // .protoc = b.path("protoc"),
         .source_files = &.{
             b.path("protocol/all.proto"),
         },

@@ -14,10 +14,10 @@ keywords:
   - rollup-plugin
   - wasm
   - webpack-plugin
-date: 2026-06-19
+date: 2026-06-27
 category: systems
-updated_at: 2026-06-19T22:06:28+00:00
-last_sync: 2026-06-19T22:06:28Z
+updated_at: 2026-06-27T09:00:40+00:00
+last_sync: 2026-06-27T09:00:40Z
 package_kind: library
 has_library: false
 has_binary: false
@@ -59,10 +59,10 @@ it's designed for. The current version is 0.15.2. It works with Zig 0.15.x.
 
 Version 0.14.3 has the same feature set as 0.15.2 and works with Zig 0.14.x. 
 
-For those on the absolutely bleeding edge, a development version of this toolkit is available that
-works with master. Append the package name with the tag `@dev` to install it. At any given time it
-might be broken due to changes to the language itself. Please file a bug report when you encounter
-a problem.
+The upcoming version is 0.15.3. The biggest addition will be suppport for the PHP language. It's
+been under development for the past 6 months and is at the moment being polished and stabilized for
+release. Once that happens, development will transit immediately to upgrading the entire suite to 
+Zig 0.16.
 
 ## Technical support
 

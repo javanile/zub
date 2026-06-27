@@ -7,12 +7,14 @@ author_github: cztomsik
 repository: https://github.com/cztomsik/fridge
 keywords:
   - database
+  - query-builder
+  - sql
   - sqlite
   - sqlite3
-date: 2026-06-26
+date: 2026-06-27
 category: data-formats
-updated_at: 2026-06-26T09:30:29+00:00
-last_sync: 2026-06-26T09:30:29Z
+updated_at: 2026-06-27T08:50:17+00:00
+last_sync: 2026-06-27T08:50:17Z
 package_kind: library
 has_library: true
 has_binary: false

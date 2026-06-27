@@ -8,14 +8,15 @@ repository: https://github.com/rcalixte/libqt6c
 keywords:
   - bindings
   - c
+  - cli
   - gui
   - gui-library
   - qt
   - qt6
-date: 2026-06-23
+date: 2026-06-25
 category: systems
-updated_at: 2026-06-23T20:34:12+00:00
-last_sync: 2026-06-23T20:34:12Z
+updated_at: 2026-06-25T16:49:53+00:00
+last_sync: 2026-06-25T16:49:53Z
 package_kind: library
 has_library: true
 has_binary: false

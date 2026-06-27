@@ -7,14 +7,15 @@ author_github: rcalixte
 repository: https://github.com/rcalixte/libqt6zig
 keywords:
   - bindings
+  - cli
   - gui
   - gui-library
   - qt
   - qt6
-date: 2026-06-24
+date: 2026-06-25
 category: systems
-updated_at: 2026-06-24T00:38:53+00:00
-last_sync: 2026-06-24T00:38:53Z
+updated_at: 2026-06-25T16:49:53+00:00
+last_sync: 2026-06-25T16:49:53Z
 package_kind: library
 has_library: true
 has_binary: false

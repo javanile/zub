@@ -17,10 +17,10 @@ keywords:
   - kqueue
   - networking
   - poll
-date: 2026-06-26
+date: 2026-06-27
 category: networking
-updated_at: 2026-06-26T11:22:00+00:00
-last_sync: 2026-06-26T11:22:00Z
+updated_at: 2026-06-27T10:53:32+00:00
+last_sync: 2026-06-27T10:53:32Z
 package_kind: hybrid
 has_library: true
 has_binary: true
