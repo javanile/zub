@@ -8,10 +8,10 @@ repository: https://github.com/floooh/sokol-zig
 keywords:
   - crossplatform
   - sokol
-date: 2026-05-15
+date: 2026-06-27
 category: game-development
-updated_at: 2026-05-15T00:05:24+00:00
-last_sync: 2026-05-15T00:05:24Z
+updated_at: 2026-06-27T18:49:00+00:00
+last_sync: 2026-06-27T18:49:00Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -126,8 +126,13 @@ sokol-zig ➤ zig build -Dgl=true run-clear
 Backend: .sokol.gfx.Backend.GLCORE33
 ```
 
-For the web-samples, run:
+For the web-samples, first install a local Emscripten SDK into `./zig-pkg`:
 
+```sh
+zig build install-emsdk
+```
+
+...then build with `-Dtarget=wasm32-emscripten`
 ```sh
 zig build examples -Dtarget=wasm32-emscripten
 # or to build and run one of the samples
@@ -135,11 +140,8 @@ zig build run-clear -Dtarget=wasm32-emscripten
 ...
 ```
 
-When building with target `wasm32-emscripten` for the first time, the build script will
-install and activate the Emscripten SDK into the Zig package cache for the latest SDK
-version. There is currently no build system functionality to update or delete the Emscripten SDK
-after this first install. The current workaround is to simply delete the `zig-pkg` subdirectory
-(for zig-0.16.x - previous versions stored the emsdk in the global Zig cache instead).
+There is currently no build system functionality to update or delete the Emscripten SDK
+after this first install. The current workaround is to simply delete the `zig-pkg` subdirectory.
 
 Improving the Emscripten SDK integration with the Zig build system is planned for the future.
 

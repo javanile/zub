@@ -1,0 +1,198 @@
+---
+title: zoptia0regex
+description: "A regular-expression (regex) library for Zig — a faithful, linear-time port of Go's regexp (RE2): proven byte-for-byte identical to Go across 30k differential tests, and ~11% faster."
+license: Apache-2.0
+author: zoptia
+author_github: zoptia
+repository: https://github.com/zoptia/zoptia0regex
+keywords:
+  - golang
+  - nfa
+  - re2
+  - redos
+  - regex
+  - regex-engine
+  - regexp
+  - regular-expression
+date: 2026-06-28
+category: systems
+updated_at: 2026-06-28T08:55:08+00:00
+last_sync: 2026-06-28T08:55:08Z
+package_kind: hybrid
+has_library: true
+has_binary: true
+has_distributable_binary: true
+binary_count: 3
+distributable_binary_count: 3
+multiple_binaries: true
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
+permalink: /packages/zoptia/zoptia0regex/
+---
+
+<div align="center">
+
+# zoptia0regex
+
+### Go's `regexp`, faithfully replicated in Zig — and faster.
+
+A **regular-expression (regex) library for Zig** — a high-fidelity port of the
+RE2 engine, with a linear-time guarantee and **~30,000 tests proving
+byte-for-byte parity with Go**.
+
+[![CI](https://github.com/zoptia/zoptia0regex/actions/workflows/ci.yml/badge.svg)](https://github.com/zoptia/zoptia0regex/actions)
+[![Zig](https://img.shields.io/badge/Zig-0.16-f7a41d?logo=zig&logoColor=white)](https://ziglang.org/)
+[![License](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
+
+</div>
+
+---
+
+## ⚡ Faster than Go. Identical to Go. Provably.
+
+Head-to-head against Go's standard-library `regexp` — same patterns, same
+inputs, same 256 KB corpus, same calibration, Zig built `ReleaseFast` —
+**zoptia0regex is ~11% faster on average** and compiles patterns **~1.7×
+faster**. And it doesn't trade correctness for speed: ~30,000 differential tests
+prove its output is **byte-for-byte identical to Go's**.
+
+Not "inspired by." **Proven identical.**
+
+- 🚀 **Faster than Go at matching.** Geometric mean across 20 workloads:
+  **0.887×** Go's time. Anchored "validation" patterns hit the one-pass engine
+  and fly — up to **~1.7× faster**.
+- 🛡️ **Linear-time. ReDoS-proof.** Thompson NFA simulation means no catastrophic
+  backtracking, ever. A pattern like `(a+)+` that hangs PCRE, JS, and Python
+  runs in linear time here.
+- ✅ **Proven identical to Go.** ~30,000 differential cases run the *real* Go
+  `regexp` and this engine on the same inputs and require identical results.
+  **Zero mismatches. Zero leaks.** The fidelity isn't a claim — it's enforced by
+  the suite on every push.
+- 🌍 **Unicode-correct.** `(?i)` case folding uses tables generated directly from
+  Go's `unicode.SimpleFold` — correct across *all* of Unicode, not just ASCII.
+
+## In a nutshell
+
+```zig
+var re = try regex.compile(gpa, "(\\w+)@(\\w+)\\.(\\w+)");
+defer re.deinit();
+
+const subs = (try re.findSubmatch(gpa, "ping me@example.com")).?;
+// subs => "me" / "example" / "com"
+```
+
+→ Full install & API in the **[usage guide](docs/usage.md)**.
+
+## 📊 The benchmark
+
+Zig vs Go, same workload, same machine. Lower is faster — `< 1.0×` means Zig
+wins.
+
+| Workload | Engine | Zig / Go |
+|---|---|---|
+| `\A\d+\z` (anchored validation) | one-pass | **0.60×** |
+| `\A[a-z]+\z` (anchored validation) | one-pass | **0.64×** |
+| `\A(...)@(...)\z` with captures | one-pass | **0.84×** |
+| `\A(?i)performance\z` | one-pass | **0.85×** |
+| alternation | Pike VM | **0.81×** |
+| `\d+` | Pike VM | **0.84×** |
+| date scan | Pike VM | **0.86×** |
+| literal search | Pike VM | **0.89×** |
+| **Geometric mean (20 workloads)** | — | **0.887×** |
+| Pattern compilation | — | **0.575×** (~1.7× faster) |
+
+**The honest caveat:** there is exactly **one** workload where Go wins — an
+*unanchored* case-insensitive scan (`(?i)performance` over 256 KB) at **1.29×**.
+That's a Pike-VM constant factor, not a missing engine (one-pass requires
+anchoring). Everything else is on par or faster. Full methodology and the
+complete table: **[BENCHMARKS.md](BENCHMARKS.md)**.
+
+## Why this exists
+
+zoptia0regex is a faithful, high-fidelity replica of Go's standard-library
+`regexp` package — the RE2 design by Russ Cox. It mirrors Go's **leftmost-first**
+match semantics (plus **POSIX leftmost-longest**), the same `Find` / `Replace` /
+`Split` / submatch API surface, and the same four-stage pipeline:
+**parse → simplify → compile → execute**. All three of Go's execution engines
+are here — the **one-pass** matcher, the **bitstate backtracker**, and the
+**Pike VM** — plus literal-prefix acceleration, with the engine chosen
+automatically per pattern.
+
+That's where the speed *and* the fidelity come from. For the full design
+walkthrough, see **[docs/internals.md](docs/internals.md)**.
+
+## Features
+
+- 🧩 Full Go `regexp/syntax`: literals, alternation, character classes (`[...]`,
+  `[^...]`, ranges, Perl `\d\w\s`, POSIX `[[:alpha:]]`, Unicode `\p{...}` curated
+  subset), `.`, anchors `^ $ \A \z \b \B`.
+- 🔁 Quantifiers `* + ? {n,m}`, greedy and non-greedy.
+- 🏷️ Capturing, non-capturing, and named groups; inline flags `(?imsU)`;
+  escapes; `\Q...\E`.
+- ⚖️ Two match modes: leftmost-first (Go default) and POSIX leftmost-longest.
+- 🛡️ Linear-time guarantee — immune to ReDoS.
+- ⚡ Allocation-free hot loops: reuse a `Scratch` across matches
+  (`matchScratch`) for zero-allocation steady state, like Go's machine pool.
+- 🌍 Full-Unicode case folding via Go-derived tables.
+- 🚫 Same intentional limits as RE2/Go: **no backreferences, no `\C`**.
+
+## Install & use
+
+Requires **Zig 0.16**.
+
+```sh
+zig fetch --save git+https://github.com/zoptia/zoptia0regex
+```
+
+```zig
+const regex = @import("regex");
+
+var re = try regex.compile(gpa, "(\\w+)@(\\w+)\\.(\\w+)");
+defer re.deinit();
+const subs = (try re.findSubmatch(gpa, "ping me@example.com")).?;
+```
+
+That's the taste — the **[full install + API guide lives in docs/usage.md](docs/usage.md)**:
+wiring the dependency into `build.zig`, every `Find` / `FindAll` / `Replace` /
+`Split` / submatch variant, the memory model, and POSIX mode.
+
+## Trust & validation
+
+Every push runs the **full ~30,000-case differential suite** in CI, across three
+corpora:
+
+| Corpus | Cases | What it checks |
+|---|---|---|
+| Curated | ~5.9k | Hand-picked edge cases across every feature |
+| Random / fuzz | ~9k | Grammar-generated patterns & inputs |
+| POSIX leftmost-longest | ~15k | POSIX match semantics |
+
+Each case runs the *real* Go `regexp` and zoptia0regex on the same input and
+requires **byte-for-byte identical** `FindSubmatchIndex` / `FindAll` /
+`ReplaceAll` / `Split`. Result: **zero mismatches, zero memory leaks** (checked
+under `std.testing.allocator`). CI stays green.
+
+```sh
+zig build test        # unit + behaviour tests
+zig build difftest    # the full ~30k differential suite (no Go toolchain needed)
+zig build bench       # benchmark vs Go (ReleaseFast)
+```
+
+## License & acknowledgement
+
+Licensed under **Apache-2.0**.
+
+zoptia0regex is a faithful port of Go's standard-library `regexp` package. Deep
+thanks to **Russ Cox** and the **Go authors** — portions are derived from Go's
+BSD-3-Clause-licensed code, attributed in [NOTICE](NOTICE). Not affiliated with
+Go or Google.
+
+---
+
+<div align="center">
+
+**[Usage guide](docs/usage.md)** · **[Internals](docs/internals.md)** ·
+**[Benchmarks](BENCHMARKS.md)** · **[Contributing](CONTRIBUTING.md)**
+
+</div>

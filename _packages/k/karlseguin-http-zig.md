@@ -9,8 +9,8 @@ keywords:
   - http-server
 date: 2026-06-27
 category: networking
-updated_at: 2026-06-27T10:02:45+00:00
-last_sync: 2026-06-27T10:02:45Z
+updated_at: 2026-06-27T17:50:38+00:00
+last_sync: 2026-06-27T17:50:38Z
 package_kind: hybrid
 has_library: true
 has_binary: true

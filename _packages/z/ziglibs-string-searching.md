@@ -1,16 +1,16 @@
 ---
-title: string-searching
+title: string_searching
 description: "String(not limited to []const u8)-searching algorithms in zig"
 license: MIT
 author: ziglibs
 author_github: ziglibs
-repository: https://github.com/ziglibs/string-searching
+repository: https://github.com/ziglibs/string_searching
 keywords:
   - bitap-algorithm
   - boyer-moore
-date: 2026-06-19
-updated_at: 2026-06-19T22:57:02+00:00
-last_sync: 2026-06-19T22:57:02Z
+date: 2026-06-28
+updated_at: 2026-06-28T10:22:24+00:00
+last_sync: 2026-06-28T10:22:24Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -21,15 +21,18 @@ multiple_binaries: false
 is_sponsor: false
 sync_priority: normal
 sync_source: zigistry
-permalink: /packages/ziglibs/string-searching/
+permalink: /packages/ziglibs/string_searching/
 ---
 
-# string-searching
+# string_searching
 
-![CI](https://github.com/ziglibs/zig-string-searching/workflows/CI/badge.svg)
+![CI](https://github.com/ziglibs/string_searching/workflows/CI/badge.svg)
 
 Implementation of some string-search algorithms in
-[zig](https://ziglang.org). Compatible with zig 0.13.0.
+[zig](https://ziglang.org). Compatible with zig 0.16.0.
+
+> [!IMPORTANT]
+> This library was renamed from `string-searching`, now using an underscore
 
 ### Boyer-Moore string searching
 

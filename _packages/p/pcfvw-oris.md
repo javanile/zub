@@ -1,0 +1,79 @@
+---
+title: oris
+description: "A high-performance heap allocator, after the folk-allotters of fate. Rust and Zig port of Dimitar Lazarov's HPHA (2007)."
+license: NOASSERTION
+author: PCfVW
+author_github: PCfVW
+repository: https://github.com/PCfVW/oris
+keywords:
+  - allocator
+  - heap
+  - hpha
+  - memory-allocator
+  - no-std
+  - rust
+date: 2026-06-26
+category: systems
+updated_at: 2026-06-26T16:54:50+00:00
+last_sync: 2026-06-26T16:54:50Z
+package_kind: library
+has_library: false
+has_binary: false
+has_distributable_binary: false
+binary_count: 0
+distributable_binary_count: 0
+multiple_binaries: false
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
+permalink: /packages/PCfVW/oris/
+---
+
+# Oris
+
+*A high-performance heap allocator, after the folk-allotters of fate.*
+
+A Rust and Zig port of Dimitar Lazarov's **HPHA** (2007).
+
+[![Rust CI](https://github.com/PCfVW/oris/actions/workflows/rust-ci.yml/badge.svg)](https://github.com/PCfVW/oris/actions/workflows/rust-ci.yml)
+[![Zig CI](https://github.com/PCfVW/oris/actions/workflows/zig-ci.yml/badge.svg)](https://github.com/PCfVW/oris/actions/workflows/zig-ci.yml)
+[![crates.io](https://img.shields.io/crates/v/orisnik?logo=rust&label=orisnik)](https://crates.io/crates/orisnik)
+[![Zig release](https://img.shields.io/github/v/release/PCfVW/oris?logo=zig&label=orisnitsa&color=f7a41d)](https://github.com/PCfVW/oris/releases)
+[![docs.rs](https://img.shields.io/docsrs/orisnik?logo=docsdotrs)](https://docs.rs/orisnik)
+[![MSRV](https://img.shields.io/badge/MSRV-1.85-blue?logo=rust)](Rust/Cargo.toml)
+[![Zig](https://img.shields.io/badge/Zig-0.16.0-f7a41d?logo=zig)](https://ziglang.org/)
+[![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue)](#license)
+
+**Working draft — v0.4. Design stage — stubs, coding conventions, and CI scaffolding are in place; the allocator core lands in v0.1.0.**
+
+## Status
+
+Oris is at its design-and-scaffolding stage — the design documents are settled and per-port build/CI scaffolding is in place, ahead of the v0.1.0 allocator implementation. The two foundational documents are:
+
+- **[BRIEF.md](BRIEF.md)** — design rationale, etymological grounding, target workloads, prior-art positioning
+- **[ROADMAP.md](ROADMAP.md)** — milestones, versioning policy, the cross-language invariant
+
+## Structure
+
+- **[Cpp/](Cpp/)** — the canonical HPHA reference source from 2007, included for diff and reference purposes. See [Cpp/NOTICE.md](Cpp/NOTICE.md) for the license trail.
+- **[Rust/](Rust/)** — the `orisnik` crate (targets Rust 1.85 / edition 2024). Name reserved on crates.io at `0.0.0`; allocator core forthcoming in v0.1.0.
+- **[Zig/](Zig/)** — the `orisnitsa` module (targets Zig 0.16.0). Stub package and manifest in place; allocator core forthcoming in v0.1.0.
+- **[.github/workflows/](.github/workflows/)** — CI for both ports (3-OS matrix; Rust adds a Miri soundness lane) plus tag-driven publishing: crates.io via Trusted Publishing, and a re-rooted Zig release asset.
+
+## Coding conventions
+
+Both ports follow the [Amphigraphic](https://github.com/PCfVW/Amphigraphic-Strict) `Grit`
+discipline, extended for a high-performance heap allocator (`Grit-ORIS`):
+
+- **[Rust/CONVENTIONS.md](Rust/CONVENTIONS.md)** — `orisnik`
+- **[Zig/CONVENTIONS.md](Zig/CONVENTIONS.md)** — `orisnitsa`
+
+The two share the cross-port-invariant discipline (see [ROADMAP.md](ROADMAP.md)): an identical
+public alloc/free sequence must produce identical internal state transitions across both ports.
+The `CLAUDE.md` files (repo root and one per port) wire these conventions into AI-assisted edits.
+
+## License
+
+Dual-licensed under [MIT](LICENSE-MIT) OR [Apache-2.0](LICENSE-APACHE), at your option — see [LICENSE](LICENSE).
+
+The HPHA reference source under `Cpp/` retains its original 2007 copyright header verbatim and is included under the same dual license, consistent with the public license trail established by the [Open 3D Engine](https://github.com/o3de/o3de) project. See [Cpp/NOTICE.md](Cpp/NOTICE.md) for full provenance.

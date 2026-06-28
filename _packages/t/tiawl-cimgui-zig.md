@@ -9,10 +9,10 @@ keywords:
   - binding
   - cimgui
   - imgui
-date: 2026-05-29
+date: 2026-06-26
 category: game-development
-updated_at: 2026-05-29T13:34:18+00:00
-last_sync: 2026-05-29T13:34:18Z
+updated_at: 2026-06-26T12:53:08+00:00
+last_sync: 2026-06-26T12:53:08Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -120,7 +120,7 @@ pub fn build(b: *std.Build) void {
 +    });
 +
 +    const cimgui_lib = cimgui_dep.artifact("cimgui");
-+    addIncludePathsToTranslateC(translate_c, cimgui_artifact);
++    addIncludePathsToTranslateC(translate_c, cimgui_lib);
 +    const c_module = translate_c.createModule();
 +    c_module.linkLibrary(cimgui_lib);
 

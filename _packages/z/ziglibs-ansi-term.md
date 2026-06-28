@@ -7,9 +7,9 @@ author_github: ziglibs
 repository: https://github.com/ziglibs/ansi_term
 keywords:
   - ansi-terminal
-date: 2026-06-19
-updated_at: 2026-06-19T22:56:31+00:00
-last_sync: 2026-06-19T22:56:31Z
+date: 2026-06-28
+updated_at: 2026-06-28T10:18:10+00:00
+last_sync: 2026-06-28T10:18:10Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -36,7 +36,7 @@ This was originally code which was extracted from
 [lscolors](https://github.com/ziglibs/lscolors) for use in
 other zig libraries. More features have been added since.
 
-`ansi_term` is designed to work with Zig 0.15.2.
+`ansi_term` is designed to work with Zig 0.16.0.
 
 ## Documentation
 
