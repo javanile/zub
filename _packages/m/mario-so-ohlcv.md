@@ -8,9 +8,9 @@ repository: https://github.com/Mario-SO/ohlcv
 keywords:
   - finance
   - trading
-date: 2026-06-25
-updated_at: 2026-06-25T00:14:08+00:00
-last_sync: 2026-06-25T00:14:08Z
+date: 2026-06-29
+updated_at: 2026-06-29T00:09:39+00:00
+last_sync: 2026-06-29T00:09:39Z
 package_kind: hybrid
 has_library: true
 has_binary: true

@@ -10,10 +10,10 @@ keywords:
   - libzmq
   - zeromq
   - zmq
-date: 2026-06-18
+date: 2026-06-29
 category: systems
-updated_at: 2026-06-18T13:27:14+00:00
-last_sync: 2026-06-18T13:27:14Z
+updated_at: 2026-06-29T06:55:25+00:00
+last_sync: 2026-06-29T06:55:25Z
 package_kind: hybrid
 has_library: true
 has_binary: true

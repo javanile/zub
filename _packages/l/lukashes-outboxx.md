@@ -9,10 +9,10 @@ keywords:
   - cdc
   - kafka
   - postgresql
-date: 2026-06-28
+date: 2026-06-29
 category: data-formats
-updated_at: 2026-06-28T06:26:14+00:00
-last_sync: 2026-06-28T06:26:14Z
+updated_at: 2026-06-29T07:21:53+00:00
+last_sync: 2026-06-29T07:21:53Z
 package_kind: binary
 has_library: false
 has_binary: true

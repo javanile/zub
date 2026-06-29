@@ -7,9 +7,9 @@ author_github: kristoff-it
 repository: https://github.com/kristoff-it/ziggy
 keywords:
   - serialization-format
-date: 2026-06-28
-updated_at: 2026-06-28T11:14:27+00:00
-last_sync: 2026-06-28T11:14:27Z
+date: 2026-06-29
+updated_at: 2026-06-29T09:22:19+00:00
+last_sync: 2026-06-29T09:22:19Z
 package_kind: hybrid
 has_library: true
 has_binary: true

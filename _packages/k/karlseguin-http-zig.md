@@ -7,10 +7,10 @@ author_github: karlseguin
 repository: https://github.com/karlseguin/http.zig
 keywords:
   - http-server
-date: 2026-06-27
+date: 2026-06-29
 category: networking
-updated_at: 2026-06-27T17:50:38+00:00
-last_sync: 2026-06-27T17:50:38Z
+updated_at: 2026-06-29T13:58:22+00:00
+last_sync: 2026-06-29T13:58:22Z
 package_kind: hybrid
 has_library: true
 has_binary: true
