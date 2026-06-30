@@ -13,10 +13,10 @@ keywords:
   - protocol
   - xet
   - xorb
-date: 2026-06-29
+date: 2026-06-30
 category: networking
-updated_at: 2026-06-29T10:34:01+00:00
-last_sync: 2026-06-29T10:34:01Z
+updated_at: 2026-06-30T09:56:06+00:00
+last_sync: 2026-06-30T09:56:06Z
 package_kind: hybrid
 has_library: true
 has_binary: true

@@ -11,9 +11,9 @@ keywords:
   - awesome-list
   - bun
   - mach
-date: 2026-06-08
-updated_at: 2026-06-08T13:22:45+00:00
-last_sync: 2026-06-08T13:22:45Z
+date: 2026-06-30
+updated_at: 2026-06-30T12:15:21+00:00
+last_sync: 2026-06-30T12:15:21Z
 package_kind: library
 has_library: false
 has_binary: false
@@ -175,6 +175,7 @@ If you find a well-maintained library that is not yet included here, welcome to 
 - [rosarp/nu-zigup](https://github.com/rosarp/nu-zigup) - Download & manage Zig compilers & zls binaries. Script is written in nushell.
 - [weezy20/zv](https://github.com/weezy20/zv) - Fast Zig/ZLS version manager + project starter kit written in Rust. Binaries available for macOS/Windows/Linux.
 - [hendriknielaender/zvm](https://github.com/hendriknielaender/zvm) - A fast and simple Zig version manager written in Zig.
+- [indaco/malt](https://github.com/indaco/malt) - Homebrew's whole ecosystem, none of its weight: a single Zig binary with native post_install and a themeable TUI and CLI.
 
 ### Utility
 
@@ -201,6 +202,7 @@ If you find a well-maintained library that is not yet included here, welcome to 
 - [ghext](https://github.com/charlesrocket/ghext) - A small library for extracting head commits from Git repositories.
 - [nrdmn/ilo_license_key](https://github.com/nrdmn/ilo_license_key) - This library validates HP iLO license keys.
 - [Decryptu/zigdex](https://github.com/Decryptu/zigdex) - Display Pokémon sprites in your terminal. A Zig rewrite of pokeget.
+- [mtxr/claude-switch](https://github.com/mtxr/claude-switch) - Swap between Claude (Code + Desktop) accounts on macOS with a single command. Credentials stored securely in macOS Keychain. Fully offline.
 
 ### Linker
 
@@ -289,6 +291,7 @@ If you find a well-maintained library that is not yet included here, welcome to 
 - [ziglibs/known-folders](https://github.com/ziglibs/known-folders) - Provides access to well-known folders across several operating systems.
 - [tiehuis/zig-regex](https://github.com/tiehuis/zig-regex) - A regex implementation for the Zig programming language.
 - [shaik-abdul-thouhid/ezi-gex](https://github.com/shaik-abdul-thouhid/ezi-gex) - Unicode-aware regex engine for Zig with runtime and comptime compilation, full \p{} Unicode property support, named captures, and custom pluggable backends (engines).
+- [zoptia/zoptia0regex](https://github.com/zoptia/zoptia0regex) - A regular-expression (regex) library — a faithful, linear-time port of Go's regexp (RE2), proven byte-for-byte identical to Go via ~30k differential tests.
 - [xcaeser/glob.zig](https://github.com/xcaeser/glob.zig) - Fast and reliable glob pattern matching in pure Zig.
 - [jecolon/ziglyph](https://github.com/jecolon/ziglyph) - Unicode text processing for the Zig programming language.
 - [kubkon/zig-yaml](https://github.com/kubkon/zig-yaml) - YAML parser for Zig.
@@ -478,6 +481,7 @@ If you find a well-maintained library that is not yet included here, welcome to 
 - [zigcord](https://codeberg.org/lipfang/zigcord) - Typed Discord API for Zig.
 - [zquic](https://github.com/ch4r10t33r/zquic) - QUIC transport protocol (RFC 9000/9001/9002) with HTTP/3 and QPACK support, written in pure Zig with zero C dependencies.
 - [zigtls](https://github.com/Geun-Oh/zigtls) - Zig-native TLS Implementation library for edge/load-balancer event loops, with BoGo strict, interop, and reliability gates.
+- [zora](https://github.com/user529/zora) - Telegram bot server that runs hot-reloadable Lua 5.4 rules, with coroutine-based async I/O, SQLite-backed state, and a durable scheduler. Targets Linux and FreeBSD.
 
 ### Browser
 
@@ -601,6 +605,8 @@ If you find a well-maintained library that is not yet included here, welcome to 
 - [clebert/LLaMa2.zig](https://github.com/clebert/llama2.zig) - Inference LLaMA 2 in pure Zig.
 - [CogitatorTech/zigformer](https://github.com/CogitatorTech/zigformer) - ZigFormer is a transformer-based LLM implemented in pure Zig.
 - [cognisoc/zigllm](https://github.com/cognisoc/zigllm) - Educational: build an LLM in Zig from scratch — tensors to text generation.
+- [cztomsik/clown-code](https://codeberg.org/cztomsik/clown-code) - AI Coding assistant.
+- [ddalcu/mlx-serve](https://github.com/ddalcu/mlx-serve) - Native LLM inference server for Apple Silicon (MLX + GGUF) with OpenAI- and Anthropic-compatible APIs; ships MLX Core, a macOS menu-bar app. MIT.
 - [EugenHotaj/zig_gpt2](https://github.com/EugenHotaj/zig_gpt2) - Neural Network Inference Engine in Zig. GPT2 inference engine written in Zig. The inference engine can run [NanoGPT](https://github.com/karpathy/nanoGPT).
 - [nullclaw/nullclaw](https://github.com/nullclaw/nullclaw) - Fastest, smallest, and fully autonomous AI assistant infrastructure written in Zig.
 - [ollama-zig](https://github.com/dravenk/ollama-zig) - Ollama Zig library.
