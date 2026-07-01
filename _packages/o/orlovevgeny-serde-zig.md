@@ -9,10 +9,10 @@ keywords:
   - json-serialization
   - parser
   - serde
-date: 2026-06-28
+date: 2026-07-01
 category: data-formats
-updated_at: 2026-06-28T06:55:15+00:00
-last_sync: 2026-06-28T06:55:15Z
+updated_at: 2026-07-01T09:28:57+00:00
+last_sync: 2026-07-01T09:28:57Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -123,7 +123,7 @@ zig fetch --save git+https://github.com/OrlovEvgeny/serde.zig
 Specific release:
 
 ```sh
-zig fetch --save https://github.com/OrlovEvgeny/serde.zig/archive/refs/tags/v1.0.5.tar.gz
+zig fetch --save https://github.com/OrlovEvgeny/serde.zig/archive/refs/tags/v1.0.6.tar.gz
 ```
 
 Then in your `build.zig`:

@@ -8,9 +8,9 @@ repository: https://github.com/privkeyio/wisp
 keywords:
   - nostr
   - nostr-relay
-date: 2026-06-29
-updated_at: 2026-06-29T13:55:56+00:00
-last_sync: 2026-06-29T13:55:56Z
+date: 2026-07-01
+updated_at: 2026-07-01T12:50:29+00:00
+last_sync: 2026-07-01T12:50:29Z
 package_kind: binary
 has_library: false
 has_binary: true
