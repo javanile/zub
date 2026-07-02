@@ -21,10 +21,10 @@ keywords:
   - wav
   - waveform
   - waveform-generator
-date: 2026-05-02
+date: 2026-06-27
 category: systems
-updated_at: 2026-05-02T14:15:31+00:00
-last_sync: 2026-05-02T14:15:31Z
+updated_at: 2026-06-27T16:50:07+00:00
+last_sync: 2026-06-27T16:50:07Z
 package_kind: binary
 has_library: false
 has_binary: true

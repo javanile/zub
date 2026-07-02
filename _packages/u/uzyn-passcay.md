@@ -7,13 +7,16 @@ author_github: uzyn
 repository: https://github.com/uzyn/passcay
 keywords:
   - authentication
+  - fido2
+  - fido2-conformant
+  - fido2-webauth
   - passkey
   - relying-party
   - security
   - webauthn
-date: 2026-06-04
-updated_at: 2026-06-04T11:38:20+00:00
-last_sync: 2026-06-04T11:38:20Z
+date: 2026-06-26
+updated_at: 2026-06-26T21:53:09+00:00
+last_sync: 2026-06-26T21:53:09Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -29,6 +32,11 @@ permalink: /packages/uzyn/passcay/
 
 # Passcay
 [![Tests](https://github.com/uzyn/passcay/actions/workflows/test.yml/badge.svg)](https://github.com/uzyn/passcay/actions/workflows/test.yml)
+[![Latest release](https://img.shields.io/github/v/tag/uzyn/passcay?label=release&sort=semver)](https://github.com/uzyn/passcay/tags)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Zig](https://img.shields.io/badge/Zig-0.16-f7a41d.svg)](https://ziglang.org)
+[![WebAuthn / FIDO2](https://img.shields.io/badge/WebAuthn-FIDO2-6f42c1.svg)](https://www.w3.org/TR/webauthn/)
+[![FIDO2 Server Conformance](https://img.shields.io/badge/FIDO2%20Server-conformant-2ea44f.svg)](https://fidoalliance.org/certification/functional-certification/conformance/)
 
 ![Passcay Logo](docs/passcay-logo.png)
 
@@ -42,11 +50,28 @@ Zig version support:
 
 ## Features
 
-- Passkey WebAuthn registration
-- Passkey WebAuthn authentication/verification (login)
-- Attestation-less passkey usage (privacy-preserving, does not affect security)
-- Cryptographic signature verification. Supports both ES256 & RS256, covering 100% of all Passkey authenticators today.
+- Passkey WebAuthn registration & authentication (login)
+- **FIDO2 conformant** — passes the [official FIDO Alliance FIDO2 Server conformance test suite](https://fidoalliance.org/certification/functional-certification/conformance/) (100%)
+- **Attestation-less by default** — privacy-preserving and recommended for passkeys (does not affect security)
+- **Optional attestation verification** (opt-in): `none`, `packed` (full + self), `fido-u2f`, and `tpm` — covering platform authenticators like **Windows Hello** (TPM) and roaming security keys — with real X.509 certificate-chain validation
+- **FIDO Metadata Service (MDS3)** integration: anchor attestation chains by AAGUID, gate on authenticator status reports, and reject BLOBs signed by a CRL-revoked certificate
+- **Broad COSE algorithm support** — ES256/384, secp256k1, Ed25519, RS256/384/512, RS1, PS256/384/512 (see table below)
 - Secure challenge generation
+- No system dependencies — pure `std.crypto`, builds and cross-compiles anywhere Zig runs
+
+### Supported algorithms
+
+| COSE alg | Algorithm | Status |
+|---|---|---|
+| `-7` | ES256 (ECDSA P-256) | ✅ |
+| `-35` | ES384 (ECDSA P-384) | ✅ |
+| `-47` | ES256K (ECDSA secp256k1) | ✅ |
+| `-8` | EdDSA (Ed25519) | ✅ |
+| `-257` / `-258` / `-259` | RS256 / RS384 / RS512 (RSASSA-PKCS1-v1_5) | ✅ |
+| `-37` / `-38` / `-39` | PS256 / PS384 / PS512 (RSASSA-PSS) | ✅ |
+| `-65535` | RS1 (RSASSA-PKCS1-v1_5 SHA-1, legacy) | ✅ |
+
+ES256 and RS256 cover virtually all passkey authenticators today; the others broaden coverage for FIDO2 and non-passkey deployments.
 
 ## Dependencies
 
@@ -60,7 +85,7 @@ Add `passcay` to your Zig project (`build.zig.zon`) dependencies:
 zig fetch --save git+https://github.com/uzyn/passcay.git
 
 # or load a specific version
-zig fetch --save git+https://github.com/uzyn/passcay.git#3.0.0
+zig fetch --save git+https://github.com/uzyn/passcay.git#3.1.0
 ```
 
 And update your `build.zig` to load `passcay`:
@@ -109,6 +134,28 @@ Store the following in database for authentication:
 - `reg.credential_id`
 - `reg.public_key`
 - `reg.sign_count` (usually starts at 0)
+
+### Attestation verification (optional)
+
+By default Passcay is attestation-less (recommended for passkeys). To cryptographically verify the attestation statement, pass an `attestation` policy:
+
+```zig
+const reg = try passcay.register.verify(allocator, input, .{
+    .challenge = challenge,
+    .origin = "https://example.com",
+    .rp_id = "example.com",
+    .require_user_verification = true,
+    .attestation = .{}, // verify the attestation statement (none / packed / fido-u2f / tpm)
+});
+// reg.attestation_type -> .none, .self, .basic, .attca, ...
+```
+
+For full (x5c) attestation, supply trust anchors directly with `.roots`, or a FIDO
+Metadata Service store with `.mds` to anchor chains by AAGUID and enforce status reports:
+
+```zig
+.attestation = .{ .mds = &metadata_store }, // passcay.mds.Store
+```
 
 ### Authentication
 
@@ -206,6 +253,7 @@ Reference implementations for integrating Passcay into your application:
 
 - `docs/register.md` - Registration flow with challenge generation
 - `docs/login.md` - Authentication flow with verification
+- `conformance/` - FIDO2 Server Conformance implementation built on Passcay (real verification; offline replay harness)
 
 ## See also
 
@@ -216,6 +264,10 @@ For passkey authenticator implementations and library for Zig, check out [Zig-Se
 
 - [W3C WebAuthn](https://www.w3.org/TR/webauthn/)
 - [FIDO2 Client to Authenticator Protocol (CTAP)](https://fidoalliance.org/specs/fido-v2.0-ps-20190130/fido-client-to-authenticator-protocol-v2.0-ps-20190130.html)
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for release history.
 
 ## License
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.

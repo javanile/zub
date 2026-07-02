@@ -7,9 +7,9 @@ author_github: srmadrid
 repository: https://github.com/srmadrid/zsl
 keywords:
   - math
-date: 2026-06-21
-updated_at: 2026-06-21T11:21:53+00:00
-last_sync: 2026-06-21T11:21:53Z
+date: 2026-07-02
+updated_at: 2026-07-02T09:27:06+00:00
+last_sync: 2026-07-02T09:27:06Z
 package_kind: hybrid
 has_library: true
 has_binary: true

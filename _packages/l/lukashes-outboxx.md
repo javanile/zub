@@ -9,10 +9,10 @@ keywords:
   - cdc
   - kafka
   - postgresql
-date: 2026-06-30
+date: 2026-07-02
 category: data-formats
-updated_at: 2026-06-30T07:26:26+00:00
-last_sync: 2026-06-30T07:26:26Z
+updated_at: 2026-07-02T11:44:29+00:00
+last_sync: 2026-07-02T11:44:29Z
 package_kind: binary
 has_library: false
 has_binary: true
@@ -73,9 +73,11 @@ Outboxx is heavily inspired by [Debezium](https://debezium.io/), the industry st
 | **Runtime** | Native binary | JVM (Kafka Connect) |
 | **Memory Usage** | <10 MB | ~200-500 MB |
 | **Startup Time** | <1s | 10-30s |
-| **Throughput** | ~105k events/sec | ~150k events/sec |
+| **Throughput** | ~150k events/sec | ~100k events/sec |
 | **Configuration** | Simple TOML | Complex JSON/Properties |
 | **Deployment** | Single binary | Kafka Connect cluster |
+
+For a measured run on the same WAL backlog (Apple M1, mixed workload), see the [benchmark results](tests/load/README.md#results).
 
 **Choose Outboxx when:**
 - Memory is constrained (containers, edge computing, cost optimization)
