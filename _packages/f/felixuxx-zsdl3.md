@@ -8,15 +8,15 @@ repository: https://github.com/felixuxx/zsdl3
 keywords:
   - gamedev
   - sdl3
-date: 2026-06-02
+date: 2026-07-03
 category: game-development
-updated_at: 2026-06-02T02:57:18+00:00
-last_sync: 2026-06-02T02:57:18Z
+updated_at: 2026-07-03T11:54:23+00:00
+last_sync: 2026-07-03T11:54:23Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 12
+binary_count: 13
 distributable_binary_count: 1
 multiple_binaries: true
 is_sponsor: false
@@ -30,7 +30,7 @@ permalink: /packages/felixuxx/zsdl3/
 [![Zig](https://img.shields.io/badge/Zig-0.16.0+-orange.svg)](https://ziglang.org)
 [![SDL3](https://img.shields.io/badge/SDL-3.2.0+-blue.svg)](https://www.libsdl.org/)
 
-Thin, zero-overhead bindings for SDL3, SDL3_image, and SDL3_ttf — without `@cImport`.
+Thin, zero-overhead bindings for SDL3, SDL3_image, SDL3_ttf and SDL3_mixer — without `@cImport`.
 
 > **Need Zig 0.15.2?** Use the [`zig-0.15.2`](https://github.com/felixuxx/zsdl3/tree/zig-0.15.2) branch.
 
@@ -78,14 +78,19 @@ zig build run      # run the app
 ### Run examples
 
 | Step | Example |
-|---|---|
-| `zig build run-basic-2d` | window + yellow rect |
+|---|---|---|
+| `zig build run-basic-2d` | window + colored rectangles |
 | `zig build run-cube-3d` | rotating 3D cube |
-| `zig build run-gpu-test` | GPU device + shader formats |
-| `zig build run-image-test` | load PNG via SDL3_image |
-| `zig build run-ttf-example` | render TTF text |
+| `zig build run-gpu` | GPU device + shader formats |
+| `zig build run-image` | load PNG via SDL3_image |
+| `zig build run-ttf` | render TTF text |
 | `zig build run-text-editor` | text editor with file dialogs |
-| `zig build run-test-enhanced-renderer-visual` | renderer smoke test |
+| `zig build run-renderer` | renderer smoke test |
+| `zig build run-audio` | sine wave audio playback |
+| `zig build run-dialog` | file open/save dialogs |
+| `zig build run-process` | external process spawning |
+| `zig build run-clipboard` | system clipboard I/O |
+| `zig build run-mixer` | load a 440hz sinewave using SDL mixer|
 
 ## Usage
 
@@ -120,7 +125,7 @@ All functions use short Zig-friendly names (`init`, `createWindow`, `pollEvent`)
 
 ```
 src/     — 50+ subsystem files (core, video, render, gpu, audio, image, ttf, …)
-examples/ — 7 runnable examples
+examples/ — 11 runnable examples
 ```
 
 ---

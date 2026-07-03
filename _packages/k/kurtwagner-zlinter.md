@@ -8,10 +8,10 @@ repository: https://github.com/KurtWagner/zlinter
 keywords:
   - linter
   - linters
-date: 2026-06-23
+date: 2026-07-03
 category: tooling
-updated_at: 2026-06-23T20:58:15+00:00
-last_sync: 2026-06-23T20:58:15Z
+updated_at: 2026-07-03T09:13:21+00:00
+last_sync: 2026-07-03T09:13:21Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -31,13 +31,13 @@ permalink: /packages/KurtWagner/zlinter/
 
 # Zlinter - Linter for Zig
 
-[![Zig support](https://img.shields.io/badge/Zig-0.14.x%20%7C%200.15.x%20%7C%200.16.x-%23f3ab20?logo=zig&style=flat)](http://github.com/kurtwagner/what-the-zig)
-[![linux](https://img.shields.io/github/actions/workflow/status/KurtWagner/zlinter/linux.yml?branch=0.16.x&label=linux&style=flat)](https://github.com/KurtWagner/zlinter/actions/workflows/linux.yml)
-[![windows](https://img.shields.io/github/actions/workflow/status/KurtWagner/zlinter/windows.yml?branch=0.16.x&label=windows&style=flat)](https://github.com/KurtWagner/zlinter/actions/workflows/windows.yml)
-[![Coverage Status](https://img.shields.io/coveralls/github/KurtWagner/zlinter/0.16.x?style=flat)](https://coveralls.io/github/KurtWagner/zlinter?branch=0.16.x)
+[![Zig support](https://img.shields.io/badge/Zig-0.14.x%20%7C%200.15.x%20%7C%200.16.x%20%7C%20master-%23f3ab20?logo=zig&style=flat)](http://github.com/kurtwagner/what-the-zig)
+[![linux](https://img.shields.io/github/actions/workflow/status/KurtWagner/zlinter/linux.yml?branch=master&label=linux&style=flat)](https://github.com/KurtWagner/zlinter/actions/workflows/linux.yml)
+[![windows](https://img.shields.io/github/actions/workflow/status/KurtWagner/zlinter/windows.yml?branch=master&label=windows&style=flat)](https://github.com/KurtWagner/zlinter/actions/workflows/windows.yml)
+[![Coverage Status](https://img.shields.io/coveralls/github/KurtWagner/zlinter/master?style=flat)](https://coveralls.io/github/KurtWagner/zlinter?branch=master)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat)](https://opensource.org/licenses/MIT)
 
-An extendable and customizable **Zig linter** (with [AST explorer](https://kurtwagner.github.io/zlinter/explorer/)) that is integrated from source into your`build.zig`.
+An extendable and customizable **Zig linter** (with [AST explorer](https://kurtwagner.github.io/zlinter/explorer/)) that is integrated from source into your `build.zig`.
 
 A **linter** is a tool that automatically checks source code for style issues, bugs, or patterns that may lead to errors,<br/> helping developers write cleaner and more reliable code.
 
@@ -69,9 +69,10 @@ A **linter** is a tool that automatically checks source code for style issues, b
   - [no_literal_only_bool_expression](RULES.md#no_literal_only_bool_expression)
   - [no_orelse_unreachable](RULES.md#no_orelse_unreachable)
   - [no_panic](RULES.md#no_panic)
+  - [no_redundant_comptime](RULES.md#no_redundant_comptime)
   - [no_swallow_error](RULES.md#no_swallow_error)
   - [no_todo](RULES.md#no_todo)
-  - [no_undefined](RULES.md#no_undefined)
+  - [no_unsafe_undefined](RULES.md#no_unsafe_undefined)
   - [no_unused](RULES.md#no_unused)
   - [require_braces](RULES.md#require_braces)
   - [require_exhaustive_enum_switch](RULES.md#require_exhaustive_enum_switch)
@@ -82,22 +83,21 @@ A **linter** is a tool that automatically checks source code for style issues, b
   - [switch_case_ordering](RULES.md#switch_case_ordering)
 - [Configuration](#configuration)
   - [Paths](#configure-paths)
-  - [Rules](#configure-rules)
+  - [Rules in build.zig](#configure-rules-in-buildzig)
+  - [Rules by Directory](#configure-rules-by-directory)
   - [Disable with Comments](#disable-with-comments)
   - [Command-Line Arguments](#command-line-arguments)
   - [Optimization](#configure-optimization)
 - [Supported zig versions](#supported-zig-versions)
-- [Milestones](#milestones)
+- [Background](#background)
 - [Versioning](#versioning)
-- [Contributing](#contributing)
-  - [How to Contribute](#contributions)
-  - [Run tests](#run-tests)
-  - [Run on self](#run-lint-on-self)
+- [Contributing](CONTRIBUTING.md)
+- [Release Notes](RELEASES.md)
 
 ## Getting started
 
-`zlinter` is not a standalone binary - it's built into your projects `build.zig`.
-This makes it flexible to each projects needs. Simply add the dependency and
+`zlinter` is not a standalone binary - it's built into your project's `build.zig`.
+This makes it flexible to each project's needs. Simply add the dependency and
 hook it up to a build step, like `zig build lint`:
 
 **1. Save dependency to your zig project:**
@@ -174,8 +174,8 @@ so this is not recommended outside of testing zlinters rules for your project:
   const lint_cmd = b.step("lint", "Lint source code.");
   lint_cmd.dependOn(step: {
       var builder = zlinter.builder(b, .{});
-      inline for (@typeInfo(zlinter.BuiltinLintRule).@"enum".fields) |f| {
-          builder.addRule(.{ .builtin = @enumFromInt(f.value) }, .{});
+      inline for (@typeInfo(zlinter.BuiltinLintRule).@"enum".field_values) |field_value| {
+          builder.addRule(.{ .builtin = @enumFromInt(field_value) }, .{});
       }
       break :step builder.build();
   });
@@ -211,11 +211,11 @@ It can sometimes require a multiple runs to completely resolve all fixable issue
 Bespoke rules can be added to your project. For example, maybe you really don't like cats, and refuse to let any `cats` exist in any identifier. See example rule [`no_cats`](./integration_tests/src/no_cats.zig), which is then integrated like builtin rules in your `build.zig`:
 
 ```zig
-builder.addRule(b, .{ 
-  .custom = .{
-    .name = "no_cats",
-    .path = "src/no_cats.zig",
-  },
+builder.addRule(.{
+    .custom = .{
+        .name = "no_cats",
+        .path = "src/no_cats.zig",
+    },
 }, .{});
 ```
 
@@ -226,34 +226,59 @@ Alternatively, take a look at <https://github.com/KurtWagner/zlinter-custom-rule
 ### Configure paths
 
 The builder used in `build.zig` has a method `addPaths`, which can be used to
-add included and excluded paths. For example,
+add included and excluded files and directories. For example,
 
 ```zig
 builder.addPaths(.{
-    .include = &.{ b.path("engine-src/"), b.path("src/") },
-    .exclude = &.{ b.path("src/android/"), b.path("engine-src/generated.zig") },
+    .include_dirs = &.{ b.path("engine-src"), b.path("src") },
+    .exclude_dirs = &.{ b.path("src/android") },
+    .exclude_files = &.{ b.path("engine-src/generated.zig") },
 });
 ```
 
 would lint zig files under `engine-src/` and `src/` except for `engine-src/generated.zig` and any zig files under `src/android/`.
 
-### Configure Rules
+### Configure Rules in `build.zig`
 
-`addRule` accepts an anonymous struct representing the `Config` of rule being added. For example,
+`addRule` accepts an anonymous struct representing the `Config` of the rule
+being added. These are the base configurations applied. For example,
 
 ```zig
 builder.addRule(.{ .builtin = .field_naming }, .{
-  .enum_field = .{ .style = .snake_case, .severity = .warning },
+  .enum_field = .{ .warning = .snake_case },
   .union_field = .off,
-  .struct_field_that_is_type = .{ .style = .title_case, .severity = .@"error" },
-  .struct_field_that_is_fn = .{ .style = .camel_case, .severity = .@"error" },
+  .struct_field_that_is_type = .{ .@"error" = .title_case },
+  .struct_field_that_is_fn = .{ .@"error" = .camel_case },
 });
 builder.addRule(.{ .builtin = .no_deprecated }, .{
   .severity = .warning,
 });
 ```
 
-where `Config` struct are found in the rule source files [`no_deprecated.Config`](./src/rules/no_deprecated.zig) and [`field_naming.Config`](./src/rules/field_naming.zig).
+where the `Config` structs are defined in the rule source files [`no_deprecated.Config`](./src/rules/no_deprecated.zig) and [`field_naming.Config`](./src/rules/field_naming.zig).
+
+### Configure Rules by directory
+
+Rules configured in `build.zig` can be overridden for a directory and its
+descendant source files by adding a `zlinter.zon` file in that directory. For
+example,
+
+```zig
+// src/lib/zlinter.zon
+.{
+    .rules = .{
+        .field_naming = .{
+            .enum_field = .off,
+        },
+    },
+}
+```
+
+would turn off `field_naming` for enum fields in `src/lib/` and any
+directories below it. Other rule configuration fields continue to use the base
+configuration from `build.zig`.
+
+This requires the rule to already be enabled and configured in your `build.zig`.
 
 ### Disable with comments
 
@@ -264,7 +289,7 @@ Disable all rules or an explicit set of rules for the next source code line.
 Syntax:
 
 ```shell
-zlinter-disable-next-line [rule_1] [rule_n] [- comment]`
+zlinter-disable-next-line [rule_1] [rule_n] [- comment]
 ```
 
 For example,
@@ -327,12 +352,12 @@ If you omit `zlinter-enable`, all lines until EOF will be disabled.
 zig build lint -- [--include <path> ...] [--exclude <path> ...] [--filter <path> ...] [--rule <name> ...] [--fix] [--quiet] [--max-warnings <u32>]
 ```
 
-- `--include` run the linter on these path ignoring the includes and excludes defined in the `build.zig` forcing these paths to be resolved and linted (if they exist).
+- `--include` run the linter on these paths ignoring the includes and excludes defined in the `build.zig`, forcing these paths to be resolved and linted (if they exist).
 - `--exclude` exclude these paths from linting. This argument will be used in conjunction with the excludes defined in the `build.zig` unless used with `--include`.
-- `--filter` used to filter the run to a specific set of already resolved paths. Unlike `--include` this leaves the includes and excludes defined in the `build.zig` as is.
+- `--filter` used to filter the run to a specific set of already resolved paths. Unlike `--include`, this leaves the includes and excludes defined in the `build.zig` as is.
 - `--quiet` only report errors (not warnings).
 - `--max-warnings` fail if there are more than this number of warnings.
-- `--fix` used to automatically fix some issues (e.g., removal of unused container declarations) - **Only use this feature if you use source control as it can result loss of code!**
+- `--fix` used to automatically fix some issues (e.g., removal of unused container declarations) - **Only use this feature if you use source control as it can result in loss of code!**
 
 For example
 
@@ -341,7 +366,7 @@ zig build lint -- --include src/ android/ --exclude src/generated.zig --rule no_
 ```
 
 - Will resolve all zig files under `src/` and `android/` but will exclude linting `src/generated.zig`; and
-- Only rules `no_deprecated` and `no_unused` will be ran.
+- Only rules `no_deprecated` and `no_unused` will be run.
 
 ### Configure Optimization
 
@@ -353,7 +378,42 @@ var builder = zlinter.builder(b, .{.optimize = .ReleaseFast });
 
 If your project is large it may be worth setting optimize to `.ReleaseFast`. Just keep in mind the first run may be slower as it builds the modules for the first time with the new optimisation.
 
-Since 0.16.x `.Debug` is significantly slower to run as it uses the debug allocator. Unless working on zlinter or a custom rule it should be avoided
+Since 0.16.x, `.Debug` is significantly slower to run as it uses the debug allocator. Unless you're working on zlinter or a custom rule, it should be avoided.
+
+### Compile Units
+
+Large projects often have many compile units with overlapping module graphs. By default, `zlinter` uses executables first, then libraries, then tests, then object units, then test objects. This usually gives the linter the module/import context you expect without resolving every compile unit in the build, which is slower.
+
+Compiled units are used to resolve declarations from dependencies in your import graph.
+
+You can override that selection with explicit selectors. For example, to do all executables and a specific test:
+
+```zig
+const exe = b.addExecutable(.{
+    .name = "my_app",
+    .root_module = app_module,
+});
+const unit_tests = b.addTest(.{
+    .name = "unit_tests",
+    .root_module = test_module,
+});
+
+var builder = zlinter.builder(b, .{});
+builder.setCompileUnits(&.{
+    .exe,
+    .{ .explicit = unit_tests },
+});
+```
+
+If you only want to context resolve a single executable and your project registers multiple, then you should:
+
+```zig
+builder.setCompileUnits(&.{
+    .{ .explicit = your_exe },
+});
+```
+
+Use `.all` only when you intentionally want every discovered compile unit to supply context. It can be much slower for large projects, and may not provide much additional context resolution.
 
 ## Supported zig versions
 
@@ -365,33 +425,17 @@ Fixes and improvements to rules may be cherry-picked to older versions if there'
 
 This may change once zig hits `1.x`.
 
-## Milestones
-
-### Background
+## Background
 
 `zlinter` was written to be used across my personal projects. The main motivation was to have it integrated from source through a build step so that it can be
 
 1. customized at build time (e.g., byo rules); and
-2. versioned with your projects source control (no separate binary to juggle)
+2. versioned with your project's source control (no separate binary to juggle)
 
 I'm opening it up incase it's more generally useful, and happy to let it
 organically evolve around needs, if there's value in doing so.
 
-It uses [`zls`](https://github.com/zigtools/zls) (an awesome project, go check it out if you haven't already) and `std.zig` to build and analyze zig source files.
-
-### Current limitations
-
-`zlinter` currently analyzes the Zig AST, which has limited context without trying to re-implement the Zig compiler (not doing).
-
-See [limitations](./LIMITATIONS.md) for more information.
-
----
-
-1. [done] **Rough implementaton of 20 diverse linter rules** - this is important to understanding limitations (e.g., the AST and design patterns to a stable API.)
-  
-1. [in-progress] **Run and review the results on at least 5 large open source Zig projects** - this is to discover unknown unknowns to populate caveats and limitations of current approach.
-
-1. [pending] **To be informed by (1) and (2)** - could be that AST is good enough for enough cases to provide value providing adequate documentation, AND/OR, could be that it's worth contributing time into Zigs efforts around "multibuild" and zig compiler server.
+It uses `std.zig` and `std.Build.Configuration` to build and analyze zig source files.
 
 ## Versioning
 
@@ -402,73 +446,3 @@ See [limitations](./LIMITATIONS.md) for more information.
 - use branch `0.14.x` for `zig` `0.14.x` releases.
 
 This may change, especially when `zig` is "stable" at `1.x`. If you have opinions on this, feel free to comment on [#20](https://github.com/KurtWagner/zlinter/issues/20).
-
-## Contributing
-
-### Contributions
-
-Contributions and new rules or formatters are very welcome.
-
-Rules are per project configurable so I don't see any problems if new opinionated ones are added (assuming they're not completely bespoke).
-
-If you notice breaking changes in `zig` that will not be picked up by a `Deprecated:` comment then consider contributing to the `no_deprecated.zig` rule, with a specific check for the change. For example, `zig` removed `usingnamespace` in `0.15` so `no_deprecated.zig` will explicitly check and report the usage of `usingnamespace` keyword in `0.14` runs.
-
-### Dependencies
-
-Zlinter avoids dependencies. It's just too much of a burden right now to depend
-on something written for Zig when Zig isn't 1.x.
-
-The one exception is ZLS, as it's well maintained and doesn't appear to be
-going anywhere. More often than not I've wasted hours implementing a method to
-find a very similar method already exists in ZLS, which makes sense, as ZLS
-analyses Zig code using the AST like this linter currently does.
-
-The AST Explorer provided with Zlinter will be similar and aims to be minimal.
-Ideally no build system, no dependencies, just plain JS and CSS targetting
-modern browers as the target audience should all have access to such things.
-
-### Run tests
-
-Unit tests:
-
-```shell
-zig build unit-test
-```
-
-Integration tests:
-
-```shell
-zig build integration-test
-```
-
-All tests:
-
-```shell
-zig build test
-```
-
-To focus on a single rule when running integration tests:
-
-```shell
-zig build integration-test -Dtest_focus_on_rule=require_braces
-```
-
-### Run lint on self
-
-```shell
-zig build lint
-```
-
-### Regenerate documentation
-
-```shell
-zig build docs
-```
-
-### Build and serve website (with AST explorer)
-
-```shell
-zig build website && npx http-server -c-1 zig-out/website
-```
-
-You don't need to use `npx`, its just static content in `zig-out/website`. You may decide to use `python -m http.server` instead.

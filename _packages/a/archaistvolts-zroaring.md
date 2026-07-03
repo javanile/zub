@@ -1,22 +1,21 @@
 ---
 title: zroaring
-description: A roaring bitmap implementation in zig with no dependencies.
+description: A roaring bitmap implementation in zig.
 license: NOASSERTION
 author: archaistvolts
 author_github: archaistvolts
 repository: https://github.com/archaistvolts/zroaring
 keywords:
-  - roaringbitmap
-date: 2026-05-22
-updated_at: 2026-05-22T01:17:48+00:00
-last_sync: 2026-05-22T01:17:48Z
+date: 2026-07-01
+updated_at: 2026-07-01T00:12:32+00:00
+last_sync: 2026-07-01T00:12:32Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 1
-distributable_binary_count: 1
-multiple_binaries: false
+binary_count: 7
+distributable_binary_count: 2
+multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
 sync_source: zigistry
@@ -24,7 +23,7 @@ permalink: /packages/archaistvolts/zroaring/
 ---
 
 # About
-A Roaring Bitmap implementation in zig inspired by [CRoaring](https://github.com/RoaringBitmap/CRoaring) and with a similar API.
+A Roaring Bitmap with an API similar to [CRoaring](https://github.com/RoaringBitmap/CRoaring).  All Bitmap data is allocated in 3 allocations with container data in simd sized blocks.
 
 This repo is hosted on [codeberg](https://codeberg.org/archaistvolts/zroaring) and mirrored to [github](https://github.com/archaistvolts/zroaring).
 
@@ -34,11 +33,9 @@ This repo is hosted on [codeberg](https://codeberg.org/archaistvolts/zroaring) a
 # Use
 With zig version 0.16.0
 
-:warning: **Be sure to test your application in debug mode as there may be unreachable code paths left as TODOs**.
-
 ### fetch package
 ```console
-$ zig fetch --save git+https://codeberg.org/archaistvolts/zroaring
+zig fetch --save git+https://codeberg.org/archaistvolts/zroaring
 ```
 ```zig
 // build.zig
@@ -50,6 +47,7 @@ const exe_mod = b.createModule(.{
     },
 });
 ```
+With an Allocator
 ```zig
 // app.zig
 const zroaring = @import("zroaring");
@@ -61,42 +59,109 @@ try std.testing.expect(!zr.contains(2));
 ```
 
 # Test
-`$ zig build test`
-### Fuzz
-* with the build system:
 ```console
-$ zig build test -Dllvm --fuzz
+zig build test
 ```
-* with nix-shell and AFL++:
+### Fuzz
+#### With the build system:
+Fuzz, verifying each `fuzz.Op` result against CRoaring.
 ```console
-$ nix-shell
-$ ./scripts/afl-fuzz.sh
+zig build test -Doptimize=ReleaseSafe --fuzz --webui=[::1]:40313 -j1 -Dfuzzprint
+```
+
+`-Dfuzzprint` prints zon reproductions which can be copied to [src/fuzz-crash-corpus.zon](src/fuzz-crash-corpus.zon).
+
+#### With nix-shell and AFL++:
+
+```console
+nix-shell
+./scripts/afl-fuzz.sh
+```
+> [!NOTE]
+> AFL fuzzing is a work in progress.  It uses `std.ArrayHashMap` instead of `CRoaring` as an oracle due to some `-Dfuzz-exe` build issues.
+
+#### Reproducing with an AFL crash/hang file
+```console
+zig build && zig-out/bin/afl-main afl/output/default/crashes...
+```
+
+# CRoaring API coverage
+```console
+date +%F; zig build run -- api-coverage
+```
+```console
+2026-06-30
+
+parsed command:
+  api-coverage --filter API-COVERAGE-FILTER-NONE
+
+symbols coverage:
+  prefix                    found total %
+---------------------------------------------
+  roaring_bitmap_           59    91    64.8%
+  ra_                       16    40    40.0%
+  container_                11    18    61.1%
+  run_container_            16    37    43.2%
+  bitset_container_         21    49    42.9%
+  array_container_          12    31    38.7%
+  roaring_iterator_         0     1     0.0%
+  roaring_uint32_iterator_  2     2     100.0%
+---------------------------------------------
+  total                     137   269   50.9%
+---------------------------------------------
+  filtered                  0     0     -nan%
+```
+
+Add `--filter`, a substring to search, if you want to see individual method coverage.
+
+# Bench
+Benchmark data is stored in `testdata/bench-data.csv`.
+
+#### Run benchmark
+```console
+zig build bench -Doptimize=ReleaseFast # -- write_csv_row
+```
+`write_csv_row` appends a row to `testdata/bench-data.csv`.
+
+#### Plot benchmarks
+```console
+gnuplot testdata/bench-by-op.gp -p
+gnuplot testdata/bench-total.gp -p
 ```
 
 # Contributing
 Human contributions are very welcome.  Please open a pull request or issue on codeberg if you run into a TODO, FIXME or any problems while using this project.  There is a lot of work yet to be done here.
+
+# Ideas / TODOs - contributions welcome
+* [x] in memory layout - 3 allocations: array, bitset_blocks and run/array blocks.
+* [x] validation: fix failing checkAllAllocationFailures test
+* [x] checkAllAllocationFailures - why so slow? - added -Dskip-slow-tests
+* [x] allocation failures test with crash corpus.
+* [x] container: match croaring binop param ordering: src1, src2, dst
+* [x] optimize: store blocks in a separtate allocation to reduce copying in realloc_array, shrink_to_fit, run_optimize, etc.
+* [ ] Provide a similar api to std.HashMap
+* [ ] Bounded API: initBuffer, appendBounded
+* [ ] Support more set sizes than just u32. with generics - Bitmap(T)?
+* [ ] build commands `$ zig build [api-coverage | correctness | bench]`
+  * [x] api-coverage:    show % of c api covered
+  * [x] bench:           show timings of bench with c
+    * [x] keep track of benchmarks over time - testdata/bench-data.csv
+  * [ ] api-correctness: show % correct fuzzing with c api oracle
+  * [ ] api-endian:      check for and document endian sensitive methods by comparing big endian serialized bytes to little endian bytes with help from qemu.
+* [ ] documentation needs a lot of work
+* [ ] audit endian sensitive methods.  aim for endian awareness throughout.
+* [ ] use in regex / peg impl in another project maybe following https://github.com/MartinErhardt/RoaringRegex
+* [ ] strategy for reclaiming blocks to reduce memory usage.  depending on users calling shrink_to_fit() doesn't seem viable.
+  * [x] add compaction to realloc_blocks shrink code path
+* [ ] AFL fuzzer
+  * [ ] slow fuzzing - check for HashMapOracle leaks
+  * [ ] try again to use croaring, address build issues, remove HashMapOracle
+* [ ] CI: windows failure: use translate-c to replace pre-translated src/c/roaring.zig
+  * [x] workaround until translate-c fixes (hopefully 0.17) - introduce src/c/roaring-subset.h with symbols copied from roaring.h which translate-c can handle.
+* [ ] bench with reordered Array fields.  also bench without field alignments.
 
 # References
 * https://github.com/RoaringBitmap/RoaringFormatSpec
 * https://github.com/RoaringBitmap/CRoaring
 * https://github.com/awesomo4000/rawr
 * https://github.com/lalinsky/roaring.zig
-* https://github.com/archaistvolts/resizable-struct
-
-# Ideas / TODOs - contributions welcome
-* [x] in memory layout - a single allocation, resizable struct to model state - serialization friendly, single write, single read.
-* [x] Transition to a more from-scratch approach.  Don't try to follow CRoaring impl closely, but try to follow the API.
-* [x] validation: fix failing checkAllAllocationFailures test
-* [ ] Provide a similar api to std.HashMap
-* [ ] Bounded API: initBuffer, appendBounded
-* [ ] Support more set sizes than just u32 with generics - Bitmap(T)
-* [ ] build commands `$ zig build [api-coverage | correctness | bench]`
-  * [ ] api-coverage:    show % of c api covered
-  * [ ] api-correctness: show % correct fuzzing with c api oracle
-  * [ ] api-endian:      check for and document endian sensitive methods by comparing big endian serialized bytes to little endian bytes with help from qemu.
-  * [ ] bench:           show timings of bench with c
-    * [ ] keep track of benchmarks over time
-* [ ] documentation needs a lot of work
-* [ ] audit endian sensitive methods.  aim for endian awareness throughout.
-* [ ] audit unreachable code paths.  fuzzing will help.
-* [ ] use in regex / peg impl in another project maybe following https://github.com/MartinErhardt/RoaringRegex
