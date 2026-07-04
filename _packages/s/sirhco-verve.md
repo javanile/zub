@@ -23,16 +23,16 @@ keywords:
   - webassembly
   - webgpu
   - webview
-date: 2026-07-01
+date: 2026-07-03
 category: systems
-updated_at: 2026-07-01T12:46:14+00:00
-last_sync: 2026-07-01T12:46:14Z
+updated_at: 2026-07-03T23:11:06+00:00
+last_sync: 2026-07-03T23:11:06Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 27
-distributable_binary_count: 27
+binary_count: 28
+distributable_binary_count: 28
 multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
@@ -213,7 +213,9 @@ Native 3D, pure Zig + two hand-written interpreters (**WebGL2 and WebGPU**) — 
 - **Morph targets** — GPU blend shapes with POSITION + NORMAL + **TANGENT** deltas (correct normal-mapped morphing), up to **32 simultaneous active influences**, cubic-Hermite weight easing, and a **combined skinned + morph** variant (morph deltas applied to local space, then the skin matrix — glTF order). Demos: `/gl-morph`, `/gl-morph16`, `/gl-skin-morph`.
 - **Level of detail (LOD)** — a single `.vmesh` packs multiple LOD levels with squared-distance thresholds; the runtime selects the active level per object by camera distance and narrows every draw pass (opaque, transparent, shadow) to it. Demo: `/gl-lod`.
 - **Image quality** — bloom + FXAA, a depth + view-space-normal prepass (G-buffer), **SSAO**, **screen-space reflections (SSR)**, **depth of field**, **weighted-blended OIT** (order-independent transparency), selectable tone-mappers (ACES / AgX / Reinhard / Reinhard-extended / Uncharted2 / linear), and vignette. Demos: `/gl-ssao`, `/gl-ssr`, `/gl-dof`, `/gl-oit`, `/gl-tonemap`, `/gl-post`.
+- **Reflection probes** — a probe renders the scene into a cubemap from a fixed position, **GGX-prefilters** it into a roughness mip chain, and binds it as the specular IBL source, so a reflective model mirrors its **actual surroundings** rather than a static environment map. Static capture-once; both backends. `ctx.glScene(…).probe(pos)`. Demo: `/gl-probe`.
 - **Asset pipeline** — build-time `.glb` → packed `.vmesh` (`tools/gl_asset_gen`): zero runtime parsing, fetch → linear memory → GPU upload. Pure-Zig PNG decoder, glb parser, and vmesh reader, all hardened against hostile input (errors, never panics). `verve.anim` fusion drives scroll-scrubbed 3D. Demo: [`examples/gl-viewer/`](examples/gl-viewer/README.md).
+- **Geometry compression (`.vmesh` v16/v17)** — index buffers compress losslessly (delta+zigzag+varint, ~50%) and vertex buffers via quantization (pos u16 / normal+tangent i8 / uv u16, ~65%), decoded host-side before upload so both backends stay unchanged. Total assets shrink **~32–46%** (lodsphere 116→79 KB). Pure-Zig codec; native round-trip + WebGL2 visual gate.
 
 ### Markdown & syntax highlighting
 Pure-Zig, server-side — replaces third-party `marked` / `highlight.js`. Parsed at SSR time into the `Node` tree; no client wasm, no JavaScript. Guide: [`docs/21-markdown-and-highlighting.md`](docs/21-markdown-and-highlighting.md). Demo: [`examples/markdown/`](examples/markdown/README.md).
@@ -385,6 +387,7 @@ Then open:
 - <http://127.0.0.1:8080/gl-skin>, `/gl-skin-morph`, `/gl-morph` — skinning, combined skinned+morph, and morph-target demos
 - <http://127.0.0.1:8080/gl-lod> — distance-based level-of-detail (LOD) mesh selection
 - <http://127.0.0.1:8080/gl-ssr>, `/gl-ssao`, `/gl-dof`, `/gl-oit`, `/gl-tonemap` — image-quality demos (SSR, SSAO, depth of field, order-independent transparency, tone-mappers)
+- <http://127.0.0.1:8080/gl-probe> — runtime reflection probe (GGX-prefiltered cubemap capture)
 
 Or run the **showcase** for a tour of every feature:
 

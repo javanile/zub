@@ -7,10 +7,10 @@ author_github: karlseguin
 repository: https://github.com/karlseguin/websocket.zig
 keywords:
   - websocket
-date: 2026-07-02
+date: 2026-07-04
 category: networking
-updated_at: 2026-07-02T12:17:36+00:00
-last_sync: 2026-07-02T12:17:36Z
+updated_at: 2026-07-04T01:13:46+00:00
+last_sync: 2026-07-04T01:13:46Z
 package_kind: library
 has_library: true
 has_binary: false
