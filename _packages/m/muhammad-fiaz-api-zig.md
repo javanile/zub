@@ -17,9 +17,9 @@ keywords:
   - zig-api-package
   - zig-http
   - zig-restful
-date: 2026-06-30
-updated_at: 2026-06-30T18:43:44+00:00
-last_sync: 2026-06-30T18:43:44Z
+date: 2026-07-03
+updated_at: 2026-07-03T16:06:11+00:00
+last_sync: 2026-07-03T16:06:11Z
 package_kind: hybrid
 has_library: true
 has_binary: true

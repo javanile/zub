@@ -7,9 +7,9 @@ author_github: srmadrid
 repository: https://github.com/srmadrid/zsl
 keywords:
   - math
-date: 2026-07-02
-updated_at: 2026-07-02T09:27:06+00:00
-last_sync: 2026-07-02T09:27:06Z
+date: 2026-07-05
+updated_at: 2026-07-05T09:18:08+00:00
+last_sync: 2026-07-05T09:18:08Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -25,7 +25,7 @@ permalink: /packages/srmadrid/zsl/
 
 # zsl: zig scientific library
 
-A generic numerical and symbolic mathematics library for Zig.
+A generic numerical mathematics library for Zig.
 
 > ⚠️ Zsl is in the early stages of development. APIs change frequently, results may be incorrect, and many features are missing or partial. Use with care, and please [open an issue](https://github.com/srmadrid/zsl/issues) if you hit a bug or have a suggestion.
 
@@ -39,32 +39,42 @@ Zsl lets you write numerical code once and run it over whatever numeric type you
   - Dyadic rationals
   - Complex numbers
 - Vectors (`vector`):
-  - Two storage formats:
+  - Three storage formats:
+    - `Static`
     - `Dense`
     - `Sparse`
   - Vector addition/subtraction and scalar multiplication/division
 - Matrices (`matrix`):
   - Diverse storage formats:
     - General (`general`):
+      - `Static`
       - `Dense`
       - `Sparse` (CSR, CSC)
     - Symmetric (`symmetric`):
+      - `Static`
       - `Dense`
       - `Sparse` (CSR, CSC)
     - Hermitian (`hermitian`):
+      - `Static`
       - `Dense`
       - `Sparse` (CSR, CSC)
     - Triangular (`triangular`):
+      - `Static`
       - `Dense`
       - `Sparse` (CSR, CSC)
-    - `Diagonal`
-    - `Permutation`
+    - Diagonal (`diagonal`):
+      - `Static`
+      - `Sparse`
+    - Permutation (`permutation`):
+      - `Static`
+      - `Sparse`
   - Matrix addition/subtraction/multiplication and scalar multiplication/division
   - Views
 - N-dimensional arrays (`array`):
-  - Two storage formats:
-    - `Dense` (plus `Strided` for views)
-    - `Sparse` (CSF): not implemented yet
+  - Three storage formats:
+    - `Static`
+    - `Dense`
+    - `Sparse` (CSF)
   - Broadcasting
   - Element-wise operations
   - Views
@@ -80,8 +90,6 @@ Zsl lets you write numerical code once and run it over whatever numeric type you
 - Automatic Differentiation (`autodiff`):
   - Dual numbers (forward)
   - Tape and Var numbers (backward)
-- Symbolic System:
-  - Nothing implemented yet
 
 ## Installation
 

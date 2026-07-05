@@ -8,10 +8,11 @@ repository: https://github.com/KurtWagner/zlinter
 keywords:
   - linter
   - linters
-date: 2026-07-04
+  - static-analysis
+date: 2026-07-05
 category: tooling
-updated_at: 2026-07-04T11:20:17+00:00
-last_sync: 2026-07-04T11:20:17Z
+updated_at: 2026-07-05T10:24:14+00:00
+last_sync: 2026-07-05T10:24:14Z
 package_kind: hybrid
 has_library: true
 has_binary: true
