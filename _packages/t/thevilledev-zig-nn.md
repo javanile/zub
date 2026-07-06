@@ -8,16 +8,16 @@ repository: https://github.com/thevilledev/zig-nn
 keywords:
   - learning
   - neural-networks
-date: 2026-07-05
-updated_at: 2026-07-05T11:39:27+00:00
-last_sync: 2026-07-05T11:39:27Z
+date: 2026-07-06
+updated_at: 2026-07-06T11:39:29+00:00
+last_sync: 2026-07-06T11:39:29Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 1
-distributable_binary_count: 1
-multiple_binaries: false
+binary_count: 2
+distributable_binary_count: 2
+multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
 sync_source: zigistry
@@ -46,30 +46,45 @@ boundaries, and small experiments that can be checked against real output.
 
 The repo has two matrix paths:
 
-- `Matrix` is the learning-oriented path used by `Network`, `Layer`, examples,
-  and training code.
+- `Matrix` is the learning-oriented path used by the default `Network`,
+  `Layer`, examples, and training code.
 - `BackendMatrix` is the backend-aware path that can run operations through CPU
-  or Metal implementations.
+  Metal, or CUDA implementations.
 
-Metal support currently applies to backend matrix operations and GPU examples.
-The higher-level `Network` training and inference path is still CPU-only. CUDA
-is present as an enum/build option, but the library backend currently falls
-back to CPU for CUDA-tagged work.
+Metal and CUDA support currently applies to backend matrix operations, GPU
+examples, and backend-aware `Network.forwardBackend` / `Network.predictBackend`
+inference. The higher-level training path is still CPU-only.
 
 ## Start Here
 
+Make sure Zig `0.16.0` and Go `1.26` or newer are installed. From the
+repository root, install `nnctl` once, then use it for repo tasks.
+
 ```bash
+# Install nnctl
+go install ./nnctl/cmd/nnctl
+nnctl help
+
 # Build, test, and build examples
-make
+nnctl all
 
-# Run quick examples
-make run-examples
+# Run specific examples
+nnctl run simple-xor
+nnctl run tiny-gpt
 
-# Prepare optional Tiny GPT corpora
-make prepare-tiny-gpt-data
+# Download data for examples
+nnctl data mnist
+nnctl data tiny-gpt
 
-# See available Make targets
-make help
+# Train and serve a TinyGPT checkpoint
+nnctl train tiny-gpt --preset coherent-small --output tiny-gpt.bin
+nnctl chat --model tiny-gpt.bin
+
+# Build with a different optimization mode
+nnctl build --mode ReleaseFast
+
+# Run readable benchmark comparisons
+nnctl benchmark
 ```
 
 For setup details and direct `zig build` commands, see
@@ -81,23 +96,26 @@ For setup details and direct `zig build` commands, see
   tests, and common development tasks
 - [Examples](docs/examples.md) - runnable demos and what each one is meant to
   show
+- [Benchmarks](docs/benchmarks.md) - repeatable CPU, GPU, and release-mode
+  benchmark commands
 - [Experiments](docs/experiments.md) - research-style probes, metrics, and
   current experiment notes
-- [GPU and Backend Notes](docs/gpu.md) - current backend boundaries, Metal
-  verification, and CUDA status
+- [GPU and Backend Notes](docs/gpu.md) - current backend boundaries, Metal and
+  CUDA verification
 - [Neural Network Architecture](docs/architecture.md) - design principles and
   component overview
 - [Advanced Activation Functions](docs/activation_functions.md) - Swish, GLU,
   SwiGLU, and implementation notes
+- [Research Resources](docs/research.md) - papers, official docs, datasets,
+  and implementation references for topics covered by the repo
 
 ## Repository Map
 
 - `src/` - reusable library code
 - `examples/` - runnable programs and acceptance-style example tests
 - `docs/` - guides and architecture notes
-- `scripts/` - helper scripts for external data
+- `nnctl/` - Go CLI for repository tasks
 - `build.zig` - Zig build graph, test steps, examples, and backend options
-- `Makefile` - convenience wrapper for common development commands
 
 ## License
 

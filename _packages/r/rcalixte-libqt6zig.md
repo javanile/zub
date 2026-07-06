@@ -12,10 +12,10 @@ keywords:
   - gui-library
   - qt
   - qt6
-date: 2026-06-25
+date: 2026-07-06
 category: systems
-updated_at: 2026-06-25T16:49:53+00:00
-last_sync: 2026-06-25T16:49:53Z
+updated_at: 2026-07-06T03:46:06+00:00
+last_sync: 2026-07-06T03:46:06Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -182,7 +182,7 @@ fn onClicked(self: QPushButton) callconv(.c) void {
 }
 ```
 
-Full examples are available in the [`libqt6zig-examples`](https://github.com/rcalixte/libqt6zig-examples) repository.
+Full examples are available in the [`libqt6zig-examples`](https://github.com/rcalixte/libqt6zig-examples) repository. An [overview of the examples](https://github.com/rcalixte/libqt6zig-examples/blob/master/OVERVIEW.md) is also available for a simpler/quicker glance.
 
 Building
 --------

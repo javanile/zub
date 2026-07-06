@@ -10,9 +10,9 @@ keywords:
   - gui
   - gui-library
   - retained-mode-gui
-date: 2026-06-05
-updated_at: 2026-06-05T18:07:10+00:00
-last_sync: 2026-06-05T18:07:10Z
+date: 2026-06-28
+updated_at: 2026-06-28T14:52:25+00:00
+last_sync: 2026-06-28T14:52:25Z
 package_kind: library
 has_library: true
 has_binary: false

@@ -6,16 +6,16 @@ author: ooyeku
 author_github: ooyeku
 repository: https://github.com/ooyeku/vigil
 keywords:
-date: 2026-05-24
-updated_at: 2026-05-24T23:58:42+00:00
-last_sync: 2026-05-24T23:58:42Z
-package_kind: hybrid
+date: 2026-06-28
+updated_at: 2026-06-28T18:17:47+00:00
+last_sync: 2026-06-28T18:17:47Z
+package_kind: library
 has_library: true
-has_binary: true
-has_distributable_binary: true
-binary_count: 2
-distributable_binary_count: 2
-multiple_binaries: true
+has_binary: false
+has_distributable_binary: false
+binary_count: 0
+distributable_binary_count: 0
+multiple_binaries: false
 is_sponsor: false
 sync_priority: normal
 sync_source: zigistry
@@ -52,7 +52,7 @@ const vigil = @import("vigil");
 
 fn worker() void {
     std.debug.print("Worker running\n", .{});
-    std.Thread.sleep(100 * std.time.ns_per_ms);
+    vigil.compat.sleep(100 * std.time.ns_per_ms);
 }
 
 pub fn main() !void {
@@ -65,6 +65,26 @@ pub fn main() !void {
     _ = try app.workerPool("pool", worker, 4);
     try app.start();
     defer app.shutdown();
+}
+```
+
+### Runtime-Owned Services
+
+```zig
+var rt = try vigil.runtime(allocator, .{});
+defer rt.deinit();
+
+var inbox = try rt.inbox(.{ .capacity = 128 });
+defer inbox.close();
+
+try inbox.send("hello from the runtime");
+
+var snapshot = try rt.snapshot(allocator);
+defer snapshot.deinit();
+
+const health = try rt.health(allocator);
+if (!health.ready) {
+    // Surface degraded runtime state in your service health endpoint.
 }
 ```
 
@@ -127,6 +147,7 @@ try group.roundRobin("message"); // Load balance
 
 - **Process Supervision** - Automatic restart strategies (one_for_one, one_for_all, rest_for_one)
 - **Message Passing** - Thread-safe inboxes with priority queues
+- **Owned Runtime** - Registry, telemetry, shutdown, inboxes, and supervisors under one owner
 - **Fluent Builders** - Intuitive API with sensible defaults
 - **Configuration Presets** - Production, development, HA, and testing modes
 
@@ -145,6 +166,7 @@ try group.roundRobin("message"); // Load balance
 ### Observability
 
 - **Telemetry** - Event hooks for monitoring (process, message, supervisor, circuit events)
+- **Runtime Introspection** - Snapshot registered mailboxes, queue depth, handlers, hooks, process groups, pub/sub brokers, timers, circuit breakers, and readiness
 - **Testing Utilities** - Mock inboxes, mock supervisors, time control
 
 ### Advanced
@@ -171,6 +193,19 @@ var app = try vigil.appWithPreset(allocator, .testing);
 
 ## Examples
 
+The root package is library-only: use `zig build test` at the repository root, and run examples from their own directories.
+
+See [examples/vigil_showcase](examples/vigil_showcase) for a self-contained resilient order pipeline that demonstrates:
+- Runtime-owned registry, telemetry, shutdown hooks, and inboxes
+- Process groups for worker routing and operations broadcast
+- Pub/Sub event fanout for audit and alert streams
+- Inbox backpressure, rate limiting, and circuit breaker behavior
+
+```bash
+cd examples/vigil_showcase
+zig build run
+```
+
 See [examples/vigilant_server](examples/vigilant_server) for a complete TCP server with:
 - Circuit breaker protection
 - Rate limiting
@@ -179,13 +214,27 @@ See [examples/vigilant_server](examples/vigilant_server) for a complete TCP serv
 
 ```bash
 cd examples/vigilant_server
-zig build
-./zig-out/bin/vigilant_server
+zig build run
 ```
+
+## Benchmarks
+
+The root package stays library-only. Run the standalone benchmark harness from its own package:
+
+```bash
+cd benchmarks/vigil_bench
+zig build run -Doptimize=ReleaseSafe -- --iterations 10000
+```
+
+The v2.1 benchmark harness reports throughput, average latency, and observed allocator calls per operation for inbox send/receive, registry lookup/register, telemetry emission, timer scheduling, process-group routing/broadcast, pub/sub fanout, request/reply correlation, and concurrent inbox contention. See [benchmarks/vigil_bench](benchmarks/vigil_bench) for the current baseline.
 
 ## Documentation
 
 See [docs/api.md](docs/api.md) for comprehensive API documentation.
+
+## Migrating to 2.0
+
+Vigil 2.0 removes the old 0.2 compatibility helpers from the root `vigil` module. Code that needs historical low-level types should import `vigil/legacy` explicitly. New code should use `vigil.Runtime`, `vigil.app`, `vigil.supervisor`, `vigil.inbox`, and `vigil.GenServer`.
 
 ## Running Tests
 
@@ -196,7 +245,8 @@ zig build test
 ## Requirements
 
 - Zig 0.16.x
-- POSIX-compliant operating system
+- Core runtime support for Zig's native thread targets
+- Distributed TCP registry and networking examples currently use the bundled POSIX socket compatibility layer
 
 ## License
 

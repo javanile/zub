@@ -8,15 +8,15 @@ repository: https://github.com/cloudboss/aws-sdk-zig
 keywords:
   - aws
   - cloud
-date: 2026-05-10
-updated_at: 2026-05-10T15:08:29+00:00
-last_sync: 2026-05-10T15:08:29Z
-package_kind: library
+date: 2026-06-28
+updated_at: 2026-06-28T19:32:52+00:00
+last_sync: 2026-06-28T19:32:52Z
+package_kind: hybrid
 has_library: true
-has_binary: false
-has_distributable_binary: false
-binary_count: 0
-distributable_binary_count: 0
+has_binary: true
+has_distributable_binary: true
+binary_count: 1
+distributable_binary_count: 1
 multiple_binaries: false
 is_sponsor: false
 sync_priority: normal
@@ -52,6 +52,8 @@ To add the SDK as a dependency, run:
 ```
 zig fetch --save git+https://github.com/cloudboss/aws-sdk-zig
 ```
+
+All service clients are constructed in the same way, by creating an `aws.Config` and passing it to the service client's `.init` with an allocator.
 
 ```zig
 const std = @import("std");

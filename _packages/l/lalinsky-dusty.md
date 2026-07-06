@@ -13,10 +13,10 @@ keywords:
   - websocket
   - websocket-client
   - websocket-server
-date: 2026-06-30
+date: 2026-07-06
 category: networking
-updated_at: 2026-06-30T07:50:07+00:00
-last_sync: 2026-06-30T07:50:07Z
+updated_at: 2026-07-06T06:45:21+00:00
+last_sync: 2026-07-06T06:45:21Z
 package_kind: hybrid
 has_library: true
 has_binary: true
