@@ -8,9 +8,9 @@ repository: https://github.com/thevilledev/zig-nn
 keywords:
   - learning
   - neural-networks
-date: 2026-07-06
-updated_at: 2026-07-06T11:39:29+00:00
-last_sync: 2026-07-06T11:39:29Z
+date: 2026-07-07
+updated_at: 2026-07-07T11:20:24+00:00
+last_sync: 2026-07-07T11:20:24Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -48,12 +48,16 @@ The repo has two matrix paths:
 
 - `Matrix` is the learning-oriented path used by the default `Network`,
   `Layer`, examples, and training code.
-- `BackendMatrix` is the backend-aware path that can run operations through CPU
+- `BackendMatrix` is the backend-aware path that can run operations through CPU,
   Metal, or CUDA implementations.
 
 Metal and CUDA support currently applies to backend matrix operations, GPU
-examples, and backend-aware `Network.forwardBackend` / `Network.predictBackend`
-inference. The higher-level training path is still CPU-only.
+examples, backend-aware `Network.forwardBackend` / `Network.predictBackend`
+inference, and `Network.trainBatchBackend` / `Network.trainBackend` training.
+`BackendNetwork` snapshots provide persistent backend inference parameters, and
+`BackendTrainer` provides persistent backend training parameters for standard
+and gated network layers. `Network.trainBatchBackend` / `Network.trainBackend`
+remain available as CPU-owned backend training paths.
 
 ## Start Here
 
@@ -71,6 +75,7 @@ nnctl all
 # Run specific examples
 nnctl run simple-xor
 nnctl run tiny-gpt
+nnctl run backend-training
 
 # Download data for examples
 nnctl data mnist
@@ -89,6 +94,28 @@ nnctl benchmark
 
 For setup details and direct `zig build` commands, see
 [Getting Started](docs/getting-started.md).
+
+## Development Hooks
+
+Install Node dependencies, then install the local Git hooks with `prek`:
+
+```bash
+npm install
+npm run hooks:install
+```
+
+Run the same checks across the repository with:
+
+```bash
+npm run prek:all
+```
+
+Update hook revisions with the same seven-day cooldown used for dependency
+updates:
+
+```bash
+npm run prek:update
+```
 
 ## Guide
 

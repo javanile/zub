@@ -12,9 +12,9 @@ keywords:
   - red-black-tree
   - skiplist
   - trie
-date: 2026-05-01
-updated_at: 2026-05-01T19:22:47+00:00
-last_sync: 2026-05-01T19:22:47Z
+date: 2026-07-07
+updated_at: 2026-07-07T08:02:28+00:00
+last_sync: 2026-07-07T08:02:28Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -198,10 +198,6 @@ pub fn main() !void {
 ### Documentation
 
 You can find the API documentation for the latest release of Ordered [here](https://CogitatorTech.github.io/ordered/).
-
-Alternatively, you can use the `make docs` command to generate the documentation for the current version of Ordered.
-This will generate HTML documentation in the `docs/api` directory, which you can serve locally with `make serve-docs`
-and view in a web browser.
 
 ### Examples
 

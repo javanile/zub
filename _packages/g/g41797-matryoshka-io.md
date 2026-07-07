@@ -8,9 +8,9 @@ repository: https://github.com/g41797/matryoshka-io
 keywords:
   - modular-monolith
   - multithreading
-date: 2026-07-06
-updated_at: 2026-07-06T12:49:11+00:00
-last_sync: 2026-07-06T12:49:11Z
+date: 2026-07-07
+updated_at: 2026-07-07T07:56:08+00:00
+last_sync: 2026-07-07T07:56:08Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -24,7 +24,7 @@ sync_source: zigistry
 permalink: /packages/g41797/matryoshka-io/
 ---
 
-# matryoshka-io
+# Matryoshka-Io
 
 ## First rule of building great software systems
 

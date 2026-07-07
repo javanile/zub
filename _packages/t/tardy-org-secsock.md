@@ -9,10 +9,10 @@ keywords:
   - async
   - tardy
   - tls
-date: 2026-06-27
+date: 2026-06-28
 category: networking
-updated_at: 2026-06-27T00:35:38+00:00
-last_sync: 2026-06-27T00:35:38Z
+updated_at: 2026-06-28T00:49:44+00:00
+last_sync: 2026-06-28T00:49:44Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -37,13 +37,18 @@ This is an implementation of `SecureSocket`, a wrapper for the Tardy `Socket` ty
 - [s2n-tls](https://github.com/aws/s2n-tls): An implementation of SSL/TLS protocols by AWS. (Experimental)
 
 ## Installing
-Compatible Zig Version: `0.16.0`
 
-Compatible [tardy](https://github.com/tardy-org/tardy) Version: `v0.3.2`
+For in development secsock which uses [tardy/main](https://github.com/tardy-org/tardy/tree/main/) and Zig `0.17.0-dev.956+2dca73595`
 
-Latest Release: `0.1.2`
+```elvish
+zig fetch --save 'git+https://github.com/tardy-org/secsock?ref=main#commit_hash'
 ```
-zig fetch --save git+https://github.com/tardy-org/secsock#v0.1.2
+
+**Else**
+
+Latest Release: `0.1.2` which uses [tardy](https://github.com/tardy-org/tardy) `v0.3.2` and Zig `0.16.0`
+```elvish
+zig fetch --save 'git+https://github.com/tardy-org/secsock#v0.1.2'
 ```
 
 You can then add the dependency in your `build.zig` file:

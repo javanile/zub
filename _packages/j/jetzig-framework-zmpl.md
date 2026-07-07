@@ -6,9 +6,9 @@ author: jetzig-framework
 author_github: jetzig-framework
 repository: https://github.com/jetzig-framework/zmpl
 keywords:
-date: 2026-05-15
-updated_at: 2026-05-15T11:14:41+00:00
-last_sync: 2026-05-15T11:14:41Z
+date: 2026-07-02
+updated_at: 2026-07-02T15:38:38+00:00
+last_sync: 2026-07-02T15:38:38Z
 package_kind: hybrid
 has_library: true
 has_binary: true

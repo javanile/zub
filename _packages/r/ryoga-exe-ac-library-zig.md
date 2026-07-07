@@ -8,9 +8,9 @@ repository: https://github.com/Ryoga-exe/ac-library-zig
 keywords:
   - atcoder-library
   - competitive-programming
-date: 2026-04-16
-updated_at: 2026-04-16T07:45:07+00:00
-last_sync: 2026-04-16T07:45:07Z
+date: 2026-07-07
+updated_at: 2026-07-07T06:53:31+00:00
+last_sync: 2026-07-07T06:53:31Z
 package_kind: library
 has_library: true
 has_binary: false
