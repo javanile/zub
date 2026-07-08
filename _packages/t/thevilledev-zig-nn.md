@@ -8,9 +8,9 @@ repository: https://github.com/thevilledev/zig-nn
 keywords:
   - learning
   - neural-networks
-date: 2026-07-07
-updated_at: 2026-07-07T11:20:24+00:00
-last_sync: 2026-07-07T11:20:24Z
+date: 2026-07-08
+updated_at: 2026-07-08T08:24:06+00:00
+last_sync: 2026-07-08T08:24:06Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -56,8 +56,9 @@ examples, backend-aware `Network.forwardBackend` / `Network.predictBackend`
 inference, and `Network.trainBatchBackend` / `Network.trainBackend` training.
 `BackendNetwork` snapshots provide persistent backend inference parameters, and
 `BackendTrainer` provides persistent backend training parameters for standard
-and gated network layers. `Network.trainBatchBackend` / `Network.trainBackend`
-remain available as CPU-owned backend training paths.
+and gated network layers, with optional backend-owned momentum optimizer state.
+`Network.trainBatchBackend` / `Network.trainBackend` remain available as
+CPU-owned backend training paths.
 
 ## Start Here
 

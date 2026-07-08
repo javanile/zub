@@ -8,9 +8,9 @@ repository: https://github.com/g41797/matryoshka-io
 keywords:
   - modular-monolith
   - multithreading
-date: 2026-07-07
-updated_at: 2026-07-07T07:56:08+00:00
-last_sync: 2026-07-07T07:56:08Z
+date: 2026-07-08
+updated_at: 2026-07-08T11:50:44+00:00
+last_sync: 2026-07-08T11:50:44Z
 package_kind: library
 has_library: true
 has_binary: false
