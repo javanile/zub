@@ -12,10 +12,10 @@ keywords:
   - gui-library
   - qt
   - qt6
-date: 2026-07-06
+date: 2026-07-10
 category: systems
-updated_at: 2026-07-06T03:46:06+00:00
-last_sync: 2026-07-06T03:46:06Z
+updated_at: 2026-07-10T12:33:51+00:00
+last_sync: 2026-07-10T12:33:51Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -37,7 +37,6 @@ unsafe_reason: "contains a URL pointing to a .zip file"
 <img alt="libqt6zig" src="assets/libqt6zig.png" height="128px;" />
 
 [![MIT License](https://img.shields.io/badge/License-MIT-blue)](https://github.com/rcalixte/libqt6zig/blob/master/LICENSE)
-[![Go Report Card](https://goreportcard.com/badge/github.com/rcalixte/libqt6zig)](https://goreportcard.com/report/github.com/rcalixte/libqt6zig)
 [![Static Badge](https://img.shields.io/badge/v0.16%20(stable)-fdc009?logo=zig&logoColor=f7a41d&label=Zig)](https://ziglang.org/download/)
 
 [![Documentation](https://github.com/rcalixte/libqt6zig/actions/workflows/docs.yml/badge.svg?branch=master)](https://github.com/rcalixte/libqt6zig/actions/workflows/docs.yml)
@@ -566,7 +565,7 @@ Qt expects fixed OS threads to be used for each QObject. When you first call `QA
 
 - When accessing Qt objects from inside another thread, it's safest to use `Threading.Async()` (from this library) to access the Qt objects from Qt's main thread. The [Threading library](https://github.com/rcalixte/libqt6zig/tree/master/src/threading/libqt6zigthreading.zig) documents additional available strategies within the source code.
 
-Qt C++ enums are projected as Zig enum structs of `i8`, `i32`, `u8`, `u16`, `u32`, or `u64` values with the same names. For example, `Qt::AlignmentFlag` is projected as `enums.AlignmentFlag` within the `libqnamespace` module and exported by default as `qnamespace_enums.AlignmentFlag` though, as previously shown, developers are free to use whatever naming convention they prefer for imports. The value `Qt::AlignmentFlag::AlignLeft` or the shorthand equivalent `Qt::AlignLeft` is projected by default as `qnamespace_enums.AlignmentFlag.AlignLeft` which is of the type `i32` and value `1`. Qt C++ [QFlags](https://doc.qt.io/qt-6/qflags.html) are projected as `i32`, `u8, `u16`, or `u32` when expected as a parameter or returned as a type by the Zig API.
+Qt C++ enums are projected as Zig enum structs of `i8`, `i32`, `u8`, `u16`, `u32`, or `u64` values with the same names. For example, `Qt::AlignmentFlag` is projected as `enums.AlignmentFlag` within the `libqnamespace` module and exported by default as `qnamespace_enums.AlignmentFlag` though, as previously shown, developers are free to use whatever naming convention they prefer for imports. The value `Qt::AlignmentFlag::AlignLeft` or the shorthand equivalent `Qt::AlignLeft` is projected by default as `qnamespace_enums.AlignmentFlag.AlignLeft` which is of the type `i32` and value `1`. Qt C++ [QFlags](https://doc.qt.io/qt-6/qflags.html) are projected as `i32`, `u8`, `u16`, or `u32` when expected as a parameter or returned as a type by the Zig API.
 
 #### API at a glance
 

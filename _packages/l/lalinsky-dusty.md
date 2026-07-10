@@ -13,10 +13,10 @@ keywords:
   - websocket
   - websocket-client
   - websocket-server
-date: 2026-07-06
+date: 2026-07-10
 category: networking
-updated_at: 2026-07-06T06:45:21+00:00
-last_sync: 2026-07-06T06:45:21Z
+updated_at: 2026-07-10T10:06:33+00:00
+last_sync: 2026-07-10T10:06:33Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -34,7 +34,7 @@ Dusty is a HTTP client/server library built on top of Zig's standard library I/O
 
 The library was originally written for [zio](https://github.com/lalinsky/zio), and later ported to `std.Io`. It's still recommended to use it with zio's
 implementation of the `std.Io` interface, especially if you need to communicate with other services over the network in your HTTP request handlers,
-or if you are using WebSocket. However, it's usable with any implementation, even the default `std.Io.Threaded`.
+or if you are using WebSocket. However, it's usable with any implementation, like `std.Io.Threaded`, or even the simulated implementation from [Marionette](https://github.com/sb2bg/marionette).
 
 The server API is inspired by Karl Seguin's [http.zig](https://github.com/karlseguin/http.zig), and tries to be as compatible as possible.
 
