@@ -9,10 +9,10 @@ keywords:
   - json-serialization
   - parser
   - serde
-date: 2026-07-01
+date: 2026-07-11
 category: data-formats
-updated_at: 2026-07-01T09:28:57+00:00
-last_sync: 2026-07-01T09:28:57Z
+updated_at: 2026-07-11T07:34:22+00:00
+last_sync: 2026-07-11T07:34:22Z
 package_kind: hybrid
 has_library: true
 has_binary: true

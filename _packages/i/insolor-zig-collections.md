@@ -6,9 +6,9 @@ author: insolor
 author_github: insolor
 repository: https://github.com/insolor/zig-collections
 keywords:
-date: 2026-06-03
-updated_at: 2026-06-03T07:47:36+00:00
-last_sync: 2026-06-03T07:47:36Z
+date: 2026-07-01
+updated_at: 2026-07-01T21:36:35+00:00
+last_sync: 2026-07-01T21:36:35Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -49,7 +49,7 @@ Supported zig versions:
     zig fetch --save https://github.com/insolor/zig-collections/archive/refs/tags/0.0.2.zip
     ```
 
-    Replace `main` in the URL with the tag you want to use.
+    Replace `0.0.2` in the URL with the tag you want to use.
 
 2. Add zig_collections as a dependency module in your `build.zig` file, example:
 
