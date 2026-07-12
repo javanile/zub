@@ -11,10 +11,10 @@ keywords:
   - command-line
   - developer-tools
   - terminal
-date: 2026-07-07
+date: 2026-07-12
 category: tooling
-updated_at: 2026-07-07T07:37:19+00:00
-last_sync: 2026-07-07T07:37:19Z
+updated_at: 2026-07-12T06:47:20+00:00
+last_sync: 2026-07-12T06:47:20Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -38,7 +38,9 @@ permalink: /packages/ryanhair/zcli/
 
 zcli is a batteries-included framework for building polished command-line apps in Zig. Drop a `.zig` file in `commands/` and it becomes a command — help text, shell completions, typo suggestions, and typed argument parsing are generated at compile time. One dependency, one self-contained binary.
 
-<img alt="Demo of a zcli app: interactive prompts, a colored task table, live search filtering, and a spinner" src="examples/showcase/demo.gif" width="600" />
+**Full documentation lives at [zcli.sh](https://zcli.sh)** — [getting started](https://zcli.sh/getting-started/), the [docs](https://zcli.sh/docs/), [plugins](https://zcli.sh/plugins/), the [CLI/TUI hybrid](https://zcli.sh/ui/), [theming](https://zcli.sh/theming/), and [building CLIs with coding agents](https://zcli.sh/ai/). This README is the tour; the site is the reference.
+
+<img alt="Demo of a zcli app: interactive prompts, a colored task table, live search filtering, and a spinner" src="examples/tasks/demo.gif" width="600" />
 
 ## Your CLI is a directory
 
@@ -78,7 +80,7 @@ Deploying api to staging
 
 No routing tables, no builder calls, no registration. Commands are discovered at build time and routing is generated as ordinary Zig code — the parser is built for your exact structs, so reading an option that doesn't exist is a compile error, and a mistyped command gets a "did you mean?" at runtime.
 
-Variadic args, option types, typed `context`, aliases, and command groups: [docs/COMMANDS.md](docs/COMMANDS.md).
+Variadic args, option types, typed `context`, aliases, and command groups: [zcli.sh/docs](https://zcli.sh/docs/#commands) (repo summary in [docs/COMMANDS.md](docs/COMMANDS.md)).
 
 ## Quick start
 
@@ -209,35 +211,38 @@ If you want one dependency that covers the whole terminal experience, that's the
 Eight prompt types with arrow-key navigation, live filtering, and unicode-correct editing. Every prompt falls back to plain line input when stdin isn't a TTY, so scripts and pipes keep working.
 
 ```zig
-const zinput = zcli.zinput;  // or standalone: @import("zinput")
+// In a zcli command — pre-wired to the command's streams, allocator, and theme.
+// Standalone: `const Prompts = @import("prompts");` and fill the fields yourself.
+const p = context.prompts();
 
-const name = try zinput.text(writer, reader, allocator, .{
+const name = try p.text(.{
     .message = "Project name:",
     .default = "my-project",
 });
 
-const idx = try zinput.select(writer, reader, .{
+const idx = try p.select(.{
     .message = "Framework:",
     .choices = &.{ "express", "fastify", "koa" },
 });
 
-const pw = try zinput.password(writer, reader, allocator, .{
+const pw = try p.password(.{
     .message = "Token:",
 });
 ```
 
-Also: `confirm`, `multiSelect`, `search` (type-to-filter), `number` (range-validated), and `editor` (opens `$EDITOR`). Full API in [packages/zinput](packages/zinput/).
+Also: `confirm`, `multiSelect`, `search` (type-to-filter), `number` (range-validated), and `editor` (opens `$EDITOR`). Full API in [packages/prompts](packages/prompts/).
 
 ## Progress indicators
 
 ```zig
-const zprogress = zcli.zprogress;  // or standalone: @import("zprogress")
+// Standalone: `const Progress = @import("progress");` and fill the fields yourself.
+const p = context.progress();
 
-var spinner = zprogress.spinner(io, .{ .style = .dots });
+var spinner = try p.spinner(.{ .style = .dots });
 spinner.start("Connecting to server...");
 spinner.succeed("Synced successfully"); // or .fail() / .warn() / .info()
 
-var bar = zprogress.progressBar(io, .{ .total = items.len, .show_eta = true });
+var bar = try p.progressBar(.{ .total = items.len, .show_eta = true });
 for (items, 0..) |item, i| {
     process(item);
     bar.update(i + 1, null);
@@ -245,21 +250,50 @@ for (items, 0..) |item, i| {
 bar.finish();
 ```
 
-Nine spinner styles; animations auto-disable when not a TTY, symbols adapt to unicode support. Details in [packages/zprogress](packages/zprogress/).
+Nine spinner styles, plus stacked multi-bars for parallel work; animations auto-disable when not a TTY, symbols adapt to unicode support. Details in [packages/progress](packages/progress/).
+
+## The CLI/TUI hybrid
+
+Prompts and progress render on `zcli.ui` — a terminal-native layout engine, and it's yours to use directly. Output splits into a static stream that flows into scrollback and a live region that repaints in place just above it — a full layout, from a single line up to the whole viewport, not a fixed bottom strip. Unlike a full-screen TUI it never takes the terminal over, so your scrollback stays intact. This is the shape of modern agent-style CLIs: a component is just a function returning a node, and frames are diffed, so an animation repaints one cell, not the screen.
+
+```zig
+var app = try context.ui(.{});
+defer app.deinit(); // restores the terminal; the final frame persists
+
+try app.emit("compiled {s}", .{name});            // static → scrollback
+try app.frame(try ui.column(app.arena(), .{ .border = .rounded }, &.{
+    ui.widgets.spinner(.{}, state.tick),
+    try ui.widgets.multiBar(app.arena(), .{}, &bars),
+}));                                              // live → diffed repaint
+```
+
+Boxes, wrapped text, spacers, and custom leaves; `fit`/`len`/`fill` sizing; viewport-clamped, resize-aware (the live region re-lays-out and the visible scrollback tail reflows), and piped output degrades to plain lines.
+
+When you want the whole terminal — a `top`-style dashboard, an interactive form — the same node tree, layout, and diff run in **full-screen mode**: `context.uiFullScreen(.{})` switches to the alternate screen and hands the `frame → event → update` loop to `app.run`. It comes with focusable widgets (`TextInput`, `Select`, `Checkbox`, `Button` — each a plain struct in your state, routed by a single `handle`-returns-`bool` contract), overlays via a `stack` of z-layers, scrollable viewports, mouse/focus/paste events, and anchored popups that flip and clamp to stay on screen. On exit the shell comes back exactly as it was. Walkthrough at [zcli.sh/ui](https://zcli.sh/ui/); design in [ADR-0013](docs/adr/0013-terminal-native-layout-engine.md) (full-screen and widgets in [ADRs 0015–0020](docs/adr/)), API in [packages/ui](packages/ui/).
 
 ## Theming
 
+Declare a theme once in your root source file and the whole CLI follows it — help output, styled text, prompts, spinners, and progress bars:
+
 ```zig
-const ztheme = zcli.ztheme;  // or standalone: @import("ztheme")
-
-// In a zcli command you already have one: context.theme. Standalone:
-const theme_ctx = ztheme.Theme.init(init.environ_map, io);
-
-try ztheme.theme("Error").red().bold().render(writer, &theme_ctx);
-try ztheme.theme("Success").success().render(writer, &theme_ctx);
+// main.zig
+pub const zcli_theme: zcli.Theme = .{
+    .palette = .{
+        .command = .{ .foreground = .{ .rgb = .{ .r = 255, .g = 179, .b = 71 } } },
+        .accent = .{ .foreground = .{ .rgb = .{ .r = 255, .g = 179, .b = 71 } } },
+    },
+};
 ```
 
-Semantic roles (`success`, `err`, `warning`, `command`, `path`, …) adapt to the terminal: true color, 256 color, 16 color, or no color (respects `NO_COLOR`). Full API in [packages/ztheme](packages/ztheme/).
+```zig
+// In a command, style by meaning — roles resolve through the active palette:
+const styled = zcli.theme.styled;
+
+try styled("Synced").success().render(writer, &context.theme);
+try styled("Error").red().bold().render(writer, &context.theme);
+```
+
+Semantic roles (`success`, `err`, `warning`, `command`, `path`, …) resolve at render time and adapt to the terminal: true color, 256 color, 16 color, or no color (respects `NO_COLOR`). Component tokens (`prompts.cursor`, `progress.spinner`, `surface.border`, …) default to palette roles, so one palette change restyles everything — including the chrome behind a full-screen panel. Styling defaults *derive* from the theme at compile time, so `ui.panel` and bordered boxes need no `Style` at the call site and `ui.text(ui.role(.success), …)` styles by meaning in one word. Guide at [zcli.sh/theming](https://zcli.sh/theming/); full API in [packages/theme](packages/theme/).
 
 ## Config files
 
@@ -273,13 +307,13 @@ The `zcli_config` plugin transparently loads option defaults from JSON, TOML, or
 }
 ```
 
-Discovery order and formats in [docs/PLUGINS.md](docs/PLUGINS.md#config-file-plugin).
+Discovery order and formats: [zcli.sh/plugins](https://zcli.sh/plugins/#config).
 
 ## Plugins
 
 Cross-cutting features are plugins, added in one line of `build.zig`: help, version, "did you mean?", shell completions (bash/zsh/fish), config files, `--output` formatting (json/table/plain), OS-keychain secrets, and self-upgrade via GitHub releases all ship in the box. Plugins hook the command lifecycle, register global options, expose typed data as `context.plugins.<id>`, and can ship commands of their own.
 
-The full list and a guide to writing your own: [docs/PLUGINS.md](docs/PLUGINS.md).
+The full list and a guide to writing your own: [zcli.sh/plugins](https://zcli.sh/plugins/) (repo summary in [docs/PLUGINS.md](docs/PLUGINS.md)).
 
 ## Testing
 
@@ -301,7 +335,7 @@ test "deploy command" {
 }
 ```
 
-`result.term` is a real ANSI-parsing terminal emulator ([vterm](packages/vterm/)). Two more tiers — subprocess integration tests and snapshot tests — are covered in [docs/TESTING.md](docs/TESTING.md).
+`result.term` is a real ANSI-parsing terminal emulator ([vterm](packages/vterm/)). Two more tiers — subprocess integration tests and snapshot tests — are covered at [zcli.sh/testing](https://zcli.sh/testing/).
 
 ## Documentation generation
 
@@ -319,10 +353,10 @@ The HTML output is a styled, dark-mode-aware static site with navigation.
 
 ## Example
 
-The [showcase](examples/showcase/) is a fully functional task tracker CLI — the app in the demo GIF above — that exercises every zcli feature: 14 commands with nested groups and aliases, every prompt type, spinners and progress bars, themed output, JSON persistence, config files, completions, and doc generation.
+The [showcase](examples/tasks/) is a fully functional task tracker CLI — the app in the demo GIF above — that exercises every zcli feature: 14 commands with nested groups and aliases, every prompt type, spinners and progress bars, themed output, JSON persistence, config files, completions, and doc generation.
 
 ```bash
-cd examples/showcase && zig build
+cd examples/tasks && zig build
 ./zig-out/bin/tasks init          # Interactive project wizard
 ./zig-out/bin/tasks add           # Add a task interactively
 ./zig-out/bin/tasks list          # Colored task list
@@ -331,8 +365,16 @@ cd examples/showcase && zig build
 
 ## Built with zcli
 
-- **[zcli](projects/zcli)** — the meta-CLI is itself a zcli app: `init`, `add`, `mv`, `rm`, `tree`, `dev`, `guide`, and `release` are files in its `commands/` directory, and it runs on the framework's own plugins (help, completions, "did you mean?", GitHub self-upgrade).
-- **[tasks](examples/showcase)** — the showcase task tracker from the demo above.
+What a real zcli app looks like. The meta-CLI you install is one; the rest are the compiled, CI-checked example apps in this repo — each a small, complete CLI you can read end to end.
+
+| App | What it is |
+|-----|------------|
+| [**zcli**](projects/zcli) — the meta-CLI | Itself a zcli app: `init`, `add`, `mv`, `rm`, `tree`, `dev`, `guide`, and `release` are files in its `commands/` directory, running on the framework's own plugins (help, completions, "did you mean?", GitHub self-upgrade). |
+| [**tasks**](examples/tasks) | A full task tracker — the app in the demo GIF above. 14 commands with nested groups and aliases, every prompt type, spinners and progress bars, themed output, JSON persistence, config files, and completions. |
+| [**ghauth**](examples/ghauth) | GitHub device-flow companion: stashes an API token in the OS keychain via `zcli_secrets`, then uses `zcli.http` to call the API as `whoami`. |
+| [**oauth-device**](examples/oauth-device) | Mints a token from scratch by running GitHub's OAuth device flow (RFC 8628), then keychains it — freeform command code, not a framework feature. |
+| [**notes**](examples/notes) | A tiny note keeper: saves and loads a typed struct as a JSON file and shares one `store` module across three commands. |
+| [**repostat**](examples/repostat) | Prints stats for a public GitHub repo — the minimal `zcli.http` + typed-JSON example, with safe client defaults out of the box. |
 
 Building something with zcli? Open a PR to add it here.
 
@@ -341,15 +383,15 @@ Building something with zcli? Open a PR to add it here.
 | Package | Description |
 |---------|-------------|
 | [**core**](packages/core/) | Command discovery, argument parsing, plugin system, registry |
-| [**zinput**](packages/zinput/) | Interactive prompts (text, confirm, select, password, search, number, editor) |
-| [**zprogress**](packages/zprogress/) | Spinners and progress bars |
-| [**ztheme**](packages/ztheme/) | Terminal theming with semantic colors and capability detection |
-| [**markdown_fmt**](packages/markdown_fmt/) | Markdown-to-terminal formatting with semantic tags |
+| [**prompts**](packages/prompts/) | Interactive prompts (text, confirm, select, password, search, number, editor) |
+| [**progress**](packages/progress/) | Spinners and progress bars |
+| [**theme**](packages/theme/) | Terminal theming with semantic colors and capability detection |
+| [**markdown**](packages/markdown/) | Markdown-to-terminal formatting with semantic tags |
 | [**terminal**](packages/terminal/) | Raw mode, key reading, cursor control, unicode detection |
 | [**vterm**](packages/vterm/) | Virtual terminal emulator for testing ANSI output |
 | [**testing**](packages/testing/) | Subprocess runner, assertions, snapshot testing, e2e harness |
 
-All packages work standalone — use `zinput`, `zprogress`, `ztheme`, or `terminal` in any Zig project without the framework.
+All packages work standalone — use `prompts`, `progress`, `theme`, or `terminal` in any Zig project without the framework.
 
 ## Zig version support
 
@@ -361,6 +403,18 @@ zcli targets **stable Zig** — no nightly required. `main` and the latest relea
 | v0.14.0 – v0.17.0 | 0.15.1 |
 
 Each release is tagged twice: `vX.Y.Z` is the framework library — the tag for your `build.zig.zon` — and `zcli-vX.Y.Z` carries the prebuilt meta-CLI binaries that `install.sh` downloads. The two ship in lockstep. Release history and the versioning policy live in [CHANGELOG.md](CHANGELOG.md).
+
+### Verifying a release
+
+CLI releases are signed. `checksums.txt` carries a SHA-256 for every binary and is itself signed with a [minisign](https://jedisct1.github.io/minisign/) key held offline — so a compromised release cannot forge a matching signature, not just a matching checksum. `install.sh` **requires `minisign`** and verifies the signature before installing (fail closed); `zcli upgrade` verifies it natively with no external tools. To check by hand:
+
+```bash
+gh release download zcli-vX.Y.Z -p 'checksums.txt*'
+minisign -Vm checksums.txt -p docs/zcli-minisign.pub   # verifies the signature
+sha256sum -c checksums.txt                              # then the binaries
+```
+
+The trust model and the key rotation/compromise procedure live in [docs/RELEASE-SIGNING.md](docs/RELEASE-SIGNING.md) ([ADR-0023](docs/adr/0023-release-signing-minisign.md)).
 
 ## License
 

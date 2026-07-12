@@ -8,9 +8,9 @@ repository: https://github.com/kobolds-io/stdx
 keywords:
   - data-structures-and-algorithms
   - std
-date: 2026-06-21
-updated_at: 2026-06-21T02:59:01+00:00
-last_sync: 2026-06-21T02:59:01Z
+date: 2026-07-06
+updated_at: 2026-07-06T03:33:48+00:00
+last_sync: 2026-07-06T03:33:48Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -87,7 +87,7 @@ fn main(init: std.process.Init) !void {
 Install using zig fetch
 
 ```bash
-zig fetch --save  https://gitlab.com/kobolds-io/stdx/-/archive/v0.4.0/stdx-v0.4.0.tar.gz
+zig fetch --save  https://gitlab.com/kobolds-io/stdx/-/archive/v0.4.1/stdx-v0.4.1.tar.gz
 ```
 
 Alternatively, you can install `stdx` just like any other `zig` dependency by editing your `build.zig.zon` file.
@@ -95,7 +95,7 @@ Alternatively, you can install `stdx` just like any other `zig` dependency by ed
 ```zig
     .dependencies = .{
         .stdx = .{
-            .url = "https://gitlab.com/kobolds-io/stdx/-/archive/v0.4.0/stdx-v0.4.0.tar.gz",
+            .url = "https://gitlab.com/kobolds-io/stdx/-/archive/v0.4.1/stdx-v0.4.1.tar.gz",
             .hash = "<hash>",
         },
     },

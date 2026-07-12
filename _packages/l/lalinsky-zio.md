@@ -17,10 +17,10 @@ keywords:
   - kqueue
   - networking
   - poll
-date: 2026-07-06
+date: 2026-07-12
 category: networking
-updated_at: 2026-07-06T08:15:07+00:00
-last_sync: 2026-07-06T08:15:07Z
+updated_at: 2026-07-12T10:46:47+00:00
+last_sync: 2026-07-12T10:46:47Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -78,7 +78,7 @@ It's similar to [goroutines] in Go, but with the pros and cons of being implemen
 1) Add zio as a dependency in your `build.zig.zon`:
 
 ```bash
-zig fetch --save "git+https://github.com/lalinsky/zio#v0.15.0"
+zig fetch --save "git+https://github.com/lalinsky/zio#v0.16.0"
 ```
 
 2) In your `build.zig`, add the `zio` module as a dependency to your program:

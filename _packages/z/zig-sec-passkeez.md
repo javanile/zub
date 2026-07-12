@@ -18,8 +18,8 @@ keywords:
   - webauthn
 date: 2026-07-05
 category: systems
-updated_at: 2026-07-05T10:19:54+00:00
-last_sync: 2026-07-05T10:19:54Z
+updated_at: 2026-07-05T20:04:48+00:00
+last_sync: 2026-07-05T20:04:48Z
 package_kind: binary
 has_library: false
 has_binary: true

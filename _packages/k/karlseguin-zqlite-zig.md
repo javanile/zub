@@ -7,9 +7,9 @@ author_github: karlseguin
 repository: https://github.com/karlseguin/zqlite.zig
 keywords:
   - sqlite3
-date: 2026-04-16
-updated_at: 2026-04-16T11:00:56+00:00
-last_sync: 2026-04-16T11:00:56Z
+date: 2026-07-11
+updated_at: 2026-07-11T13:13:42+00:00
+last_sync: 2026-07-11T13:13:42Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -67,7 +67,21 @@ This library is tested with SQLite3 3.53.0.
 zig fetch --save git+https://github.com/karlseguin/zqlite.zig#master
 ```
 
-2)  The library doesn't attempt to link/include SQLite. You're free to do this how you want.
+2) Link libc in your `build.zig`:
+
+```zig
+const exe = b.addExecutable(.{
+        .name = "example",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/main.zig"),
+            .target = target,
+            .optimize = optimize,
+            .link_libc = true,
+        }),
+    });
+```
+
+3) The library doesn't attempt to link/include SQLite. You're free to do this how you want.
 
 If you have sqlite3 installed on your system you might get away with just adding this to your build.zig
 
@@ -77,20 +91,19 @@ const zqlite = b.dependency("zqlite", .{
     .optimize = optimize,
 });
 
-exe.linkLibC();
-exe.linkSystemLibrary("sqlite3");
+exe.root_module.linkSystemLibrary("sqlite3", .{});
 exe.root_module.addImport("zqlite", zqlite.module("zqlite"));
 ```
 
 Alternatively, If you download the SQLite amalgamation from [the SQLite download page](https://www.sqlite.org/download.html) and place the `sqlite.c` and `sqlite.h` file in your project's `lib/` folder, you can then:
 
-2) Add this in `build.zig`:
+3) Add this in `build.zig`:
 ```zig
 const zqlite = b.dependency("zqlite", .{
     .target = target,
     .optimize = optimize,
 });
-exe.addCSourceFile(.{
+exe.root_module.addCSourceFile(.{
     .file = b.path("lib/sqlite3.c"),
     .flags = &[_][]const u8{
         "-DSQLITE_DQS=0",
@@ -111,7 +124,6 @@ exe.addCSourceFile(.{
         "-DHAVE_USLEEP=0",
     },
 });
-exe.linkLibC();
 exe.root_module.addImport("zqlite", zqlite.module("zqlite"));
 ```
 

@@ -1,0 +1,145 @@
+---
+title: zpem
+description: A pem parse and encode library for Zig.
+license: Apache-2.0
+author: deatil
+author_github: deatil
+repository: https://github.com/deatil/zpem
+keywords:
+  - pem
+  - zig-pem
+date: 2026-07-08
+updated_at: 2026-07-08T05:55:24+00:00
+last_sync: 2026-07-08T05:55:24Z
+package_kind: library
+has_library: true
+has_binary: false
+has_distributable_binary: false
+binary_count: 0
+distributable_binary_count: 0
+multiple_binaries: false
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
+permalink: /packages/deatil/zpem/
+---
+
+## zpem 
+
+A pem parse and encode library for Zig.
+
+
+### Env
+
+ - Zig >= 0.16.0
+
+
+ ### Adding zpem as a dependency
+
+Add the dependency to your project:
+
+```sh
+zig fetch --save=zpem git+https://github.com/deatil/zpem#main
+```
+
+or use local path to add dependency at `build.zig.zon` file
+
+```zig
+.{
+    .dependencies = .{
+        .zpem = .{
+            .path = "./lib/zpem",
+        },
+        ...
+    },
+    ...
+}
+```
+
+And the following to your `build.zig` file:
+
+```zig
+    const zpem_dep = b.dependency("zpem", .{});
+    exe.root_module.addImport("zpem", zpem_dep.module("zpem"));
+```
+
+The `zpem` structure can be imported in your application with:
+
+```zig
+const zpem = @import("zpem");
+```
+
+
+### Get Starting
+
+* parse pem
+
+~~~zig
+const std = @import("std");
+const zpem = @import("zpem");
+
+pub fn main(init: std.process.Init) !void {
+    _ = init;
+
+    const bytes =
+        "-----BEGIN RSA PRIVATE-----\n" ++
+        "ABC: thsasd   \n" ++
+        "\n" ++
+        "MIIBmTCCAUegAwIBAgIBKjAJBgUrDgMCHQUAMBMxETAPBgNVBAMTCEF0bGFudGlz\n" ++
+        "MB4XDTEyMDcwOTAzMTAzOFoXDTEzMDcwOTAzMTAzN1owEzERMA8GA1UEAxMIQXRs\n" ++
+        "YW50aXMwXDANBgkqhkiG9w0BAQEFAANLADBIAkEAu+BXo+miabDIHHx+yquqzqNh\n" ++
+        "Ryn/XtkJIIHVcYtHvIX+S1x5ErgMoHehycpoxbErZmVR4GCq1S2diNmRFZCRtQID\n" ++
+        "AQABo4GJMIGGMAwGA1UdEwEB/wQCMAAwIAYDVR0EAQH/BBYwFDAOMAwGCisGAQQB\n" ++
+        "gjcCARUDAgeAMB0GA1UdJQQWMBQGCCsGAQUFBwMCBggrBgEFBQcDAzA1BgNVHQEE\n" ++
+        "LjAsgBA0jOnSSuIHYmnVryHAdywMoRUwEzERMA8GA1UEAxMIQXRsYW50aXOCASow\n" ++
+        "CQYFKw4DAh0FAANBAKi6HRBaNEL5R0n56nvfclQNaXiDT174uf+lojzA4lhVInc0\n" ++
+        "ILwpnZ1izL4MlI9eCSHhVQBHEp2uQdXJB+d5Byg=\n" ++
+        "-----END RSA PRIVATE-----\n";
+
+    const allocator = std.heap.page_allocator;
+    var p = try zpem.decode(allocator, bytes);
+    defer p.deinit();
+
+    std.debug.print("pem type: {s}\n", .{p.type});
+    std.debug.print("pem bytes: {x}\n", .{p.bytes.written()});
+
+    // get header data
+    const header = p.headers.get("ABC").?;
+    std.debug.print("pem header: {s}\n", .{header});
+}
+~~~
+
+* encode pem
+
+~~~zig
+const std = @import("std");
+const zpem = @import("zpem");
+
+pub fn main(init: std.process.Init) !void {
+    _ = init;
+
+    const alloc = std.heap.page_allocator;
+    
+    var b = zpem.Block.init(allocator);
+    b.type = "RSA PRIVATE";
+    try b.headers.put("TTTYYY", "dghW66666");
+    try b.headers.put("Proc-Type", "4,Encond");
+    try b.bytes.appendSlice("pem bytes");
+
+    const allocator = std.heap.page_allocator;
+    var encoded_pem = try zpem.encode(allocator, b);
+    defer alloc.free(encoded_pem);
+
+    std.debug.print("pem encoded: {s}\n", .{encoded_pem});
+}
+~~~
+
+
+### LICENSE
+
+*  The library LICENSE is `Apache2`, using the library need keep the LICENSE.
+
+
+### Copyright
+
+*  Copyright deatil(https://github.com/deatil).
