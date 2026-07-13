@@ -12,10 +12,10 @@ keywords:
   - nostr-protocol
   - protocol
   - secp256k1
-date: 2026-07-11
+date: 2026-07-13
 category: networking
-updated_at: 2026-07-11T11:20:59+00:00
-last_sync: 2026-07-11T11:20:59Z
+updated_at: 2026-07-13T10:11:13+00:00
+last_sync: 2026-07-13T10:11:13Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -43,7 +43,7 @@ transport with the outbox model, NIP-44/NIP-17 encrypted messaging, and a
 zero-copy local event store modeled on
 [nostrdb](https://github.com/damus-io/nostrdb).
 
-**Status: pre-alpha, `v0.3.1`.** The library core, relay transport, the
+**Status: pre-alpha, `v0.3.5`.** The library core, relay transport, the
 local-first event store, and the NIP-46 signer protocol layer have shipped:
 
 - **Milestone A2 — library core:** secp256k1 keys and BIP-340 Schnorr
@@ -59,22 +59,24 @@ local-first event store, and the NIP-46 signer protocol layer have shipped:
   insert ingestion (dedup, replaceable/parameterized, NIP-09 deletion), a
   direct-message conversation index, local-first reconciliation, and a
   size-cap cache.
-- **Milestone A5 (in progress) — signer protocol layer:** NIP-44 v2 payload
-  encryption and the NIP-46 remote-signing ("bunker") protocol — the
-  request/response messages, the `kind:24133` envelope, a transport-agnostic
-  dispatcher behind an approval policy, and the `bunker://` / `nostrconnect://`
-  connection URIs. The native signer app is being built in
-  [`zig-nostr/signer`](https://github.com/zig-nostr/signer).
+- **Milestone A5 — signer:** NIP-44 v2 payload encryption, the NIP-46
+  remote-signing ("bunker") protocol — the request/response messages, the
+  `kind:24133` envelope, a transport-agnostic dispatcher behind an approval
+  policy, and the `bunker://` / `nostrconnect://` connection URIs — and NIP-42
+  client authentication. The native signer built on this — **Signet** — ships as
+  a downloadable macOS app that keeps your key off every client and approves each
+  request; [`zig-nostr/signet`](https://github.com/zig-nostr/signet).
 
-Native signer, messenger, and reader showcases land in upcoming milestones —
-see [`CURRENT_STATE.md`](CURRENT_STATE.md) for what's in progress and the
-[project board](https://github.com/orgs/zig-nostr/projects) for the full
-milestone roadmap.
+The signer showcase (A5) has shipped. Documentation and benchmarks (A8) are the
+current focus; the DM messenger (A6) and read-only reader (A7) showcases are the
+final milestones that follow. See [`CURRENT_STATE.md`](CURRENT_STATE.md) for
+detail and the [project board](https://github.com/orgs/zig-nostr/projects) for
+the full milestone roadmap.
 
 ## Install
 
 ```sh
-zig fetch --save https://github.com/zig-nostr/nostr/archive/refs/tags/v0.3.1.tar.gz
+zig fetch --save https://github.com/zig-nostr/nostr/archive/refs/tags/v0.3.5.tar.gz
 ```
 
 Then in `build.zig`:

@@ -6,9 +6,9 @@ author: nektro
 author_github: nektro
 repository: https://github.com/nektro/zig-tracer
 keywords:
-date: 2026-07-01
-updated_at: 2026-07-01T01:45:09+00:00
-last_sync: 2026-07-01T01:45:09Z
+date: 2026-07-05
+updated_at: 2026-07-05T02:48:04+00:00
+last_sync: 2026-07-05T02:48:04Z
 package_kind: hybrid
 has_library: true
 has_binary: true

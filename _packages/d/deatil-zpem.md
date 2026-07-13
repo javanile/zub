@@ -8,9 +8,9 @@ repository: https://github.com/deatil/zpem
 keywords:
   - pem
   - zig-pem
-date: 2026-07-08
-updated_at: 2026-07-08T05:55:24+00:00
-last_sync: 2026-07-08T05:55:24Z
+date: 2026-07-13
+updated_at: 2026-07-13T11:41:28+00:00
+last_sync: 2026-07-13T11:41:28Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -59,8 +59,8 @@ or use local path to add dependency at `build.zig.zon` file
 And the following to your `build.zig` file:
 
 ```zig
-    const zpem_dep = b.dependency("zpem", .{});
-    exe.root_module.addImport("zpem", zpem_dep.module("zpem"));
+const zpem_dep = b.dependency("zpem", .{});
+exe.root_module.addImport("zpem", zpem_dep.module("zpem"));
 ```
 
 The `zpem` structure can be imported in your application with:
@@ -79,9 +79,9 @@ const std = @import("std");
 const zpem = @import("zpem");
 
 pub fn main(init: std.process.Init) !void {
-    _ = init;
+    const alloc = init.arena.allocator();
 
-    const bytes =
+    const pem =
         "-----BEGIN RSA PRIVATE-----\n" ++
         "ABC: thsasd   \n" ++
         "\n" ++
@@ -96,12 +96,11 @@ pub fn main(init: std.process.Init) !void {
         "ILwpnZ1izL4MlI9eCSHhVQBHEp2uQdXJB+d5Byg=\n" ++
         "-----END RSA PRIVATE-----\n";
 
-    const allocator = std.heap.page_allocator;
-    var p = try zpem.decode(allocator, bytes);
+    var p = try zpem.decode(alloc, pem);
     defer p.deinit();
 
     std.debug.print("pem type: {s}\n", .{p.type});
-    std.debug.print("pem bytes: {x}\n", .{p.bytes.written()});
+    std.debug.print("pem bytes: {x}\n", .{p.bytes});
 
     // get header data
     const header = p.headers.get("ABC").?;
@@ -116,18 +115,15 @@ const std = @import("std");
 const zpem = @import("zpem");
 
 pub fn main(init: std.process.Init) !void {
-    _ = init;
-
-    const alloc = std.heap.page_allocator;
+    const alloc = init.arena.allocator();
     
     var b = zpem.Block.init(allocator);
     b.type = "RSA PRIVATE";
     try b.headers.put("TTTYYY", "dghW66666");
     try b.headers.put("Proc-Type", "4,Encond");
-    try b.bytes.appendSlice("pem bytes");
+    try b.withBytes("pem bytes");
 
-    const allocator = std.heap.page_allocator;
-    var encoded_pem = try zpem.encode(allocator, b);
+    var encoded_pem = try zpem.encode(alloc, b);
     defer alloc.free(encoded_pem);
 
     std.debug.print("pem encoded: {s}\n", .{encoded_pem});

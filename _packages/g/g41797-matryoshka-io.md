@@ -8,9 +8,9 @@ repository: https://github.com/g41797/matryoshka-io
 keywords:
   - modular-monolith
   - multithreading
-date: 2026-07-08
-updated_at: 2026-07-08T11:50:44+00:00
-last_sync: 2026-07-08T11:50:44Z
+date: 2026-07-13
+updated_at: 2026-07-13T08:58:47+00:00
+last_sync: 2026-07-13T08:58:47Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -24,7 +24,23 @@ sync_source: zigistry
 permalink: /packages/g41797/matryoshka-io/
 ---
 
-# Matryoshka-Io
+![](kitchen/_logo/matryoshka-io-logo.png)
+
+---
+
+# Matryoshka-Io — a practical way to build great software systems
+
+---
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Linux](https://github.com/g41797/matryoshka-io/actions/workflows/linux.yml/badge.svg)](https://github.com/g41797/matryoshka-io/actions/workflows/linux.yml)
+[![Windows](https://github.com/g41797/matryoshka-io/actions/workflows/windows.yml/badge.svg)](https://github.com/g41797/matryoshka-io/actions/workflows/windows.yml)
+[![macOS](https://github.com/g41797/matryoshka-io/actions/workflows/mac.yml/badge.svg)](https://github.com/g41797/matryoshka-io/actions/workflows/mac.yml)
+[![Deploy Documentation](https://github.com/g41797/matryoshka-io/actions/workflows/docs.yml/badge.svg)](https://github.com/g41797/matryoshka-io/actions/workflows/docs.yml)
+
+
+---
+
+
 
 ## First rule of building great software systems
 
@@ -46,11 +62,13 @@ Matryoshka is an attempt to make them a little more ***boring***.
 
 ## Main concept
 
-Matryoshka introduces one main concept.
+Zig creates tasks through `io.concurrent()`.
 
-**Master**.
+Matryoshka introduces one main concept: **Master**.
 
-Master is a role.
+* A Master is an Io task.
+* Created by `io.concurrent()`.
+* Follows the Matryoshka rules.
 
 Master is **not**:
 
@@ -58,7 +76,7 @@ Master is **not**:
 * an interface
 * a runtime
 
-A Master:
+A task becomes a Master when it:
 
 * typically has a long lifetime
 * owns application state
@@ -71,6 +89,9 @@ Some Masters also:
 
 A *worker* is simply a Master with a single dedicated responsibility.
 
+* Not every task is a Master.
+* Every Master is a task.
+
 ---
 
 ## Matryoshka-based system
@@ -81,7 +102,7 @@ Masters:
 
 * own state
 * communicate through Mailboxes
-* share reusable objects through Pools
+* share reusable items through Pools
 
 Matryoshka does not dictate the implementation.
 
@@ -97,7 +118,7 @@ A Master uses only three small building blocks.
 
 Like `Node`, it is:
 
-* embedded into application objects
+* embedded into application items
 * suitable for:
 
   * intrusive lists
@@ -110,25 +131,25 @@ In addition, it:
 
 Given a `PolyNode`, you can:
 
-* safely identify the containing object
 * without interfaces
 * without virtual dispatch
+* safely identify the containing item
 
 ### Mailbox
 
 `Mailbox`:
 
-* transfers `PolyNode` objects between Masters
-* transfers ownership together with the object
-* does not know or care about the concrete object type
+* transfers `PolyNode` items between Masters
+* transfers the item, not a reference to it
+* does not know or care about the concrete item type
 
 ### Pool
 
 `Pool`:
 
-* reuses `PolyNode`-based objects
-* does not know or care about the concrete object type
-* returns objects for reuse instead of destroying them
+* reuses `PolyNode`-based items
+* does not know or care about the concrete item type
+* returns items for reuse instead of destroying them
 
 ### Together
 
@@ -136,8 +157,8 @@ Just three small building blocks.
 
 > Together, this troika allows you to:
 >
-> * transfer ownership
-> * reuse objects
+> * transfer items
+> * reuse items
 > * stay type-agnostic
 
 Exactly what the doctor ordered.
@@ -154,8 +175,8 @@ The steroids are simple:
 
 * intrusion
 * type erasure
-* ownership transfer
-* object reuse
+* item transfer
+* item reuse
 
 Nothing else.
 
@@ -166,50 +187,44 @@ Nothing else.
 
 ## The role of Zig Io
 
-Matryoshka-Io uses Zig Io in two situations.
+Io creates every task through `io.concurrent()`.
 
-### Required by Zig
+Matryoshka lives inside that task world. Not beside it.
 
-Some operations must use Zig Io because Zig exposes them only through the Io API.
+A Master is one of those tasks. It follows the Matryoshka rules.
 
-Matryoshka uses Io where it is required.
-
-The architecture remains unchanged.
-
-### Additional Io capabilities
-
-Matryoshka also uses Zig Io where it provides useful functionality.
-
-Examples include:
+Io still does the rest:
 
 * waiting for multiple event sources
 * timers
 * cancellation
 * integration with other Io-based libraries
 
-These capabilities extend Matryoshka.
+Matryoshka does not compete with these.
 
-They do not define it.
+* Io answers: how do tasks run?
+* Matryoshka answers: how do tasks cooperate?
 
 ---
 
 ## Why Matryoshka-Io?
 
-Think about cars.
+Io is large. Io does a lot.
 
-* A traditional threaded application is a conventional car.
-* A pure Io-based application is an electric car.
-* Matryoshka-Io is a hybrid.
+Matryoshka is small on purpose:
 
-Matryoshka:
+* a handful of rules
+* a few hundred lines of code
+
+It gives your Io tasks a simple, repeatable shape.
 
 * keeps the architecture simple
-* uses Zig Io where Zig requires it
-* uses Zig Io where it provides additional functionality
+* one way to create a task: `io.concurrent()`
+* one small set of rules for Masters to follow
 
 Start building today.
 
-If Zig Io changes tomorrow—and it will—your architecture stays the same.
+If Zig Io changes tomorrow—and it will—Matryoshka's rules stay the same.
 
 ---
 
@@ -219,7 +234,7 @@ There is no big-bang commitment.
 
 Start your first Master with the simplest building block: `PolyNode`.
 
-Add `Pool` when object reuse becomes useful.
+Add `Pool` when item reuse becomes useful.
 
 Add `Mailbox` when you need message passing.
 
@@ -230,8 +245,6 @@ It's up to you.
 Each step provides immediate value.
 
 Each step remains useful after the next one.
-
-The whole troika is only 582 lines of code.
 
 Don't be afraid.
 

@@ -9,10 +9,10 @@ keywords:
   - tui
   - zig-build
   - zig-language
-date: 2026-07-10
+date: 2026-07-13
 category: tooling
-updated_at: 2026-07-10T10:18:18+00:00
-last_sync: 2026-07-10T10:18:18Z
+updated_at: 2026-07-13T09:25:37+00:00
+last_sync: 2026-07-13T09:25:37Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -76,8 +76,8 @@ var split = try zit.widget.SplitPane.init(alloc);
 defer split.deinit();
 split.setOrientation(.horizontal);
 try split.setTheme(theme.Theme.dark());
-split.setFirst(&tree.widget);
-split.setSecond(&gauge.widget);
+try split.setFirst(&tree.widget);
+try split.setSecond(&gauge.widget);
 ```
 
 Navigate instantly with typeahead and fluent builders:
@@ -95,7 +95,7 @@ defer table.deinit();
 try table.addRow(&.{ "gateway", "alice" });
 try table.addRow(&.{ "search", "carmen" });
 table.setTypeaheadTimeout(750); // printable keys jump rows while focused
-table.widget.focused = true;
+table.widget.setFocus(true);
 ```
 
 Add motion and recurring tasks without extra plumbing:
@@ -183,6 +183,7 @@ From this repo you can also run `zig build hello-world` to launch the smallest i
 
 ## Quick Start (copy-pasteable)
 
+<!-- docs-check: compile -->
 ```zig
 const std = @import("std");
 const zit = @import("zit");
@@ -213,7 +214,9 @@ pub fn main() !void {
     var running = true;
     while (running) {
         if (try app.pollInputOnce()) |event| switch (event) {
-            .key => |key| if (key.key == 'q') running = false,
+            .key => |key| {
+                if (key.key == 'q') running = false;
+            },
             else => {},
         };
 
@@ -237,7 +240,7 @@ Quick starts
 
 System checks
 - `zig build terminal-test` (`examples/terminal_test.zig`): verify terminal capabilities, resize handling, and cursor control.
-- `zig build input-test` (`examples/input_test.zig`): stream key and mouse events to the screen to confirm input wiring.
+- `zig build input-test` (`examples/input_test.zig`): stream key, mouse, resize, and terminal-focus events to the screen to confirm input wiring.
 - `zig build render-test` (`examples/render_test.zig`): exercise color, style, and box drawing primitives.
 - `zig build layout-test` (`examples/layout_test.zig`): lay out widgets and layout primitives to validate sizing math.
 - `zig build widget-test` (`examples/widget_test.zig`): composite widget smoke test that renders a basic UI frame.

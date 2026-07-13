@@ -8,9 +8,9 @@ repository: https://github.com/jedisct1/zig-asymcrypt
 keywords:
   - asymcrypt
   - encryption
-date: 2026-05-17
-updated_at: 2026-05-17T11:05:24+00:00
-last_sync: 2026-05-17T11:05:24Z
+date: 2026-07-13
+updated_at: 2026-07-13T12:35:05+00:00
+last_sync: 2026-07-13T12:35:05Z
 package_kind: hybrid
 has_library: true
 has_binary: true

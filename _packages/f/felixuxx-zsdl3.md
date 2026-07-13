@@ -8,10 +8,10 @@ repository: https://github.com/felixuxx/zsdl3
 keywords:
   - gamedev
   - sdl3
-date: 2026-07-03
+date: 2026-07-10
 category: game-development
-updated_at: 2026-07-03T11:54:23+00:00
-last_sync: 2026-07-03T11:54:23Z
+updated_at: 2026-07-10T09:28:05+00:00
+last_sync: 2026-07-10T09:28:05Z
 package_kind: hybrid
 has_library: true
 has_binary: true
