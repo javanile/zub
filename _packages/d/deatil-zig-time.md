@@ -1,0 +1,111 @@
+---
+title: zig-time
+description: A date and time parse and format library for Zig
+license: Apache-2.0
+author: deatil
+author_github: deatil
+repository: https://github.com/deatil/zig-time
+keywords:
+  - date
+  - datetime
+  - time
+  - zig-time
+date: 2026-07-08
+updated_at: 2026-07-08T05:55:49+00:00
+last_sync: 2026-07-08T05:55:49Z
+package_kind: library
+has_library: true
+has_binary: false
+has_distributable_binary: false
+binary_count: 0
+distributable_binary_count: 0
+multiple_binaries: false
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
+permalink: /packages/deatil/zig-time/
+---
+
+## Zig-time 
+
+A date and time parse and format library for Zig.
+
+
+### Env
+
+ - Zig >= 0.16.0
+
+
+### Adding zig-time as a dependency
+
+Add the dependency to your project:
+
+```sh
+zig fetch --save=zig-time git+https://github.com/deatil/zig-time#main
+```
+
+or use local path to add dependency at `build.zig.zon` file
+
+```zig
+.{
+    .dependencies = .{
+        .@"zig-time" = .{
+            .path = "./lib/zig-time",
+        },
+        ...
+    },
+    ...
+}
+```
+
+And the following to your `build.zig` file:
+
+```zig
+const zig_time_dep = b.dependency("zig-time", .{});
+exe.root_module.addImport("zig-time", zig_time_dep.module("zig-time"));
+```
+
+The `zig-time` structure can be imported in your application with:
+
+```zig
+const zig_time = @import("zig-time");
+```
+
+
+### Get Starting
+
+~~~zig
+const std = @import("std");
+const time = @import("zig-time");
+
+pub fn main(init: std.process.Init) !void {
+    const io = init.io;
+
+    const time_0 = time.now(io).timestamp();
+    std.debug.print("now time: {d} \n", .{time_0});
+    
+    // ==========
+    
+    const seed: i64 = 1691879007;
+    const fmt: []const u8 = "YYYY-MM-DD HH:mm:ss z";
+    
+    const alloc = std.heap.page_allocator;
+    const instant = time.Time.fromTimestamp(seed).setLoc(time.UTC);
+    const fmtRes = try instant.formatAlloc(alloc, fmt);
+    defer alloc.free(fmtRes);
+    
+    // output: 
+    // format time: 2023-08-12 22:23:27 UTC
+    std.debug.print("format time: {s} \n", .{fmtRes});
+}
+~~~
+
+
+### LICENSE
+
+*  The library LICENSE is `Apache2`, using the library need keep the LICENSE.
+
+
+### Copyright
+
+*  Copyright deatil(https://github.com/deatil).

@@ -9,10 +9,10 @@ keywords:
   - sql
   - zig-libary
   - zig-program
-date: 2026-07-13
+date: 2026-07-14
 category: data-formats
-updated_at: 2026-07-13T12:39:31+00:00
-last_sync: 2026-07-13T12:39:31Z
+updated_at: 2026-07-14T11:50:59+00:00
+last_sync: 2026-07-14T11:50:59Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -53,6 +53,84 @@ It does not give you:
 
 Zig **0.16** package. Core surface is usable for SQLite end-to-end and PostgreSQL protocol/query work (live server recommended for integration).
 
+## Install
+
+Add the package to an application and import its public module:
+
+```sh
+zig fetch --save=zsql git+https://github.com/oswalpalash/zsql.git
+```
+
+```zig
+const zsql_dep = b.dependency("zsql", .{
+    .target = target,
+    .optimize = optimize,
+    .@"enable-sqlite" = true, // omit or set false for PostgreSQL/core only
+});
+app.root_module.addImport("zsql", zsql_dep.module("zsql"));
+```
+
+The repository verifies this dependency boundary from a separate Zig package
+with `zig build consumer-smoke`; the optional system-library route is covered
+by `zig build consumer-smoke-system`. Both routes compile the documented root
+façade and driver lifecycle declarations before exercising runtime behavior.
+
+`zig build install-smoke` also installs the static library and CLI into a fresh
+temporary prefix and runs the installed `zsql doctor`, ensuring distribution
+artifacts do not depend on repository-relative files. Every install also writes
+`share/zsql/build.zon` with its package version, Zig version, target,
+optimization, strip policy, SQLite linkage mode, and optional source revision.
+Release builders can pass a validated 40- or 64-digit lowercase hexadecimal
+revision with `-Dsource-revision=<revision>`; ordinary builds record `null` and
+never require Git metadata. `zig build provenance-validation` checks accepted
+and rejected revision forms without compiling artifacts. The CLI reports the
+recorded value—or `unrecorded`—through `zsql doctor`; this is a CLI-private build
+option and does not add a public library symbol.
+`zsql doctor --zon` emits the exact embedded `build.zon` bytes for automation;
+the install and reproducibility gates compare the output byte-for-byte with the
+installed file. Unknown or extra doctor arguments are rejected.
+`zig build portability-smoke` cross-builds the installed library and CLI for
+`x86_64-windows` and static `aarch64-linux-musl` in isolated prefixes, both
+with the libc-free default configuration and with bundled SQLite enabled.
+`zig build reproducibility-smoke` performs two stripped `ReleaseSafe` native
+installs with separate local caches and prefixes, then requires byte-identical
+CLI, static-library, and build-provenance outputs. zsql canonicalizes the
+installed archive member name because Zig 0.16 otherwise embeds its full cache
+path. Use `-Dstrip=true` for the same install mode.
+`zig build version-sync` makes `build.zig.zon` authoritative for release
+metadata and fails if the library/CLI build option drifts; `install-smoke` also
+compares the installed doctor's reported version to that manifest value.
+`zig build saslprep-tables-check` verifies the generated Unicode 3.2 tables
+used by the native PostgreSQL SCRAM implementation. It requires Python 3 only
+for this maintainer check; library builds have no Python or Unicode dependency.
+`zig build package-smoke` snapshots the current worktree through an isolated Git
+index, runs `zig fetch` into a clean cache, extracts the manifest-selected
+payload, and repeats its test, consumer, and install gates from that package. A
+representative static `aarch64-linux-musl` bundled-SQLite cross-build also proves
+that the fetched payload retained its target-portable sources and C dependency.
+
+Before tagging, run the complete deterministic release contract:
+
+```sh
+zig build release-verify
+```
+
+This covers formatting, generated SASLprep table drift, default and SQLite
+tests, version integrity, checked queries, examples, external consumers, clean installation, default/bundled-
+SQLite Windows and static-Linux cross-builds, stripped native CLI
+and static-library reproducibility, and the fetched release payload. PostgreSQL
+protocol tests are included in the default suite;
+live server behavior remains the explicit final service-backed gate:
+
+```sh
+ZSQL_PG_URL='postgres://…' zig build test-postgres
+```
+
+The owner-facing [release checklist](RELEASE_CHECKLIST.md) defines version,
+license, live-service, tag-payload, and post-release evidence. The repository
+currently has no license, so a public tag remains blocked until the owner
+chooses and adds one.
+
 ### Public names
 
 - `zsql.Database(D)`, `zsql.Connection(D)`, `zsql.Statement(D)`, `zsql.ResultRows(D)`, `zsql.ResultRow(D)`
@@ -63,8 +141,8 @@ Zig **0.16** package. Core surface is usable for SQLite end-to-end and PostgreSQ
 - `zsql.Hooks`, `zsql.QueryStart`, `zsql.QueryEnd` (connection-local observability)
 - `zsql.StmtCache` (connection-local prepared-statement name LRU)
 - `zsql.inspect`, `zsql.check`
-- `zsql.drivers.sqlite` (`-Denable-sqlite=true`): full open/exec/query/bind/tx/savepoint/pool/migrator/schema inspect, borrowed `InterruptHandle`, and `Conn.lastError()`
-- `zsql.drivers.postgres`: native (no libpq) URL parse, SCRAM-SHA-256 / SCRAM-SHA-256-PLUS / MD5 / cleartext, simple + extended query, tx/savepoints, pool, schema inspect, owned `CancelHandle`, `Conn.lastError()`, optional `enableStmtCache`
+- `zsql.drivers.sqlite` (`-Denable-sqlite=true`): full open/exec/query/bind/tx/savepoint/pool/migrator/schema inspect, borrowed `InterruptHandle`, and borrowed/owned `Conn.lastError*()` diagnostics
+- `zsql.drivers.postgres`: native (no libpq) URL parse, SCRAM-SHA-256 / SCRAM-SHA-256-PLUS / MD5 / cleartext, simple + extended query, tx/savepoints, pool, schema inspect, owned `CancelHandle`, borrowed/owned `Conn.lastError*()` diagnostics, optional `enableStmtCache`
 
 Use a driver’s explicit marker for the generic façade, e.g.
 `zsql.Database(zsql.drivers.sqlite.Driver)` or
@@ -105,7 +183,9 @@ dedicated lease for the statement lifetime. The lease is heap-stable so the
 statement's connection pointer remains valid even when `PooledStmt` moves.
 Closing or deinitializing the statement always happens before releasing or
 discarding its lease; a pool shutdown lets the statement finish, then closes
-the connection instead of returning it to idle.
+the connection instead of returning it to idle. Rows returned by
+`PooledStmt.query` / `queryNamed` own their decoded data and remain valid after
+the statement is closed and the pool is deinitialized.
 
 ### SQLite
 
@@ -146,6 +226,17 @@ var db = try zsql.drivers.sqlite.Database.open(allocator, .{
 
 SQLite extended result codes map unique/primary-key, foreign-key, not-null, and
 check failures to the corresponding public `zsql.Error` categories.
+Bare SQLite named binds may match `:`, `@`, or `$` parameters of any length
+SQLite accepts. Each name is resolved once into a prevalidated index slice
+before SQLite bindings are cleared or changed. Marker probing uses one
+maximum-size temporary buffer shared by every name in the call, and allocation
+failure remains `error.OutOfMemory` rather than a bind-name error.
+
+SQLite `Stmt.query` / `queryNamed` borrow and temporarily mark the prepared
+statement busy. Keep the `Stmt` at a stable address until `Rows.deinit`; rows
+teardown resets it for reuse. Calling `close` while rows are active defers
+finalization until their teardown, so rows remain valid without a double-close
+hazard.
 
 ### PostgreSQL
 
@@ -178,6 +269,8 @@ defer zsql.freeOwnedRows(allocator, all);
 SQLite mirrors this with `Conn.queryOne` / `Conn.queryAll`. Pools expose
 `Pool.queryOne` / `Pool.queryOneParams` and `Pool.queryAll` / `Pool.queryAllParams`
 (lease held only for the fetch; free multi-row results with `zsql.freeOwnedRows`).
+Both drivers release a newly copied row if result-slice growth fails, so
+`queryAll` remains leak-free at every allocation boundary.
 
 Scoped transactions via `withTx` (commit on success, rollback on error):
 
@@ -218,6 +311,17 @@ Pool acquire timeout: `0` = non-blocking, `std.math.maxInt(u64)` = wait forever
 Pools retain synchronized connections after recoverable SQL errors and discard
 closed, protocol-broken, or transaction-busy leases. A lease released with an
 open transaction is never returned to another borrower.
+`Pool.init` clones connection configuration needed by future opens: PostgreSQL
+URL fields and optional peer-certificate bytes, or the SQLite database path.
+Callers retain and may immediately deinitialize their source configuration.
+Query-hook context pointers remain borrowed and must outlive their use by the
+pool.
+Connection setup failures return their reserved capacity and wake another
+acquirer, including wait-forever acquirers, so usable capacity cannot remain
+stranded behind a failed open.
+`Lease.release` always consumes the lease; if the idle list cannot grow under
+allocation pressure, it closes the connection and returns `OutOfMemory`
+without leaving a second cleanup obligation on the caller.
 
 `Pool.deinit()` closes idle connections and wakes blocked acquirers with
 `error.PoolClosed`. Already-issued leases and pooled rows remain usable; they
@@ -235,7 +339,14 @@ TLS uses Zig's `std.crypto.tls.Client` (no OpenSSL). Behavior by `sslmode`:
 Use `sslmode=verify-full` when you need full certificate checks against OS trust stores.
 
 Auth: trust, cleartext, MD5, **SCRAM-SHA-256**, and **SCRAM-SHA-256-PLUS**
-(`tls-server-end-point` channel binding).
+(`tls-server-end-point` channel binding). SCRAM salt decoding is allocator-
+bounded rather than constrained by a fixed library buffer, and authentication
+state remains safe to deinitialize or retry after allocation failure. Server
+verifiers are strictly decoded to their 32-byte signature and compared in
+constant time. Owned password bytes and password-derived stack intermediates are
+securely zeroed at their lifetime boundaries. Nonces and attribute values are
+validated against the SCRAM wire grammar before use, including required field
+ordering and unsupported mandatory-extension rejection.
 
 SCRAM-PLUS is used when the server offers it, TLS is active, and a leaf
 certificate DER is available for channel binding. Because `std.crypto.tls.Client`
@@ -274,6 +385,9 @@ try cancel.request(); // five-second request deadline
 The interrupted query returns `error.QueryTimeout`, and the original connection
 drains through `ReadyForQuery` before it is reused. Use
 `requestWithTimeout(duration)` to choose a different cancellation deadline.
+The handle owns its endpoint and backend key copy, so it may be deinitialized
+after the connection; sending a request still requires the originating server
+session to be open.
 
 Failed commands map SQLSTATE into fine-grained errors (`UniqueViolation`, `ForeignKeyViolation`, …) and store rich metadata on the connection:
 
@@ -293,6 +407,18 @@ starting a later operation clears stale metadata, including when it succeeds.
 For SQL operations it also owns the exact statement template sent to PostgreSQL
 in `db_err.sql`; bind arguments are never interpolated into that text. Server
 fields such as `detail` remain verbatim and may themselves quote data values.
+
+To retain diagnostics across another operation, lease release, or connection
+teardown, request an allocator-owned copy:
+
+```zig
+var owned_error = (try conn.lastErrorOwned(allocator)) orelse return error.NoRows;
+defer owned_error.deinit(allocator);
+const stable_error = owned_error.view();
+```
+
+`zsql.OwnedDbError.from(allocator, db_err)` provides the same deep-copy
+operation for any borrowed `DbError` view.
 
 Format rich errors with `{f}` (or call `formatSafe`) for logs. The safe format
 keeps the driver, category, code, and escaped object identifiers while omitting
@@ -330,6 +456,9 @@ preventing permanent `prepared statement does not exist` or `0A000` loops.
 SQLite (`-Denable-sqlite=true`) has the same `enableStmtCache` API, caching `sqlite3_stmt` handles.
 Schema-changing SQLite statements and scripts clear cached handles while keeping
 the configured cache enabled, preventing stale result-column metadata after DDL.
+Cache-borrowed copies release their temporary text/blob bytes and list capacity
+after every operation; explicit prepared statements retain only their own
+reusable scratch.
 
 Schema inspection (for offline checks):
 
@@ -337,6 +466,11 @@ Schema inspection (for offline checks):
 const schema = try conn.inspectSchema(allocator);
 defer zsql.drivers.postgres.freeInspectedSchema(allocator, schema);
 ```
+
+Inspected schema graphs and `Migrator.status(allocator)` results deep-copy all
+catalog and migration-history strings. They remain valid after the originating
+connection or database is deinitialized and must be released with the
+documented schema cleanup function or `MigrationStatus.deinit`.
 
 ### PostgreSQL extensions
 
@@ -350,6 +484,11 @@ var notification = try listener.next();
 defer notification.deinit(allocator);
 ```
 
+Notifications own their channel and payload buffers and may outlive the
+listener lease. `Listener.deinit` sends `UNLISTEN *` before returning its
+session to the pool; if cleanup fails, that connection is discarded instead of
+leaking subscription state into an unrelated lease.
+
 COPY uses trusted COPY SQL plus explicit bytes; values are encoded by the caller
 for the selected COPY format:
 
@@ -358,6 +497,11 @@ _ = try conn.copyIn("copy users (id, email) from stdin with (format csv)", csv_b
 const exported = try conn.copyOut("copy users to stdout with (format csv)");
 defer allocator.free(exported);
 ```
+
+`Pool.copyIn` and `Pool.copyOut` run the same protocol under a short-lived
+lease. COPY output is allocator-owned and remains valid after the lease or pool
+is deinitialized. If synchronization or lease release fails, the pool discards
+the connection and frees any not-yet-returned output.
 
 ### QueryBuilder
 
@@ -375,6 +519,11 @@ try qb.bind(@as(i64, 1)); // Zig scalars OK
 ```
 
 Unsafe raw append is named `rawUnsafe` on purpose.
+`bind` owns copied text/blob payloads and is failure-atomic: allocation failure
+leaves SQL, bind order, ownership, and the next PostgreSQL placeholder unchanged,
+so callers may handle OOM and retry the same builder safely.
+Identifier methods have the same retry contract: invalid later path segments or
+allocation failure never leave a partial quoted identifier in the SQL buffer.
 
 ### Query hooks
 
@@ -418,6 +567,10 @@ const email = try row.asName([]const u8, "email");
 const owned_email = try row.asNameOwned(allocator, "email");
 defer allocator.free(owned_email);
 
+// Allocator-owned columns and values (survives Rows/connection teardown):
+var owned_row = try row.getOwned(allocator);
+defer owned_row.deinit();
+
 // Struct mapping (name first, ordinal fallback):
 const user = try row.to(struct { id: i64, email: []const u8 });
 
@@ -425,7 +578,18 @@ const user = try row.to(struct { id: i64, email: []const u8 });
 const flag = try zsql.decode(bool, try row.get(2));
 ```
 
+Borrowed row values remain valid only until the next row is advanced, the
+statement is reset or finalized, the rows object is deinitialized, or its
+connection/lease is released. Copy a single text/blob with `asOwned` /
+`asNameOwned`, or copy the complete row with `getOwned`, before crossing that
+boundary. Every owned copy records or receives its allocator and must be
+released explicitly.
+
 Postgres `SimpleRow` exposes the same `get` / `getName` / `as` / `asName` / `to` / `getOwned` surface.
+Its struct mapping decodes directly from owned wire values without allocation
+or an arbitrary result-column width cap.
+`getOwned` deep-copies those values directly into the final `OwnedRow`; it does
+not allocate transient column or value views.
 PostgreSQL `bytea` is allocator-owned by `SimpleRows` and decoded to the original
 bytes for both server `hex` and `escape` output modes; wire hex characters are
 never exposed as blob contents.
@@ -436,6 +600,9 @@ separate query calls instead.
 Both simple and extended row collectors drain on any local parse, decode, or
 allocation error before `ReadyForQuery`. If synchronization itself fails, the
 connection is closed so a pool cannot reuse unread protocol state.
+After `ReadyForQuery`, column-name duplication and final column/row ownership
+transfers are failure-atomic, so an OOM preserves connection reuse without
+leaking any partially collected result storage.
 
 `zsql.types.Text`, `Blob`, `Numeric`, and canonical-text `Uuid` decode through
 the same borrowed row path. PostgreSQL `date`, `time`, `timestamp`, and
@@ -476,7 +643,7 @@ try zsql.check.checkQuery(.{
     },
     .check_projections = true, // also parse SELECT list against the scope
     .check_where = true, // resolve bare/qualified column refs in WHERE/HAVING
-    .check_join_on = true, // resolve column refs in JOIN ON clauses
+    .check_join_on = true, // resolve JOIN ON refs and schema-known USING lists
     .check_group_by = true, // resolve GROUP BY refs and unique SELECT aliases
     .check_order_by = true, // resolve column refs in ORDER BY
 });
@@ -533,12 +700,52 @@ When `from_table` / `from_tables` are omitted, `checkQuery` best-effort extracts
 `check_join_on`, `check_group_by`, and `check_order_by` are opt-in: they resolve
 simple column refs (including those inside function arguments like
 `lower(email)`), while skipping keywords, binds, casts, and function *names*.
+JOIN USING lists between schema-known tables must name one exposed column on
+the accumulated left relation and a column on the new right table; chained
+USING merges are tracked. Opaque CTE/subquery relations return `UnknownTable`
+rather than borrowing unrelated schema columns.
 GROUP BY validation checks reference existence and unique result aliases; it
 does not attempt to prove full SQL grouping legality. SQLite and PostgreSQL can
 build a schema graph with `Conn.inspectSchema` and render ZON via
 `zsql.inspect.writeSchemaZon`. Applications load an embedded artifact with
 `parseSchemaZon` and release its allocator-owned graph with
 `freeParsedSchemaZon`.
+SQLite inspection binds catalog names through table-valued PRAGMA queries;
+table and index identifiers are never interpolated into SQL or restricted by a
+fixed query buffer.
+
+For `WITH` queries, projection, scope, and clause discovery is anchored to the
+outer depth-zero statement; nested CTE keywords cannot replace the outer query
+being checked. CTE bodies and CTE-derived relation shapes remain opaque, so
+their internal expressions and output columns are not inferred; using a
+CTE/subquery as an outer relation returns `UnknownTable`.
+
+Quoted table, column, and alias names remain allocation-free encoded slices in
+the checker. Double-quoted (`"a""b"`), backtick (`` `a``b` ``), and bracket
+(`[a]]b]`) delimiter escapes are decoded during comparison, so exact inspected
+schema names work across projections, clauses, aggregates, and JOIN USING.
+
+Inspected schema artifacts carry `.dialect = .sqlite` or `.postgres`.
+PostgreSQL checks lowercase unquoted identifiers before catalog lookup; SQLite
+checks unquoted identifiers case-insensitively. Quoted identifiers remain exact.
+Legacy and hand-authored artifacts without this field default to `.unknown` and
+retain exact-match behavior.
+
+PostgreSQL artifacts store each table's exact `.schema` and `.name` separately.
+The checker resolves `schema.table` without flattening identifiers that may
+themselves contain dots. Because artifacts do not encode a session
+`search_path`, only `public` tables resolve as bare PostgreSQL names;
+non-public tables must be schema-qualified. A SQL alias hides the original
+relation name, matching PostgreSQL visibility rules. Legacy artifacts that used
+a single `schema.table` display name remain readable.
+
+Fully qualified PostgreSQL column references (`schema.table.column`) are
+validated in SELECT projections, qualified stars, portable aggregate
+arguments, WHERE/HAVING expressions, JOIN ON, GROUP BY, and ORDER BY. Quoted
+components remain exact; unquoted components use PostgreSQL lowercase folding.
+PostgreSQL cast type syntax is excluded from column lookup, including
+schema-qualified types, modifiers, array suffixes, and standard multi-word type
+names in both `expr::type` and `CAST(expr AS type)` forms.
 
 ### CLI
 
@@ -547,6 +754,12 @@ fails, schema changes roll back and zsql persists that version/checksum as
 `dirty` after rollback. Later applies return `error.MigrationDirty` until an
 operator inspects and repairs or removes the failed record; zsql does not hide
 or automatically retry an uncertain migration.
+If the post-rollback marker write itself fails, that persistence error takes
+precedence over the original SQL error: zsql never reports the original failure
+as durably guarded when it could not record the guard.
+SQLite acquires `BEGIN IMMEDIATE` before reading or validating migration history,
+so a waiter cannot apply from a stale pre-lock snapshot. PostgreSQL performs the
+same revalidation after acquiring its session advisory lock.
 
 `Migrator(D).repairDirty(version, expected_checksum)` is the guarded repair
 primitive. It locks migration history, requires an existing dirty row and exact
@@ -583,6 +796,22 @@ zig build checked-queries-example
 zig build check-sql
 zig build run-postgres-pool-example # skips cleanly if ZSQL_PG_URL unset
 ```
+
+CLI-generated migration, schema, and Zig files are written through a
+same-directory temporary file and synchronized before publication. `inspect`
+and `gen structs` atomically replace their destination; `migrate new` remains
+exclusive and never overwrites an existing migration. If concurrent creators
+select the same next version, the loser rescans and retries up to a fixed bound
+instead of leaving a partial file or immediately surfacing the filename race.
+The four-digit version field is minimum padding, not a ceiling; exhaustion at
+`u64` maximum returns `MigrationVersionConflict` instead of wrapping to zero.
+Atomic replacement preserves an existing regular file's permissions, so
+regenerating a private schema artifact does not silently broaden its access.
+Missing parent directories in an explicit output path are created only after
+the command has successfully rendered the complete artifact in memory. After
+publication, zsql also synchronizes the containing directory on supported
+POSIX platforms; other targets retain atomic visibility and pre-publication
+file synchronization, with power-loss directory durability left to the target.
 
 Generated struct files import `zsql` themselves, map supported SQL domain types
 to `zsql.types.*`, and preserve database nullability with optional Zig fields.

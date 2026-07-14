@@ -9,9 +9,9 @@ keywords:
   - backoff
   - fault-tolerance
   - retry
-date: 2026-07-02
-updated_at: 2026-07-02T10:34:18+00:00
-last_sync: 2026-07-02T10:34:18Z
+date: 2026-07-03
+updated_at: 2026-07-03T02:34:00+00:00
+last_sync: 2026-07-03T02:34:00Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -36,7 +36,7 @@ Create a project with `zig init` that has a `build.zig` and `build.zig.zon`.
 Run:
 
 ```sh
-zig fetch --save 'git+https://github.com/k1ngkevin/zretry#v0.3.1'
+zig fetch --save 'git+https://github.com/k1ngkevin/zretry#v0.4.0'
 ```
 
 Add this to your `build.zig`:
@@ -106,6 +106,45 @@ pub fn main(init: std.process.Init) !void {
 }
 ```
 
+To retry only some errors, pass a `retry_if` function.
+If `retry_if` is omitted, `zretry` retries every error until `max_attempts` is reached.
+
+```zig
+const std = @import("std");
+const retry = @import("zretry");
+
+const FetchError = error{
+    Timeout,
+    TooManyRequests,
+    ServiceUnavailable,
+    Forbidden,
+    InvalidUrl,
+};
+
+fn shouldRetryError(err: anyerror) bool {
+    return switch (err) {
+        error.Timeout,
+        error.TooManyRequests,
+        error.ServiceUnavailable,
+        => true,
+
+        else => false,
+    };
+}
+
+fn fetchResource() FetchError!void {
+    // map temporary failures to retryable errors
+}
+
+pub fn main(init: std.process.Init) !void {
+    try retry.zretry(fetchResource, .{}, .{
+        .io = init.io,
+        .max_attempts = 5,
+        .retry_if = shouldRetryError,
+    });
+}
+```
+
 ## Options
 
 - `io`: `std.Io` used to sleep between retries and seed jitter randomness.
@@ -113,8 +152,14 @@ pub fn main(init: std.process.Init) !void {
 - `initial_delay_ms`: starting delay in milliseconds.
 - `max_delay_ms`: maximum delay in milliseconds.
 - `strategy`: `.fixed`, `.linear`, or `.exponential`.
-- `jitter`: `.none` or `.full`.
+  - `.fixed`: use the same delay after every failure
+  - `.linear`: increase by `initial_delay_ms` every failure
+  - `.exponential`: double delay after each failure
+- `jitter`: `.none` or `.percent`.
+  - `.none`: sleep for the calculated delay exactly
+  - `.percent`: subtract a small percentage from each delay
 - `random`: optional `std.Random`; if omitted, one is seeded from `std.Io`.
+- `retry_if`: optional function that receives the error and returns `true` to retry it or `false` to return it immediately. If omitted, all errors are retried.
 
 ## Development
 
