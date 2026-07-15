@@ -6,11 +6,13 @@ author: g41797
 author_github: g41797
 repository: https://github.com/g41797/matryoshka-io
 keywords:
+  - building-block
+  - concurrent-programming
   - modular-monolith
-  - multithreading
-date: 2026-07-13
-updated_at: 2026-07-13T08:58:47+00:00
-last_sync: 2026-07-13T08:58:47Z
+  - std-io
+date: 2026-07-15
+updated_at: 2026-07-15T10:25:01+00:00
+last_sync: 2026-07-15T10:25:01Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -30,7 +32,7 @@ permalink: /packages/g41797/matryoshka-io/
 
 # Matryoshka-Io — a practical way to build great software systems
 
----
+---  
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Linux](https://github.com/g41797/matryoshka-io/actions/workflows/linux.yml/badge.svg)](https://github.com/g41797/matryoshka-io/actions/workflows/linux.yml)
 [![Windows](https://github.com/g41797/matryoshka-io/actions/workflows/windows.yml/badge.svg)](https://github.com/g41797/matryoshka-io/actions/workflows/windows.yml)

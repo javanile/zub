@@ -12,10 +12,10 @@ keywords:
   - memory-allocator
   - no-std
   - rust
-date: 2026-07-01
+date: 2026-07-13
 category: systems
-updated_at: 2026-07-01T15:58:05+00:00
-last_sync: 2026-07-01T15:58:05Z
+updated_at: 2026-07-13T08:11:48+00:00
+last_sync: 2026-07-13T08:11:48Z
 package_kind: library
 has_library: false
 has_binary: false

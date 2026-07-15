@@ -17,10 +17,10 @@ keywords:
   - zig-language
   - zig-programming-language
   - zig-tui
-date: 2026-07-10
+date: 2026-07-12
 category: tooling
-updated_at: 2026-07-10T22:43:41+00:00
-last_sync: 2026-07-10T22:43:41Z
+updated_at: 2026-07-12T04:09:52+00:00
+last_sync: 2026-07-12T04:09:52Z
 package_kind: library
 has_library: true
 has_binary: false

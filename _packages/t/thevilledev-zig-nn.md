@@ -6,11 +6,13 @@ author: thevilledev
 author_github: thevilledev
 repository: https://github.com/thevilledev/zig-nn
 keywords:
+  - golang
   - learning
+  - monorepo
   - neural-networks
-date: 2026-07-14
-updated_at: 2026-07-14T11:37:35+00:00
-last_sync: 2026-07-14T11:37:35Z
+date: 2026-07-15
+updated_at: 2026-07-15T10:43:02+00:00
+last_sync: 2026-07-15T10:43:02Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -24,77 +26,60 @@ sync_source: zigistry
 permalink: /packages/thevilledev/zig-nn/
 ---
 
-# Neural Network in Zig
+# Neural-Network Experiments in Zig
 
 [![Work in Progress](https://img.shields.io/badge/Status-Work%20in%20Progress-yellow)](https://github.com/thevilledev/zig-nn)
 
-A small neural-network playground written in Zig.
+`zig-nn` is an educational laboratory for learning how neural networks work by
+building and running the pieces directly. It favors small, inspectable
+implementations and experiments whose output shows whether an idea works.
 
-This is for learning neural-network fundamentals by building the pieces
-directly: matrix math, layers, training loops, small examples, focused
-experiments, and a CPU-first path with separate backend-aware matrix operations
-plus a device-resident f32 tensor and Transformer path for CPU, Metal, CUDA,
-and ROCm.
-It is not trying to be a production ML framework.
+There are two complementary paths through the code:
+
+- The CPU fundamentals in [`src/matrix.zig`](src/matrix.zig),
+  [`src/layer.zig`](src/layer.zig), and [`src/network.zig`](src/network.zig)
+  keep forward passes, losses, and backpropagation easy to follow.
+- The tensor runtime in [`src/tensor.zig`](src/tensor.zig), reusable modules in
+  [`src/modules.zig`](src/modules.zig), and training tools in
+  [`src/training.zig`](src/training.zig) support the later CPU, Metal, CUDA, and
+  ROCm experiments without hiding device boundaries.
+
+The reusable mechanics live in `src/`. The runnable programs in
+[`experiments/`](experiments/README.md) connect those mechanics to a concrete
+question, observable metrics, and relevant research. This is a learning
+project, not a production machine-learning framework.
 
 ## Start Here
 
-Install Zig `0.16.0` and Go `1.26` or newer, then from the repository root:
+Install Zig `0.16.0` and Go `1.26` or newer, then run one small experiment:
 
 ```bash
 go install ./nnctl/cmd/nnctl
-nnctl all
-nnctl run quick
-```
-
-`nnctl all` builds the library, runs the tests, and builds the examples.
-`nnctl run quick` runs the small CPU examples that do not need downloaded data
-or a saved model.
-
-Try a specific example or workflow:
-
-```bash
 nnctl run simple-xor
-nnctl run tiny-gpt
-nnctl run backend-training
-nnctl data mnist
-nnctl train tiny-gpt --preset coherent-small --output tiny-gpt.bin
-nnctl chat --model tiny-gpt.bin
-nnctl benchmark
 ```
 
-For direct `zig build` commands and data files, see
-[Getting Started](docs/getting-started.md). For local hooks and full-repository
-checks, see [Development Environment](docs/development.md). GPU details are in
-[GPU and Backend Notes](docs/gpu.md).
+Continue with `nnctl run quick`, or choose a topic from the
+[experiment guide](experiments/README.md). The complete setup, direct Zig
+commands, data requirements, and full validation workflow are in
+[Getting Started](docs/getting-started.md).
 
-## Guide
+## Documentation
 
-- [Getting Started](docs/getting-started.md) - prerequisites, build commands,
-  tests, and common development tasks
-- [Development Environment](docs/development.md) - pinned tools, local hooks,
-  and full-repository checks
-- [Examples](docs/examples.md) - runnable demos and what each one is meant to
-  show
-- [Benchmarks](docs/benchmarks.md) - repeatable CPU, GPU, and release-mode
-  benchmark commands
-- [Experiments](docs/experiments.md) - research-style probes, metrics, and
-  current experiment notes
-- [GPU and Backend Notes](docs/gpu.md) - current backend boundaries, Metal,
-  CUDA, and ROCm verification
-- [Neural Network Architecture](docs/architecture.md) - design principles and
-  component overview
-- [Advanced Activation Functions](docs/activation_functions.md) - Swish, GLU,
-  SwiGLU, and implementation notes
-- [Research Resources](docs/research.md) - papers, official docs, datasets,
-  and implementation references for topics covered by the repo
-
-## Where To Look
-
-Start with `examples/` when you want to see the code run. Read `src/matrix.zig`,
-`src/layer.zig`, and `src/network.zig` for the core learning path. Use
-[GPU and Backend Notes](docs/gpu.md) when you need the current backend
-boundaries, and `nnctl/` only when you are changing the helper CLI.
+- [Experiments](experiments/README.md) — learning routes, runnable programs,
+  source links, expected evidence, and research background
+- [Getting Started](docs/getting-started.md) — prerequisites, build commands,
+  tests, data, and checkpoints
+- [Architecture](docs/architecture.md) — how the CPU fundamentals, tensor
+  runtime, backends, and model-specific components fit together
+- [Research Resources](docs/research.md) — papers, datasets, official docs, and
+  links back to their implementations
+- [GPU and Backend Notes](docs/gpu.md) — backend boundaries and Metal, CUDA,
+  and ROCm verification
+- [NLP and Adjacent Roadmap](docs/nlp-roadmap.md) — current backend boundaries
+  and planned learning experiments
+- [Benchmarks](docs/benchmarks.md) — repeatable local and remote measurements
+- [Development Environment](docs/development.md) — pinned tools, hooks, and
+  repository-wide checks
 
 ## License
 

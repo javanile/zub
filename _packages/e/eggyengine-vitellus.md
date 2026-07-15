@@ -6,16 +6,16 @@ author: eggyengine
 author_github: eggyengine
 repository: https://github.com/eggyengine/vitellus
 keywords:
-date: 2026-06-03
-updated_at: 2026-06-03T23:54:35+00:00
-last_sync: 2026-06-03T23:54:35Z
+date: 2026-07-15
+updated_at: 2026-07-15T10:45:03+00:00
+last_sync: 2026-07-15T10:45:03Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 1
-distributable_binary_count: 1
-multiple_binaries: false
+binary_count: 2
+distributable_binary_count: 2
+multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
 sync_source: zigistry
@@ -25,8 +25,6 @@ permalink: /packages/eggyengine/vitellus/
 # vitellus
 
 vitellus is a native-first rendering hardware interface written in Zig for building game engines and renderers on modern graphics APIs.
-
-Shaders are parsed with SPIR-V and compiled with the [splat](splat) project (spirv-cross packaged for zig).
 
 ## add to project
 requires zig `0.16.0`
@@ -46,28 +44,18 @@ const vit = b.dependency("vitellus", .{
 exe.root_module.addImport("vitellus", vit.module("vitellus"));
 ```
 
-Backends can be selected from your dependency options:
 ```zig
 const vit = b.dependency("vitellus", .{
     .target = target,
     .optimize = optimize,
-    
-    // lazy dependency fetching
-    // .vulkan = true,
-    // .dx12 = true,
-    // .metal = true,
-    // .opengl = false,
-    // .noop = false,
 });
 ```
-
-If you wish for only the shader compiler `splat`, take a look at the docs at [splat/README.md](splat/README.md). 
 
 and lastly in your library/executable:
 ```zig
 const vit = @import("vitellus");
 ```
 
-# backend availability
+## documentation
 
-take a look at the current status in [src/backends/README.md](src/backends/README.md)
+there is a tutorial available in [docs/tutorial](docs/tutorial/README.md) that might be worth checking out
