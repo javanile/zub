@@ -7,9 +7,9 @@ author_github: allyourcodebase
 repository: https://github.com/allyourcodebase/ffmpeg
 keywords:
   - ffmpeg
-date: 2026-07-11
-updated_at: 2026-07-11T09:14:40+00:00
-last_sync: 2026-07-11T09:14:40Z
+date: 2026-07-15
+updated_at: 2026-07-15T17:45:01+00:00
+last_sync: 2026-07-15T17:45:01Z
 package_kind: hybrid
 has_library: true
 has_binary: true

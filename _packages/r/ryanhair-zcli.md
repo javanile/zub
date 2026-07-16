@@ -11,10 +11,10 @@ keywords:
   - command-line
   - developer-tools
   - terminal
-date: 2026-07-12
+date: 2026-07-16
 category: tooling
-updated_at: 2026-07-12T06:47:20+00:00
-last_sync: 2026-07-12T06:47:20Z
+updated_at: 2026-07-16T06:47:29+00:00
+last_sync: 2026-07-16T06:47:29Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -57,6 +57,7 @@ A command is one file: a `meta` block for help text, two structs, and an `execut
 ```zig
 // src/commands/deploy.zig
 const zcli = @import("zcli");
+const Context = @import("command_registry").Context;
 
 pub const meta = .{
     .description = "Deploy your application",
@@ -68,7 +69,7 @@ pub const meta = .{
 pub const Args = struct { service: []const u8 };
 pub const Options = struct { env: []const u8 = "production" };
 
-pub fn execute(args: Args, options: Options, context: anytype) !void {
+pub fn execute(args: Args, options: Options, context: *Context) !void {
     try context.stdout().print("Deploying {s} to {s}\n", .{ args.service, options.env });
 }
 ```
@@ -85,10 +86,14 @@ Variadic args, option types, typed `context`, aliases, and command groups: [zcli
 ## Quick start
 
 ```bash
-curl -fsSL https://zcli.sh/install.sh | sh    # install the zcli CLI
+curl -fsSL https://zcli.sh/install.sh | sh    # install the zcli CLI (macOS/Linux)
 zcli init myapp && cd myapp
 zig build
 ./zig-out/bin/myapp hello World --loud
+```
+
+```powershell
+irm https://zcli.sh/install.ps1 | iex         # install the zcli CLI (Windows)
 ```
 
 ```
@@ -105,7 +110,7 @@ The framework itself is an ordinary Zig dependency — the meta-CLI is optional:
 Pin the release in your `build.zig.zon` with an immutable hash:
 
 ```bash
-zig fetch --save https://github.com/ryanhair/zcli/archive/refs/tags/v0.19.0.tar.gz
+zig fetch --save https://github.com/ryanhair/zcli/archive/refs/tags/v0.20.0.tar.gz
 ```
 
 To track the development branch instead, fetch `.../archive/refs/heads/main.tar.gz` — its hash changes with every commit, so re-run the command to update.
@@ -165,11 +170,13 @@ pub fn main(init: std.process.Init) !void {
 
 ```zig
 // src/commands/hello.zig
+const Context = @import("command_registry").Context;
+
 pub const meta = .{ .description = "Say hello" };
 pub const Args = struct { name: []const u8 };
 pub const Options = struct {};
 
-pub fn execute(args: Args, _: Options, context: anytype) !void {
+pub fn execute(args: Args, _: Options, context: *Context) !void {
     try context.stdout().print("Hello, {s}!\n", .{args.name});
 }
 ```
@@ -297,21 +304,21 @@ Semantic roles (`success`, `err`, `warning`, `command`, `path`, …) resolve at 
 
 ## Config files
 
-The `zcli_config` plugin transparently loads option defaults from JSON, TOML, or YAML — zero changes to command code. Values cascade: **CLI flags > command config > global config > struct defaults**.
+The `zcli_config` plugin transparently loads option defaults from JSON, TOML, or YAML — zero changes to command code. Values cascade: **CLI flags > env vars > command config > global config > struct defaults**. A CLI flag or env var wins even when its value equals the struct default. Every option type coerces from config the same way it parses on the command line — bools, all int widths, floats, enums, arrays, and custom parse types.
 
 ```json
 // .myapp.config.json
 {
-  "output": "json",         // global — applies to all commands
+  "verbose": true,          // global — applies to all commands
   "list": { "all": true }   // scoped — applies only to "myapp list"
 }
 ```
 
-Discovery order and formats: [zcli.sh/plugins](https://zcli.sh/plugins/#config).
+Discovery order and formats: [zcli.sh/docs/config](https://zcli.sh/docs/config/).
 
 ## Plugins
 
-Cross-cutting features are plugins, added in one line of `build.zig`: help, version, "did you mean?", shell completions (bash/zsh/fish), config files, `--output` formatting (json/table/plain), OS-keychain secrets, and self-upgrade via GitHub releases all ship in the box. Plugins hook the command lifecycle, register global options, expose typed data as `context.plugins.<id>`, and can ship commands of their own.
+Cross-cutting features are plugins, added in one line of `build.zig`: help, version, "did you mean?", shell completions (bash/zsh/fish/PowerShell), config files, OS-keychain secrets, and self-upgrade via GitHub releases all ship in the box. Plugins hook the command lifecycle, register global options, expose typed data as `context.plugins.<id>`, and can ship commands of their own.
 
 The full list and a guide to writing your own: [zcli.sh/plugins](https://zcli.sh/plugins/) (repo summary in [docs/PLUGINS.md](docs/PLUGINS.md)).
 
@@ -353,7 +360,7 @@ The HTML output is a styled, dark-mode-aware static site with navigation.
 
 ## Example
 
-The [showcase](examples/tasks/) is a fully functional task tracker CLI — the app in the demo GIF above — that exercises every zcli feature: 14 commands with nested groups and aliases, every prompt type, spinners and progress bars, themed output, JSON persistence, config files, completions, and doc generation.
+The [showcase](examples/tasks/) is a fully functional task tracker CLI — the app in the demo GIF above — that exercises most zcli features: 14 commands with nested groups and aliases, six of the eight prompt types, spinners and progress bars, themed output, JSON persistence, config files, completions, and doc generation.
 
 ```bash
 cd examples/tasks && zig build
@@ -370,7 +377,7 @@ What a real zcli app looks like. The meta-CLI you install is one; the rest are t
 | App | What it is |
 |-----|------------|
 | [**zcli**](projects/zcli) — the meta-CLI | Itself a zcli app: `init`, `add`, `mv`, `rm`, `tree`, `dev`, `guide`, and `release` are files in its `commands/` directory, running on the framework's own plugins (help, completions, "did you mean?", GitHub self-upgrade). |
-| [**tasks**](examples/tasks) | A full task tracker — the app in the demo GIF above. 14 commands with nested groups and aliases, every prompt type, spinners and progress bars, themed output, JSON persistence, config files, and completions. |
+| [**tasks**](examples/tasks) | A full task tracker — the app in the demo GIF above. 14 commands with nested groups and aliases, six of the eight prompt types, spinners and progress bars, themed output, JSON persistence, config files, and completions. |
 | [**ghauth**](examples/ghauth) | GitHub device-flow companion: stashes an API token in the OS keychain via `zcli_secrets`, then uses `zcli.http` to call the API as `whoami`. |
 | [**oauth-device**](examples/oauth-device) | Mints a token from scratch by running GitHub's OAuth device flow (RFC 8628), then keychains it — freeform command code, not a framework feature. |
 | [**notes**](examples/notes) | A tiny note keeper: saves and loads a typed struct as a JSON file and shares one `store` module across three commands. |
@@ -415,6 +422,18 @@ sha256sum -c checksums.txt                              # then the binaries
 ```
 
 The trust model and the key rotation/compromise procedure live in [docs/RELEASE-SIGNING.md](docs/RELEASE-SIGNING.md) ([ADR-0023](docs/adr/0023-release-signing-minisign.md)).
+
+## Stability & the road to 1.0
+
+zcli is pre-1.0: breaking changes can land in minor versions and are always
+called out in the CHANGELOG; patch versions are always safe. The core command
+contract (`meta`/`Args`/`Options`/`execute`), the plugin hooks, and the
+`build.zig` integration have been stable across releases — the remaining churn is
+scoped and mechanical.
+
+If you're evaluating whether to adopt now or wait, [ROADMAP.md](ROADMAP.md) lays
+out what freezes at 1.0, what stays deliberately open, what must land first, and
+how to pin and upgrade safely today.
 
 ## License
 

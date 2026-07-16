@@ -7,9 +7,9 @@ author_github: karlseguin
 repository: https://github.com/karlseguin/zqlite.zig
 keywords:
   - sqlite3
-date: 2026-07-11
-updated_at: 2026-07-11T13:13:42+00:00
-last_sync: 2026-07-11T13:13:42Z
+date: 2026-07-16
+updated_at: 2026-07-16T06:23:06+00:00
+last_sync: 2026-07-16T06:23:06Z
 package_kind: library
 has_library: true
 has_binary: false

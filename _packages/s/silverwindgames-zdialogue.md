@@ -8,10 +8,10 @@ repository: https://github.com/silverwindgames/zdialogue
 keywords:
   - gamedev
   - yarnspinner
-date: 2026-07-10
+date: 2026-07-11
 category: game-development
-updated_at: 2026-07-10T12:29:20+00:00
-last_sync: 2026-07-10T12:29:20Z
+updated_at: 2026-07-11T01:46:08+00:00
+last_sync: 2026-07-11T01:46:08Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -52,14 +52,20 @@ zdialogue, like Yarn Spinner, is MIT licensed. See LICENSE for exact terms.
 Comparing against the upstream test suite:
 ```sh
 info: Passed Tests:
+info:  - ShadowLines.yarnc
+info:  - Detours.yarnc
+info:  - VariableStorage.yarnc
+info:  - DecimalNumbers.yarnc
+info:  - Jumps.yarnc
 info:  - IfStatements.yarnc
+info:  - Enums.yarnc
+info:  - Functions.yarnc
+info:  - Inference-FunctionsCalledWithConvertibleParameters.yarnc
+info:  - VisitCount.yarnc
 info:  - Lines.yarnc
+info:  - VisitTracking.yarnc
 error: Failed Tests:
-error:  - ShadowLines.yarnc
-error:  - Detours.yarnc
-error:  - VariableStorage.yarnc
 error:  - NodeGroupVisitTracking.yarnc
-error:  - DecimalNumbers.yarnc
 error:  - Visited.yarnc
 error:  - LineGroups.yarnc
 error:  - Types.yarnc
@@ -68,7 +74,6 @@ error:  - InlineExpressions.yarnc
 error:  - SmartVariables.yarnc
 error:  - NodeGroupsWithImplicitDeclarations.yarnc
 error:  - Escaping.yarnc
-error:  - Jumps.yarnc
 error:  - Once.yarnc
 error:  - FormatFunctions.yarnc
 error:  - Inference-FunctionsAndVarsInheritType.yarnc
@@ -76,14 +81,9 @@ error:  - ShortcutOptions.yarnc
 error:  - NodeGroups.yarnc
 error:  - Smileys.yarnc
 error:  - Indentation.yarnc
-error:  - Enums.yarnc
-error:  - Functions.yarnc
-error:  - Inference-FunctionsCalledWithConvertibleParameters.yarnc
-error:  - VisitCount.yarnc
-error:  - VisitTracking.yarnc
 error:  - Commands.yarnc
 error:  - NodeGroupsContentQuerying.yarnc
-info: Summary: 2 passed, 28 failed
+info: Summary: 12 passed, 18 failed
 ```
 
 ## Updating Protobuf Mappings

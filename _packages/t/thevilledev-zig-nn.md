@@ -1,18 +1,18 @@
 ---
 title: zig-nn
-description: A lightweight neural network library implemented in Zig
+description: A hands-on neural network learning lab in Zig, with inspectable experiments, CPU/GPU backends, and live browser visualizations
 license: MIT
 author: thevilledev
 author_github: thevilledev
 repository: https://github.com/thevilledev/zig-nn
 keywords:
   - golang
-  - learning
+  - learning-lab
   - monorepo
   - neural-networks
-date: 2026-07-15
-updated_at: 2026-07-15T10:43:02+00:00
-last_sync: 2026-07-15T10:43:02Z
+date: 2026-07-16
+updated_at: 2026-07-16T11:16:16+00:00
+last_sync: 2026-07-16T11:16:16Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -63,6 +63,18 @@ Continue with `nnctl run quick`, or choose a topic from the
 commands, data requirements, and full validation workflow are in
 [Getting Started](docs/getting-started.md).
 
+For a guided browser view of live training, run:
+
+```bash
+mise run lab
+```
+
+The local learning lab covers XOR training, nonlinear regression, binary
+classification, optimizer comparison, CPU-versus-Metal evidence, and semantic
+search. It streams native Zig metrics, snapshots, and device telemetry through
+`nnctl`; see the [learning lab guide](docs/learning-lab.md) for the interface,
+development workflow, backend contract, and event protocol.
+
 ## Documentation
 
 - [Experiments](experiments/README.md) — learning routes, runnable programs,
@@ -80,6 +92,8 @@ commands, data requirements, and full validation workflow are in
 - [Benchmarks](docs/benchmarks.md) — repeatable local and remote measurements
 - [Development Environment](docs/development.md) — pinned tools, hooks, and
   repository-wide checks
+- [Real-Time Learning Lab](docs/learning-lab.md) — live browser experiments,
+  controls, and the structured event protocol
 
 ## License
 

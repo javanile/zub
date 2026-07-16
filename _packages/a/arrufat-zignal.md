@@ -14,10 +14,10 @@ keywords:
   - wasm
   - webassembly
   - zero-dependency
-date: 2026-07-08
+date: 2026-07-11
 category: systems
-updated_at: 2026-07-08T11:52:12+00:00
-last_sync: 2026-07-08T11:52:12Z
+updated_at: 2026-07-11T21:06:59+00:00
+last_sync: 2026-07-11T21:06:59Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -41,7 +41,7 @@ Zignal is a zero-dependency image processing library inspired by [dlib](https://
 ## Features
 
 - **Core Math:** Matrices (`SMatrix`, `Matrix`, SVD), PCA, ND Geometry (SIMD Points, affine/projective transforms, convex hull), Statistics, Optimization.
-- **Computer Vision:** Feature detection and matching (FAST, ORB), Edge detection (Shen-Castan), Hough Transform, Feature Distribution Matching (style transfer).
+- **Computer Vision:** Feature detection and matching (FAST, ORB), Edge detection (Shen-Castan), Hough Transform, QR code encoding and decoding, Feature Distribution Matching (style transfer).
 - **Image Processing:** Spatial transforms (resize, crop, rotate), morphology, convolution filters (blur, sharpen), thresholding, advanced Color Spaces (Lab, Oklab, Oklch, Xyb, Lms, etc.), Perlin noise generation.
 - **I/O & Graphics:** Pure-Zig PNG/JPEG codecs, Canvas API (antialiasing, Bézier curves), Bitmap/PCF Fonts, Colormaps, Terminal graphics (Kitty/Sixel).
 - **Platform Support:** Native Zig, first-class Python bindings, and WASM compilation for the web.
@@ -101,6 +101,7 @@ zig-out/bin/zignal <command> [options]
 - `resize` - Resize images with various filters
 - `tile` - Combine multiple images into a grid
 - `fdm` - Apply style transfer (Feature Distribution Matching)
+- `qr` - Encode text as QR codes or decode them from images
 - `info` - Show image metadata
 
 ## Examples
@@ -118,6 +119,7 @@ zig-out/bin/zignal <command> [options]
 - [Hough transform animation](https://arrufat.github.io/zignal/examples/hough-animation.html) - Real-time visualization of line detection
 - [Metrics analyzer](https://arrufat.github.io/zignal/examples/metrics.html) - PSNR and SSIM comparison for reference vs. distorted images
 - [Global optimization](https://arrufat.github.io/zignal/examples/global-optimization.html) - Type a JavaScript function and watch the MaxLIPO+TR optimizer search for its optimum
+- [QR code](https://arrufat.github.io/zignal/examples/qrcode.html) - Encode text into QR codes and decode them from your camera or images
 
 
 ## Sponsors
@@ -126,5 +128,12 @@ Special thanks to **[B Factory, Inc](https://www.bfactory.ai/)**, the **Founding
 I originally developed this library internally for [Ameli](https://ameli.co.kr/)'s virtual makeup try-on system,
 and B Factory graciously transferred ownership to the community to ensure its long-term maintenance and growth.
 
-<br></br>
-[![Star History Chart](https://api.star-history.com/svg?repos=arrufat/zignal&type=Date)](https://www.star-history.com/#arrufat/zignal&Date)
+## Star History
+
+<a href="https://www.star-history.com/?type=date&repos=arrufat%2Fzignal">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=arrufat/zignal&type=date&theme=dark&legend=top-left&sealed_token=mrDU-4e_6lnlpXw5h8vK9rHyQgFuQfV6l1IPzXRzzTKwqmWrL77iYYoBkTBMZ7uSTfqkazS9hK3y6gSAaa9pLFMzORK3PjjC9A4pcRipvC49UtXf8_J5XSa2rAcuF7FeS53-HoNoXJsyv-4mBhoW7LPoS2ED93sdnA1r-7EfUfPXrKCJBBsZFJ1yEurR" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=arrufat/zignal&type=date&legend=top-left&sealed_token=mrDU-4e_6lnlpXw5h8vK9rHyQgFuQfV6l1IPzXRzzTKwqmWrL77iYYoBkTBMZ7uSTfqkazS9hK3y6gSAaa9pLFMzORK3PjjC9A4pcRipvC49UtXf8_J5XSa2rAcuF7FeS53-HoNoXJsyv-4mBhoW7LPoS2ED93sdnA1r-7EfUfPXrKCJBBsZFJ1yEurR" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=arrufat/zignal&type=date&legend=top-left&sealed_token=mrDU-4e_6lnlpXw5h8vK9rHyQgFuQfV6l1IPzXRzzTKwqmWrL77iYYoBkTBMZ7uSTfqkazS9hK3y6gSAaa9pLFMzORK3PjjC9A4pcRipvC49UtXf8_J5XSa2rAcuF7FeS53-HoNoXJsyv-4mBhoW7LPoS2ED93sdnA1r-7EfUfPXrKCJBBsZFJ1yEurR" />
+ </picture>
+</a>
