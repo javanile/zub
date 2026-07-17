@@ -11,10 +11,10 @@ keywords:
   - command-line
   - developer-tools
   - terminal
-date: 2026-07-16
+date: 2026-07-17
 category: tooling
-updated_at: 2026-07-16T06:47:29+00:00
-last_sync: 2026-07-16T06:47:29Z
+updated_at: 2026-07-17T06:19:33+00:00
+last_sync: 2026-07-17T06:19:33Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -276,7 +276,7 @@ try app.frame(try ui.column(app.arena(), .{ .border = .rounded }, &.{
 
 Boxes, wrapped text, spacers, and custom leaves; `fit`/`len`/`fill` sizing; viewport-clamped, resize-aware (the live region re-lays-out and the visible scrollback tail reflows), and piped output degrades to plain lines.
 
-When you want the whole terminal — a `top`-style dashboard, an interactive form — the same node tree, layout, and diff run in **full-screen mode**: `context.uiFullScreen(.{})` switches to the alternate screen and hands the `frame → event → update` loop to `app.run`. It comes with focusable widgets (`TextInput`, `Select`, `Checkbox`, `Button` — each a plain struct in your state, routed by a single `handle`-returns-`bool` contract), overlays via a `stack` of z-layers, scrollable viewports, mouse/focus/paste events, and anchored popups that flip and clamp to stay on screen. On exit the shell comes back exactly as it was. Walkthrough at [zcli.sh/ui](https://zcli.sh/ui/); design in [ADR-0013](docs/adr/0013-terminal-native-layout-engine.md) (full-screen and widgets in [ADRs 0015–0020](docs/adr/)), API in [packages/ui](packages/ui/).
+When you want the whole terminal — a `top`-style dashboard, an interactive form — the same node tree, layout, and diff run in **full-screen mode**: `context.uiFullScreen(.{})` switches to the alternate screen and hands the `frame → event → update` loop to `app.run`. It comes with focusable widgets (`TextInput`, `Select`, `Checkbox`, `Button` — each a plain struct in your state, routed by a single `handle`-returns-`bool` contract), overlays via a `stack` of z-layers, scrollable viewports, mouse/focus/paste events, and anchored popups that flip and clamp to stay on screen. On exit the shell comes back exactly as it was. Walkthrough at [zcli.sh/ui](https://zcli.sh/ui/); design in [ADR-0013](docs/adr/0013-terminal-native-layout-engine.md) (full-screen and widgets in [ADRs 0015–0021](docs/adr/)), API in [packages/ui](packages/ui/).
 
 ## Theming
 
@@ -346,7 +346,7 @@ test "deploy command" {
 
 ## Documentation generation
 
-Generate markdown, man pages, or HTML documentation from your command metadata — automatically on every build:
+Generate markdown, man pages, or HTML documentation from your command metadata, on demand via `zig build docs`:
 
 ```zig
 // In build.zig, after generate():
@@ -390,6 +390,7 @@ Building something with zcli? Open a PR to add it here.
 | Package | Description |
 |---------|-------------|
 | [**core**](packages/core/) | Command discovery, argument parsing, plugin system, registry |
+| [**ui**](packages/ui/) | Terminal-native layout engine (CLI/TUI hybrid, focusable widgets, full-screen mode) |
 | [**prompts**](packages/prompts/) | Interactive prompts (text, confirm, select, password, search, number, editor) |
 | [**progress**](packages/progress/) | Spinners and progress bars |
 | [**theme**](packages/theme/) | Terminal theming with semantic colors and capability detection |

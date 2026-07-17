@@ -10,9 +10,9 @@ keywords:
   - learning-lab
   - monorepo
   - neural-networks
-date: 2026-07-16
-updated_at: 2026-07-16T11:16:16+00:00
-last_sync: 2026-07-16T11:16:16Z
+date: 2026-07-17
+updated_at: 2026-07-17T07:00:29+00:00
+last_sync: 2026-07-17T07:00:29Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -70,10 +70,11 @@ mise run lab
 ```
 
 The local learning lab covers XOR training, nonlinear regression, binary
-classification, optimizer comparison, CPU-versus-Metal evidence, and semantic
-search. It streams native Zig metrics, snapshots, and device telemetry through
-`nnctl`; see the [learning lab guide](docs/learning-lab.md) for the interface,
-development workflow, backend contract, and event protocol.
+classification, spectral learning, optimizer comparison, CPU-versus-Metal
+evidence, and semantic search. It streams native Zig metrics, snapshots, and
+device telemetry through `nnctl`; see the
+[learning lab guide](docs/learning-lab.md) for the interface, development
+workflow, backend contract, and event protocol.
 
 ## Documentation
 
@@ -85,11 +86,14 @@ development workflow, backend contract, and event protocol.
   runtime, backends, and model-specific components fit together
 - [Research Resources](docs/research.md) — papers, datasets, official docs, and
   links back to their implementations
+- [Spectral Methods](experiments/README.md#spectral-methods) — Fourier analysis,
+  coordinate features, and frequency-resolved learning evidence
 - [GPU and Backend Notes](docs/gpu.md) — backend boundaries and Metal, CUDA,
   and ROCm verification
-- [NLP and Adjacent Roadmap](docs/nlp-roadmap.md) — current backend boundaries
-  and planned learning experiments
+- [Language, Retrieval, and Sequence Models](experiments/README.md#language-retrieval-and-sequence-models) —
+  runnable NLP experiments, evidence, and source links
 - [Benchmarks](docs/benchmarks.md) — repeatable local and remote measurements
+- [Containers](docs/containers.md) — minimal CPU and CUDA benchmark job images
 - [Development Environment](docs/development.md) — pinned tools, hooks, and
   repository-wide checks
 - [Real-Time Learning Lab](docs/learning-lab.md) — live browser experiments,

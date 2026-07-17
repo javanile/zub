@@ -1,0 +1,319 @@
+---
+title: zigquery
+description: Zig HTML parser and CSS selector engine for DOM querying and manipulation
+license: MIT
+author: OrlovEvgeny
+author_github: OrlovEvgeny
+repository: https://github.com/OrlovEvgeny/zigquery
+keywords:
+  - dom-parser
+  - html
+  - parser
+date: 2026-07-17
+category: data-formats
+updated_at: 2026-07-17T09:59:28+00:00
+last_sync: 2026-07-17T09:59:28Z
+package_kind: hybrid
+has_library: true
+has_binary: true
+has_distributable_binary: true
+binary_count: 1
+distributable_binary_count: 1
+multiple_binaries: false
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
+permalink: /packages/OrlovEvgeny/zigquery/
+---
+
+# zigquery
+
+[![CI](https://github.com/OrlovEvgeny/zigquery/actions/workflows/ci.yml/badge.svg)](https://github.com/OrlovEvgeny/zigquery/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/OrlovEvgeny/zigquery)](https://github.com/OrlovEvgeny/zigquery/releases/latest)
+[![Zig](https://img.shields.io/badge/Zig-0.15.2%20%7C%200.16.0-f7a41d?logo=zig)](https://ziglang.org/)
+
+jQuery-like HTML DOM manipulation library for Zig. Parse HTML, query elements with CSS selectors, traverse the tree, and manipulate the document.
+## Quick start
+
+```zig
+const std = @import("std");
+const zq = @import("zigquery");
+
+pub fn main() !void {
+    const allocator = std.heap.page_allocator;
+
+    var doc = try zq.Document.initFromSlice(allocator,
+        \\<html>
+        \\  <body>
+        \\    <div class="content">
+        \\      <h1>Hello</h1>
+        \\      <p>First paragraph</p>
+        \\      <p>Second paragraph</p>
+        \\      <a href="/about" class="active">About</a>
+        \\    </div>
+        \\  </body>
+        \\</html>
+    );
+    defer doc.deinit();
+
+    // Find all paragraphs.
+    const paragraphs = try doc.find("p");
+    std.debug.print("Found {} paragraphs\n", .{paragraphs.len()});
+
+    // Get text content.
+    const title = try (try doc.find("h1")).text();
+    std.debug.print("Title: {s}\n", .{title});
+
+    // Read attributes.
+    const link = try doc.find("a.active");
+    const href = link.attr("href") orelse "";
+    std.debug.print("Link: {s}\n", .{href});
+}
+```
+
+## Installation
+
+Add zigquery as a dependency in your `build.zig.zon`:
+
+```sh
+zig fetch --save git+https://github.com/OrlovEvgeny/zigquery
+```
+
+If Zig reports an invalid fingerprint, make sure the repository owner is
+`OrlovEvgeny` and rerun `zig fetch --save` with the corrected URL.
+
+Then in your `build.zig`:
+
+```zig
+const zigquery = b.dependency("zigquery", .{
+    .target = target,
+    .optimize = optimize,
+});
+module.addImport("zigquery", zigquery.module("zigquery"));
+```
+
+Supported Zig versions: **0.15.2** and **0.16.x**.
+
+## CSS selectors
+
+Supported selector syntax:
+
+| Selector | Example | Description |
+|---|---|---|
+| Type | `div`, `p`, `a` | Match by tag name |
+| Class | `.active`, `.foo.bar` | Match by class (compound supported) |
+| ID | `#main` | Match by ID |
+| Universal | `*` | Match any element |
+| Attribute | `[href]`, `[type="text"]` | Attribute existence / value |
+| Attribute operators | `[class~="foo"]`, `[lang\|="en"]`, `[href^="/"]`, `[src$=".png"]`, `[data*="val"]` | Includes, dash-match, prefix, suffix, substring |
+| Descendant | `div p` | `p` anywhere inside `div` |
+| Child | `div > p` | Direct child only |
+| Adjacent sibling | `h1 + p` | Immediately after |
+| General sibling | `h1 ~ p` | Any sibling after |
+| Group | `h1, h2, h3` | Match any in the list |
+| Negation | `:not(.hidden)` | Exclude matches |
+| Logical lists | `:is(h1, h2)`, `:where(.note)` | Match any selector in a list |
+| `:has()` | `div:has(> p)` | Parent has matching descendant |
+| `:contains()` | `p:contains("hello")` | Element contains text |
+| `:first-child`, `:last-child`, `:only-child` | `li:first-child` | Structural pseudo-classes |
+| `:first-of-type`, `:last-of-type`, `:only-of-type` | `p:first-of-type` | Type-based structural pseudo-classes |
+| `:nth-child()`, `:nth-last-child()` | `tr:nth-child(2n+1)` | Positional with `an+b` formula |
+| `:nth-of-type()`, `:nth-last-of-type()` | `p:nth-of-type(odd)` | Type-positional |
+| `:empty`, `:root` | `div:empty` | Content / root pseudo-classes |
+| `:enabled`, `:disabled`, `:checked` | `input:enabled` | Form pseudo-classes |
+
+## API overview
+
+### Document
+
+```zig
+// Parse HTML into a document. All allocations use an internal arena.
+var doc = try zq.Document.initFromSlice(allocator, html);
+defer doc.deinit();
+
+// Query from the document root.
+const sel = try doc.find("div.content");
+
+// Deep-clone the entire document.
+var copy = try doc.clone(allocator);
+defer copy.deinit();
+```
+
+### Selection — Traversal
+
+```zig
+const sel = try doc.find("div");
+
+// Descendants matching a selector.
+const links = try sel.find("a");
+
+// Direct children.
+const kids = try sel.children();
+const filtered_kids = try sel.childrenFiltered("p");
+
+// Parents.
+const p = try sel.parent();
+const all_parents = try sel.parents();
+
+// Closest ancestor (or self) matching a selector.
+const wrapper = try sel.closest(".wrapper");
+
+// Siblings.
+const sibs = try sel.siblings();
+const next_el = try sel.next();
+const prev_all = try sel.prevAll();
+```
+
+### Selection — Filtering
+
+```zig
+const items = try doc.find("li");
+
+const active = try items.filter(".active");
+const inactive = try items.not(".active");
+const with_links = try items.has("a");
+
+const first = try items.first();
+const last = try items.last();
+const third = try items.eq(2);        // zero-based
+const from_end = try items.eq(-1);    // negative indexes from end
+const middle = try items.sliceRange(1, 3);
+
+// Boolean checks.
+const is_active = try items.is(".active");
+```
+
+### Selection — Properties
+
+```zig
+const el = try doc.find("a.nav");
+
+// Attributes.
+const href = el.attr("href");
+const title = el.attrOr("title", "default");
+try el.setAttr("target", "_blank");
+el.removeAttr("rel");
+
+// Classes.
+try el.addClass("highlight bold");
+try el.removeClass("nav");
+try el.toggleClass("active");
+const has = el.hasClass("highlight");
+
+// Content.
+const inner = try el.html();
+const outer = try zq.outerHtml(el);
+const txt = try el.text();
+const name = zq.nodeName(el);
+```
+
+### Selection — Manipulation
+
+```zig
+const div = try doc.find("div");
+
+// Insert content.
+try div.appendHtml("<p>appended</p>");
+try div.prependHtml("<p>prepended</p>");
+
+// Insert around selection.
+const p = try doc.find("p");
+try p.afterHtml("<hr/>");
+try p.beforeHtml("<!-- marker -->");
+
+// Replace and remove.
+_ = try p.replaceWithHtml("<div>replaced</div>");
+_ = p.remove();
+_ = try div.empty();   // remove all children
+
+// Set content.
+try div.setHtml("<b>new content</b>");
+try div.setText("plain text");
+
+// Wrap / unwrap.
+try div.wrapHtml("<section></section>");
+try div.unwrap();
+```
+
+### Selection — Iteration
+
+```zig
+const rows = try doc.find("tr");
+
+// Iterator (idiomatic Zig).
+var it = rows.iterator();
+while (it.next()) |row| {
+    const cells = try row.find("td");
+    // ...
+}
+
+// Callback-based.
+rows.each(struct {
+    fn f(i: usize, sel: zq.Selection) void {
+        _ = i;
+        _ = sel;
+    }
+}.f);
+```
+
+### Selection — Set operations
+
+```zig
+const a = try doc.find(".foo");
+const b = try doc.find(".bar");
+
+const combined = try a.add(".bar");
+const merged = try a.addSelection(b);
+const union_sel = try a.@"union"(b);
+const common = try a.intersection(b);
+```
+
+### Compiled selectors
+
+Compile a selector once when it is reused across queries or documents:
+
+```zig
+var active_links = try zq.CompiledSelector.init(allocator, "a.active");
+defer active_links.deinit();
+
+const links = try doc.findCompiled(&active_links);
+const matches = links.isCompiled(&active_links);
+```
+
+## Ownership and errors
+
+`Document.initFromSlice`, `Document.initFromNode`, `Document.clone`, parsed fragments,
+attributes, and inserted nodes own their data through the document arena. Input buffers
+and source documents may be released after these operations complete. Use
+`Document.initBorrowedNode` only when the source tree is guaranteed to outlive the
+document.
+
+Operations that allocate return an error union. In v0.2 this includes traversal methods
+such as `children`, positional methods such as `first`, attribute/class updates, and DOM
+mutations. Mutations parse or clone all required data before changing the tree, so an
+allocation failure does not leave a partially updated selection.
+
+## v0.2 migration
+
+Add `try` to allocating `Selection` calls. Node insertion now deep-clones supplied nodes
+for every destination and never detaches the caller's source nodes. Invalid selector
+syntax is returned as an error by `Selection.is` instead of being treated as no match.
+
+## Parser scope
+
+The parser is intentionally lenient and covers common HTML document and fragment use,
+including implicit `html/head/body`, raw text/RCDATA, optional closing for common list
+and table elements, comments, and core character references. It is not yet a complete
+WHATWG tree builder; foreign content, templates, the adoption agency algorithm, and the
+full named entity table remain roadmap items. See [ROADMAP.md](ROADMAP.md).
+
+## Running tests
+
+```sh
+zig build test
+```
+
+Inspired by Go's [goquery](https://github.com/PuerkitoBio/goquery) and, by extension, jQuery
+
+## License
+[MIT](LICENSE)

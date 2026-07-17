@@ -6,9 +6,9 @@ author: nektro
 author_github: nektro
 repository: https://github.com/nektro/zig-git
 keywords:
-date: 2026-07-12
-updated_at: 2026-07-12T10:52:02+00:00
-last_sync: 2026-07-12T10:52:02Z
+date: 2026-07-17
+updated_at: 2026-07-17T10:13:24+00:00
+last_sync: 2026-07-17T10:13:24Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -37,3 +37,4 @@ Inspect into the depths of your .git folder purely from Zig.
 - https://git-scm.com/book/en/v2/Git-Internals-Git-Objects
 - https://git-scm.com/docs/gitformat-pack
 - https://awasu.com/weblog/git-guts/delta-objects/
+- https://git-scm.com/docs/gitformat-signature

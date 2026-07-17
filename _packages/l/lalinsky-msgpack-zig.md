@@ -6,9 +6,9 @@ author: lalinsky
 author_github: lalinsky
 repository: https://github.com/lalinsky/msgpack.zig
 keywords:
-date: 2026-05-02
-updated_at: 2026-05-02T16:12:14+00:00
-last_sync: 2026-05-02T16:12:14Z
+date: 2026-07-10
+updated_at: 2026-07-10T14:47:37+00:00
+last_sync: 2026-07-10T14:47:37Z
 package_kind: library
 has_library: true
 has_binary: false

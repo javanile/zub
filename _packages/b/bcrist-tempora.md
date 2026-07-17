@@ -13,9 +13,9 @@ keywords:
   - tz
   - tzdata
   - tzinfo
-date: 2026-06-06
-updated_at: 2026-06-06T23:05:39+00:00
-last_sync: 2026-06-06T23:05:39Z
+date: 2026-07-10
+updated_at: 2026-07-10T05:58:54+00:00
+last_sync: 2026-07-10T05:58:54Z
 package_kind: hybrid
 has_library: true
 has_binary: true

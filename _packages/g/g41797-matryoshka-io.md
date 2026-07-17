@@ -10,9 +10,9 @@ keywords:
   - concurrent-programming
   - modular-monolith
   - std-io
-date: 2026-07-15
-updated_at: 2026-07-15T10:25:01+00:00
-last_sync: 2026-07-15T10:25:01Z
+date: 2026-07-17
+updated_at: 2026-07-17T09:30:08+00:00
+last_sync: 2026-07-17T09:30:08Z
 package_kind: library
 has_library: true
 has_binary: false

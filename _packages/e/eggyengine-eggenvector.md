@@ -1,0 +1,64 @@
+---
+title: eggenvector
+description: a math library built for zig using builtin SIMD types
+license: ""
+author: eggyengine
+author_github: eggyengine
+repository: https://github.com/eggyengine/eggenvector
+keywords:
+date: 2026-07-12
+updated_at: 2026-07-12T22:58:59+00:00
+last_sync: 2026-07-12T22:58:59Z
+package_kind: library
+has_library: true
+has_binary: false
+has_distributable_binary: false
+binary_count: 0
+distributable_binary_count: 0
+multiple_binaries: false
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
+permalink: /packages/eggyengine/eggenvector/
+---
+
+# eggenvector
+
+eggenvector (like eigenvector haha) is a math library backed by the zig SIMD `@Vector` types, and does not contain any external dependencies. 
+
+The library specifically targets vulkan-based mathematics (as is used for the eggy engine), however many functions are available that allow for other renderers and physics engines contexts to be available (such as OpenGL). 
+
+- Vector2|3|4|any
+- Mat|2x2|3x3|4x4|any_rowXany_col
+- Quaternion, UnitQuaternion
+- UnitComplex (2D rotation from an euler angle)
+- Unit(T) — algebraic entities with a norm equal to one, e.g. `Unit(Vec3)`
+- Isometry2|3 (translation ⨯ rotation)
+- Similarity2|3 (translation ⨯ rotation ⨯ uniform scale)
+- Affine2|3, Projective2|3, Transform2|3 (homogeneous-matrix transformations)
+- Perspective3, Orthographic3 (3D projections for computer graphics)
+- Transform
+- Angle
+
+## add to project
+requires zig `0.16.0` (have not tested for other zig versions, however likely works fine. please open a PR to reduce down the minimum version). 
+
+to use this with the zig build system, import as so:
+```bash
+zig fetch --save git+https://github.com/eggyengine/eggenvector
+```
+
+and then in `build.zig`:
+```zig
+const emath = b.dependency("eggenvector", .{
+    .target = target,
+    .optimize = optimize,
+});
+
+exe.root_module.addImport("eggenvector", emath.module("eggenvector"));
+```
+
+and lastly in your library/executable:
+```zig
+const emath = @import("eggenvector");
+```
