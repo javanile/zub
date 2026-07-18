@@ -8,9 +8,9 @@ repository: https://github.com/deatil/zpem
 keywords:
   - pem
   - zig-pem
-date: 2026-07-14
-updated_at: 2026-07-14T10:15:44+00:00
-last_sync: 2026-07-14T10:15:44Z
+date: 2026-07-18
+updated_at: 2026-07-18T07:05:28+00:00
+last_sync: 2026-07-18T07:05:28Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -117,11 +117,12 @@ const zpem = @import("zpem");
 pub fn main(init: std.process.Init) !void {
     const alloc = init.arena.allocator();
     
-    var b = zpem.Block.init(allocator);
+    var b = zpem.Block.init(alloc);
     try b.withType("RSA PRIVATE");
     try b.headers.put("TTTYYY", "dghW66666");
     try b.headers.put("Proc-Type", "4,Encond");
     try b.withBytes("pem bytes");
+    defer b.deinit();
 
     var encoded_pem = try zpem.encode(alloc, b);
     defer alloc.free(encoded_pem);

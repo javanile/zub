@@ -8,9 +8,9 @@ repository: https://github.com/MahdiGMK/zaman
 keywords:
   - memory-management
   - safety
-date: 2026-07-15
-updated_at: 2026-07-15T11:43:06+00:00
-last_sync: 2026-07-15T11:43:06Z
+date: 2026-07-17
+updated_at: 2026-07-17T11:51:26+00:00
+last_sync: 2026-07-17T11:51:26Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -329,7 +329,7 @@ fn foo() void {
 
 This package doesn't use any version specific std/language feature so it could be used in any zig version with zero or minimal modification
 
-- `master` directly supports from zig-0.15.0 to zig-0.16.0
+- `master` directly supports from zig-0.15.0 to master
 
 ## Installation
 

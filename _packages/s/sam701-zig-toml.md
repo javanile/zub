@@ -8,10 +8,10 @@ repository: https://github.com/sam701/zig-toml
 keywords:
   - parser
   - toml
-date: 2026-06-11
+date: 2026-07-16
 category: data-formats
-updated_at: 2026-06-11T13:56:48+00:00
-last_sync: 2026-06-11T13:56:48Z
+updated_at: 2026-07-16T19:37:25+00:00
+last_sync: 2026-07-16T19:37:25Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -73,8 +73,11 @@ Add `zig-toml` to your `build.zig.zon`
 # For zig-master
 zig fetch --save git+https://github.com/sam701/zig-toml
 
-# For zig 0.13
-zig fetch --save git+https://github.com/sam701/zig-toml#last-zig-0.13
+# For zig 0.16
+zig fetch --save git+https://github.com/sam701/zig-toml#zig-0.16
+
+# For zig 0.15
+zig fetch --save git+https://github.com/sam701/zig-toml#zig-0.15
 ```
 
 ## Example

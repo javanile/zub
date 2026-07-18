@@ -6,9 +6,9 @@ author: thomashn
 author_github: thomashn
 repository: https://github.com/thomashn/libssh
 keywords:
-date: 2026-07-17
-updated_at: 2026-07-17T11:01:21+00:00
-last_sync: 2026-07-17T11:01:21Z
+date: 2026-07-18
+updated_at: 2026-07-18T10:23:08+00:00
+last_sync: 2026-07-18T10:23:08Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -33,7 +33,7 @@ packaged for [Zig](https://ziglang.org/).
 First, update your `build.zig.zon`:
 
 ```
-zig fetch --save git+https://github.com/thomashn/libssh#<commit>
+zig fetch --save git+https://github.com/thomashn/libssh#<commit|tag>
 ```
 
 Next, add this snippet to your `build.zig` script:
@@ -41,8 +41,7 @@ Next, add this snippet to your `build.zig` script:
 const libssh_dep = b.dependency("libssh", .{
     .target = target,
     .optimize = optimize,
-    // mbedtls is preferred because it supports seamless cross-compilation
-    // across all platforms natively, avoiding OpenSSL's build limits on non-Linux hosts.
+    // The Zig mbedtls is preferred because it is more complete
     .mbedtls = true,
 });
 your_compilation.linkLibrary(libssh_dep.artifact("libssh"));
@@ -50,15 +49,8 @@ your_compilation.linkLibrary(libssh_dep.artifact("libssh"));
 
 This will provide libssh as a static library to `your_compilation`.
 
-## How to run tests
-libssh uses CMocka as its underlying C unit-testing framework. To compile and run the unit test suite, make sure you have `cmocka` installed on your host system:
-
-* **Ubuntu/Debian:** `sudo apt install libcmocka-dev`
-* **Fedora/RHEL:** `sudo dnf install libcmocka-devel`
-* **Arch Linux:** `sudo pacman -S cmocka`
-* **macOS (Homebrew):** `brew install cmocka`
-
-Then run the tests on top of `mbedtls` using:
+## Run tests
+Run all [cmocka](https://cmocka.org/) libssh tests that do not require external processes.
 ```bash
 zig build test -Dunit_testing=true -Dmbedtls=true
 ```

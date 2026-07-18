@@ -19,8 +19,8 @@ keywords:
   - httpx-zig
 date: 2026-07-16
 category: networking
-updated_at: 2026-07-16T01:03:12+00:00
-last_sync: 2026-07-16T01:03:12Z
+updated_at: 2026-07-16T14:39:21+00:00
+last_sync: 2026-07-16T14:39:21Z
 package_kind: hybrid
 has_library: true
 has_binary: true

@@ -8,9 +8,9 @@ repository: https://github.com/deatil/zig-jwt
 keywords:
   - jwt
   - zig-jwt
-date: 2026-07-14
-updated_at: 2026-07-14T10:17:14+00:00
-last_sync: 2026-07-14T10:17:14Z
+date: 2026-07-18
+updated_at: 2026-07-18T06:52:39+00:00
+last_sync: 2026-07-18T06:52:39Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -139,7 +139,7 @@ pub fn main(init: std.process.Init) !void {
     var token = jwt.Token.init(alloc);
     token.parse(token_string);
 
-    var validator = try jwt.Validator.init(token);
+    var validator = try jwt.Validator.init(alloc, token);
     defer validator.deinit();
 
     // validator.withLeeway(3);
@@ -148,7 +148,7 @@ pub fn main(init: std.process.Init) !void {
     // hasBeenIssuedBy: true
     std.debug.print("hasBeenIssuedBy: {} \n", .{validator.hasBeenIssuedBy(&.{"iss"})});
 
-    // const now = std.Io.Timestamp.now(io, .real).toNanoseconds();
+    // const now = std.Io.Timestamp.now(io, .real).toSeconds();
 
     // have functions:
     // validator.hasBeenIssuedBy(&.{"iss"}) // iss

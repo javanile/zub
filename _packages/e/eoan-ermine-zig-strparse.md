@@ -1,0 +1,90 @@
+---
+title: zig-strparse
+description: Generic string parsing library for Zig
+license: MIT
+author: eoan-ermine
+author_github: eoan-ermine
+repository: https://github.com/eoan-ermine/zig-strparse
+keywords:
+  - parse
+  - parsing
+date: 2026-07-18
+updated_at: 2026-07-18T11:27:23+00:00
+last_sync: 2026-07-18T11:27:23Z
+package_kind: hybrid
+has_library: true
+has_binary: true
+has_distributable_binary: true
+binary_count: 1
+distributable_binary_count: 1
+multiple_binaries: false
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
+permalink: /packages/eoan-ermine/zig-strparse/
+---
+
+# zig-strparse
+
+[![API Reference](https://github.com/eoan-ermine/zig-strparse/actions/workflows/docs.yml/badge.svg?branch=master)](https://github.com/eoan-ermine/zig-strparse/actions/workflows/docs.yml) [![Linux (Zig 0.16.0)](https://github.com/eoan-ermine/zig-strparse/actions/workflows/main.yml/badge.svg?branch=master)](https://github.com/eoan-ermine/zig-strparse/actions/workflows/main.yml) [![Linux (Zig master)](https://github.com/eoan-ermine/zig-strparse/actions/workflows/master.yml/badge.svg?branch=master)](https://github.com/eoan-ermine/zig-strparse/actions/workflows/master.yml)
+
+Generic string parsing library for Zig.
+
+# Installation
+
+For Zig vMAJOR.MINOR.PATCH:
+
+```bash
+zig fetch --save https://github.com/eoan-ermine/zig-strparse/archive/refs/tags/<REPLACE ME>.tar.gz
+```
+
+For Zig master branch:
+
+```bash
+zig fetch --save git+https://github.com/eoan-ermine/zig-strparse
+```
+
+Then add the following to `build.zig`:
+
+```zig
+const strparse = b.dependency("zig_strparse", .{});
+exe.root_module.addImport("strparse", strparse.module("strparse"));
+```
+
+# Examples
+
+```zig
+const Point = struct {
+    x: i32,
+    y: i32,
+
+    pub const ParseError = error{
+        InvalidFormat,
+    } || std.fmt.ParseIntError;
+
+    pub fn parse(s: []const u8) ParseError!Point {
+        var it = std.mem.splitScalar(u8, s, ',');
+
+        const x_str = it.next() orelse return error.InvalidFormat;
+        const y_str = it.next() orelse return error.InvalidFormat;
+
+        if (it.next() != null)
+            return error.InvalidFormat;
+
+        return .{
+            .x = try std.fmt.parseInt(i32, x_str, 10),
+            .y = try std.fmt.parseInt(i32, y_str, 10),
+        };
+    }
+};
+
+pub fn main() !void {
+    const x = try strparse.parse(i32, "42");
+    const y = try strparse.parse(f64, "3.14");
+    const z = try strparse.parse(Point, "10,20");
+
+    std.log.info("x: {}", .{x});
+    std.log.info("y: {}", .{y});
+    std.log.info("z: {},{}", .{ z.x, z.y });
+}
+```

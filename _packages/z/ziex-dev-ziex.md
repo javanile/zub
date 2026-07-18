@@ -17,9 +17,9 @@ keywords:
   - web
   - web-assembly
   - web-framework
-date: 2026-07-13
-updated_at: 2026-07-13T11:06:03+00:00
-last_sync: 2026-07-13T11:06:03Z
+date: 2026-07-18
+updated_at: 2026-07-18T10:02:53+00:00
+last_sync: 2026-07-18T10:02:53Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -64,6 +64,9 @@ powershell -c "irm ziex.dev/install.ps1 | iex"
 zx init
 # or
 npm init ziex
+# or
+git clone https://github.com/ziex-dev/template-starter my-app
+cd my-app && zig build dev
 ```
 
 You will need [compatible](#versions) Zig version when using zx CLI or you can use the `Node` template from `npm init ziex`
@@ -155,7 +158,7 @@ pub fn Playground(allocator: zx.Allocator) zx.Component {
 // A Ziex Component is a Zig function that returns a `zx.Component`.
 // It can have signatures like:
 // - `pub fn ComponentName(allocator: zx.Allocator) zx.Component`
-// - `pub fn ComponentName(ctx: *zx.ComponentCtx<PropsType>) zx.Component`
+// - `pub fn ComponentName(ctx: *zx.ComponentCtx(PropsType)) zx.Component`
 // - `pub fn ComponentName(allocator: zx.Allocator, props: PropsType) zx.Component`
 fn Profile(ctx: *zx.ComponentCtx(User)) zx.Component {
     return (

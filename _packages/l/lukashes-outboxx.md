@@ -9,10 +9,10 @@ keywords:
   - cdc
   - kafka
   - postgresql
-date: 2026-07-12
+date: 2026-07-18
 category: data-formats
-updated_at: 2026-07-12T08:08:38+00:00
-last_sync: 2026-07-12T08:08:38Z
+updated_at: 2026-07-18T11:02:50+00:00
+last_sync: 2026-07-18T11:02:50Z
 package_kind: binary
 has_library: false
 has_binary: true
@@ -119,7 +119,9 @@ GRANT USAGE, CREATE ON SCHEMA public TO outboxx_user;
 -- Grant table access (SELECT needed for logical replication)
 GRANT SELECT ON TABLE my_table TO outboxx_user;
 
--- Enable REPLICA IDENTITY FULL (required for capturing complete row data in UPDATE/DELETE)
+-- Enable REPLICA IDENTITY FULL so DELETE events carry the full row.
+-- Required (and validated at startup) for tables whose stream tracks DELETE.
+-- UPDATE emits only the new row, so it does not need this.
 ALTER TABLE my_table REPLICA IDENTITY FULL;
 ```
 
