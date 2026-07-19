@@ -8,9 +8,9 @@ repository: https://github.com/MahdiGMK/zaman
 keywords:
   - memory-management
   - safety
-date: 2026-07-17
-updated_at: 2026-07-17T11:51:26+00:00
-last_sync: 2026-07-17T11:51:26Z
+date: 2026-07-19
+updated_at: 2026-07-19T03:41:14+00:00
+last_sync: 2026-07-19T03:41:14Z
 package_kind: library
 has_library: true
 has_binary: false

@@ -6,9 +6,9 @@ author: thomashn
 author_github: thomashn
 repository: https://github.com/thomashn/libssh
 keywords:
-date: 2026-07-18
-updated_at: 2026-07-18T10:23:08+00:00
-last_sync: 2026-07-18T10:23:08Z
+date: 2026-07-19
+updated_at: 2026-07-19T08:40:22+00:00
+last_sync: 2026-07-19T08:40:22Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -41,7 +41,9 @@ Next, add this snippet to your `build.zig` script:
 const libssh_dep = b.dependency("libssh", .{
     .target = target,
     .optimize = optimize,
-    // The Zig mbedtls is preferred because it is more complete
+    // The Zig mbedtls is preferred because its build replacement
+    // is more complete than the OpenSSL one. OpenSSL only works
+    // as a static build in Linux.
     .mbedtls = true,
 });
 your_compilation.linkLibrary(libssh_dep.artifact("libssh"));
@@ -50,7 +52,9 @@ your_compilation.linkLibrary(libssh_dep.artifact("libssh"));
 This will provide libssh as a static library to `your_compilation`.
 
 ## Run tests
-Run all [cmocka](https://cmocka.org/) libssh tests that do not require external processes.
+Run the original libssh [cmocka](https://cmocka.org/) based unittests. For now,
+tests are limited to those that do not require external processes like sshd and
+Putty.
 ```bash
-zig build test -Dunit_testing=true -Dmbedtls=true
+zig build test -Dmbedtls=true
 ```

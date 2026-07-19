@@ -14,9 +14,9 @@ keywords:
   - trie-data-structure
   - trie-structure
   - vahab-repo
-date: 2026-07-11
-updated_at: 2026-07-11T15:45:36+00:00
-last_sync: 2026-07-11T15:45:36Z
+date: 2026-07-19
+updated_at: 2026-07-19T08:48:30+00:00
+last_sync: 2026-07-19T08:48:30Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -38,7 +38,7 @@ Tested in __0.16.0__</br>
 you can use this as a package because its a package</br>
 i optimized it as much as i could</br>
 ## Usage
-There are Two Executables in 1.0.0</br>
+There are Two Executables in Last Release</br>
 for Indexing we use `FFL-Index`
 
 	FFL-Index <Directory to Index> <output file>

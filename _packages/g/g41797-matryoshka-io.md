@@ -10,9 +10,9 @@ keywords:
   - concurrent-programming
   - modular-monolith
   - std-io
-date: 2026-07-18
-updated_at: 2026-07-18T09:31:07+00:00
-last_sync: 2026-07-18T09:31:07Z
+date: 2026-07-19
+updated_at: 2026-07-19T09:11:13+00:00
+last_sync: 2026-07-19T09:11:13Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -147,7 +147,7 @@ You start talking on Matryoshka-Io language:
 A **Master** is
 
 - an _Threaded_ Io _task_
-- created by `_concurrent()_`
+- created by _concurrent()_
 - follows the Matryoshka-Io rules
 - holds its own state
 - works with Items
@@ -183,18 +183,12 @@ The one rule that matters:
 
 > **Never several at once**.
 
-Item ASCII notation:  
-```text
-Job
-Shunk
-Shutdown
-Blob
-```
+---
 
 ### Item and ItemHandle.
 
-The documentation talks about _Item(s)_.    
-The API works with an **ItemHandle**.
+The documentation talks about _Item(s)_.      
+The API works with an **ItemHandle**.  
 
 You are thinking in terms of:
 

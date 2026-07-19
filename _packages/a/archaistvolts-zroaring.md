@@ -6,9 +6,9 @@ author: archaistvolts
 author_github: archaistvolts
 repository: https://github.com/archaistvolts/zroaring
 keywords:
-date: 2026-07-01
-updated_at: 2026-07-01T00:12:32+00:00
-last_sync: 2026-07-01T00:12:32Z
+date: 2026-07-19
+updated_at: 2026-07-19T07:15:30+00:00
+last_sync: 2026-07-19T07:15:30Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -23,7 +23,7 @@ permalink: /packages/archaistvolts/zroaring/
 ---
 
 # About
-A Roaring Bitmap with an API similar to [CRoaring](https://github.com/RoaringBitmap/CRoaring).  All Bitmap data is allocated in 3 allocations with container data in simd sized blocks.
+A Roaring Bitmap with an API similar to [CRoaring](https://github.com/RoaringBitmap/CRoaring) and container data stored in simd sized blocks.
 
 This repo is hosted on [codeberg](https://codeberg.org/archaistvolts/zroaring) and mirrored to [github](https://github.com/archaistvolts/zroaring).
 
@@ -77,12 +77,10 @@ zig build test -Doptimize=ReleaseSafe --fuzz --webui=[::1]:40313 -j1 -Dfuzzprint
 nix-shell
 ./scripts/afl-fuzz.sh
 ```
-> [!NOTE]
-> AFL fuzzing is a work in progress.  It uses `std.ArrayHashMap` instead of `CRoaring` as an oracle due to some `-Dfuzz-exe` build issues.
 
 #### Reproducing with an AFL crash/hang file
 ```console
-zig build && zig-out/bin/afl-main afl/output/default/crashes...
+zig build && zig-out/bin/afl-run afl/output/default/<path_to_crash_file>
 ```
 
 # CRoaring API coverage
@@ -134,6 +132,7 @@ Human contributions are very welcome.  Please open a pull request or issue on co
 
 # Ideas / TODOs - contributions welcome
 * [x] in memory layout - 3 allocations: array, bitset_blocks and run/array blocks.
+  * [x] - switch to Container managed blocks to improve overall performance by around 7%.
 * [x] validation: fix failing checkAllAllocationFailures test
 * [x] checkAllAllocationFailures - why so slow? - added -Dskip-slow-tests
 * [x] allocation failures test with crash corpus.
@@ -153,9 +152,8 @@ Human contributions are very welcome.  Please open a pull request or issue on co
 * [ ] use in regex / peg impl in another project maybe following https://github.com/MartinErhardt/RoaringRegex
 * [ ] strategy for reclaiming blocks to reduce memory usage.  depending on users calling shrink_to_fit() doesn't seem viable.
   * [x] add compaction to realloc_blocks shrink code path
-* [ ] AFL fuzzer
-  * [ ] slow fuzzing - check for HashMapOracle leaks
-  * [ ] try again to use croaring, address build issues, remove HashMapOracle
+* [x] AFL fuzzer
+  * [x] use croaringOracle, address build issues, remove HashMapOracle
 * [ ] CI: windows failure: use translate-c to replace pre-translated src/c/roaring.zig
   * [x] workaround until translate-c fixes (hopefully 0.17) - introduce src/c/roaring-subset.h with symbols copied from roaring.h which translate-c can handle.
 * [ ] bench with reordered Array fields.  also bench without field alignments.
@@ -163,5 +161,3 @@ Human contributions are very welcome.  Please open a pull request or issue on co
 # References
 * https://github.com/RoaringBitmap/RoaringFormatSpec
 * https://github.com/RoaringBitmap/CRoaring
-* https://github.com/awesomo4000/rawr
-* https://github.com/lalinsky/roaring.zig

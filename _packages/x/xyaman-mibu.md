@@ -1,21 +1,23 @@
 ---
 title: mibu
-description: "Pure Zig library for low-level terminal manipulation: zero heap allocations, UTF-8 support, text styling, color output, cursor and screen control, key and mouse event handling."
+description: "Zero-allocation Zig library for ANSI terminal control: colors, styling, cursor, screen, and input events."
 license: MIT
 author: xyaman
 author_github: xyaman
 repository: https://github.com/xyaman/mibu
 keywords:
   - ansi
-  - color
+  - cli
+  - colors
   - console
-  - cursor
+  - escape-codes
+  - kitty
   - terminal
   - tui
-date: 2026-07-14
+date: 2026-07-19
 category: tooling
-updated_at: 2026-07-14T09:23:58+00:00
-last_sync: 2026-07-14T09:23:58Z
+updated_at: 2026-07-19T11:23:56+00:00
+last_sync: 2026-07-19T11:23:56Z
 package_kind: hybrid
 has_library: true
 has_binary: true
