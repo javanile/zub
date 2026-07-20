@@ -24,10 +24,10 @@ keywords:
   - secp256k1
   - web3
   - zig-ethereum
-date: 2026-06-23
+date: 2026-07-17
 category: systems
-updated_at: 2026-06-23T14:57:06+00:00
-last_sync: 2026-06-23T14:57:06Z
+updated_at: 2026-07-17T11:11:31+00:00
+last_sync: 2026-07-17T11:11:31Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -258,7 +258,7 @@ Built something with eth.zig? Open a PR to add it here.
 
 <!-- x-release-please-start-version -->
 ```bash
-zig fetch --save git+https://github.com/StrobeLabs/eth.zig.git#v0.7.0
+zig fetch --save git+https://github.com/StrobeLabs/eth.zig.git#v0.8.1
 ```
 <!-- x-release-please-end -->
 
@@ -268,7 +268,7 @@ zig fetch --save git+https://github.com/StrobeLabs/eth.zig.git#v0.7.0
 ```zig
 .dependencies = .{
     .eth = .{
-        .url = "git+https://github.com/StrobeLabs/eth.zig.git#v0.7.0",
+        .url = "git+https://github.com/StrobeLabs/eth.zig.git#v0.8.1",
         .hash = "...", // run `zig build` and it will tell you the expected hash
     },
 },

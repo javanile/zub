@@ -10,10 +10,10 @@ keywords:
   - game-development
   - graphics
   - sdl3
-date: 2026-06-25
+date: 2026-07-15
 category: game-development
-updated_at: 2026-06-25T23:05:56+00:00
-last_sync: 2026-06-25T23:05:56Z
+updated_at: 2026-07-15T19:44:28+00:00
+last_sync: 2026-07-15T19:44:28Z
 package_kind: hybrid
 has_library: true
 has_binary: true

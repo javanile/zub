@@ -7,9 +7,9 @@ author_github: insolor
 repository: https://github.com/insolor/zig-itertools
 keywords:
   - zigang
-date: 2026-05-20
-updated_at: 2026-05-20T17:27:07+00:00
-last_sync: 2026-05-20T17:27:07Z
+date: 2026-07-20
+updated_at: 2026-07-20T10:49:51+00:00
+last_sync: 2026-07-20T10:49:51Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -42,13 +42,13 @@ Implemented so far:
 
 Supported zig versions:
 
-| Version | Support |
-| :-----: | :-----: |
-| 0.14.0  | ✅      |
-| 0.14.1  | ✅      |
-| 0.15.1  | ✅      |
-| 0.15.2  | ✅      |
-| 0.16.0  | ✅      |
+| Version | Support   |
+| :-----: | :-------: |
+| 0.14.0  | In v0.0.1 |
+| 0.14.1  | In v0.0.1 |
+| 0.15.1  | ✅        |
+| 0.15.2  | ✅        |
+| 0.16.0  | ✅        |
 
 ## Installation
 
@@ -58,7 +58,7 @@ Supported zig versions:
     zig fetch --save https://github.com/insolor/zig-itertools/archive/refs/tags/0.0.1.zip
     ```
 
-    Replace `main` in the URL with the tag you want to use.
+    Replace `0.0.1` in the URL with the tag you want to use.
 
 2. Add zig_itertools as a dependency module in your `build.zig` file, example:
 

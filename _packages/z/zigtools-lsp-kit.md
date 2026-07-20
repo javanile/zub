@@ -7,9 +7,9 @@ author_github: zigtools
 repository: https://github.com/zigtools/lsp-kit
 keywords:
   - lsp
-date: 2026-07-16
-updated_at: 2026-07-16T05:26:32+00:00
-last_sync: 2026-07-16T05:26:32Z
+date: 2026-07-17
+updated_at: 2026-07-17T09:05:39+00:00
+last_sync: 2026-07-17T09:05:39Z
 package_kind: hybrid
 has_library: true
 has_binary: true
