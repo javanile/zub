@@ -10,10 +10,10 @@ keywords:
   - ecs
   - game-development
   - slotmap
-date: 2026-07-12
+date: 2026-07-21
 category: game-development
-updated_at: 2026-07-12T11:30:37+00:00
-last_sync: 2026-07-12T11:30:37Z
+updated_at: 2026-07-21T11:58:05+00:00
+last_sync: 2026-07-21T11:58:05Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -73,7 +73,7 @@ that are frequently created and destroyed while other things hold references to 
 Fetch the package (pins to a tagged release):
 
 ```sh
-zig fetch --save "git+https://github.com/itsakeyfut/slotmap#v0.1.0"
+zig fetch --save "git+https://github.com/itsakeyfut/slotmap#v0.2.0"
 ```
 
 Then wire the module into your `build.zig`:
@@ -164,6 +164,12 @@ zig build examples
 | `remove` | `(*Self, Key) ?T` | Remove and return the value, or `null` if the key is stale. Bumps the slot's generation. |
 | `count` | `(Self) usize` | Number of live values. |
 | `iterator` | `(*Self) Iterator` | Iterate live entries as `{ key, value_ptr }`, in slot order. |
+| `valueIterator` | `(*Self) ValueIterator` | Iterate live values as `*T`, in slot order. |
+| `keyIterator` | `(*const Self) KeyIterator` | Iterate live keys (by value), in slot order. Works on a `const` map. |
+| `clearRetainingCapacity` | `(*Self) void` | Remove all entries, invalidating every outstanding key; keeps the allocated capacity. |
+| `ensureTotalCapacity` | `(*Self, usize) !void` | Grow so total capacity is at least N slots. |
+| `ensureUnusedCapacity` | `(*Self, usize) !void` | Grow so N more entries can be inserted without a reallocation. |
+| `initCapacity` | `(allocator, usize) !Self` | Create an empty map pre-sized for N slots. |
 
 `Key` is `struct { index: u32, generation: u32 }` — cheap to copy and store.
 
@@ -171,6 +177,17 @@ A `get`/`getPtr`/`remove`/`contains` call returns `null`/`false` when the key do
 match a live slot: either the value was removed, or the slot has since been reused by a
 newer generation. This is the core guarantee — a stale handle can never read or mutate
 an unrelated value.
+
+`valueIterator` hands out `*T` pointers with the same lifetime caveat as `getPtr` — an
+intervening `insert` that grows the map invalidates them. `keyIterator` yields `Key` by
+value, so it has no such caveat and can iterate a `const` map.
+
+## Design
+
+This library favors reliability over feature count, and grows only when real use
+demands it. [`docs/DESIGN.md`](docs/DESIGN.md) records the rationale behind the
+current design, the trade-offs chosen, and the conditions under which each will be
+revisited.
 
 ## License
 

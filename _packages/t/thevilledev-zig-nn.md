@@ -10,9 +10,9 @@ keywords:
   - learning-lab
   - monorepo
   - neural-networks
-date: 2026-07-20
-updated_at: 2026-07-20T11:41:54+00:00
-last_sync: 2026-07-20T11:41:54Z
+date: 2026-07-21
+updated_at: 2026-07-21T05:18:13+00:00
+last_sync: 2026-07-21T05:18:13Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -109,8 +109,9 @@ workflow, backend contract, and event protocol.
 - [Containers](docs/containers.md) — minimal CPU and CUDA benchmark job images
 - [Development Environment](docs/development.md) — pinned tools, hooks, and
   repository-wide checks
-- [Roadmap](docs/roadmap.md) — the confidence, inference, and steady-state
-  performance release gates
+- [TinyGPT](experiments/tiny_gpt/README.md) and
+  [Serving](experiments/serving/README.md) — the persistent inference path,
+  streaming text API, and bounded dense prediction service
 - [Real-Time Learning Lab](docs/learning-lab.md) — live browser experiments,
   controls, and the structured event protocol
 

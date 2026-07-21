@@ -1,20 +1,20 @@
 ---
 title: vitellus
-description: A WebGPU-inspired implementation in pure zig, allowing for cross compilation
+description: Native-first render hardware interface written in zig
 license: ""
 author: eggyengine
 author_github: eggyengine
 repository: https://github.com/eggyengine/vitellus
 keywords:
-date: 2026-07-15
-updated_at: 2026-07-15T10:45:03+00:00
-last_sync: 2026-07-15T10:45:03Z
+date: 2026-07-21
+updated_at: 2026-07-21T07:22:38+00:00
+last_sync: 2026-07-21T07:22:38Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 2
-distributable_binary_count: 2
+binary_count: 3
+distributable_binary_count: 3
 multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
@@ -58,4 +58,4 @@ const vit = @import("vitellus");
 
 ## documentation
 
-there is a tutorial available in [docs/tutorial](docs/tutorial/README.md) that might be worth checking out
+~~there is a tutorial available in [docs/tutorial](docs/tutorial/README.md) that might be worth checking out~~

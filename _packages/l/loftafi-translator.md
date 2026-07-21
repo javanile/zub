@@ -6,9 +6,9 @@ author: loftafi
 author_github: loftafi
 repository: https://github.com/loftafi/translator
 keywords:
-date: 2026-05-04
-updated_at: 2026-05-04T23:31:30+00:00
-last_sync: 2026-05-04T23:31:30Z
+date: 2026-07-15
+updated_at: 2026-07-15T00:37:11+00:00
+last_sync: 2026-07-15T00:37:11Z
 package_kind: library
 has_library: true
 has_binary: false
