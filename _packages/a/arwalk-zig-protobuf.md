@@ -7,10 +7,10 @@ author_github: Arwalk
 repository: https://github.com/Arwalk/zig-protobuf
 keywords:
   - protobuf
-date: 2026-06-28
+date: 2026-07-21
 category: data-formats
-updated_at: 2026-06-28T11:21:47+00:00
-last_sync: 2026-06-28T11:21:47Z
+updated_at: 2026-07-21T01:19:02+00:00
+last_sync: 2026-07-21T01:19:02Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -109,6 +109,43 @@ zig-protobuf generates code for Protocol Buffer `service` definitions using the 
 **Note**: This generates service interfaces only. It does not include a gRPC transport layer - users must implement their own server logic and transport.
 
 For detailed documentation on service code generation, including examples and usage patterns, see [docs/services.md](docs/services.md).
+
+## Streaming decode
+
+Besides `MyMessage.decode`, which materializes a whole message (allocating storage for
+every dynamic field), every generated message also exposes a `StreamDecoder`: a
+zero-allocation **pull parser** that walks a `std.Io.Reader` one wire field at a time.
+This is useful for incremental / low-memory decoding — large or deeply nested messages,
+embedded systems, or multiplexed IO — where you don't want to buffer a whole message in
+contiguous memory. It implies some caveats and limitations though, see `src/stream.zig`
+
+Call `next()` to get the next field as an `Event`. Scalars come back by value; the leaf
+cases of a `oneof` are flattened into their own variants. Length-delimited fields
+(submessages, `string`, `bytes`) are surfaced as a `*std.Io.Reader` bound to that
+field's bytes — you can recurse into it with another `StreamDecoder`, copy the bytes out,
+or simply ignore it (the decoder drains it for you on the next call). `next()` returns
+`null` at the end of the stream.
+
+```zig
+var sd = MyMessage.StreamDecoder.init(&reader);
+while (try sd.next()) |item| switch (item) {
+    .some_scalar => |v| { ... },                  // value, by value
+    .some_string => |limited| {                   // limited: *std.Io.Reader
+        var buf: [64]u8 = undefined;
+        const n = try limited.readSliceShort(&buf);
+        ...
+    },
+    .some_submessage => |limited| {               // recurse without allocating
+        var inner = SubMessage.StreamDecoder.init(limited);
+        while (try inner.next()) |x| switch (x) { ... };
+    },
+    // repeated fields (packed or not) emit one event per element
+    .some_repeated => |v| { ... },
+};
+```
+
+Note: the decoder must not be copied after `init` — the `*std.Io.Reader` it hands out for
+length-delimited fields points back into the decoder itself.
 
 -------
 

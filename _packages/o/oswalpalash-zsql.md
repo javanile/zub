@@ -11,8 +11,8 @@ keywords:
   - zig-program
 date: 2026-07-14
 category: data-formats
-updated_at: 2026-07-14T11:50:59+00:00
-last_sync: 2026-07-14T11:50:59Z
+updated_at: 2026-07-14T13:09:22+00:00
+last_sync: 2026-07-14T13:09:22Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -308,6 +308,24 @@ put it into failed state, where `begin`/`commit` return
 Pool acquire timeout: `0` = non-blocking, `std.math.maxInt(u64)` = wait forever
 (condition), any other value = deadline-based wait with ≤1 ms polling.
 
+PostgreSQL pools can enforce session isolation at lease boundaries:
+
+```zig
+var pool = try zsql.drivers.postgres.Pool.init(allocator, io, .{
+    .database = config,
+    .session_reset = .discard_all,
+});
+```
+
+The default `.none` preserves connection-local settings, temporary objects, and
+statement-cache entries for callers that deliberately need them. The opt-in
+`.discard_all` policy runs PostgreSQL `DISCARD ALL` before an idle connection is
+reused, removing changed settings, temporary objects, LISTEN registrations,
+session advisory locks, and server prepares. zsql clears and rebuilds its client
+statement cache and reapplies the configured `statement_timeout`. Reset traffic
+does not fire application query hooks. Any reset failure consumes the lease and
+closes the connection rather than exposing uncertain state to another borrower.
+
 Pools retain synchronized connections after recoverable SQL errors and discard
 closed, protocol-broken, or transaction-busy leases. A lease released with an
 open transaction is never returned to another borrower.
@@ -402,6 +420,9 @@ conn.execParams(...) catch |err| {
 ```
 
 After `ErrorResponse`, the driver drains to `ReadyForQuery` so the connection stays usable.
+If that recovery loses the transport, the connection rejects further work but
+still retains its allocator ownership until `deinit`; teardown remains required
+and releases buffers, diagnostics, cached statements, and queued notifications.
 PostgreSQL `lastError()` is borrowed until the next SQL operation or `deinit`;
 starting a later operation clears stale metadata, including when it succeeds.
 For SQL operations it also owns the exact statement template sent to PostgreSQL
@@ -485,9 +506,13 @@ defer notification.deinit(allocator);
 ```
 
 Notifications own their channel and payload buffers and may outlive the
-listener lease. `Listener.deinit` sends `UNLISTEN *` before returning its
-session to the pool; if cleanup fails, that connection is discarded instead of
-leaking subscription state into an unrelated lease.
+listener lease. A connection queues notifications that arrive while it is
+collecting another command, so later `nextNotification` / `Listener.next` calls
+receive them in server order. `pendingNotificationCount` reports only events
+already read from the wire. `Listener.deinit` sends `UNLISTEN *` and discards
+queued events before returning its session to the pool; if cleanup fails, that
+connection is discarded instead of leaking subscription state into an
+unrelated lease.
 
 COPY uses trusted COPY SQL plus explicit bytes; values are encoded by the caller
 for the selected COPY format:
@@ -759,7 +784,16 @@ precedence over the original SQL error: zsql never reports the original failure
 as durably guarded when it could not record the guard.
 SQLite acquires `BEGIN IMMEDIATE` before reading or validating migration history,
 so a waiter cannot apply from a stale pre-lock snapshot. PostgreSQL performs the
-same revalidation after acquiring its session advisory lock.
+same revalidation after acquiring its session advisory lock. PostgreSQL verifies
+that advisory unlock actually succeeded. If lock acquisition or release becomes
+uncertain because of allocation, transport, or protocol failure, zsql closes the
+session so the global migration lock cannot remain stranded; a successful
+migration never hides an unlock failure.
+Migration plans must be strictly increasing and complete for the recorded
+history. Duplicate or descending versions, a renamed/missing applied migration,
+or a newly introduced pending version below the highest applied version return
+`MigrationVersionConflict` before any migration-file SQL runs. This prevents an
+older schema change from being silently applied after newer production history.
 
 `Migrator(D).repairDirty(version, expected_checksum)` is the guarded repair
 primitive. It locks migration history, requires an existing dirty row and exact

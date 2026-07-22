@@ -1,0 +1,169 @@
+---
+title: zig-paseto
+description: A PASETO (Platform-Agnostic SEcurity TOkens) library for zig.
+license: Apache-2.0
+author: deatil
+author_github: deatil
+repository: https://github.com/deatil/zig-paseto
+keywords:
+  - jwt
+  - paseto
+  - token
+  - zig-paseto
+date: 2026-07-22
+updated_at: 2026-07-22T11:13:48+00:00
+last_sync: 2026-07-22T11:13:48Z
+package_kind: library
+has_library: true
+has_binary: false
+has_distributable_binary: false
+binary_count: 0
+distributable_binary_count: 0
+multiple_binaries: false
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
+permalink: /packages/deatil/zig-paseto/
+---
+
+## Zig-paseto 
+
+A PASETO (Platform-Agnostic SEcurity TOkens) library for zig.
+
+
+### Env
+
+ - Zig >= 0.16.0
+
+
+### What is PASETO?
+
+PASETO (Platform-Agnostic SEcurity TOkens) is a specification and reference implementation
+for secure stateless tokens.
+
+
+### Key Differences between PASETO and JWT
+
+Unlike JSON Web Tokens (JWT), which gives developers more than enough rope with which to
+hang themselves, PASETO only allows secure operations. JWT gives you "algorithm agility",
+PASETO gives you "versioned protocols". It's incredibly unlikely that you'll be able to
+use PASETO in [an insecure way](https://auth0.com/blog/critical-vulnerabilities-in-json-web-token-libraries).
+
+
+### Adding zig-paseto as a dependency
+
+Add the dependency to your project:
+
+```sh
+zig fetch --save=zig-paseto git+https://github.com/deatil/zig-paseto#main
+```
+
+or use local path to add dependency at `build.zig.zon` file
+
+```zig
+.{
+    .dependencies = .{
+        .@"zig-paseto" = .{
+            .path = "./lib/zig-paseto",
+        },
+        ...
+    }
+}
+```
+
+And the following to your `build.zig` file:
+
+```zig
+const zig_paseto_dep = b.dependency("zig-paseto", .{});
+exe.root_module.addImport("zig-paseto", zig_paseto_dep.module("zig-paseto"));
+```
+
+The `zig-paseto` structure can be imported in your application with:
+
+```zig
+const paseto = @import("zig-paseto");
+```
+
+
+### Get Starting
+
+~~~zig
+const std = @import("std");
+const crypto = std.crypto;
+
+const paseto = @import("zig-paseto");
+
+pub fn main(init: std.process.Init) !void {
+    _ = init;
+
+    const alloc = std.heap.page_allocator;
+
+    const key = "707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f";
+
+    var buf: [32]u8 = undefined;
+    const k = try std.fmt.hexToBytes(&buf, key);
+
+    const m = "{\"data\":\"this is a signed message\",\"exp\":\"2022-01-01T00:00:00+00:00\"}";
+    const f = "{\"kid\":\"zVhMiPBP9fRf2snEcT7gFTioeA9COcNy9DfgL1W60haN\"}";
+    const i = "{\"test-vector\":\"4-S-3\"}";
+
+    var e = paseto.V4Local.init(alloc);
+    defer e.deinit();
+
+    try e.withMessage(m);
+    try e.withFooter(f);
+    try e.withImplicit(i);
+
+    var prng = std.Random.DefaultPrng.init(1234);
+
+    const token = try e.encode(prng.random(), k);
+    defer alloc.free(token);
+    
+    // output: 
+    // make paseto token: v4.local.G-ToOUO6A-LGTVrBKiVn7najk-XOBR2a4olurkkWrLgM9sKOf6tNlMpKbSZpI70E5MzgdnWq6yplehnR2VeLR4VTmGMZYDI0VMotPJpKJeBuS7xDoCsm8z_5wA9af2ZtTfrlMY5ErELyiqx5pqdVAzSBP9ZM6-Qxo4oHTnWAqjENeOHdYA.eyJraWQiOiJ6VmhNaVBCUDlmUmYyc25FY1Q3Z0ZUaW9lQTlDT2NOeTlEZmdMMVc2MGhhTiJ9
+    std.debug.print("make paseto token: {s} \n", .{token});
+
+    // ====================
+
+    // parse token
+    var p = paseto.V4Local.init(alloc);
+    defer p.deinit();
+
+    try p.withImplicit(i);
+
+    try p.decode(token, k);
+    
+    // output: 
+    // message: this is a signed message
+    const message = try p.getMessage();
+    defer message.deinit();
+    std.debug.print("message: {s} \n", .{message.value.object.get("data").?.string});
+}
+~~~
+
+
+### Encode Methods
+
+The PASETO library have encode methods:
+
+ - `v1.local`: paseto.V1Local
+ - `v1.public`: paseto.V1Public
+
+ - `v2.local`: paseto.V2Local
+ - `v2.public`: paseto.V2Public
+
+ - `v3.local`: paseto.V3Local
+ - `v3.public`: paseto.V3Public
+
+ - `v4.local`: paseto.V4Local
+ - `v4.public`: paseto.V4Public
+
+
+### LICENSE
+
+*  The library LICENSE is `Apache2`, using the library need keep the LICENSE.
+
+
+### Copyright
+
+*  Copyright deatil(https://github.com/deatil).

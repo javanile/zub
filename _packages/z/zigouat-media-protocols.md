@@ -15,9 +15,9 @@ keywords:
   - sdp
   - srtp
   - stun
-date: 2026-07-16
-updated_at: 2026-07-16T15:53:35+00:00
-last_sync: 2026-07-16T15:53:35Z
+date: 2026-07-22
+updated_at: 2026-07-22T08:47:00+00:00
+last_sync: 2026-07-22T08:47:00Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -67,9 +67,9 @@ Then, in your `build.zig` file, add the following:
 const media_protocols = b.dependecy("media_protocols", .{ .target = .target, .optimize = optimize });
 
 /// You can all the whole module:
-exe.root_module.addImportPath("media_protocols", media_protocols.module("protocols"));
+exe.root_module.addImport("media_protocols", media_protocols.module("protocols"));
 
 /// Or you can import only the modules you need:
-exe.root_module.addImportPath("rtp", media_protocols.module("rtp"));
-exe.root_module.addImportPath("ice", media_protocols.module("ice"));
+exe.root_module.addImport("rtp", media_protocols.module("rtp"));
+exe.root_module.addImport("ice", media_protocols.module("ice"));
 ```
