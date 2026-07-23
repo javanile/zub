@@ -17,10 +17,10 @@ keywords:
   - kqueue
   - networking
   - poll
-date: 2026-07-19
+date: 2026-07-23
 category: networking
-updated_at: 2026-07-19T09:53:28+00:00
-last_sync: 2026-07-19T09:53:28Z
+updated_at: 2026-07-23T10:47:41+00:00
+last_sync: 2026-07-23T10:47:41Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -61,7 +61,7 @@ It's similar to [goroutines] in Go, but with the pros and cons of being implemen
 
 ## Features
 
-- Support for Linux (`io_uring`, `epoll`), Windows (`iocp`), macOS (`kqueue`), most BSDs (`kqueue`), and many other systems (`poll`).
+- Support for Linux (`io_uring`, `epoll`), Windows (`iocp`), macOS/FreeBSD/NetBSD/OpenBSD (`kqueue`), and many other systems (`poll`).
 - User-mode coroutine context switching for `x86_64`, `aarch64`, `arm`, `thumb`, `riscv32`, `riscv64`, `loongarch64` and `powerpc64` architectures.
 - Growable stacks for the coroutines implemented by auto-extending virtual memory reservations.
 - Single-threaded or multi-threaded coroutine scheduler.

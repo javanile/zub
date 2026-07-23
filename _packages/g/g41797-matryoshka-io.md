@@ -10,9 +10,9 @@ keywords:
   - concurrent-programming
   - modular-monolith
   - std-io
-date: 2026-07-20
-updated_at: 2026-07-20T09:22:39+00:00
-last_sync: 2026-07-20T09:22:39Z
+date: 2026-07-23
+updated_at: 2026-07-23T09:00:55+00:00
+last_sync: 2026-07-23T09:00:55Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -273,7 +273,9 @@ If
 
 ## Master is King
 
-Only Master(_your code_)
+Master is YOUR CODE.  
+
+Only Master
 
 - makes decisions
 - owns application state

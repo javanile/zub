@@ -8,9 +8,9 @@ repository: https://github.com/tiawl/X11.zig
 keywords:
   - binding
   - x11
-date: 2026-07-14
-updated_at: 2026-07-14T13:05:49+00:00
-last_sync: 2026-07-14T13:05:49Z
+date: 2026-07-23
+updated_at: 2026-07-23T11:44:34+00:00
+last_sync: 2026-07-23T11:44:34Z
 package_kind: hybrid
 has_library: true
 has_binary: true

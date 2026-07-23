@@ -6,9 +6,9 @@ author: justinGrosvenor
 author_github: justinGrosvenor
 repository: https://github.com/justinGrosvenor/nether
 keywords:
-date: 2026-07-14
-updated_at: 2026-07-14T23:02:16+00:00
-last_sync: 2026-07-14T23:02:16Z
+date: 2026-07-23
+updated_at: 2026-07-23T07:56:21+00:00
+last_sync: 2026-07-23T07:56:21Z
 package_kind: binary
 has_library: false
 has_binary: true
