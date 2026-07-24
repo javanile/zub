@@ -8,10 +8,10 @@ repository: https://github.com/JacobCrabill/zigdown
 keywords:
   - markdown
   - terminal
-date: 2026-04-16
+date: 2026-07-24
 category: tooling
-updated_at: 2026-04-16T19:24:19+00:00
-last_sync: 2026-04-16T19:24:19Z
+updated_at: 2026-07-24T05:13:30+00:00
+last_sync: 2026-07-24T05:13:30Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -32,7 +32,7 @@ permalink: /packages/JacobCrabill/zigdown/
 ![CI Status](https://github.com/JacobCrabill/zigdown/actions/workflows/main.yml/badge.svg)
 
 > [!TIP]
-> Zig 0.15.1 Required
+> Zig 0.16.x Required
 
 - [Tools & Features](#tools-&-features)
   - [Command-Line Tools](#command-line-tools)
@@ -110,6 +110,7 @@ a psuedo-static web site, or present a set of files interactively as an in-termi
 - [x] Neovim integration (Lua)
 - [x] Markdown formatter
 - [x] HTML-encode all text in the HTML renderer
+- [x] Character escaping
 
 ### Future Work / Missing Pieces
 
@@ -123,7 +124,6 @@ a psuedo-static web site, or present a set of files interactively as an in-termi
       - Requires filling in some libC stub functions (the TS parsers use quite a few functions from
         the C standard library that are not available in WASM)
       - To run the exising WASM demo, do `./tools/run_wasm_demo.sh`.
-- [ ] Character escaping
 
 ## Caveats
 
@@ -147,7 +147,7 @@ subset of all Markdown syntax, and ignoring anything I personally find useless o
 ## Usage
 
 The current version of Zig this code compiles with is
-[0.15.2](https://ziglang.org/download/0.15.2/zig-x86_64-linux-0.15.2.tar.xz).  I highly recommend
+[0.16.0](https://ziglang.org/download/0.16.0/zig-x86_64-linux-0.16.0.tar.xz). I highly recommend
 using the [Zig version manager](https://github.com/tristanisham/zvm) to install and manage various
 Zig versions.
 
@@ -208,17 +208,17 @@ from the default tree-sitter project on Github:
 #!/usr/bin/env bash
 
 # Ensure the TS_CONFIG_DIR is available
-export TS_CONFIG_DIR=$HOME/.config/tree-sitter/
+export TS_CONFIG_DIR=${HOME}/.config/tree-sitter/
 mkdir -p ${TS_CONFIG_DIR}/parsers
 cd ${TS_CONFIG_DIR}/parsers
 
 # Clone and build a TreeSitter parser library
 git clone https://github.com/tree-sitter/tree-sitter-cpp
 cd tree-sitter-cpp
-make install PREFIX=$HOME/.local/
+make install PREFIX=${HOME}/.local/
 
-# Add the install directory to LD_LIBRARY_PATH (if not done so already)
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/.local/lib/
+# Add the library install directory to LD_LIBRARY_PATH (if not done so already)
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${HOME}/.local/lib/
 ```
 
 In addition to having the parser libraries available for `dlopen`, you will also need the highlight
