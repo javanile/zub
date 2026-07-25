@@ -8,17 +8,17 @@ repository: https://github.com/ooyeku/wick
 keywords:
   - wasm
   - webassembly
-date: 2026-07-20
+date: 2026-07-25
 category: systems
-updated_at: 2026-07-20T05:18:07+00:00
-last_sync: 2026-07-20T05:18:07Z
-package_kind: library
+updated_at: 2026-07-25T07:30:00+00:00
+last_sync: 2026-07-25T07:30:00Z
+package_kind: hybrid
 has_library: true
-has_binary: false
-has_distributable_binary: false
-binary_count: 0
-distributable_binary_count: 0
-multiple_binaries: false
+has_binary: true
+has_distributable_binary: true
+binary_count: 2
+distributable_binary_count: 2
+multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
 sync_source: zigistry
@@ -121,6 +121,15 @@ regressions, float semantics (NaN, saturation), `call_indirect`
 dispatch and traps, fuel exhaustion, and an end-to-end test of the
 full plugin-host integration pattern (host imports, `user_data`,
 guest strings, export lookup and invocation).
+
+Three more build steps back the [roadmap](ROADMAP.md):
+
+- `zig build bench` — the benchmark suite (ReleaseFast), reporting
+  per-workload instruction counts and MIPS.
+- `zig build fuzz` — fuzz targets for the decoder and executor.
+- `zig build spec` — the official WebAssembly spec test suite
+  scoreboard; run `scripts/fetch-spec-tests.sh` once first (needs
+  git and wabt).
 
 ## License
 

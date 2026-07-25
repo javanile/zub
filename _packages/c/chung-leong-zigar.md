@@ -14,10 +14,10 @@ keywords:
   - rollup-plugin
   - wasm
   - webpack-plugin
-date: 2026-07-19
+date: 2026-07-24
 category: systems
-updated_at: 2026-07-19T10:48:42+00:00
-last_sync: 2026-07-19T10:48:42Z
+updated_at: 2026-07-24T23:13:29+00:00
+last_sync: 2026-07-24T23:13:29Z
 package_kind: library
 has_library: false
 has_binary: false
