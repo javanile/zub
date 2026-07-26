@@ -12,10 +12,10 @@ keywords:
   - tardy
   - tls
   - zzz
-date: 2026-07-02
+date: 2026-07-25
 category: networking
-updated_at: 2026-07-02T11:24:33+00:00
-last_sync: 2026-07-02T11:24:33Z
+updated_at: 2026-07-25T07:40:56+00:00
+last_sync: 2026-07-25T07:40:56Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -35,7 +35,7 @@ permalink: /packages/tardy-org/zzz/
 [![Discord](https://img.shields.io/discord/1294761432922980392?logo=discord)](https://discord.gg/HNEszT7qSR)
 
 ## Installing
-For in development zzz which uses [tardy/main](https://github.com/tardy-org/tardy/tree/main/), [secsock/main](https://github.com/tardy-org/secsock/tree/main/)  and Zig `0.17.0-dev.956+2dca73595`
+For in development zzz which uses [tardy/main](https://github.com/tardy-org/tardy/tree/main/), [secsock/main](https://github.com/tardy-org/secsock/tree/main/)  and Zig `0.17.0-dev.1413+addc3c3b8`
 
 ```elvish
 zig fetch --save 'git+https://github.com/tardy-org/zzz?ref=main#commit_hash'

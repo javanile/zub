@@ -9,10 +9,10 @@ keywords:
   - cli
   - lines-of-code
   - tree
-date: 2026-06-15
+date: 2026-07-23
 category: tooling
-updated_at: 2026-06-15T15:31:18+00:00
-last_sync: 2026-06-15T15:31:18Z
+updated_at: 2026-07-23T23:44:09+00:00
+last_sync: 2026-07-23T23:44:09Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -90,10 +90,7 @@ Some highlights:
 
 - =loc= counts lines of code across languages
 - =tree= prints directory trees with optional filtering
-- =pretty-csv= renders CSV and TSV files as aligned tables
-- =hexdump= prints a color-coded hex dump of files or stdin, with optional C include output
-- =zfetch= prints system information
-- =cowsay=, =repeat=, and other small terminal utilities round out the collection
+- =procscope= samples CPU, RSS, and energy usage for a macOS process
 
 The programs and packages are developed in the same repository, so the binaries can also serve as
 examples of how the reusable modules fit together.

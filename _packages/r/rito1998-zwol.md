@@ -10,9 +10,20 @@ keywords:
   - command-line
   - wake-on-lan
   - wol
-date: 2026-04-07
+date: 2026-07-19
 category: tooling
-last_sync: 2026-04-07T20:18:19Z
+updated_at: 2026-07-19T21:41:31+00:00
+last_sync: 2026-07-19T21:41:31Z
+package_kind: hybrid
+has_library: true
+has_binary: true
+has_distributable_binary: true
+binary_count: 1
+distributable_binary_count: 1
+multiple_binaries: false
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
 permalink: /packages/rito1998/zwol/
 ---
 
@@ -110,17 +121,18 @@ zig fetch --save git+https://github.com/rito1998/zwol
 Add the wol module from the fetched dependency in `build.zig`.
 
 ```zig
-const wol_module = b.dependency("wol", .{}).module("wol");
+const wol_module = b.dependency("zwol", .{}).module("wol");
 exe.root_module.addImport("wol", wol_module); // e.g. add it to an exe root module
 ```
 
 Import the module in `main.zig` and broadcast a magic packet.
 
 ```zig
+const std = @import("std");
 const wol = @import("wol");
 
 pub fn main(init: std.process.Init) !void {
-    try wol.broadcastMagicPacket(init.io, "11-22-33-44-55-66", 10, "255.255.255.255:9", 1);
+    try wol.broadcastMagicPacket(init.io, "11-22-33-44-55-66", "255.255.255.255:9", 1);
 }
 ```
 

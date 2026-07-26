@@ -6,9 +6,9 @@ author: ooyeku
 author_github: ooyeku
 repository: https://github.com/ooyeku/vigil
 keywords:
-date: 2026-06-28
-updated_at: 2026-06-28T18:17:47+00:00
-last_sync: 2026-06-28T18:17:47Z
+date: 2026-07-19
+updated_at: 2026-07-19T20:40:40+00:00
+last_sync: 2026-07-19T20:40:40Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -61,10 +61,10 @@ pub fn main() !void {
     const allocator = gpa.allocator();
 
     var app = try vigil.app(allocator);
+    defer app.shutdown();
     _ = try app.worker("task1", worker);
     _ = try app.workerPool("pool", worker, 4);
     try app.start();
-    defer app.shutdown();
 }
 ```
 
@@ -102,6 +102,33 @@ if (try inbox.recvTimeout(1000)) |msg| {
 }
 ```
 
+### Dead-Letter Recovery
+
+```zig
+var jobs = try rt.inbox(.{
+    .capacity = 1,
+    .dead_letter_capacity = 32,
+    .max_delivery_attempts = 3,
+});
+defer jobs.close();
+
+try jobs.send("active");
+try jobs.send("retained while full");
+
+var dead_letters = try jobs.deadLetters(allocator);
+defer dead_letters.deinit();
+const retained_id = dead_letters.entries[0].id;
+
+var active = try jobs.recv();
+active.deinit();
+_ = try jobs.replayDeadLetter(retained_id);
+```
+
+`recv()` increments the message delivery-attempt count. A consumer can transfer
+a failed message back to the inbox with `deadLetter(message,
+.delivery_failed)`. Once the configured attempt limit is reached, Vigil marks
+the entry as poison, emits telemetry, and invokes the optional poison hook.
+
 ### Circuit Breaker for Resilience
 
 ```zig
@@ -113,6 +140,47 @@ defer breaker.deinit();
 
 if (breaker.getState() == .open) {
     // Service unavailable, fail fast
+}
+```
+
+### Reliability Policy
+
+```zig
+const Result = enum { ok, fallback };
+
+const Client = struct {
+    attempts: u32 = 0,
+
+    fn call(self: *@This()) anyerror!Result {
+        self.attempts += 1;
+        if (self.attempts < 3) return error.TemporaryFailure;
+        return .ok;
+    }
+
+    fn fallback(_: *@This(), _: vigil.PolicyFailure) anyerror!Result {
+        return .fallback;
+    }
+};
+
+var client = Client{};
+const result = vigil.executePolicy(Client, Result, &client, Client.call, .{
+    .retry = .{
+        .max_attempts = 3,
+        .backoff = .{ .exponential = .{ .initial_ms = 10, .max_ms = 100 } },
+    },
+    .timeout_ms = 500,
+    .fallback = Client.fallback,
+});
+
+switch (result) {
+    .success => |success| std.debug.print("result={s}\n", .{@tagName(success.value)}),
+    .fallback => |fallback| std.debug.print("fallback={s} from={s}\n", .{
+        @tagName(fallback.value),
+        @tagName(fallback.report.fallback_from.?),
+    }),
+    .timeout => |failure| std.debug.print("timeout after {d} attempt(s)\n", .{failure.attempts}),
+    .circuit_open => |failure| std.debug.print("circuit open after {d} attempt(s)\n", .{failure.attempts}),
+    .permanent_failure => |failure| std.debug.print("failed outcome={s}\n", .{@tagName(failure.outcome)}),
 }
 ```
 
@@ -147,12 +215,14 @@ try group.roundRobin("message"); // Load balance
 
 - **Process Supervision** - Automatic restart strategies (one_for_one, one_for_all, rest_for_one)
 - **Message Passing** - Thread-safe inboxes with priority queues
+- **Dead-Letter Recovery** - Bounded inspection, replay, discard, poison detection, telemetry, and runtime health
 - **Owned Runtime** - Registry, telemetry, shutdown, inboxes, and supervisors under one owner
 - **Fluent Builders** - Intuitive API with sensible defaults
 - **Configuration Presets** - Production, development, HA, and testing modes
 
 ### Resilience 
 
+- **Reliability Policies** - Compose retry, backoff, timeout, fallback, and circuit breakers around fallible operations
 - **Circuit Breaker** - Protect services from cascading failures
 - **Rate Limiting** - Token bucket algorithm for flow control
 - **Backpressure** - Strategies for handling overload (drop_oldest, drop_newest, block, error)
@@ -197,9 +267,11 @@ The root package is library-only: use `zig build test` at the repository root, a
 
 See [examples/vigil_showcase](examples/vigil_showcase) for a self-contained resilient order pipeline that demonstrates:
 - Runtime-owned registry, telemetry, shutdown hooks, and inboxes
+- Reliability policies for retry/backoff/fallback around a payment dependency
 - Process groups for worker routing and operations broadcast
 - Pub/Sub event fanout for audit and alert streams
 - Inbox backpressure, rate limiting, and circuit breaker behavior
+- Dead-letter inspection and replay workflows
 
 ```bash
 cd examples/vigil_showcase
@@ -232,15 +304,24 @@ The v2.1 benchmark harness reports throughput, average latency, and observed all
 
 See [docs/api.md](docs/api.md) for comprehensive API documentation.
 
-## Migrating to 2.0
+## Migrating from the legacy API
 
-Vigil 2.0 removes the old 0.2 compatibility helpers from the root `vigil` module. Code that needs historical low-level types should import `vigil/legacy` explicitly. New code should use `vigil.Runtime`, `vigil.app`, `vigil.supervisor`, `vigil.inbox`, and `vigil.GenServer`.
+Current code should use `vigil.Runtime`, `vigil.app`, `vigil.supervisor`,
+`vigil.inbox`, and `vigil.GenServer`. The deprecated `vigil/legacy` module now
+contains only a reduced set of type aliases for migration; obsolete worker,
+configuration, and supervision-tree APIs have been removed. Root-level global
+pub/sub and shutdown shortcuts have also been removed in favor of explicitly
+owned brokers and runtimes.
 
 ## Running Tests
 
 ```bash
 zig build test
 ```
+
+The default test step runs the current API suite and then the reduced legacy
+compatibility suite. Use `zig build test-root` or `zig build test-legacy` to run
+either suite independently.
 
 ## Requirements
 
