@@ -6,15 +6,15 @@ author: dasimmet
 author_github: dasimmet
 repository: https://github.com/dasimmet/ncurses
 keywords:
-date: 2026-07-25
-updated_at: 2026-07-25T09:41:37+00:00
-last_sync: 2026-07-25T09:41:37Z
+date: 2026-07-27
+updated_at: 2026-07-27T11:26:39+00:00
+last_sync: 2026-07-27T11:26:39Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 11
-distributable_binary_count: 11
+binary_count: 6
+distributable_binary_count: 6
 multiple_binaries: true
 is_sponsor: false
 sync_priority: normal

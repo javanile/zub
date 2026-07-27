@@ -6,9 +6,9 @@ author: allyourcodebase
 author_github: allyourcodebase
 repository: https://github.com/allyourcodebase/catch2
 keywords:
-date: 2026-05-30
-updated_at: 2026-05-30T19:33:00+00:00
-last_sync: 2026-05-30T19:33:00Z
+date: 2026-07-18
+updated_at: 2026-07-18T20:24:23+00:00
+last_sync: 2026-07-18T20:24:23Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -30,7 +30,7 @@ Provides a package to be used by the zig package manager for C++ programs.
 
 | Refname  | Catch2 version | Zig `0.17-dev` | Zig `0.16.x` | Zig `0.15.x` | Zig `0.14.x` | Zig `0.13.x` | Zig `0.12.x` |
 |:---------|:---------------|:---------------|:------------:|:------------:|:------------:|:------------:|:------------:|
-| `3.15.0` | `v3.15.0`      | ✅             | ✔            | ✔            | ✅           | ❌           | ❌           |
+| `3.15.2` | `v3.15.2`      | ✅             | ✔            | ✔            | ✅           | ❌           | ❌           |
 | `3.8.0`  | `v3.8.0`       | ❌             | ❌           | ❌           | ❌           | ✅           | ✅           |
 
 ✔ means that that the package is compatible but that Catch2's own tests fail because of [a regression of LLVM 20](https://github.com/llvm/llvm-project/issues/140519).

@@ -19,9 +19,9 @@ keywords:
   - zon-parse
   - zon-parser
   - zon-zig
-date: 2026-05-27
-updated_at: 2026-05-27T21:45:42+00:00
-last_sync: 2026-05-27T21:45:42Z
+date: 2026-07-19
+updated_at: 2026-07-19T04:08:53+00:00
+last_sync: 2026-07-19T04:08:53Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -198,7 +198,7 @@ A **document-based** ZON (Zig Object Notation) library for Zig, designed for con
 For **Zig 0.16.0** support (recommended), use `v0.0.5`:
 
 ```bash
-zig fetch --save https://github.com/muhammad-fiaz/zon.zig/archive/refs/tags/v0.0.5.tar.gz
+zig fetch --save https://github.com/muhammad-fiaz/zon.zig/archive/refs/tags/0.0.5.tar.gz
 ```
 
 For **Zig 0.15.0**, use `v0.0.4`:

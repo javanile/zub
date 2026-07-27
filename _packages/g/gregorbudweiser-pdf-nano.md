@@ -1,0 +1,109 @@
+---
+title: pdf-nano
+description: A small PDF encoder written in Zig
+license: MIT
+author: GregorBudweiser
+author_github: GregorBudweiser
+repository: https://github.com/GregorBudweiser/pdf-nano
+keywords:
+  - pdf
+  - pdf-generation
+  - typescript
+  - wasm
+date: 2026-07-27
+category: systems
+updated_at: 2026-07-27T10:42:36+00:00
+last_sync: 2026-07-27T10:42:36Z
+package_kind: hybrid
+has_library: true
+has_binary: true
+has_distributable_binary: true
+binary_count: 2
+distributable_binary_count: 1
+multiple_binaries: true
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
+permalink: /packages/GregorBudweiser/pdf-nano/
+---
+
+# Welcome!
+**PDF-Nano** is a small(ish) library for generating simple PDF files.
+
+The goal of PDF-Nano is to have a lightweight PDF-library usable from Zig, C and Wasm. 
+
+### Features
+The main feature is PDF-Nano's small size. Compiled to wasm, it weighs **less than 64kb**, making it suitable for embedded devices.
+To keep the code/binary small only a minimal set of features have been and will be added. Currently the following is supported:
+- Text (Latin-1 charset support only)
+- Basic options for fonts, colors and alignment
+- Lines and tables (fixed layout, optionally repeat table header on new page)
+- Page numbers in footer
+- Jpeg Images (no Jpeg2000 or xl)
+
+Nice to have at some point:
+- Unify/improve handling of text/table styles
+- Text justify
+
+Not on the todo list (due to code size):
+- TrueType fonts (if you need a small library you probably don't have space for fonts anyway)
+- Non-jpeg images (as only jpeg is natively supported)
+- Compression
+
+### How to build
+PDF-Nano is written in Zig, so you will need the Zig compiler. Then simply compile for your target platform (e.g. wasm):
+
+    zig build -Doptimize=ReleaseSmall -Dtarget=wasm32-freestanding
+
+### Build compatibility
+| PDF-Nano     | Zig                        |
+|--------------|----------------------------|
+| **v0.10.x**  | **v0.15.2**                |
+| v0.9.x       | v0.15.2                    |
+| v0.8.x       | v0.15.x                    |
+| v0.7.0       | v0.15.x                    |
+| v0.6.0       | v0.14.x                    |
+| v0.5.0       | v0.13.0                    |
+| v0.4.0       | v0.13.0                    |
+| v0.3.0       | v0.12.0-dev.3291+17bad9f88 |
+| v0.2.0       | v0.11.0                    |
+| v0.1.0       | v0.11.0                    |
+
+### Usage
+PDF-Nano provides a text-editor like interface, meaning it handles layouting/positioning for you.
+See an [example here](examples/native/main.c).
+
+```c
+#include <pdf-nano.h>
+
+int main(int argc, char** argv) {
+    encoder_handle handle = createEncoder(A4, PORTRAIT);
+    addText(handle, "Hello world!");
+    saveAs(handle, "hello.pdf");
+    freeEncoder(handle);
+    return 0;
+}
+```
+
+There is also a [typescript wrapper](examples/web/pdf-nano.ts).
+
+### How to add PDF-Nano to your Zig project
+To use PDF-Nano via Zig's package manager you can add it as a dependency to your project:
+
+    zig fetch --save git+https://github.com/GregorBudweiser/pdf-nano.git
+
+Then in your build.zig file add this:
+
+```zig
+const pdf_nano_module = b.dependency("pdf_nano", .{
+    .target = target,
+    .optimize = optimize,
+});
+yourModule.addImport("pdf_nano", pdf_nano_module.module("pdf_nano"));
+```
+
+Then in your module's zig code you can import it:
+
+```zig
+const pdf = @import("pdf_nano");
+```
