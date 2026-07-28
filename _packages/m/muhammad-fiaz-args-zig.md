@@ -16,10 +16,10 @@ keywords:
   - zig-cli
   - zig-language
   - zig-library-args
-date: 2026-06-15
+date: 2026-07-28
 category: tooling
-updated_at: 2026-06-15T05:21:27+00:00
-last_sync: 2026-06-15T05:21:27Z
+updated_at: 2026-07-28T11:37:56+00:00
+last_sync: 2026-07-28T11:37:56Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -38,7 +38,7 @@ permalink: /packages/muhammad-fiaz/args.zig/
 <img  alt="cover" src="https://github.com/user-attachments/assets/6b4390a1-af10-4175-8c8b-c36f3868b398" />
 
 <a href="https://muhammad-fiaz.github.io/args.zig/"><img src="https://img.shields.io/badge/docs-muhammad--fiaz.github.io-blue" alt="Documentation"></a>
-<a href="https://ziglang.org/"><img src="https://img.shields.io/badge/Zig-0.16.0+-orange.svg?logo=zig" alt="Zig Version"></a>
+<a href="https://ziglang.org/"><img src="https://img.shields.io/badge/Zig-0.16%2B%20%7C%200.17%2B-orange.svg?logo=zig" alt="Zig Version"></a>
 <a href="https://github.com/muhammad-fiaz/args.zig"><img src="https://img.shields.io/github/stars/muhammad-fiaz/args.zig" alt="GitHub stars"></a>
 <a href="https://github.com/muhammad-fiaz/args.zig/issues"><img src="https://img.shields.io/github/issues/muhammad-fiaz/args.zig" alt="GitHub issues"></a>
 <a href="https://github.com/muhammad-fiaz/args.zig/pulls"><img src="https://img.shields.io/github/issues-pr/muhammad-fiaz/args.zig" alt="GitHub pull requests"></a>
@@ -71,12 +71,22 @@ A production-grade, high-performance command-line argument parsing library for Z
 
 **Related Zig projects:**
 
+- For **env.zig** (.env parsing), check out **[env.zig](https://github.com/muhammad-fiaz/env.zig)**.
+- For **TUI** support, check out **[tui.zig](https://github.com/muhammad-fiaz/tui.zig)**.
+- For **ZON file format** support, check out **[zon.zig](https://github.com/muhammad-fiaz/zon.zig)**.
+- For **spinners/loading/progress bar** support, check out **[loaders.zig](https://github.com/muhammad-fiaz/loaders.zig)**.
+- For **MCP** support, check out **[mcp.zig](https://github.com/muhammad-fiaz/mcp.zig)**.
+- For **args parsing** support, check out **[args.zig](https://github.com/muhammad-fiaz/args.zig)**.
+- For **HTTP client/server** support, check out **[httpx.zig](https://github.com/muhammad-fiaz/httpx.zig)**.
 - For **API framework** support, check out **[api.zig](https://github.com/muhammad-fiaz/api.zig)**.
 - For **web framework** support, check out **[zix](https://github.com/muhammad-fiaz/zix)**.
+- For **archive/compression** support, check out **[archive.zig](https://github.com/muhammad-fiaz/archive.zig)**.
+- For **compression file format** support, check out **[zigx](https://github.com/muhammad-fiaz/zigx)**.
+- For **file downloading** support, check out **[downloader.zig](https://github.com/muhammad-fiaz/downloader.zig)**.
+- For **update checker/auto-updater** support, check out **[updater.zig](https://github.com/muhammad-fiaz/updater.zig)**.
+- For **numerical computing** support, check out **[num.zig](https://github.com/muhammad-fiaz/num.zig)**.
 - For **logging** support, check out **[logly.zig](https://github.com/muhammad-fiaz/logly.zig)**.
 - For **data validation and serialization** support, check out **[zigantic](https://github.com/muhammad-fiaz/zigantic)**.
-- For **HTTP Server/Client** support, check out **[httpx.zig](https://github.com/muhammad-fiaz/httpx.zig)**.
-- For **ZON file format** support, check out **[zon.zig](https://github.com/muhammad-fiaz/zon.zig)**  
 
 ⭐ **If you love `args.zig`, make sure to give it a star!**
 
@@ -125,13 +135,21 @@ A production-grade, high-performance command-line argument parsing library for Z
 
 ### Release Installation (Recommended)
 
-Install the latest stable release for zig v0.16 (v0.0.7):
+Install the stable release matching your Zig version:
+
+**Zig 0.16+ / 0.17+ (v0.0.8) — Latest:**
+
+```bash
+zig fetch --save https://github.com/muhammad-fiaz/args.zig/archive/refs/tags/0.0.8.tar.gz
+```
+
+**Zig 0.16 (v0.0.7) — Previous Stable:**
 
 ```bash
 zig fetch --save https://github.com/muhammad-fiaz/args.zig/archive/refs/tags/0.0.7.tar.gz
 ```
 
-Install the supported release for zig v0.15 (v0.0.4):
+**Zig 0.15 (v0.0.4):**
 
 ```bash
 zig fetch --save https://github.com/muhammad-fiaz/args.zig/archive/refs/tags/0.0.4.tar.gz
@@ -578,22 +596,25 @@ try parser.addArg(.{
 
 ### Declarative Structs
 
-Define your CLI interface using a native Zig struct:
+Define your CLI interface using a native Zig struct. Fields with defaults are automatically optional:
 
 ```zig
 const Config = struct {
     verbose: bool,
     output: ?[]const u8,
     count: i32,
+    host: []const u8 = "localhost",
+    port: u32 = 8080,
 };
 
 // Parse directly into the struct
 var parsed = try args.parseInto(allocator, Config, .{
     .name = "myapp",
-}, null);
+}, null, init);
 defer parsed.deinit();
 
 std.debug.print("Count: {d}\n", .{parsed.options.count});
+std.debug.print("Host: {s}\n", .{parsed.options.host});
 ```
 
 ### Typed Numeric Options
@@ -657,7 +678,7 @@ const level = result.get("verbosity").?.asInt().? orelse 0; // -v -v => 2; -q =>
 
 ### Advanced parseInto with Enums
 
-Enum struct fields are automatically converted to `--flag` choices:
+Enum struct fields are automatically converted to `--flag` choices. Fields with defaults are optional:
 
 ```zig
 const LogLevel = enum { debug, info, warn, err };
@@ -677,6 +698,8 @@ defer parsed.deinit();
 
 std.debug.print("Log level: {s}\n", .{@tagName(parsed.options.log_level)});
 ```
+
+Run with no args to see defaults applied: `host=localhost`, `port=8080`, `log-level=info`, `timeout=30.0`.
 
 ### Environment Variable Configuration
 
@@ -839,6 +862,16 @@ Full documentation is available at [muhammad-fiaz.github.io/args.zig](https://mu
 - [API Reference](https://muhammad-fiaz.github.io/args.zig/api/parser)
 - [Examples](https://muhammad-fiaz.github.io/args.zig/examples/)
 - [Update Checker](https://muhammad-fiaz.github.io/args.zig/guide/updates)
+
+> [!TIP]
+> To generate docs for a specific older version, clone the repo, checkout the version tag, and run `zig build docs`:
+> ```bash
+> git clone https://github.com/muhammad-fiaz/args.zig.git
+> cd args.zig
+> git checkout 0.0.7   # or any release tag
+> zig build docs
+> ```
+> This generates a local docs site in `docs/.vitepress/dist/` that you can open in your browser.
 
 ## Contributing
 

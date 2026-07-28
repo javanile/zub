@@ -6,9 +6,9 @@ author: loftafi
 author_github: loftafi
 repository: https://github.com/loftafi/resources
 keywords:
-date: 2026-07-16
-updated_at: 2026-07-16T00:24:20+00:00
-last_sync: 2026-07-16T00:24:20Z
+date: 2026-07-28
+updated_at: 2026-07-28T03:30:21+00:00
+last_sync: 2026-07-28T03:30:21Z
 package_kind: hybrid
 has_library: true
 has_binary: true

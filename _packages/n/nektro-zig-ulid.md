@@ -7,9 +7,9 @@ author_github: nektro
 repository: https://github.com/nektro/zig-ulid
 keywords:
   - ulid
-date: 2026-07-20
-updated_at: 2026-07-20T10:36:35+00:00
-last_sync: 2026-07-20T10:36:35Z
+date: 2026-07-28
+updated_at: 2026-07-28T11:55:48+00:00
+last_sync: 2026-07-28T11:55:48Z
 package_kind: library
 has_library: true
 has_binary: false
