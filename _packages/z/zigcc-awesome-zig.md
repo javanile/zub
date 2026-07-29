@@ -11,9 +11,9 @@ keywords:
   - awesome-list
   - bun
   - mach
-date: 2026-07-23
-updated_at: 2026-07-23T09:10:11+00:00
-last_sync: 2026-07-23T09:10:11Z
+date: 2026-07-29
+updated_at: 2026-07-29T11:30:19+00:00
+last_sync: 2026-07-29T11:30:19Z
 package_kind: library
 has_library: false
 has_binary: false
@@ -206,6 +206,7 @@ If you find a well-maintained library that is not yet included here, welcome to 
 - [copyleftdev/whatthediff](https://github.com/copyleftdev/whatthediff) - Deterministic semantic diff across many files at once — finds consensus, drift, and outliers with inspectable evidence, from configs and JSON/YAML/XML/PDF to executables (SSDeep-style fuzzy analysis). Zero dependencies.
 - [bare-devcontainer/templates](https://github.com/bare-devcontainer/templates/tree/main/src/zig) - Security-focused Zig dev container with zls integration and a persistent build cache. The base image is available at [bare-devcontainer/images](https://github.com/bare-devcontainer/images/tree/main/zig).
 - [xsawyerx/vind](https://codeberg.org/xsawyerx/vind) - A tiny embeddable full-text search engine that also has a CLI app and a built-in service.
+- [Illusionna/LocalTransfer](https://github.com/Illusionna/LocalTransfer) - A fast cross-platform HTTP file server.
 
 ### Linker
 

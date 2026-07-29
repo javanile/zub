@@ -7,9 +7,9 @@ author_github: thevilledev
 repository: https://github.com/thevilledev/ChibiHash-zig
 keywords:
   - hash-functions
-date: 2026-06-24
-updated_at: 2026-06-24T02:48:07+00:00
-last_sync: 2026-06-24T02:48:07Z
+date: 2026-07-29
+updated_at: 2026-07-29T09:34:54+00:00
+last_sync: 2026-07-29T09:34:54Z
 package_kind: hybrid
 has_library: true
 has_binary: true
