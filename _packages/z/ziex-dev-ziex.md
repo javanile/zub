@@ -17,9 +17,9 @@ keywords:
   - web
   - web-assembly
   - web-framework
-date: 2026-07-29
-updated_at: 2026-07-29T11:36:38+00:00
-last_sync: 2026-07-29T11:36:38Z
+date: 2026-07-30
+updated_at: 2026-07-30T11:33:03+00:00
+last_sync: 2026-07-30T11:33:03Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -41,9 +41,10 @@ A full-stack web framework for Zig. Declarative UI components using familiar pat
 
 Ziex combines the power and performance of Zig with the expressiveness and simplicity of declarative UI, enabling you to build fast, type-safe web applications.
 
-**[Documentation →](https://ziex.dev/learn)**
 
 > **Note:** Most of the API and syntax are finalized and stable, and server-side rendering (SSR) features are production-ready, Ziex continues to evolve with ongoing improvements to client-side rendering and state management, see the [roadmap](#roadmap). You can start using the documented features today, as they are stable and unlikely to change. Areas still under development are not yet documented and will be added as they mature. See [versions](#versions) for Zig and Ziex versions compatibility.
+
+**[Documentation →](https://ziex.dev/learn)**
 
 ## Getting Started
 
@@ -216,13 +217,6 @@ The [`0.1.0`](https://github.com/ziex-dev/ziex/milestone/2) release will indicat
 
 The [`1.0.0`](https://github.com/ziex-dev/ziex/milestone/6) release will signify long-term support for that major version, receiving bug fixes and minor updates.
 
-## Editor Support
-
-- [VSCode](https://marketplace.visualstudio.com/items?itemName=ziex.ziex)/[VSCode Forks](https://open-vsx.org/extension/ziex/ziex)
-- [Neovim](/ide/neovim/)
-- [Helix](/ide/helix/)
-- [Zed](/ide/zed/)
-
 ## Community
 
 - [Discord](https://ziex.dev/r/discord)
@@ -233,4 +227,4 @@ The [`1.0.0`](https://github.com/ziex-dev/ziex/milestone/6) release will signify
 
 ## Contributing
 
-Contributions are welcome! Currently trying out Ziex and reporting issues for edge cases and providing feedback are greatly appreciated.
+Contributions are welcome! Trying out Ziex, reporting issues (especially edge cases), and providing feedback are greatly appreciated. You can also look through the [open issues](https://github.com/ziex-dev/ziex/issues) to find something to work on.

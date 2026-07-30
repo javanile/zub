@@ -6,16 +6,16 @@ author: eggyengine
 author_github: eggyengine
 repository: https://github.com/eggyengine/vitellus
 keywords:
-date: 2026-07-21
-updated_at: 2026-07-21T07:22:38+00:00
-last_sync: 2026-07-21T07:22:38Z
+date: 2026-07-30
+updated_at: 2026-07-30T04:28:33+00:00
+last_sync: 2026-07-30T04:28:33Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 3
-distributable_binary_count: 3
-multiple_binaries: true
+binary_count: 1
+distributable_binary_count: 1
+multiple_binaries: false
 is_sponsor: false
 sync_priority: normal
 sync_source: zigistry
@@ -39,16 +39,12 @@ and then in `build.zig`:
 const vit = b.dependency("vitellus", .{
     .target = target,
     .optimize = optimize,
+
+    .enable_dxc = true, // default is false
+    .enable_spirv-cross = true, // default is false
 });
 
 exe.root_module.addImport("vitellus", vit.module("vitellus"));
-```
-
-```zig
-const vit = b.dependency("vitellus", .{
-    .target = target,
-    .optimize = optimize,
-});
 ```
 
 and lastly in your library/executable:

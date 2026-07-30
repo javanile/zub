@@ -11,10 +11,10 @@ keywords:
   - command-line
   - developer-tools
   - terminal
-date: 2026-07-17
+date: 2026-07-30
 category: tooling
-updated_at: 2026-07-17T06:19:33+00:00
-last_sync: 2026-07-17T06:19:33Z
+updated_at: 2026-07-30T01:23:13+00:00
+last_sync: 2026-07-30T01:23:13Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -110,7 +110,7 @@ The framework itself is an ordinary Zig dependency — the meta-CLI is optional:
 Pin the release in your `build.zig.zon` with an immutable hash:
 
 ```bash
-zig fetch --save https://github.com/ryanhair/zcli/archive/refs/tags/v0.20.0.tar.gz
+zig fetch --save https://github.com/ryanhair/zcli/archive/refs/tags/v0.24.0.tar.gz
 ```
 
 To track the development branch instead, fetch `.../archive/refs/heads/main.tar.gz` — its hash changes with every commit, so re-run the command to update.
@@ -346,14 +346,14 @@ test "deploy command" {
 
 ## Documentation generation
 
-Generate markdown, man pages, or HTML documentation from your command metadata, on demand via `zig build docs`:
+Generate markdown, man pages, or HTML documentation from your command metadata, on demand via `zig build docs`. The `docs` plugin is build-only — it wires the build step and ships nothing in your binary:
 
 ```zig
-// In build.zig, after generate():
-zcli.generateDocs(b, cmd_registry, zcli_dep, .{
+// In build.zig, in the generate() plugins list:
+zcli.builtin(.docs, .{
     .formats = &.{ "markdown", "man", "html" },
     .output_dir = "docs",
-});
+}),
 ```
 
 The HTML output is a styled, dark-mode-aware static site with navigation.
@@ -382,6 +382,14 @@ What a real zcli app looks like. The meta-CLI you install is one; the rest are t
 | [**oauth-device**](examples/oauth-device) | Mints a token from scratch by running GitHub's OAuth device flow (RFC 8628), then keychains it — freeform command code, not a framework feature. |
 | [**notes**](examples/notes) | A tiny note keeper: saves and loads a typed struct as a JSON file and shares one `store` module across three commands. |
 | [**repostat**](examples/repostat) | Prints stats for a public GitHub repo — the minimal `zcli.http` + typed-JSON example, with safe client defaults out of the box. |
+| [**ext-plugin**](examples/ext-plugin) | Registers a third-party plugin shipped as its own Zig package (`.dependency = greet_plugin_dep`), contrasting the local-path and built-in plugin styles used elsewhere. |
+| [**vault**](examples/vault) | A secrets-backed CLI combining `zcli_secrets` (OS keychain), `zcli_config`, dynamic completions, and password prompts in one app. |
+| [**options-features**](examples/options-features) | Exercises option-parsing edge cases: required options (flag/env/config), array options, per-field `validate` hooks, custom `parse` types, and `meta.exclusive`/`meta.options.*.requires`. |
+| [**prompts-features**](examples/prompts-features) | Covers the `password` and `multi_select` prompt types not shown elsewhere. |
+| [**testing-demo**](examples/testing-demo) | Shows the `zcli-testing` harness used directly in app code — unit-tier `runCommand` in command tests plus a subprocess/snapshot integration test against the compiled binary. |
+| [**upgrade-demo**](examples/upgrade-demo) | Wires the `github_upgrade` plugin to add a self-upgrade `upgrade` command backed by GitHub Releases. |
+
+See [`examples/README.md`](examples/README.md) for the full index, including how each example is built and tested in CI.
 
 Building something with zcli? Open a PR to add it here.
 
@@ -414,11 +422,18 @@ Each release is tagged twice: `vX.Y.Z` is the framework library — the tag for 
 
 ### Verifying a release
 
-CLI releases are signed. `checksums.txt` carries a SHA-256 for every binary and is itself signed with a [minisign](https://jedisct1.github.io/minisign/) key held offline — so a compromised release cannot forge a matching signature, not just a matching checksum. `install.sh` **requires `minisign`** and verifies the signature before installing (fail closed); `zcli upgrade` verifies it natively with no external tools. To check by hand:
+CLI releases are signed. `checksums.txt` carries a SHA-256 for every binary and is itself signed with a [minisign](https://jedisct1.github.io/minisign/) key held offline — so a compromised release cannot forge a matching signature, not just a matching checksum.
+
+The signature is also **bound to its release tag**. `checksums.txt` names artifacts but carries no version, so a signature alone cannot tell a current release from an older one; the signing ceremony therefore writes the tag into minisign's trusted comment, which minisign's second signature covers. Every client requires that comment to name the exact tag being installed, as a whole token — so a genuinely-signed *older* release replayed under a newer tag is refused rather than silently installed (a downgrade/replay, CWE-294). `install.sh` and `install.ps1` both **require `minisign`** and verify signature and tag before installing (fail closed); `zcli upgrade` verifies both natively with no external tools.
+
+To check by hand:
 
 ```bash
 gh release download zcli-vX.Y.Z -p 'checksums.txt*'
-minisign -Vm checksums.txt -p docs/zcli-minisign.pub   # verifies the signature
+minisign -Vm checksums.txt -p docs/zcli-minisign.pub   # verifies the signature,
+                                                       # and prints the trusted
+                                                       # comment — confirm it
+                                                       # names zcli-vX.Y.Z
 sha256sum -c checksums.txt                              # then the binaries
 ```
 

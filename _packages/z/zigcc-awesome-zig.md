@@ -11,9 +11,9 @@ keywords:
   - awesome-list
   - bun
   - mach
-date: 2026-07-29
-updated_at: 2026-07-29T11:30:19+00:00
-last_sync: 2026-07-29T11:30:19Z
+date: 2026-07-30
+updated_at: 2026-07-30T07:47:05+00:00
+last_sync: 2026-07-30T07:47:05Z
 package_kind: library
 has_library: false
 has_binary: false
@@ -76,7 +76,6 @@ If you find a well-maintained library that is not yet included here, welcome to 
 - [Network & Web](#network--web)
   - [Network](#network)
   - [Browser](#browser)
-  - [Runtime](#runtime)
   - [Web Framework](#web-framework)
   - [Web3 Framework](#web3-framework)
   - [WebAssembly](#webassembly)
@@ -495,10 +494,6 @@ If you find a well-maintained library that is not yet included here, welcome to 
 ### Browser
 
 - [lightpanda-io/browser](https://github.com/lightpanda-io/browser) - Headless browser designed for AI and automation.
-
-### Runtime
-
-- [oven-sh/bun](https://github.com/oven-sh/bun) - Incredibly fast JavaScript runtime, bundler, transpiler and package manager – all in one.
 
 ### Web Framework
 
