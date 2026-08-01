@@ -7,9 +7,9 @@ author_github: insolor
 repository: https://github.com/insolor/zig-itertools
 keywords:
   - zigang
-date: 2026-07-20
-updated_at: 2026-07-20T10:49:51+00:00
-last_sync: 2026-07-20T10:49:51Z
+date: 2026-08-01
+updated_at: 2026-08-01T06:57:32+00:00
+last_sync: 2026-08-01T06:57:32Z
 package_kind: library
 has_library: true
 has_binary: false
