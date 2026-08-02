@@ -8,9 +8,9 @@ repository: https://github.com/gh0st4n/ZVC
 keywords:
   - sh
   - shell
-date: 2026-06-27
-updated_at: 2026-06-27T13:51:27+00:00
-last_sync: 2026-06-27T13:51:27Z
+date: 2026-07-26
+updated_at: 2026-07-26T16:47:18+00:00
+last_sync: 2026-07-26T16:47:18Z
 package_kind: library
 has_library: false
 has_binary: false

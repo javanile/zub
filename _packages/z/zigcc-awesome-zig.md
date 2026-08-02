@@ -11,9 +11,9 @@ keywords:
   - awesome-list
   - bun
   - mach
-date: 2026-07-30
-updated_at: 2026-07-30T07:47:05+00:00
-last_sync: 2026-07-30T07:47:05Z
+date: 2026-08-02
+updated_at: 2026-08-02T08:21:03+00:00
+last_sync: 2026-08-02T08:21:03Z
 package_kind: library
 has_library: false
 has_binary: false
@@ -36,10 +36,7 @@ permalink: /packages/zigcc/awesome-zig/
 > [!IMPORTANT]
 > Zig is a rapidly evolving language. Some projects listed here may require a specific version of the Zig compiler (e.g., the latest `master` or a stable release like `0.13.0`). Always check the project's repository for compatibility.
 
-Contributing:
-
-This repository lists "awesome" Zig projects and ecosystem tools, maintained by the ZigCC community.
-If you find a well-maintained library that is not yet included here, welcome to submit it via a pull request. Just be sure to execute `make all` before you open a PR.
+[Contributing](contributing.md)
 
 ## Contents
 
@@ -279,6 +276,7 @@ If you find a well-maintained library that is not yet included here, welcome to 
 
 - [OrlovEvgeny/zigquery](https://github.com/OrlovEvgeny/zigquery) - Zig HTML parser and CSS selector engine for DOM querying and manipulation.
 - [tree-sitter/zig-tree-sitter](https://github.com/tree-sitter/zig-tree-sitter) - Zig bindings to the [Tree-sitter](https://tree-sitter.github.io/zig-tree-sitter/) parsing library.
+- [eoan-ermine/zig-strparse](https://github.com/eoan-ermine/zig-strparse) - Generic string parsing library for Zig.
 
 ### Logging Processing
 
@@ -685,6 +683,7 @@ If you find a well-maintained library that is not yet included here, welcome to 
 - [xtxf](https://github.com/charlesrocket/xtxf) - The Matrix screensaver in Zig.
 - [zsdl3](https://github.com/felixuxx/zsdl3) - SDL3 bindings for Zig.
 - [anomalyco/opentui](https://github.com/anomalyco/opentui) - A library for building terminal user interfaces.
+- [vancluever/z2d](https://github.com/vancluever/z2d) - A pure Zig 2D graphics library.
 
 ### GUI
 
