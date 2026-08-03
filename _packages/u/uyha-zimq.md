@@ -10,10 +10,10 @@ keywords:
   - libzmq
   - zeromq
   - zmq
-date: 2026-08-01
+date: 2026-08-03
 category: systems
-updated_at: 2026-08-01T10:00:11+00:00
-last_sync: 2026-08-01T10:00:11Z
+updated_at: 2026-08-03T11:38:28+00:00
+last_sync: 2026-08-03T11:38:28Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -28,11 +28,11 @@ permalink: /packages/uyha/zimq/
 ---
 
 <!-- markdownlint-disable no-inline-html -->
-# Zig binding for ZeroMQ
+# Zig Binding for ZeroMQ
 
 <!--toc:start-->
 - [Zig binding for ZeroMQ](#zig-binding-for-zeromq)
-  - [How to use](#how-to-use)
+  - [How to Use](#how-to-use)
   - [Example](#example)
   - [Binding map](#binding-map)
 <!--toc:end-->
@@ -40,7 +40,7 @@ permalink: /packages/uyha/zimq/
 A ZeroMQ wrapper that covers nearly 100% of ZeroMQ's API (skipped functions are
 to be deprecated or superseded).
 
-## How to use
+## How to Use
 
 1. Run the following command to add this project as a dependency
 
@@ -75,19 +75,38 @@ pub fn main() !void {
     try pull.bind("inproc://#1");
     try push.connect("inproc://#1");
 
-    try push.sendSlice("hello", .{});
+    try push.sendSlice("hello", .more);
+    try push.sendSlice("hello", .none);
 
-    var buffer: zimq.Message = .empty();
-    _ = try pull.recvMsg(&buffer, .{});
+    var message: zimq.Message = .empty();
+    _ = try pull.recvMsg(&message, .none);
 
-    std.debug.print("{s}\n", .{buffer.slice()});
+    std.debug.print("Message: {s}\n", .{message.slice()});
+    std.debug.print("More Frame: {}\n", .{message.more()});
+
+    var routing_id_buffer: [255]u8 = @splat(5);
+    try pull.set(.routing_id, "someroutingid");
+    std.debug.print(
+        "Routing ID: {s}\n",
+        .{try pull.getSlice(.routing_id, &routing_id_buffer)},
+    );
+
+    var endpoint_buffer: [20:0]u8 = @splat(0xAA);
+    std.debug.print(
+        "Last Endpoint: {s}\n",
+        .{try pull.getSlice(.last_endpoint, &endpoint_buffer)},
+    );
+
+    std.debug.print("Backlog: {}\n", .{try pull.get(.backlog)});
+    std.debug.print("More Frame: {}\n", .{try pull.get(.rcvmore)});
 }
 
 const std = @import("std");
 const zimq = @import("zimq");
+const zmq = zimq.zmq;
 ```
 
-## Binding map
+## Binding Map
 
 All the binding functions live in the `zimq` module.
 

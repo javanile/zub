@@ -12,11 +12,13 @@ keywords:
   - gui
   - gui-library
   - qt
+  - qt-widgets
   - qt6
-date: 2026-06-30
+  - qt6-widgets
+date: 2026-07-30
 category: systems
-updated_at: 2026-06-30T20:20:47+00:00
-last_sync: 2026-06-30T20:20:47Z
+updated_at: 2026-07-30T05:53:23+00:00
+last_sync: 2026-07-30T05:53:23Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -38,7 +40,6 @@ unsafe_reason: "contains a URL pointing to a .zip file"
 <img alt="libqt6c" src="assets/libqt6c.png" height="128px;" />
 
 [![MIT License](https://img.shields.io/badge/License-MIT-blue)](https://github.com/rcalixte/libqt6c/blob/master/LICENSE)
-[![Go Report Card](https://goreportcard.com/badge/github.com/rcalixte/libqt6c)](https://goreportcard.com/report/github.com/rcalixte/libqt6c)
 [![Static Badge](https://img.shields.io/badge/v0.16%20(stable)-fdc009?logo=zig&logoColor=f7a41d&label=Zig)](https://ziglang.org/download/)
 
 [![Documentation](https://github.com/rcalixte/libqt6c/actions/workflows/docs.yml/badge.svg?branch=master)](https://github.com/rcalixte/libqt6c/actions/workflows/docs.yml)
@@ -70,6 +71,7 @@ These bindings are based on the [MIQT bindings for Go](https://github.com/mappu/
     - [Fedora-based distributions](#fedora-based-distributions)
     - [Arch-based distributions](#arch-based-distributions)
     - [openSUSE-based distributions](#opensuse-based-distributions)
+    - [Flatpak-based environments](#flatpak-based-environments)
   - [macOS (native)](#macos-native)
   - [Windows (native)](#windows-native)
 - [Tools](#tools)
@@ -79,6 +81,7 @@ These bindings are based on the [MIQT bindings for Go](https://github.com/mappu/
     - [Fedora-based](#fedora-based)
     - [Arch-based](#arch-based)
     - [openSUSE-based](#opensuse-based)
+    - [Flatpak](#flatpak)
   - [macOS](#macos)
   - [Windows](#windows)
 - [Usage](#usage)
@@ -100,6 +103,8 @@ Supported platforms
 
 | OS      | Arch   | Linkage (Bindings) | Status  |
 | ------- | ------ | ------------------ | ------- |
+| Flatpak | arm64  | Static             | ✅ Works |
+| Flatpak | x86_64 | Static             | ✅ Works |
 | FreeBSD | arm64  | Static             | ✅ Works |
 | FreeBSD | x86_64 | Static             | ✅ Works |
 | Linux   | arm64  | Static             | ✅ Works |
@@ -248,7 +253,7 @@ For dynamic linking with the Qt 6 system libraries:
 #### Debian-based distributions
 
 ```bash
-sudo apt install gcc libstdc++-14-dev-$(dpkg --print-architecture)-cross clang-format qt6-base-dev qt6-base-private-dev qt6-charts-dev qt6-connectivity-dev qt6-location-dev qt6-multimedia-dev qt6-pdf-dev qt6-positioning-dev qt6-scxml-dev qt6-speech-dev qt6-svg-dev qt6-webchannel-dev qt6-webengine-dev qt6-websockets-dev qt6-tools-dev libaccounts-qt6-dev libkcolorpicker-qt6-dev libkf6archive-dev libkf6attica-dev libkf6bookmarks-dev libkf6codecs-dev libkf6colorscheme-dev libkf6completion-dev libkf6config-dev libkf6configwidgets-dev libkf6coreaddons-dev libkf6crash-dev libkf6filemetadata-dev libkf6globalaccel-dev libkf6guiaddons-dev libkf6i18n-dev libkf6iconthemes-dev libkf6idletime-dev libkf6kio-dev libkf6itemmodels-dev libkf6itemviews-dev libkf6jobwidgets-dev libkf6newstuff-dev libkf6notifications-dev libkf6parts-dev libkf6plotting-dev libkf6service-dev libkf6solid-dev libkf6sonnet-dev libkf6statusnotifieritem-dev libkf6svg-dev libkf6syntaxhighlighting-dev libkf6texteditor-dev libkf6textwidgets-dev libkf6unitconversion-dev libkf6widgetsaddons-dev libkf6windowsystem-dev libkf6xmlgui-dev libkimageannotator-qt6-dev libktextaddons-dev liblayershellqtinterface-dev libpackagekitqt6-dev libpoppler-qt6-dev libqcustomplot-dev libqscintilla2-qt6-dev libqtermwidget-dev libsignon-qt6-dev qtkeychain-qt6-dev qt6-speech-flite-plugin sonnet6-plugins
+sudo apt install gcc libstdc++-14-dev clang-format qt6-base-dev qt6-base-private-dev qt6-charts-dev qt6-connectivity-dev qt6-location-dev qt6-multimedia-dev qt6-pdf-dev qt6-positioning-dev qt6-scxml-dev qt6-speech-dev qt6-svg-dev qt6-webchannel-dev qt6-webengine-dev qt6-websockets-dev qt6-tools-dev libaccounts-qt6-dev libkcolorpicker-qt6-dev libkf6archive-dev libkf6attica-dev libkf6bookmarks-dev libkf6codecs-dev libkf6colorscheme-dev libkf6completion-dev libkf6config-dev libkf6configwidgets-dev libkf6coreaddons-dev libkf6crash-dev libkf6filemetadata-dev libkf6globalaccel-dev libkf6guiaddons-dev libkf6i18n-dev libkf6iconthemes-dev libkf6idletime-dev libkf6kio-dev libkf6itemmodels-dev libkf6itemviews-dev libkf6jobwidgets-dev libkf6newstuff-dev libkf6notifications-dev libkf6parts-dev libkf6plotting-dev libkf6service-dev libkf6solid-dev libkf6sonnet-dev libkf6statusnotifieritem-dev libkf6svg-dev libkf6syntaxhighlighting-dev libkf6texteditor-dev libkf6textwidgets-dev libkf6unitconversion-dev libkf6widgetsaddons-dev libkf6windowsystem-dev libkf6xmlgui-dev libkimageannotator-qt6-dev libktextaddons-dev liblayershellqtinterface-dev libpackagekitqt6-dev libpoppler-qt6-dev libqcustomplot-dev libqscintilla2-qt6-dev libqtermwidget-dev libsignon-qt6-dev qtkeychain-qt6-dev qt6-speech-flite-plugin sonnet6-plugins
 ```
 
 > [!NOTE]
@@ -257,7 +262,7 @@ sudo apt install gcc libstdc++-14-dev-$(dpkg --print-architecture)-cross clang-f
 #### Fedora-based distributions
 
 ```bash
-sudo dnf install sysroot-$(uname -m)-fc$(lsb_release -rs)-glibc gcc libstdc++-devel clang-tools-extra qt6-qtbase-devel qt6-qtcharts-devel qt6-qtconnectivity-devel qt6-qtlocation-devel qt6-qtmultimedia-devel qt6-qtpdf-devel qt6-qtpositioning-devel qt6-qtscxml-devel qt6-qtspeech-devel qt6-qtsvg-devel qt6-qttools-devel qt6-qtwebchannel-devel qt6-qtwebengine-devel qt6-qtwebsockets-devel kcolorpicker-qt6-devel kf6-attica-devel kf6-karchive-devel kf6-kbookmarks-devel kf6-kcodecs-devel kf6-kcolorscheme-devel kf6-kcompletion-devel kf6-kconfig-devel kf6-kconfigwidgets-devel kf6-kcoreaddons-devel kf6-kcrash-devel kf6-kfilemetadata-devel kf6-kglobalaccel-devel kf6-kguiaddons-devel kf6-ki18n-devel kf6-kiconthemes-devel kf6-kidletime-devel kf6-kio-devel kf6-kitemmodels-devel kf6-kitemviews-devel kf6-kjobwidgets-devel kf6-knewstuff-devel kf6-knotifications-devel kf6-kparts-devel kf6-kplotting-devel kf6-kservice-devel kf6-kstatusnotifieritem-devel kf6-ksvg-devel kf6-ktexteditor-devel kf6-ktextwidgets-devel kf6-kunitconversion-devel kf6-kwidgetsaddons-devel kf6-kwindowsystem-devel kf6-kxmlgui-devel kf6-solid-devel kf6-sonnet-devel kf6-syntax-highlighting-devel kimageannotator-qt6-devel ktextaddons-qt6-devel layer-shell-qt-devel libaccounts-qt6-devel qcustomplot-qt6-devel qscintilla-qt6-devel qtermwidget-devel qtkeychain-qt6-devel kf6-sonnet-aspell PackageKit-Qt6-devel poppler-qt6-devel signon-qt6-devel
+sudo dnf install gcc libstdc++-devel clang-tools-extra qt6-qtbase-devel qt6-qtcharts-devel qt6-qtconnectivity-devel qt6-qtlocation-devel qt6-qtmultimedia-devel qt6-qtpdf-devel qt6-qtpositioning-devel qt6-qtscxml-devel qt6-qtspeech-devel qt6-qtsvg-devel qt6-qttools-devel qt6-qtwebchannel-devel qt6-qtwebengine-devel qt6-qtwebsockets-devel kcolorpicker-qt6-devel kf6-attica-devel kf6-karchive-devel kf6-kbookmarks-devel kf6-kcodecs-devel kf6-kcolorscheme-devel kf6-kcompletion-devel kf6-kconfig-devel kf6-kconfigwidgets-devel kf6-kcoreaddons-devel kf6-kcrash-devel kf6-kfilemetadata-devel kf6-kglobalaccel-devel kf6-kguiaddons-devel kf6-ki18n-devel kf6-kiconthemes-devel kf6-kidletime-devel kf6-kio-devel kf6-kitemmodels-devel kf6-kitemviews-devel kf6-kjobwidgets-devel kf6-knewstuff-devel kf6-knotifications-devel kf6-kparts-devel kf6-kplotting-devel kf6-kservice-devel kf6-kstatusnotifieritem-devel kf6-ksvg-devel kf6-ktexteditor-devel kf6-ktextwidgets-devel kf6-kunitconversion-devel kf6-kwidgetsaddons-devel kf6-kwindowsystem-devel kf6-kxmlgui-devel kf6-solid-devel kf6-sonnet-devel kf6-syntax-highlighting-devel kimageannotator-qt6-devel ktextaddons-qt6-devel layer-shell-qt-devel libaccounts-qt6-devel qcustomplot-qt6-devel qscintilla-qt6-devel qtermwidget-devel qtkeychain-qt6-devel kf6-sonnet-aspell PackageKit-Qt6-devel poppler-qt6-devel signon-qt6-devel
 ```
 
 > [!NOTE]
@@ -285,18 +290,35 @@ Users of openSUSE-based distributions need to __make sure that all packages are 
 > [!NOTE]
 > The `zig` package must be downloaded and installed separately as the version available in the default repositories is too unstable for usage.
 
+#### Flatpak-based environments
+
+These instructions assume that [Flathub is setup](https://flathub.org/setup) on the host system already.
+
+```bash
+flatpak install flathub org.kde.Sdk org.freedesktop.Sdk.Extension.ziglang
+```
+
+To activate a shell in the Flatpak environment, run a command similar to:
+
+```bash
+flatpak run --device=dri --filesystem=home --share=ipc --share=network --socket=session-bus --socket=fallback-x11 --socket=wayland --talk-name=org.kde.StatusNotifierWatcher org.kde.Sdk
+```
+
+> [!INFO]
+> The previous installation command installs the KDE Software Development Kit which provides many of the KDE Frameworks available in the bindings as well as many Qt libraries. Notable exceptions are KTextAddons, Qt PDF, and Qt WebEngine. The Zig SDK Extension provides the Zig toolchain, available by default at `/usr/lib/sdk/ziglang/zig` in the Flatpak environment.
+
 ---
 
 ### macOS (native)
 
-For macOS, currently the Qt 6 framework and select third-party modules are available via [Homebrew](https://brew.sh/).
+For macOS, currently the Qt 6 framework and select third-party modules are available via [Homebrew](https://brew.sh/). Installation via this method should require no further steps.
 
 ```bash
 brew install qt6 karchive ki18n qscintilla2 qtkeychain
 ```
 
 > [!IMPORTANT]
-> In recent versions of Qt 6, the symlinks are not correctly created at the time of installation and must be created manually for each framework. This can be done with commands similar to the following commands but for the appropriate framework:
+> In recent versions of Qt 6, auxiliary symlinks are not created at the time of installation and must be created manually for each framework if `pkg-config` is not available and configured correctly. This can be done with commands similar to the following commands but for the appropriate framework:
 >
 > ```bash
 > ln -s /opt/homebrew/lib/QtCore.framework/Headers /opt/homebrew/include/QtCore
@@ -312,7 +334,7 @@ brew install qt6 karchive ki18n qscintilla2 qtkeychain
 >
 > This is currently not necessary for the additional third-party module frameworks.
 
-The official Qt installer is also supported but will require manually creating the symlinks as above and using the `extra-paths` option described above, using the root of the include directory as the path value.
+The official Qt installer is supported but will require manually creating the symlinks as above and using the `extra-paths` option described above, using the root of the include directory as the path value.
 
 > [!NOTE]
 > The `zig` package will need to be downloaded and installed separately if the latest stable version is not available via Homebrew.
@@ -421,6 +443,15 @@ All of the tools are already installed as dependencies of `qt6-tools-devel` and 
 - `/usr/bin/lupdate6`
 - `/usr/libexec/qt6/rcc`
 - `/usr/libexec/qt6/uic`
+
+#### Flatpak
+
+All of the tools are already installed when using the KDE SDK and available at:
+
+- `/usr/bin/lrelease`
+- `/usr/bin/lupdate`
+- `/usr/lib/libexec/rcc`
+- `/usr/lib/libexec/uic`
 
 ---
 
