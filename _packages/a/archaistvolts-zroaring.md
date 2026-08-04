@@ -6,9 +6,9 @@ author: archaistvolts
 author_github: archaistvolts
 repository: https://github.com/archaistvolts/zroaring
 keywords:
-date: 2026-07-19
-updated_at: 2026-07-19T07:15:30+00:00
-last_sync: 2026-07-19T07:15:30Z
+date: 2026-07-31
+updated_at: 2026-07-31T23:14:08+00:00
+last_sync: 2026-07-31T23:14:08Z
 package_kind: hybrid
 has_library: true
 has_binary: true

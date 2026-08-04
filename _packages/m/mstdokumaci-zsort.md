@@ -1,0 +1,230 @@
+---
+title: zsort
+description: Opinionated import organizer for Zig similar to isort / goimports
+license: MIT
+author: mstdokumaci
+author_github: mstdokumaci
+repository: https://github.com/mstdokumaci/zsort
+keywords:
+  - goimports
+  - import-organizer
+  - isort
+  - zig-application
+date: 2026-08-04
+updated_at: 2026-08-04T11:34:00+00:00
+last_sync: 2026-08-04T11:34:00Z
+package_kind: hybrid
+has_library: true
+has_binary: true
+has_distributable_binary: true
+binary_count: 2
+distributable_binary_count: 2
+multiple_binaries: true
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
+permalink: /packages/mstdokumaci/zsort/
+---
+
+# zsort
+
+An opinionated import organizer for Zig, similar to [isort](https://pycqa.github.io/isort/) / [goimports](https://pkg.go.dev/golang.org/x/tools/cmd/goimports).
+
+`zsort check` verifies import ordering; `zsort fix` rewrites files so imports are
+grouped and sorted, stray imports are hoisted to the top of the file, and
+attached comments travel with their imports.
+
+## Requirements
+
+- Zig **0.15.2 or newer** (Zig 0.16 is supported)
+
+## Installation
+
+There are two ways to get `zsort`.
+
+### Homebrew
+
+```sh
+brew tap mstdokumaci/zsort
+brew install mstdokumaci/zsort/zsort
+```
+
+This installs a `zsort` binary built from source with the Homebrew-provided
+Zig. No cask or prebuilt bottles involved.
+
+### Prebuilt binaries
+
+Linux and macOS binaries are attached to each
+[GitHub Release](https://github.com/mstdokumaci/zsort/releases). Download
+`zsort-<target>.tar.gz` (e.g. `zsort-x86_64-linux.tar.gz`), unpack it, and put
+`zsort` on your `PATH`.
+
+### As a Zig package
+
+Add zsort to your `build.zig.zon` (run `zig fetch --save` to fill in a hash
+like the one below for the version you pin):
+
+```zig
+.{
+    .name = .my_project,
+    .version = "0.0.0",
+    .fingerprint = 0x123456789abcdef0, // placeholder: the first `zig build` rejects it and prints the canonical fingerprint to paste in
+    .dependencies = .{
+        .zsort = .{
+            .url = "https://github.com/mstdokumaci/zsort/archive/refs/tags/v0.3.0.tar.gz",
+            // .hash: fill in via `zig fetch --save https://github.com/mstdokumaci/zsort/archive/refs/tags/v0.3.0.tar.gz` (see CONTRIBUTING.md § Releasing)
+            .lazy = true,
+        },
+    },
+    .paths = .{ "build.zig", "build.zig.zon", "src" },
+}
+```
+
+Then wire up the `check-imports` and `fix-imports` steps in `build.zig`:
+
+```zig
+const zsort = b.lazyDependency("zsort", .{
+    .target = b.graph.host,
+    .optimize = .ReleaseFast,
+});
+if (zsort) |dep| {
+    const zsort_exe = dep.artifact("zsort");
+
+    const check_imports = b.addRunArtifact(zsort_exe);
+    check_imports.setCwd(b.path("."));
+    check_imports.addArgs(&.{ "check", "src", "--ban-prefix", "./", "--ban-prefix", "src/" });
+    const check_imports_step = b.step("check-imports", "Run zsort check on this project");
+    check_imports_step.dependOn(&check_imports.step);
+
+    const run_fix_imports = b.addRunArtifact(zsort_exe);
+    run_fix_imports.setCwd(b.path("."));
+    run_fix_imports.addArgs(&.{ "fix", "src", "--ban-prefix", "./", "--ban-prefix", "src/" });
+    const fix_imports_step = b.step("fix-imports", "Fix Zig import ordering in this project");
+    fix_imports_step.dependOn(&run_fix_imports.step);
+}
+```
+
+Adjust the `--ban-prefix` flags and target paths to your project. The first
+`zig build check-imports` or `zig build fix-imports` run fetches zsort
+automatically. The `test/consumer/` project in this repo is a working copy of
+this setup.
+
+### From source
+
+```sh
+zig build -Doptimize=ReleaseFast
+```
+
+The binary is written to `zig-out/bin/zsort`.
+
+## Usage
+
+```text
+Usage: zsort [check|fix] <dir|file> [options]
+
+Modes:
+  check              Verify Zig import ordering; exits 1 when changes are needed
+  fix                Rewrite files with sorted imports
+
+Options:
+  --ban-prefix <p>   Reject import paths starting with prefix (repeatable)
+  -h, --help         Show this help message
+  --version          Print version and exit
+```
+
+Examples:
+
+```sh
+zsort check src/          # verify; exit 1 if any file needs fixing
+zsort fix .               # rewrite all files in the repo
+zsort check . --ban-prefix ./ --ban-prefix src/
+```
+
+In `check` mode, files that need changes are reported with a unified diff.
+`zsort` exits with code 0 when everything is clean, and 1 when any file needs
+fixing, errors, or banned imports are found.
+
+## Ordering rules
+
+`zsort` recognizes three kinds of top-of-file declarations:
+
+- **Plain import** — `const x = @import("path");`
+- **Member import** — `const X = @import("path").Member;` (a member access
+  after the import; the base path is what gets sorted)
+- **Alias** — `const X = module.Member;` (a dotted name with no `@import`)
+
+Imports are emitted in this order:
+
+1. **std/builtin** — `std`, `builtin`
+2. **third-party** — any other module name (`httpz`, `sqlite`, ...)
+3. **local** — `root`, `build_root`, paths containing `/`, and paths ending
+   in `.zig`
+4. **aliases** — keyed by the import path their module name resolves to
+   (`auth` → `auth.zig`); unresolvable names fall back to the dotted text as
+   written
+
+Blank lines appear only between classification bands (1–3) and before the
+alias band. Plain and member imports of the same class sit in one band, no
+blank line between them. Before `zsort fix`:
+
+```zig
+const std = @import("std");
+const Config = auth.Config;
+const Router = @import("router.zig").Router;
+const httpz = @import("httpz");
+// Handles request authentication.
+const auth = @import("auth.zig");
+```
+
+After:
+
+```zig
+const std = @import("std");
+
+const httpz = @import("httpz");
+
+// Handles request authentication.
+const auth = @import("auth.zig");
+const Router = @import("router.zig").Router;
+
+const Config = auth.Config;
+```
+
+Within a band, imports are sorted by path, byte-wise (`a.zig` before
+`aa.zig`); identical paths tie-break on the declaration text. Sorting never
+depends on where a declaration sits in the file — any input order produces
+the same output. `@cImport` blocks count as third-party imports.
+
+### What `fix` does
+
+- Sorts and groups top-of-file imports
+- Organizes typed imports (`const x: SomeType = @import(...)`) like plain ones
+- Hoists imports that appear later in the file into their proper group
+- Keeps comments that immediately precede an import attached to it (blank
+  lines do not travel with an import)
+- Preserves `//!` module documentation and the file's line endings (CRLF kept)
+
+### Escape hatches
+
+- `// zsort: skip` anywhere in a file leaves it completely untouched
+- `--ban-prefix <prefix>` makes any import starting with `prefix` fail in both
+  `check` and `fix` modes (e.g. ban `./`-relative and `src/`-prefixed paths)
+
+### .gitignore support
+
+When given a directory, `zsort` reads `<dir>/.gitignore` and skips matching
+paths, along with `.git`, `.zig-cache`, `zig-cache`, and `zig-out`.
+
+> **Limitation:** gitignore entries are matched as path-component prefixes.
+> Wildcards (`*?[`) and negation (`!`) are not supported and are skipped.
+> A pattern like `build` matches `build/` and `a/build/x.zig`, but not
+> `build-tools/x.zig`.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, lint gates,
+and contribution guidelines. Release history is in [CHANGELOG.md](CHANGELOG.md).
+
+## License
+
+MIT

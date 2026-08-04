@@ -1,6 +1,6 @@
 ---
 title: zigar
-description: Toolkit enabling the use of Zig code in JavaScript projects
+description: Toolkit enabling the use of Zig code in JavaScript and PHP projects
 license: MIT
 author: chung-leong
 author_github: chung-leong
@@ -14,10 +14,10 @@ keywords:
   - rollup-plugin
   - wasm
   - webpack-plugin
-date: 2026-08-02
+date: 2026-08-04
 category: systems
-updated_at: 2026-08-02T08:02:51+00:00
-last_sync: 2026-08-02T08:02:51Z
+updated_at: 2026-08-04T10:37:58+00:00
+last_sync: 2026-08-04T10:37:58Z
 package_kind: library
 has_library: false
 has_binary: false
@@ -35,16 +35,16 @@ permalink: /packages/chung-leong/zigar/
 
 ![Logo](./logo.png)
 
-A software tool set that lets you utilize [Zig](https://ziglang.org/) code in your JavaScript
-projects.
+A software tool set that lets you utilize [Zig](https://ziglang.org/) code in your JavaScript or
+PHP projects.
 
 Consult the [project wiki](https://github.com/chung-leong/zigar/wiki) for installation instructions
 and tutorials.
 
 ## Features
 
-* Access to all Zig data types in JavaScript
-* Zig-to-JavaScript, JavaScript-to-Zig call marshalling
+* Access to all Zig data types in JavaScript/PHP
+* Zig-to-JavaScript/PHP, JavaScript/PHP-to-Zig call marshalling
 * Async task management
 * Threads in native code and WebAssembly (with support for pthread)
 * Emulating of file system operations
@@ -60,7 +60,7 @@ it's designed for. The current version is 0.15.2. It works with Zig 0.15.x.
 Version 0.14.3 has the same feature set as 0.15.2 and works with Zig 0.14.x. 
 
 The upcoming version is 0.15.3. The biggest addition will be suppport for the PHP language. It's
-been under development for the past 6 months and is at the moment being polished and stabilized for
+been under development for the past 7 months and is at the moment being polished and stabilized for
 release. Once that happens, development will transit immediately to upgrading the entire suite to 
 Zig 0.16.
 

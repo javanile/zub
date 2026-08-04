@@ -1,0 +1,106 @@
+---
+title: comlink
+description: An experimental IRC client
+license: MIT
+author: rockorager
+author_github: rockorager
+repository: https://github.com/rockorager/comlink
+keywords:
+  - irc
+  - irc-client
+date: 2026-07-31
+updated_at: 2026-07-31T20:28:03+00:00
+last_sync: 2026-07-31T20:28:03Z
+package_kind: binary
+has_library: false
+has_binary: true
+has_distributable_binary: true
+binary_count: 2
+distributable_binary_count: 2
+multiple_binaries: true
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
+permalink: /packages/rockorager/comlink/
+---
+
+# comlink
+
+An experimental IRC client written in zig. Join the discussion in #comlink on
+libera.chat.
+
+![screenshot of comlink](screenshot.png)
+
+## Installation
+
+### Arch Linux
+
+[comlink](https://aur.archlinux.org/packages/comlink) is available as a package in the AUR. It can be installed using an AUR helper (e.g. paru).
+
+```sh
+paru -S comlink
+```
+
+### Zig Build System
+
+`comlink` is written in zig and can be installed using the zig build system,
+version 0.16.0.
+
+```sh
+git clone https://github.com/rockorager/comlink
+cd comlink
+zig build -Doptimize=ReleaseSafe --prefix ~/.local
+```
+
+## Configuration
+
+Configuration is loaded from `$HOME/.config/comlink/init.lua`
+
+Works best with `soju`. [irctoday](https://irctoday.com) runs a paid instance of `soju`, and
+another paid alternative is [pico.sh](https://pico.sh/irc)
+
+```lua
+local comlink = require("comlink")
+
+local config = {
+	server = "chat.sr.ht",
+	user = "rockorager",
+	nick = "rockorager",
+	password = "password",
+	real_name = "Tim Culverhouse",
+	tls = true,
+}
+
+-- Pass the server config to connect. Connect to as many servers as you need
+comlink.connect(config)
+
+-- Bind a key to an action
+comlink.bind("ctrl+c", "quit")
+```
+
+Storing passwords in configuration files is generally considered a poor
+security practice. The following example reads the password from an external
+password manager:
+
+```lua
+local comlink = require("comlink")
+
+local proc =
+  assert(io.popen("hiq -dFpassword proto=irc address=irc.example.com nickname=alex", "r"))
+local password = proc:read("*l")
+proc:close()
+
+local config = {
+	-- …other fields here…
+	password = password,
+}
+```
+
+## Contributing
+
+Patches accepted on the [mailing list](https://lists.sr.ht/~rockorager/comlink)
+
+Pull requests accepted on [Github](https://github.com/rockorager/comlink)
+
+Pull requests accepted on
+[tangled.sh](https://tangled.sh/@rockorager.dev/comlink)

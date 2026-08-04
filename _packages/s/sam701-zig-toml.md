@@ -8,10 +8,10 @@ repository: https://github.com/sam701/zig-toml
 keywords:
   - parser
   - toml
-date: 2026-07-16
+date: 2026-08-04
 category: data-formats
-updated_at: 2026-07-16T19:37:25+00:00
-last_sync: 2026-07-16T19:37:25Z
+updated_at: 2026-08-04T06:29:10+00:00
+last_sync: 2026-08-04T06:29:10Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -57,6 +57,7 @@ This is a top-down LL parser that parses directly into Zig structs.
   * [x] Mapping to integer and floats with lower bit number than defined by TOML, i.e. `i16`, `f32`.
   * [x] Mapping to optional fields
   * [x] Mapping to HashMaps
+  * [x] Optional strict mode that rejects unknown keys (`disallow_unknown_fields`)
 * [ ] Serialization
     * [x] Basic types like integers, floating points, strings, booleans etc.
     * [x] Arrays
@@ -112,6 +113,23 @@ pub fn main(init: std.process.Init) anyerror!void {
     std.debug.print("{s}\nlocal address: {s}:{}\n", .{ config.description, config.local.host, config.local.port });
     std.debug.print("peer0: {s}:{}\n", .{ config.peers[0].host, config.peers[0].port });
 }
+```
+
+## Strict mode
+By default an unknown key in the TOML document (one with no matching struct field) is
+silently ignored, so a typo like `nam` instead of `name` goes unnoticed. Set
+`disallow_unknown_fields` on the parser to make such keys fail with `error.UnknownField`:
+
+```zig
+var parser = toml.Parser(Config).init(allocator);
+parser.options.disallow_unknown_fields = true;
+defer parser.deinit();
+
+const result = parser.parseFile(init.io, "./config.toml") catch |err| {
+    // On error.UnknownField, parser.error_info.?.unknown_fields lists every
+    // unrecognized key: `.path` names the table, `.keys` are the unknown keys.
+    return err;
+};
 ```
 
 ## Error Handling

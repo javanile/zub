@@ -11,10 +11,10 @@ keywords:
   - utf-8
   - utf8
   - wtf-8
-date: 2026-05-23
+date: 2026-07-31
 category: systems
-updated_at: 2026-05-23T13:24:13+00:00
-last_sync: 2026-05-23T13:24:13Z
+updated_at: 2026-07-31T14:24:29+00:00
+last_sync: 2026-07-31T14:24:29Z
 package_kind: library
 has_library: true
 has_binary: false
