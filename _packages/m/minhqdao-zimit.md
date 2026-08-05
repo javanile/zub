@@ -23,17 +23,17 @@ keywords:
   - token-bucket
   - zero-allocation
   - zigistry
-date: 2026-07-27
+date: 2026-08-05
 category: systems
-updated_at: 2026-07-27T22:40:29+00:00
-last_sync: 2026-07-27T22:40:29Z
+updated_at: 2026-08-05T04:09:08+00:00
+last_sync: 2026-08-05T04:09:08Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 1
-distributable_binary_count: 1
-multiple_binaries: false
+binary_count: 2
+distributable_binary_count: 2
+multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
 sync_source: zigistry
@@ -100,6 +100,10 @@ For an arbitrary period, initialize `Limit` directly with `count` and
 
 See [examples](examples) for more.
 
+Compile every example without running it using `zig build examples`. To run
+the examples as a smoke test, including the deliberately paced waiting example,
+use `zig build smoke`.
+
 ## Key types
 
 String keys are copied automatically, and integer keys work directly.
@@ -108,6 +112,19 @@ use `RateLimiterWithContext`. Its `Config` adds the required `context` and
 `ownership` fields while retaining the usual `init` and `initWithClock`
 constructors.
 
+## Errors
+
+Zimit exposes operation-specific error sets so callers can handle failures
+exhaustively:
+
+- `InitializationError` covers invalid configuration, unrepresentable time
+  values, and initial keyed-storage allocation.
+- `AdmissionError` covers invalid batches, time overflow, keyed-storage
+  allocation, and configured key-capacity exhaustion.
+- `WaitError` contains every admission error plus `error.Canceled`, which is
+  returned when cancellation interrupts the underlying I/O sleep.
+
+`pruneExpired` is narrower still and returns only allocator errors.
 
 ## Installation
 
@@ -162,6 +179,16 @@ Run the test suite with:
 
 ```shell
 zig build test
+```
+
+## Benchmarks
+
+Run the ReleaseFast benchmark suite with `zig build bench`. It measures global
+admission, contended global admission, keyed hits, borrowed and copied new-key
+insertion, full-capacity rejection, and pruning. Workload sizes are configurable:
+
+```shell
+zig build bench -Dbench-iterations=2000000 -Dbench-keys=50000 -Dbench-threads=8
 ```
 
 ## License

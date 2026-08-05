@@ -11,6 +11,8 @@ keywords:
   - fix
   - grpc
   - http
+  - http2
+  - http3
   - network
   - tcp
   - udp
@@ -19,10 +21,10 @@ keywords:
   - webrtc
   - websockets
   - zix
-date: 2026-08-04
+date: 2026-08-05
 category: networking
-updated_at: 2026-08-04T10:01:37+00:00
-last_sync: 2026-08-04T10:01:37Z
+updated_at: 2026-08-05T10:36:16+00:00
+last_sync: 2026-08-05T10:36:16Z
 package_kind: hybrid
 has_library: true
 has_binary: true

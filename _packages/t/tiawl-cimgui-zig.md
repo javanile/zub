@@ -9,10 +9,10 @@ keywords:
   - binding
   - cimgui
   - imgui
-date: 2026-08-03
+date: 2026-08-05
 category: game-development
-updated_at: 2026-08-03T09:47:02+00:00
-last_sync: 2026-08-03T09:47:02Z
+updated_at: 2026-08-05T09:40:21+00:00
+last_sync: 2026-08-05T09:40:21Z
 package_kind: library
 has_library: true
 has_binary: false

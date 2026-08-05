@@ -11,10 +11,10 @@ keywords:
   - code-generation
   - cue
   - deterministic-builds
-date: 2026-08-03
+date: 2026-08-05
 category: tooling
-updated_at: 2026-08-03T11:31:38+00:00
-last_sync: 2026-08-03T11:31:38Z
+updated_at: 2026-08-05T09:46:22+00:00
+last_sync: 2026-08-05T09:46:22Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -111,6 +111,7 @@ CUE generates **Zig source code**, not JSON. The build system never parses anyth
 |-------|------|----------|---------|-------------|
 | `kind` | `"exe"` \| `"static"` \| `"shared"` \| `"module"` | Yes | — | Output type |
 | `root` | `string` | Yes | — | Root source file |
+| `artifact_name` | `string` | No | module key | Name of the produced artifact when it should differ from the module key |
 | `deps` | `[...string]` | No | `[]` | Module dependencies |
 | `profile` | `"debug"` \| `"release"` | No | `"debug"` | Optimization level |
 | `link` | `"abi"` \| `"import"` | No | `"abi"` | How dependents consume this module |

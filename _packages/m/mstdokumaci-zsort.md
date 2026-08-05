@@ -9,10 +9,11 @@ keywords:
   - goimports
   - import-organizer
   - isort
+  - llm
   - zig-application
-date: 2026-08-04
-updated_at: 2026-08-04T11:34:00+00:00
-last_sync: 2026-08-04T11:34:00Z
+date: 2026-08-05
+updated_at: 2026-08-05T10:03:52+00:00
+last_sync: 2026-08-05T10:03:52Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -37,10 +38,12 @@ attached comments travel with their imports.
 ## Requirements
 
 - Zig **0.15.2 or newer** (Zig 0.16 is supported)
+- A Unix-like operating system (Linux or macOS). Windows is not supported —
+  on Windows, run `zsort` inside [WSL2](https://learn.microsoft.com/windows/wsl/).
 
 ## Installation
 
-There are two ways to get `zsort`.
+There are multiple ways to get `zsort`.
 
 ### Homebrew
 
@@ -61,22 +64,27 @@ Linux and macOS binaries are attached to each
 
 ### As a Zig package
 
-Add zsort to your `build.zig.zon` (run `zig fetch --save` to fill in a hash
-like the one below for the version you pin):
+Run:
+
+```sh
+zig fetch --save https://github.com/mstdokumaci/zsort/archive/refs/tags/v0.5.0.tar.gz
+```
+
+To add zsort to your `build.zig.zon`:
 
 ```zig
 .{
     .name = .my_project,
-    .version = "0.0.0",
-    .fingerprint = 0x123456789abcdef0, // placeholder: the first `zig build` rejects it and prints the canonical fingerprint to paste in
+    // .version
+    // .fingerprint
     .dependencies = .{
         .zsort = .{
-            .url = "https://github.com/mstdokumaci/zsort/archive/refs/tags/v0.3.0.tar.gz",
-            // .hash: fill in via `zig fetch --save https://github.com/mstdokumaci/zsort/archive/refs/tags/v0.3.0.tar.gz` (see CONTRIBUTING.md § Releasing)
+            .url = "https://github.com/mstdokumaci/zsort/archive/refs/tags/v0.5.0.tar.gz",
+            // .hash
             .lazy = true,
         },
     },
-    .paths = .{ "build.zig", "build.zig.zon", "src" },
+    // .paths = .{ "build.zig", "build.zig.zon", ... },
 }
 ```
 
@@ -120,16 +128,18 @@ The binary is written to `zig-out/bin/zsort`.
 ## Usage
 
 ```text
-Usage: zsort [check|fix] <dir|file> [options]
+Usage: zsort [check|fix] <dir|file>... [options]
 
 Modes:
-  check              Verify Zig import ordering; exits 1 when changes are needed
-  fix                Rewrite files with sorted imports
+  check              Verify Zig import ordering; exit code 1 when changes are needed
+  fix                Rewrite files, sorting their imports
 
 Options:
-  --ban-prefix <p>   Reject import paths starting with prefix (repeatable)
+  --ban-prefix <p>   Reject import paths starting with this prefix (repeatable)
   -h, --help         Show this help message
   --version          Print version and exit
+
+Multiple paths may be given; directories are scanned recursively.
 ```
 
 Examples:
@@ -137,12 +147,35 @@ Examples:
 ```sh
 zsort check src/          # verify; exit 1 if any file needs fixing
 zsort fix .               # rewrite all files in the repo
+zsort check src/ build.zig   # mixed directories and files
 zsort check . --ban-prefix ./ --ban-prefix src/
 ```
 
 In `check` mode, files that need changes are reported with a unified diff.
 `zsort` exits with code 0 when everything is clean, and 1 when any file needs
 fixing, errors, or banned imports are found.
+
+## Pre-commit
+
+`zsort` ships a `.pre-commit-hooks.yaml` manifest with two hooks:
+
+- `zsort` — `check` mode; fails when any passed file needs fixing
+- `zsort-fix` — `fix` mode; rewrites files in place (use only one)
+
+Add to your `.pre-commit-config.yaml`:
+
+```yaml
+repos:
+  - repo: https://github.com/mstdokumaci/zsort
+    rev: v0.5.0        # or the latest release tag
+    hooks:
+      - id: zsort
+      # - id: zsort-fix  # fix mode; use only one
+```
+
+Requires `zsort` on your `$PATH` (the hooks run with `language: system`).
+Use `args` to pass extra flags, e.g. `args: [--ban-prefix, 'src/']`. Only
+changed `.zig` files are passed to the hook.
 
 ## Ordering rules
 
@@ -220,10 +253,11 @@ paths, along with `.git`, `.zig-cache`, `zig-cache`, and `zig-out`.
 > A pattern like `build` matches `build/` and `a/build/x.zig`, but not
 > `build-tools/x.zig`.
 
-## Contributing
+## See Also
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, lint gates,
-and contribution guidelines. Release history is in [CHANGELOG.md](CHANGELOG.md).
+- [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, lint gates,
+and contribution guidelines.
+- [CHANGELOG.md](CHANGELOG.md) for release history.
 
 ## License
 
