@@ -16,16 +16,16 @@ keywords:
   - rust
   - wasm
   - webassembly
-date: 2026-08-04
+date: 2026-08-06
 category: tooling
-updated_at: 2026-08-04T11:48:47+00:00
-last_sync: 2026-08-04T11:48:47Z
+updated_at: 2026-08-06T06:41:01+00:00
+last_sync: 2026-08-06T06:41:01Z
 package_kind: binary
 has_library: false
 has_binary: true
 has_distributable_binary: true
-binary_count: 2
-distributable_binary_count: 2
+binary_count: 3
+distributable_binary_count: 3
 multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
@@ -425,6 +425,7 @@ Project Link: [https://github.com/godofecht/zaza](https://github.com/godofecht/z
 | [`build.zig`](build.zig) | Root build graph |
 | [`build_lib`](build_lib) | Reusable build helpers |
 | [`examples`](examples) | Example projects and workflows |
+| [`corpus`](corpus) | External upstream repos rebuilt through Zaza, with native-build comparisons |
 | [`tests`](tests) | Zig-side test coverage |
 | [`registry`](registry) | Lightweight registry metadata |
 | [`wiki`](wiki) | Static docs site |

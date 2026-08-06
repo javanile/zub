@@ -11,17 +11,17 @@ keywords:
   - code-generation
   - cue
   - deterministic-builds
-date: 2026-08-05
+date: 2026-08-06
 category: tooling
-updated_at: 2026-08-05T09:46:22+00:00
-last_sync: 2026-08-05T09:46:22Z
+updated_at: 2026-08-06T08:32:17+00:00
+last_sync: 2026-08-06T08:32:17Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 1
-distributable_binary_count: 1
-multiple_binaries: false
+binary_count: 2
+distributable_binary_count: 2
+multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
 sync_source: zigistry
@@ -34,6 +34,8 @@ permalink: /packages/godofecht/azazel/
 [![Zig](https://img.shields.io/badge/zig-0.14.1%20%7C%200.15.2%20%7C%200.16.0-f7a41d)](https://ziglang.org/)
 
 A deterministic build configuration layer powered by **CUE** for constraint validation and **Zig** for execution. The configuration frontend for [Zaza](https://github.com/godofecht/zaza).
+
+**Who this is for:** Zig developers who'd rather declare their build than hand-maintain `std.Build`. You still write your own Zig — Azazel replaces the imperative `build.zig` boilerplate (and the churn of tracking `std.Build` across Zig releases), not the language.
 
 ```
 project.cue  →  CUE validates  →  build_spec.zig  →  zig build  →  binary

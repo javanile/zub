@@ -6,9 +6,9 @@ author: sudo-su-coffee
 author_github: sudo-su-coffee
 repository: https://github.com/sudo-su-coffee/zigzvm
 keywords:
-date: 2026-07-27
-updated_at: 2026-07-27T06:27:58+00:00
-last_sync: 2026-07-27T06:27:58Z
+date: 2026-08-03
+updated_at: 2026-08-03T06:25:30+00:00
+last_sync: 2026-08-03T06:25:30Z
 package_kind: library
 has_library: false
 has_binary: false

@@ -9,9 +9,9 @@ keywords:
   - dom
   - html
   - html-parser
-date: 2026-08-01
-updated_at: 2026-08-01T09:55:07+00:00
-last_sync: 2026-08-01T09:55:07Z
+date: 2026-08-06
+updated_at: 2026-08-06T12:19:37+00:00
+last_sync: 2026-08-06T12:19:37Z
 package_kind: binary
 has_library: false
 has_binary: true
