@@ -22,10 +22,10 @@ keywords:
   - webrtc
   - webserver
   - websockets
-date: 2026-08-07
+date: 2026-08-08
 category: networking
-updated_at: 2026-08-07T10:16:45+00:00
-last_sync: 2026-08-07T10:16:45Z
+updated_at: 2026-08-08T05:23:16+00:00
+last_sync: 2026-08-08T05:23:16Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -97,11 +97,11 @@ permalink: /packages/prothegee/zix/
 <p align="center">
     <code><i>Green: Maintained</i></code>
     <br>
-    <code><i>Yellow: Cross-Compiled (Open for contributors/maintainers)</i></code>
+    <code><i>Yellow: Cross-Compiled</i></code>
 </p>
 <div align="center">
-    <img src="https://img.shields.io/badge/x86__64-Linux-green">
-    <img src="https://img.shields.io/badge/aarch64-Linux-green">
+    <img src="https://img.shields.io/badge/x86__64-Linux-brightgreen">
+    <img src="https://img.shields.io/badge/aarch64-Linux-brightgreen">
     <img src="https://img.shields.io/badge/x86__64-Windows-yellow">
     <img src="https://img.shields.io/badge/aarch64-MacOS-yellow">
     <img src="https://img.shields.io/badge/x86__64-FreeBSD-yellow">
@@ -115,7 +115,7 @@ permalink: /packages/prothegee/zix/
     <b><i>Zig Build Main Branch Status:</i></b>
 </h4>
 <p align="center">
-    <code><i>These built are not checking native container.</i></code>
+    <code><i>These built are not checking native docker/podman container</i></code>
 </p>
 <div align="center">
     <img src="https://img.shields.io/github/actions/workflow/status/prothegee/zix/zig-x86_64-linux-0.16.yml?label=zig-x86_64-Linux-0.16">
@@ -130,14 +130,12 @@ permalink: /packages/prothegee/zix/
 
 <hr>
 
-<!-- RESERVED -->
-
 <h4 align="center">
     <b><i>Benchmark by HttpArena:</i></b>
 </h4>
 <br>
 <div align="center">
-    <a href="https://www.http-arena.com/#sort=rps:-1&type=engine&tuned=0&q=zix" target="_blank" rel="noopener noreferrer">
+    <a href="https://www.http-arena.com/#scope=h1&type=engine&tuned=0&q=zix" target="_blank" rel="noopener noreferrer">
         <img src="https://cdn.jsdelivr.net/gh/MDA2AV/httparena-badge/httparena-badge-h1.svg" alt="Benchmarked by HttpArena H/1.1" height="44">
     </a>
     &nbsp;&nbsp;
@@ -161,6 +159,14 @@ permalink: /packages/prothegee/zix/
         <img src="https://cdn.jsdelivr.net/gh/MDA2AV/httparena-badge/httparena-badge-h3.svg" alt="Benchmarked by HttpArena H/3" height="44">
     </a>
 </div>
+
+<!-- <br> -->
+
+<!-- RESERVED localbench -->
+
+<!-- <br> -->
+
+<!-- RESERVED sponsor -->
 
 <br>
 

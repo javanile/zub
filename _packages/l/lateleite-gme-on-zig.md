@@ -8,9 +8,9 @@ repository: https://github.com/lateleite/gme-on-zig
 keywords:
   - game-music-emu
   - gme
-date: 2026-04-09
-updated_at: 2026-04-09T14:31:48+00:00
-last_sync: 2026-04-09T14:31:48Z
+date: 2026-08-02
+updated_at: 2026-08-02T04:30:50+00:00
+last_sync: 2026-08-02T04:30:50Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -28,7 +28,11 @@ permalink: /packages/lateleite/gme-on-zig/
 
 This repository wraps the Game Music Emulators library's source code with Zig's build system.
 
-Zig 0.15.2 is required.
+Zig 0.17.0's development version is required.
+
+Need a different version?
+
+- [0.15.2 branch](https://github.com/lateleite/gme-on-zig/tree/zig-0.15.2)
 
 ## Installing as a `build.zig.zon` package
 
@@ -46,6 +50,12 @@ pub fn build(b: *std.Build) !void {
     const dep_gme = b.dependency("gme", .{
         .target = target,
         .optimize = optimize,
+        // force linking mode (default is static)
+        // .@"link-mode" = .dynamic,
+        // force enable or disable Position Independent Code (PIC) 
+        // .pic = true,
+        // disable zlib file decompression support (it's enabled by default)
+        // .@"enable-zlib" = false,
     });
     const lib_gme = dep_gme.artifact("gme");
 

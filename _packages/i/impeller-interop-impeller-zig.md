@@ -8,10 +8,10 @@ repository: https://github.com/impeller-interop/impeller-zig
 keywords:
   - bindings
   - graphics
-date: 2026-06-24
+date: 2026-08-08
 category: systems
-updated_at: 2026-06-24T19:08:41+00:00
-last_sync: 2026-06-24T19:08:41Z
+updated_at: 2026-08-08T07:42:20+00:00
+last_sync: 2026-08-08T07:42:20Z
 package_kind: library
 has_library: true
 has_binary: false

@@ -16,10 +16,10 @@ keywords:
   - passkey
   - passkeys
   - webauthn
-date: 2026-07-05
+date: 2026-08-08
 category: systems
-updated_at: 2026-07-05T20:04:48+00:00
-last_sync: 2026-07-05T20:04:48Z
+updated_at: 2026-08-08T05:53:12+00:00
+last_sync: 2026-08-08T05:53:12Z
 package_kind: binary
 has_library: false
 has_binary: true
@@ -48,7 +48,7 @@ PassKeeZ is a Passkey (FIDO2) compatible authenticator for Linux based on [keyli
 | Version | Command |
 |:--------|:--------|
 | 0.6.3   | `sudo bash -c "$(curl -fsSL https://codeberg.org/r4gus/PassKeeZ/raw/branch/master/script/install-linux.sh)" install-linux.sh --vpasskeez 0.6.3 --vzig 0.15.2 --vzigenity 0.7.1`|
-| 0.7.0   | `sudo bash -c "$(curl -fsSL https://codeberg.org/r4gus/PassKeeZ/raw/branch/master/script/install-linux.sh)"` |
+| 0.7.3   | `sudo bash -c "$(curl -fsSL https://codeberg.org/r4gus/PassKeeZ/raw/branch/master/script/install-linux.sh)"` |
 
 The project currently supports only Linux due to the absence of a standardized API for interprocess communication (IPC) between the client and authenticator. As a workaround, platform authenticators on Linux act as virtual USB HID devices utilizing uhid. However, extending this functionality to other platforms remains unexplored as I haven't had the opportunity to investigate the equivalent mechanisms elsewhere.
 

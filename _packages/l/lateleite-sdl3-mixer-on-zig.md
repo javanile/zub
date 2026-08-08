@@ -9,9 +9,9 @@ keywords:
   - sdl-mixer
   - sdl3
   - sdl3-mixer
-date: 2026-04-09
-updated_at: 2026-04-09T14:33:07+00:00
-last_sync: 2026-04-09T14:33:07Z
+date: 2026-08-02
+updated_at: 2026-08-02T04:51:58+00:00
+last_sync: 2026-08-02T04:51:58Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -29,7 +29,11 @@ permalink: /packages/lateleite/sdl3_mixer-on-zig/
 
 This repository wraps the upstream SDL3_Mixer library source code with Zig's build system.
 
-Zig 0.15.2 is required.
+Zig 0.17.0's development version is required.
+
+Need a different version?
+
+- [0.15.2 branch](https://github.com/lateleite/sdl3_mixer-on-zig/tree/zig-0.15.2)
 
 The build setup support the following audio decoders:
 
@@ -59,9 +63,18 @@ pub fn build(b: *std.Build) !void {
     const dep_mixer = b.dependency("sdl3_mixer", .{
         .target = target,
         .optimize = optimize,
+        // force linking mode (default is static)
+        // .@"link-mode" = .dynamic,
+        // force enable or disable Position Independent Code (PIC) 
+        // .pic = true,
         // you may choose to use your system's SDL3 library,
         // instead of building and statically linking another.
-        //.@"use-system-sdl" = false,
+        //.@"use-system-sdl" = true,
+        // you may also choose to use any other dependency from your system
+        //.@"use-system-gme" = true,
+        //.@"use-system-ogg" = true,
+        //.@"use-system-opus" = true,
+        //.@"use-system-opusfile" = true,
     });
     const lib_mixer = dep_mixer.artifact("SDL_mixer");
 

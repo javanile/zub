@@ -7,9 +7,9 @@ author_github: lateleite
 repository: https://github.com/lateleite/ogg-on-zig
 keywords:
   - ogg
-date: 2026-04-09
-updated_at: 2026-04-09T14:24:32+00:00
-last_sync: 2026-04-09T14:24:32Z
+date: 2026-08-02
+updated_at: 2026-08-02T01:44:37+00:00
+last_sync: 2026-08-02T01:44:37Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -27,7 +27,11 @@ permalink: /packages/lateleite/ogg-on-zig/
 
 This repository wraps the upstream OGG container library source code with Zig's build system.
 
-Zig 0.15.2 is required.
+Zig 0.17.0's development version is required.
+
+Need a different version?
+
+- [0.15.2 branch](https://github.com/lateleite/ogg-on-zig/tree/zig-0.15.2)
 
 ## Installing as a `build.zig.zon` package
 

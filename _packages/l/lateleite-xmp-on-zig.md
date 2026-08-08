@@ -10,9 +10,9 @@ keywords:
   - pcm
   - tracker-music
   - xmp
-date: 2026-04-09
-updated_at: 2026-04-09T14:09:19+00:00
-last_sync: 2026-04-09T14:09:19Z
+date: 2026-08-02
+updated_at: 2026-08-02T04:33:26+00:00
+last_sync: 2026-08-02T04:33:26Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -30,7 +30,11 @@ permalink: /packages/lateleite/xmp-on-zig/
 
 This repository wraps the upstream Extended Module Player library source code with Zig's build system.
 
-Zig 0.15.2 is required.
+Zig 0.17.0's development version is required.
+
+Need a different version?
+
+- [0.15.2 branch](https://github.com/lateleite/xmp-on-zig/tree/zig-0.15.2)
 
 ## Installing as a `build.zig.zon` package
 
@@ -48,6 +52,14 @@ pub fn build(b: *std.Build) !void {
     const dep_xmp = b.dependency("xmp", .{
         .target = target,
         .optimize = optimize,
+        // force linking mode (default is static)
+        // .@"link-mode" = .dynamic,
+        // force enable or disable Position Independent Code (PIC) 
+        // .pic = true,
+        // disable archive depackers support (they're enabled by default)
+        // .@"enable-depackers" = false,
+        // disable ProWizard format loaders (they're enabled by default)
+        // .@"enable-prowizard" = false,
     });
     const lib_xmp = dep_xmp.artifact("xmp");
 
