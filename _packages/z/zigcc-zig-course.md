@@ -8,9 +8,9 @@ repository: https://github.com/zigcc/zig-course
 keywords:
   - tutorial
   - tutorials
-date: 2026-08-07
-updated_at: 2026-08-07T09:36:27+00:00
-last_sync: 2026-08-07T09:36:27Z
+date: 2026-08-09
+updated_at: 2026-08-09T06:41:28+00:00
+last_sync: 2026-08-09T06:41:28Z
 package_kind: library
 has_library: true
 has_binary: false

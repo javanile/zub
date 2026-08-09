@@ -14,9 +14,9 @@ keywords:
   - passkey
   - passkeys
   - webauthn
-date: 2026-07-16
-updated_at: 2026-07-16T06:55:41+00:00
-last_sync: 2026-07-16T06:55:41Z
+date: 2026-08-09
+updated_at: 2026-08-09T07:23:32+00:00
+last_sync: 2026-08-09T07:23:32Z
 package_kind: hybrid
 has_library: true
 has_binary: true

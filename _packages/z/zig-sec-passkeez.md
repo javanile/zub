@@ -16,10 +16,10 @@ keywords:
   - passkey
   - passkeys
   - webauthn
-date: 2026-08-08
+date: 2026-08-09
 category: systems
-updated_at: 2026-08-08T05:53:12+00:00
-last_sync: 2026-08-08T05:53:12Z
+updated_at: 2026-08-09T07:27:10+00:00
+last_sync: 2026-08-09T07:27:10Z
 package_kind: binary
 has_library: false
 has_binary: true

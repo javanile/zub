@@ -17,10 +17,10 @@ keywords:
   - kqueue
   - networking
   - poll
-date: 2026-08-05
+date: 2026-08-09
 category: networking
-updated_at: 2026-08-05T10:29:22+00:00
-last_sync: 2026-08-05T10:29:22Z
+updated_at: 2026-08-09T10:53:18+00:00
+last_sync: 2026-08-09T10:53:18Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -55,7 +55,7 @@ zio is built in layers, and each layer is usable on its own:
 - **`zio.coro`**: stackful coroutine primitives (context switching, growable stacks, manual scheduling), with no I/O or scheduler attached. This is what you'd build a different kind of scheduler on top of, if `zio.Runtime`'s isn't the one you want.
 - **`zio.Runtime`**: the full runtime. It schedules `zio.coro` coroutines across executor threads, drives their I/O through `zio.ev`, and adds structured concurrency (task groups), cancellation, synchronization primitives, and the `std.Io` implementation. Most programs use this directly and never touch the layers below it.
 
-A runtime can run single-threaded, or multi-threaded in one of two modes. With work-stealing (the default), idle executors steal work from busy ones, and tasks whose I/O keeps re-waking them faster than a stealer can grab them get load-shed to another executor instead. This keeps every thread busy even when work isn't spread evenly to begin with, for example when one connection generates a lot more work than the others. With pinned scheduling, a task stays on whichever executor it was spawned on for its entire life, with no migration and no cross-executor synchronization on the scheduling path, at the cost of no rebalancing if load is uneven.
+A runtime can run single-threaded, or multi-threaded in one of two modes. With work-stealing (the default), idle executors steal work from busy ones. This keeps every thread busy when runnable work is spread unevenly to begin with. With pinned scheduling, a task stays on whichever executor it was spawned on for its entire life, with no migration and no cross-executor synchronization on the scheduling path, at the cost of no rebalancing if load is uneven.
 
 [libuv]: https://github.com/libuv/libuv
 [libxev]: https://github.com/mitchellh/libxev
