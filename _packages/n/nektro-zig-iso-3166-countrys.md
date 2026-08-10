@@ -6,9 +6,9 @@ author: nektro
 author_github: nektro
 repository: https://github.com/nektro/zig-iso-3166-countrys
 keywords:
-date: 2026-08-08
-updated_at: 2026-08-08T10:02:39+00:00
-last_sync: 2026-08-08T10:02:39Z
+date: 2026-08-10
+updated_at: 2026-08-10T00:19:10+00:00
+last_sync: 2026-08-10T00:19:10Z
 package_kind: library
 has_library: true
 has_binary: false

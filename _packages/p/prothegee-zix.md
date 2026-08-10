@@ -22,10 +22,10 @@ keywords:
   - webrtc
   - webserver
   - websockets
-date: 2026-08-09
+date: 2026-08-10
 category: networking
-updated_at: 2026-08-09T10:34:29+00:00
-last_sync: 2026-08-09T10:34:29Z
+updated_at: 2026-08-10T01:49:15+00:00
+last_sync: 2026-08-10T01:49:15Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -52,6 +52,12 @@ permalink: /packages/prothegee/zix/
 <div align="center">
     <img src="zix-logo.svg" alt="zix-logo" style="display: block; margin: auto;" align="center" width="512px">
 </div>
+
+<p align="center">
+    <b>
+        <i>A high-performance network backend library & http engine written in Zig</i>
+    </b>
+</p>
 
 <hr>
 
@@ -131,7 +137,10 @@ permalink: /packages/prothegee/zix/
 <hr>
 
 <h4 align="center">
-    <b><i>Benchmark by HttpArena:</i></b>
+    <b><i>Benchmark</i></b>
+</h4>
+<h4 align="center">
+    <b><i>HttpArena</i></b>
 </h4>
 <br>
 <div align="center">
@@ -162,11 +171,21 @@ permalink: /packages/prothegee/zix/
 
 <!-- <br> -->
 
-<!-- RESERVED localbench -->
+<!--
+RESERVED localbench
+-->
 
 <!-- <br> -->
 
-<!-- RESERVED sponsor -->
+<!--
+RESERVED sponsor
+
+kofi: https://ko-fi.com/prothegee
+paypal: https://paypal.me/prothegee
+saweria: https://saweria.co/prothegee
+
+RESERVED patrons
+-->
 
 <br>
 

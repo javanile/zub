@@ -7,10 +7,10 @@ author_github: nektro
 repository: https://github.com/nektro/zig-zorm
 keywords:
   - sqlite
-date: 2026-05-22
+date: 2026-08-10
 category: data-formats
-updated_at: 2026-05-22T03:18:23+00:00
-last_sync: 2026-05-22T03:18:23Z
+updated_at: 2026-08-10T00:19:16+00:00
+last_sync: 2026-08-10T00:19:16Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -29,7 +29,7 @@ permalink: /packages/nektro/zig-zorm/
 ![loc](https://sloc.xyz/github/nektro/zig-zorm)
 [![license](https://img.shields.io/github/license/nektro/zig-zorm.svg)](https://github.com/nektro/zig-zorm/blob/master/LICENSE)
 [![nektro @ github sponsors](https://img.shields.io/badge/sponsors-nektro-purple?logo=github)](https://github.com/sponsors/nektro)
-[![Zig](https://img.shields.io/badge/Zig-0.14-f7a41d)](https://ziglang.org/)
+[![Zig](https://img.shields.io/badge/Zig-0.16-f7a41d)](https://ziglang.org/)
 [![Zigmod](https://img.shields.io/badge/Zigmod-latest-f7a41d)](https://github.com/nektro/zigmod)
 
 The database library for Zig.
