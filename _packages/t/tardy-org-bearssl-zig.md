@@ -8,10 +8,10 @@ repository: https://github.com/tardy-org/bearssl-zig
 keywords:
   - bearssl
   - tls
-date: 2026-07-28
+date: 2026-08-04
 category: networking
-updated_at: 2026-07-28T15:28:30+00:00
-last_sync: 2026-07-28T15:28:30Z
+updated_at: 2026-08-04T17:17:14+00:00
+last_sync: 2026-08-04T17:17:14Z
 package_kind: library
 has_library: true
 has_binary: false
