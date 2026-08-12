@@ -7,10 +7,10 @@ author_github: nektro
 repository: https://github.com/nektro/zig-zorm
 keywords:
   - sqlite
-date: 2026-08-10
+date: 2026-08-12
 category: data-formats
-updated_at: 2026-08-10T00:19:16+00:00
-last_sync: 2026-08-10T00:19:16Z
+updated_at: 2026-08-12T09:29:12+00:00
+last_sync: 2026-08-12T09:29:12Z
 package_kind: library
 has_library: true
 has_binary: false

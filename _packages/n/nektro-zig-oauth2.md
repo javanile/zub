@@ -6,9 +6,9 @@ author: nektro
 author_github: nektro
 repository: https://github.com/nektro/zig-oauth2
 keywords:
-date: 2026-08-01
-updated_at: 2026-08-01T00:58:13+00:00
-last_sync: 2026-08-01T00:58:13Z
+date: 2026-08-12
+updated_at: 2026-08-12T06:26:35+00:00
+last_sync: 2026-08-12T06:26:35Z
 package_kind: library
 has_library: true
 has_binary: false
