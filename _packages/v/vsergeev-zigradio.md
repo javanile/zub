@@ -9,9 +9,9 @@ keywords:
   - radio
   - sdr
   - zigradio
-date: 2026-07-21
-updated_at: 2026-07-21T10:27:47+00:00
-last_sync: 2026-07-21T10:27:47Z
+date: 2026-08-05
+updated_at: 2026-08-05T09:12:53+00:00
+last_sync: 2026-08-05T09:12:53Z
 package_kind: hybrid
 has_library: true
 has_binary: true

@@ -6,9 +6,9 @@ author: VantStudios
 author_github: VantStudios
 repository: https://github.com/VantStudios/BedrockData
 keywords:
-date: 2026-08-02
-updated_at: 2026-08-02T02:01:45+00:00
-last_sync: 2026-08-02T02:01:45Z
+date: 2026-08-13
+updated_at: 2026-08-13T10:03:49+00:00
+last_sync: 2026-08-13T10:03:49Z
 package_kind: binary
 has_library: false
 has_binary: true

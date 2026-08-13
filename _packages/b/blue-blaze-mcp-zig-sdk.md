@@ -11,10 +11,10 @@ keywords:
   - mcp
   - model-context-protocol
   - oauth2
-date: 2026-08-04
+date: 2026-08-13
 category: networking
-updated_at: 2026-08-04T03:17:01+00:00
-last_sync: 2026-08-04T03:17:01Z
+updated_at: 2026-08-13T09:28:45+00:00
+last_sync: 2026-08-13T09:28:45Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -49,6 +49,63 @@ exe.root_module.addImport("mcp", mcp_dep.module("mcp"));
 exe.root_module.addImport("oauth", mcp_dep.module("oauth"));
 ```
 
+## A whole server
+
+`examples/hello.zig` in full — a tool, a registry, a server, stdio. There is no
+`initialize`/`initialized` handshake to write: 2026-07-28 is stateless, so the first
+request may be the real one.
+
+```zig
+const std = @import("std");
+const mcp = @import("mcp");
+
+const GreetArgs = struct {
+    who: []const u8,
+    greeting: ?[]const u8 = null,
+
+    pub const schema_docs = .{ .who = "Who to greet" };
+};
+
+fn greet(context: *mcp.Context, args: GreetArgs) mcp.Error!mcp.types.CallToolResult {
+    return context.textResult(try context.print("{s}, {s}!", .{
+        args.greeting orelse "Hello",
+        args.who,
+    }));
+}
+
+pub fn main() !void {
+    var debug_allocator: std.heap.DebugAllocator(.{}) = .init;
+    defer _ = debug_allocator.deinit();
+    const gpa = debug_allocator.allocator();
+
+    var threaded: std.Io.Threaded = .init(gpa, .{});
+    defer threaded.deinit();
+
+    var registry = try mcp.Registry.initComptime(gpa, .{
+        mcp.tool("greet", greet, .{ .description = "Greets somebody by name." }),
+    });
+    defer registry.deinit();
+
+    const server: mcp.Server = .init(&registry, .{ .name = "hello", .version = "0.1.0" }, .{});
+    try mcp.stdio.serve(gpa, threaded.io(), &server);
+}
+```
+
+`GreetArgs` is the tool's contract: its JSON Schema is generated from the type at compile
+time, and `context.print` allocates from an arena freed once the reply is written, so
+there is nothing to release. Talk to it with one line:
+
+```sh
+zig build examples
+echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{
+  "_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28",
+           "io.modelcontextprotocol/clientCapabilities":{}},
+  "name":"greet","arguments":{"who":"Ada"}}}' | ./zig-out/bin/hello
+```
+
+Serving the same registry over HTTP instead is `mcp.velo_http.listen` in place of
+`mcp.stdio.serve`; `examples/http_server.zig` is the equivalent file.
+
 ## Modules
 
 | Module  | Purpose |
@@ -78,9 +135,12 @@ interoperability matrix against the official TypeScript SDK and the MCP Inspecto
 | Streamable HTTP transport, server and client | done |
 | OAuth 2.1 resource server: PRM, challenges, JWT/JWKS verification | done |
 | OAuth 2.1 client: discovery, PKCE, `iss` validation, refresh, step-up | done |
+| OAuth 2.1 client: `client_credentials`, for a service authorizing as itself | done |
 | Authorization on the HTTP transport: 401/403/503, PRM endpoint, per-tool scopes | done |
 | Interoperability: official TypeScript SDK, both directions, both transports | done |
 | Interoperability: MCP Inspector, both transports | done |
+
+| Client fallback to the 2025 protocol, opt-in | done |
 
 `https://` on the client transport requires `-Dtls`, which this build forwards to
 Velo; without it an `https` URL is refused rather than silently downgraded.
@@ -100,6 +160,109 @@ a separate test forces the session type to be analyzed even then, so a fresh clo
 still type-checks the path it cannot run. The round trip was negative-verified by
 making the client *verify* the self-signed certificate: it then fails, which is what
 proves a TLS handshake is happening rather than a plaintext connection succeeding.
+
+A TLS session is torn down with `SSL_set_quiet_shutdown`, so `SSL_shutdown` neither sends
+`close_notify` nor reads for the peer's. Reading for it is what crashed: against a server
+that had finished with the connection there was nothing to read from, and OpenSSL faulted
+inside `ssl3_read_bytes` rather than returning an error — about one run in six against a
+live gateway, reported from use. Skipping `close_notify` gives up the ability to tell a
+clean end of data from a truncated one, and nothing here rests on that: a length-delimited
+body is complete when its length is met, SSE events are self-delimiting, and the connection
+is never reused.
+
+## Tool arguments
+
+A tool's `inputSchema` is derived from its handler's argument type at compile time, so the
+schema and the code that decodes against it cannot disagree — and where they could, the
+build stops rather than the call:
+
+```zig
+const ForecastArgs = struct {
+    city: []const u8,
+    days: u8 = 3,
+    units: ?enum { metric, imperial } = null,   // `= null` is required, see below
+
+    pub const schema_docs = .{ .city = "The city to look up" };
+};
+```
+
+Two rules follow from `std.json` being the decoder, both enforced by `schema_gen`:
+
+- **An optional field must be written `?T = null`.** Without the default, the schema leaves
+  the field out of `required` while `std.json` still demands it be present, so the tool
+  advertises a field as omittable and then rejects every call that omits it. That is a
+  compile error naming the field and the fix.
+- **An integer carries its Zig type's own bounds.** A `u8` is `minimum: 0, maximum: 255`,
+  not just `{"type":"integer"}`, because a model that sent `300` to a bare integer schema
+  was obeying the contract and getting `InvalidParams` for it.
+
+## Talking to a server on the 2025 protocol
+
+The protocol splits into two eras, and the split is not cosmetic. Before 2026-07-28 a
+connection was stateful: `initialize`, a counter-offered version, `notifications/initialized`,
+and capabilities exchanged once. 2026-07-28 removed all of it — no handshake, and every
+request carries its own `_meta` envelope instead.
+
+This client speaks the modern era, and will cross to the older one if asked:
+
+```zig
+var client: mcp.Client = .init(transport.transport(), info, .{
+    .legacy = .negotiate,   // default is .reject
+});
+```
+
+`.negotiate` probes with `server/discover`, which is the modern era's own negotiation entry
+point — so a modern server pays nothing extra and its answer is the answer `discover`
+wanted anyway. A server that refuses gets the 2025 handshake instead, after which
+`negotiatedVersion()` reports what was agreed and `discover` returns the `InitializeResult`
+in the shape a `DiscoverResult` has, so calling code does not branch on the era.
+
+The default stays `.reject`, and that is the point of having the knob at all: a downgrade
+nobody asked for is a downgrade nobody notices. Every other leg of the interoperability
+matrix runs against a peer configured to refuse the older protocol for the same reason.
+
+**Most applications should pass `.negotiate` anyway**, and the reason is deployment rather
+than principle: the managed MCP servers in service today are still on the 2025 revisions, so
+a client that refuses them fails against the common case. An agent connecting to servers it
+does not control wants `.negotiate` and wants `negotiatedVersion()` surfaced where a user
+can see it. Something talking only to servers shipped alongside it should keep `.reject`, so
+a peer left on an old revision is a loud failure rather than a quiet downgrade. Either way,
+set `Options.diagnostics`: with `.reject` the refusal names the version and not the cause,
+and one line of diagnostics is the difference between a minute and an afternoon.
+
+What crosses the boundary, checked end to end by `interop/run.sh` leg 5 against the
+official TypeScript SDK serving 2025: `tools/list`, `tools/call`, `prompts/list`,
+`prompts/get`, `resources/list`, `resources/templates/list`, `resources/read`,
+`completion/complete`, and `progressToken` — the one `_meta` key both eras spell the same,
+because it predates the prefix convention.
+
+What does not, and is refused locally with `error.UnsupportedByRevision` rather than sent
+to earn a `-32601`:
+
+- **`subscriptions/listen`.** The older era used `resources/subscribe` plus out-of-band
+  notifications, which on Streamable HTTP means a second, long-lived `GET` stream. This
+  transport is POST-only by design, so the mapping is not a rename.
+- **The multi-round-trip input flow**, including elicitation. 2026-07-28 delivers it inside
+  a result; 2025 made it a server-to-client request on a bidirectional channel. Different
+  mechanism, not a different spelling.
+- **Per-request log level.** It is connection state in the older era, so
+  `CallOptions.log_level` cannot be honoured per call; `setLogLevel` is how to ask, and a
+  per-request one is reported and dropped rather than quietly turned into an extra request.
+
+Two things happen underneath. A legacy request carries no `_meta` at all — writing 2026
+keys onto a 2025 connection is the one thing the older wire format must never see. And
+`Mcp-Session-Id`, which those revisions made mandatory on every request after `initialize`,
+is captured from the response head and echoed on subsequent requests; that happens header
+to header, without the transport parsing a body, so it never has to learn what an
+`InitializeResult` is. The `MCP-Protocol-Version` header comes from the body's `_meta`,
+which is exactly why a legacy request sends none — an absent one is tolerated, where
+`2026-07-28` is a `400` from a server that has never heard of it.
+
+The 2025 shapes in `src/mcp/legacy.zig` are transcribed from the reference implementation,
+not from memory: `@modelcontextprotocol/server` 2.0.0 ships sourcemaps carrying its
+original `wire/rev2025-11-25/`, which is where the method list, the `initialize` params and
+the never-stamp rule come from. `spec/schema.json` here is 2026-07-28 only and says nothing
+about any of it.
 
 ## Authorization
 
@@ -122,6 +285,13 @@ Credentials are checked before the body is parsed, so a client with no token get
 about its JSON. The per-tool requirement is then applied to the grant already
 established, which is why widening a scope never revalidates a token.
 
+`completion/complete` inherits the scopes of whatever its `params.ref` names. It has to:
+completing an argument of a privileged prompt runs that prompt's completion handler, which
+is the code that enumerates the values the scope exists to protect. It names its subject in
+the body rather than in `Mcp-Name`, so the lookup is `params.ref`'s — and it is the same
+lookup dispatch will perform, because authorizing one entity and completing another is the
+failure this shares one code path to avoid.
+
 On the client side a refusal surfaces as `error.Unauthorized`, and the transport records
 what the server said:
 
@@ -139,9 +309,26 @@ client.listTools(arena, .{}) catch |err| switch (err) {
 };
 ```
 
-`zig build run-http-auth` runs all of it against real sockets: a mock authorization
-server, a protected MCP server, and a client that starts with nothing and works its way
-through a `401` and a `403`.
+A token outlives no client for long — an hour is typical — so the header it goes in is
+asked for per request rather than fixed when the transport is built:
+
+```zig
+var transport: mcp.http_client.Transport = .init(gpa, io, url, .{
+    .header_source = credential.source(),   // consulted once per `send`
+});
+...
+credential.authorization = try refreshed.authorizationHeader(arena);   // next request uses it
+```
+
+`Options.extra_headers` is still there for headers that genuinely do not change, and takes
+a named `Header{ .name, .value }` rather than a `[2][]const u8` whose two strings look
+alike at the call site. Rewriting `extra_headers` in place also works, but only under
+conditions the type cannot state — the storage must outlive the transport, the write must
+land between exchanges, and no other thread may be reading it — which is why the rotating
+case has its own mechanism. `zig build run-http-auth` runs all of it against real sockets:
+a mock authorization server, a protected MCP server, and a client that starts with nothing
+and works its way through a `401` and a `403`, replacing what one `Credential` holds
+instead of rebuilding a transport per attempt.
 
 stdio is deliberately **not** covered. The specification says a stdio server SHOULD NOT
 use OAuth — the client started the process and can pass credentials directly — and
@@ -170,6 +357,37 @@ A server built with `mount` on its own Velo app has to set `write_ms = 0` itself
 doc comment on `mount` says so, because the failure is a stream that works perfectly for
 thirty seconds and then closes with no reply.
 
+## Bounding a hung server
+
+The mirror image, on the client: a server that accepts the POST and then says nothing.
+`http_client.Options.receive_timeout_ms` bounds the wait and surfaces expiry as
+`error.Timeout`.
+
+```zig
+var transport: mcp.http_client.Transport = .init(gpa, io, url, .{
+    .receive_timeout_ms = 30_000,
+});
+```
+
+It is a gap between bytes rather than a deadline on the exchange, which is what lets a
+`subscriptions/listen` stream — a response that never ends — live under it. Abandoning the
+call it belonged to is safe: request ids are never reused and `receive` skips any response
+whose id it is not awaiting, so a late reply is discarded rather than mistaken for the
+next one. That is a documented guarantee, and a caller building its own deadline with
+`io.async` may rely on it.
+
+There is deliberately no equivalent on `Client.Options`. A deadline needs an `Io` to wait
+on and a clock to measure with, and `Client` holds neither — which is what lets the same
+client drive a socket, a pipe, or an in-memory pair in a test. The knob belongs to
+whichever transport owns the wait.
+
+Two gaps stated rather than left to be found: it is not enforced on `https`, where the
+socket belongs to Velo's TLS session and the read happens inside OpenSSL (the transport
+writes a diagnostic when both are configured), and it does not cover connecting, since
+`std.Io.net` exposes no deadline there. `SO_RCVTIMEO` is not the missing piece — on a
+blocking socket it fails a read with `EAGAIN`, which `std.Io.Threaded` treats as a caller
+bug and aborts on, so the socket option would turn a slow server into a crash.
+
 ## Memory
 
 Request memory is an arena the transport owns. A handler allocates from
@@ -177,6 +395,15 @@ Request memory is an arena the transport owns. A handler allocates from
 so there are no `defer free`s in handler code and no way for a handler to outlive its own
 allocations. Long-lived state — the registry, the subscription broker, the transport
 itself — takes a general allocator from the application and is torn down by it.
+
+The registry borrows every string in a definition and copies none of them, so a name,
+description or raw schema passed to `addTool` at runtime has to stay valid for as long as
+the entry is registered — `removeTool` and `deinit` free nothing they pointed at. Comptime
+registration is unaffected, since those strings are literals. There is also no lock inside
+the registry: mutating it while requests are being served is a data race the application
+has to serialize, and a `*const ToolDefinition` from `findTool` dies at the next mutation.
+Registering everything before serving needs none of that, which is why the plain path has
+no lock in it.
 
 Everything with a per-peer cost is a fixed-size table rather than a growing container, so
 a peer cannot enlarge the server: 4096 registry entries, 256 subscribers, 64 subscribed
@@ -203,6 +430,12 @@ Three consequences worth knowing before they are discovered:
 - Notifications are encoded into the request arena and are not freed until the request
   ends, so a handler that reports progress per row accumulates every one of those messages.
   Report per batch.
+
+On the client side of Streamable HTTP the bound on a response is applied while it
+arrives, not after. Only a declared `Content-Length` can be refused up front; a
+`Transfer-Encoding: chunked` body and a `Connection: close` body with no length have
+nothing to check, and those two were bounded by nothing but the server's willingness to
+stop. The number of lines in a response head is bounded for the same reason.
 
 Request bodies over HTTP are bounded by what Velo can buffer rather than by the protocol's
 16 MiB ceiling, and the effective limit is lower still — the body and its parsed form share
@@ -252,15 +485,19 @@ cd interop && npm install
 ```
 
 `run.sh` runs all four directions, because a bug on either side of the wire shows up in
-only one of them:
+only one of them, plus a fifth leg for the older protocol:
 
 | | Streamable HTTP | stdio |
 |---|---|---|
 | TypeScript SDK client → this server | pass | pass |
 | this client → TypeScript SDK server | pass | pass |
+| this client → TypeScript SDK server on **2025** | — | pass |
 
-Both TypeScript servers run with `legacy: 'reject'` and both clients pin `2026-07-28`, so
-no leg can pass by quietly falling back to the 2025 protocol. What the legs cover beyond
+Legs 1–4 run the TypeScript servers with `legacy: 'reject'` and pin both clients to
+`2026-07-28`, so none of them can pass by quietly falling back. Leg 5 is the opposite
+experiment and needs both halves to mean anything: a server that speaks only 2025, and a
+client told it may negotiate. It uses the same `buildServer` as the others, so any
+difference in the results is the protocol era and nothing else. What the legs cover beyond
 the method surface: comptime-generated JSON Schema consumed by another SDK's validator,
 `x-mcp-header` mirrored into `Mcp-Param-*` and validated against the body in both
 directions, per-request progress and `logLevel` (both opt-in, so they prove the `_meta`
@@ -302,6 +539,22 @@ only shows up on the platform itself:
 - `zig fmt --check` rejected every `.zig` file, because Windows runners ship
   `core.autocrlf=true` and there was no `.gitattributes`. That one reads like a formatting
   problem in the code and is not one; see the comment in `.gitattributes`.
+
+One gap is left rather than papered over. The two tests that measure
+`receive_timeout_ms` need a listener a client can connect to, and they are the only tests
+here that open a real socket. `std.Io.Threaded` drives a Windows listener through AFD
+directly, where `accept` is an `AFD_WAIT_FOR_LISTEN` IOCTL that has to be outstanding for
+an incoming connection to complete — there is no kernel-managed backlog behind it the way
+`listen(2)` provides. The client's connect is answered with `CONNECTION_REFUSED`, and its
+first write with `LOCAL_DISCONNECT`. It is not a startup race: making the server accept in
+a loop and the client retry for a second changed neither symptom.
+
+So those two skip on Windows. The deadline itself is measured on Linux and macOS, running
+the same code, and `TimedReader` is still compiled and analyzed on Windows because
+`Exchange.open` names it on a runtime branch — so it cannot rot there the way the `-Dtls`
+branch did. What is genuinely unverified on Windows is whether `Io.operateTimeout` over
+`net_receive` works at all, and a server that goes quiet on that platform may therefore
+still hang. Said plainly here because a skipped test is easy to mistake for a covered one.
 
 ## Testing
 

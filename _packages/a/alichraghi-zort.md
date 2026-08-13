@@ -10,10 +10,10 @@ keywords:
   - sorting
   - sorting-algorithms
   - sorting-algorithms-implemented
-date: 2026-07-20
+date: 2026-08-13
 category: data-formats
-updated_at: 2026-07-20T11:16:52+00:00
-last_sync: 2026-07-20T11:16:52Z
+updated_at: 2026-08-13T05:19:45+00:00
+last_sync: 2026-08-13T05:19:45Z
 package_kind: hybrid
 has_library: true
 has_binary: true

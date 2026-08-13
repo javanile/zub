@@ -7,9 +7,9 @@ author_github: omkar-foss
 repository: https://github.com/omkar-foss/zebra
 keywords:
   - config-loader
-date: 2026-05-30
-updated_at: 2026-05-30T05:48:59+00:00
-last_sync: 2026-05-30T05:48:59Z
+date: 2026-07-21
+updated_at: 2026-07-21T14:03:30+00:00
+last_sync: 2026-07-21T14:03:30Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -29,8 +29,6 @@ permalink: /packages/omkar-foss/zebra/
 
 A simple, fast, all-in-one config loader for Zig. Supports reading dotenv, toml,
 yaml and os env. Fully-functional and tested on Zig 0.15.2.
-
-🏔️ Codeberg Mirror: https://codeberg.org/omkar-foss/zebra
 
 ## Design
 
@@ -63,7 +61,7 @@ exe.root_module.addImport("zebra", zebra.module("zebra"));
 
 ### Step 2. Load yaml file as a map and print a key in it
 
-To try out below example, copy the file [`env_test.yaml`](env_test.yaml) to your project folder, and then update your `src/main.zig` as follows:
+To try out below example, copy the file [`env_test.yaml`](tests/assets/env_test.yaml) to your project folder, and then update your `src/main.zig` as follows:
 
 ```zig
 const std = @import("std");

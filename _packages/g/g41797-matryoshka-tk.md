@@ -12,9 +12,9 @@ keywords:
   - multitasking
   - std-io
   - toolkit
-date: 2026-08-11
-updated_at: 2026-08-11T09:49:17+00:00
-last_sync: 2026-08-11T09:49:17Z
+date: 2026-08-13
+updated_at: 2026-08-13T06:02:15+00:00
+last_sync: 2026-08-13T06:02:15Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -32,7 +32,7 @@ permalink: /packages/g41797/matryoshka-tk/
 
 ---
 
-# Matryoshka-Tk — Toolkit for Building Multitasking Systems
+# Toolkit for Building Multitasking Systems
 
 ---
 

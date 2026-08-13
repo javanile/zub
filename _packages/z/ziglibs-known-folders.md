@@ -6,9 +6,9 @@ author: ziglibs
 author_github: ziglibs
 repository: https://github.com/ziglibs/known-folders
 keywords:
-date: 2026-05-09
-updated_at: 2026-05-09T11:47:49+00:00
-last_sync: 2026-05-09T11:47:49Z
+date: 2026-08-04
+updated_at: 2026-08-04T14:50:59+00:00
+last_sync: 2026-08-04T14:50:59Z
 package_kind: library
 has_library: true
 has_binary: false
