@@ -8,10 +8,10 @@ repository: https://github.com/yaml/yamlscript-zig
 keywords:
   - yaml
   - yamlscript
-date: 2026-07-16
+date: 2026-07-20
 category: data-formats
-updated_at: 2026-07-16T02:03:44+00:00
-last_sync: 2026-07-16T02:03:44Z
+updated_at: 2026-07-20T19:19:20+00:00
+last_sync: 2026-07-20T19:19:20Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -180,7 +180,7 @@ shared library:
 
 ```bash
 zig fetch --save \
-  https://github.com/yaml/yamlscript-zig/archive/refs/tags/v0.2.28.tar.gz
+  https://github.com/yaml/yamlscript-zig/archive/refs/tags/v0.2.29.tar.gz
 curl -sSL https://yamlscript.org/install | LIB=1 bash
 export LD_LIBRARY_PATH="$HOME/.local/lib:$LD_LIBRARY_PATH"
 ```

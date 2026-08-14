@@ -9,10 +9,10 @@ keywords:
   - cli
   - lines-of-code
   - tree
-date: 2026-07-23
+date: 2026-08-12
 category: tooling
-updated_at: 2026-07-23T23:44:09+00:00
-last_sync: 2026-07-23T23:44:09Z
+updated_at: 2026-08-12T14:22:19+00:00
+last_sync: 2026-08-12T14:22:19Z
 package_kind: hybrid
 has_library: true
 has_binary: true

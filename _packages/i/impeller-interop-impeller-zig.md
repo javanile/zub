@@ -8,10 +8,10 @@ repository: https://github.com/impeller-interop/impeller-zig
 keywords:
   - bindings
   - graphics
-date: 2026-08-08
+date: 2026-08-14
 category: systems
-updated_at: 2026-08-08T07:42:20+00:00
-last_sync: 2026-08-08T07:42:20Z
+updated_at: 2026-08-14T06:58:15+00:00
+last_sync: 2026-08-14T06:58:15Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -31,12 +31,18 @@ Zig wrapper for Impeller's standalone `impeller.h` API.
 
 Standalone SDK artifacts are packaged in [`impeller-sdk`](https://github.com/impeller-interop/impeller-sdk).
 
-<p align="left">
-  <img src="https://github.com/user-attachments/assets/490aced2-7c7a-4a00-84ad-bdac6e7cb9ea" height="300"/>
-  <img src="https://github.com/user-attachments/assets/f5cb1140-2d40-42cd-b9a0-0d9366a72ce7" height="300"/>
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/f143b456-1d55-4309-9817-6b53f7ab2ccb" height="300"/>
+  <img src="https://github.com/user-attachments/assets/71ce96fe-fbe4-4195-aa36-aeee224b3830" height="300"/>
 </p>
 
-> Examples [here](https://github.com/impeller-interop/impeller-zig-examples).
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/883936cf-6c3b-40b6-a34a-0d6c7388b7cc" width="700"/>
+</p>
+
+<p align="center">
+  <strong><a href="https://github.com/impeller-interop/impeller-zig-examples">Explore runnable examples →</a></strong>
+</p>
 
 ## Features
 
@@ -47,6 +53,14 @@ Standalone SDK artifacts are packaged in [`impeller-sdk`](https://github.com/imp
 - Flat domain modules such as `impeller.geometry`, `impeller.paint`, `impeller.path`, and `impeller.text`
 
 ## Install
+
+Install the latest release:
+
+```bash
+zig fetch --save git+https://github.com/impeller-interop/impeller-zig#v0.1.0
+```
+
+To follow the development branch instead:
 
 ```bash
 zig fetch --save git+https://github.com/impeller-interop/impeller-zig#main
@@ -143,7 +157,7 @@ try surface.present();
 
 ## Examples
 
-Runnable examples now live in the separate `impeller-zig-examples` repository so this package stays a pure library dependency with no windowing requirement.
+Runnable examples live in [`impeller-zig-examples`](https://github.com/impeller-interop/impeller-zig-examples), keeping this package a pure library dependency with no windowing requirement.
 
 ## API notes
 

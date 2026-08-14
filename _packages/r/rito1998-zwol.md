@@ -10,10 +10,10 @@ keywords:
   - command-line
   - wake-on-lan
   - wol
-date: 2026-07-19
+date: 2026-08-08
 category: tooling
-updated_at: 2026-07-19T21:41:31+00:00
-last_sync: 2026-07-19T21:41:31Z
+updated_at: 2026-08-08T20:10:45+00:00
+last_sync: 2026-08-08T20:10:45Z
 package_kind: hybrid
 has_library: true
 has_binary: true

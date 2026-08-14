@@ -8,16 +8,16 @@ repository: https://github.com/neurocyte/thespian
 keywords:
   - actor-model
   - cpp
-date: 2026-06-11
-updated_at: 2026-06-11T13:54:22+00:00
-last_sync: 2026-06-11T13:54:22Z
-package_kind: library
+date: 2026-08-14
+updated_at: 2026-08-14T10:57:45+00:00
+last_sync: 2026-08-14T10:57:45Z
+package_kind: hybrid
 has_library: true
-has_binary: false
-has_distributable_binary: false
-binary_count: 0
-distributable_binary_count: 0
-multiple_binaries: false
+has_binary: true
+has_distributable_binary: true
+binary_count: 4
+distributable_binary_count: 3
+multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
 sync_source: zigistry

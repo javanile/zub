@@ -14,9 +14,9 @@ keywords:
   - trie-data-structure
   - trie-structure
   - vahab-repo
-date: 2026-07-22
-updated_at: 2026-07-22T12:57:56+00:00
-last_sync: 2026-07-22T12:57:56Z
+date: 2026-08-04
+updated_at: 2026-08-04T12:05:32+00:00
+last_sync: 2026-08-04T12:05:32Z
 package_kind: hybrid
 has_library: true
 has_binary: true
