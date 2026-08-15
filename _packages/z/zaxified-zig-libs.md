@@ -19,10 +19,10 @@ keywords:
   - snmp
   - wireguard
   - zero-dependency
-date: 2026-08-14
+date: 2026-08-15
 category: networking
-updated_at: 2026-08-14T06:54:29+00:00
-last_sync: 2026-08-14T06:54:29Z
+updated_at: 2026-08-15T09:05:52+00:00
+last_sync: 2026-08-15T09:05:52Z
 package_kind: hybrid
 has_library: true
 has_binary: true

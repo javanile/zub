@@ -9,9 +9,9 @@ keywords:
   - microzig
   - pico
   - raspberry
-date: 2026-07-05
-updated_at: 2026-07-05T15:36:48+00:00
-last_sync: 2026-07-05T15:36:48Z
+date: 2026-08-15
+updated_at: 2026-08-15T09:16:01+00:00
+last_sync: 2026-08-15T09:16:01Z
 package_kind: hybrid
 has_library: true
 has_binary: true
