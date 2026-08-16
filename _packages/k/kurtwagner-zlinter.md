@@ -9,10 +9,10 @@ keywords:
   - linter
   - linters
   - static-analysis
-date: 2026-07-11
+date: 2026-08-16
 category: tooling
-updated_at: 2026-07-11T10:53:47+00:00
-last_sync: 2026-07-11T10:53:47Z
+updated_at: 2026-08-16T01:50:24+00:00
+last_sync: 2026-08-16T01:50:24Z
 package_kind: hybrid
 has_library: true
 has_binary: true

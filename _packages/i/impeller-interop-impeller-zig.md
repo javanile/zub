@@ -8,10 +8,10 @@ repository: https://github.com/impeller-interop/impeller-zig
 keywords:
   - bindings
   - graphics
-date: 2026-08-14
+date: 2026-08-16
 category: systems
-updated_at: 2026-08-14T06:58:15+00:00
-last_sync: 2026-08-14T06:58:15Z
+updated_at: 2026-08-16T01:38:55+00:00
+last_sync: 2026-08-16T01:38:55Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -51,6 +51,10 @@ Standalone SDK artifacts are packaged in [`impeller-sdk`](https://github.com/imp
 - Windows + Vulkan
 - Zig wrappers for contexts, surfaces, paints, paths, textures, display lists, typography, and basic geometry
 - Flat domain modules such as `impeller.geometry`, `impeller.paint`, `impeller.path`, and `impeller.text`
+
+## Zig support
+
+[![Zig version support](https://zig-support.dkx215417.workers.dev/0.16.0/0.15.2/0.15.1/badge.svg)](https://ziglang.org/download/)
 
 ## Install
 

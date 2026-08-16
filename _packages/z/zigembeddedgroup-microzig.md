@@ -8,10 +8,10 @@ repository: https://github.com/ZigEmbeddedGroup/microzig
 keywords:
   - embedded
   - hal
-date: 2026-08-09
+date: 2026-08-15
 category: embedded
-updated_at: 2026-08-09T03:42:39+00:00
-last_sync: 2026-08-09T03:42:39Z
+updated_at: 2026-08-15T18:38:18+00:00
+last_sync: 2026-08-15T18:38:18Z
 package_kind: binary
 has_library: false
 has_binary: true
