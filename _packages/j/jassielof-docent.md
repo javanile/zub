@@ -11,10 +11,10 @@ keywords:
   - complexity
   - linter
   - style
-date: 2026-07-01
+date: 2026-08-17
 category: tooling
-updated_at: 2026-07-01T02:32:48+00:00
-last_sync: 2026-07-01T02:32:48Z
+updated_at: 2026-08-17T01:01:52+00:00
+last_sync: 2026-08-17T01:01:52Z
 package_kind: hybrid
 has_library: true
 has_binary: true
