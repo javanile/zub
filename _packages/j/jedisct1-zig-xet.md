@@ -13,10 +13,10 @@ keywords:
   - protocol
   - xet
   - xorb
-date: 2026-07-08
+date: 2026-08-13
 category: networking
-updated_at: 2026-07-08T12:25:40+00:00
-last_sync: 2026-07-08T12:25:40Z
+updated_at: 2026-08-13T14:06:59+00:00
+last_sync: 2026-08-13T14:06:59Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -141,10 +141,23 @@ try xet.model_download.downloadModelToFileParallel(
 );
 
 // Upload data to CAS
-var cas = try xet.cas_client.CasClient.init(allocator, io, cas_url, token);
+var cas = try xet.cas_client.CasClient.init(allocator, io, environ, cas_url, token);
 defer cas.deinit();
 const result = try xet.upload.uploadData(allocator, &cas, data);
 ```
+
+### Going through a proxy
+
+The library honors the usual proxy environment variables: `https_proxy`, `http_proxy` and `all_proxy`, in lower or upper case.
+
+```sh
+https_proxy=http://proxy.example.com:3128 zig build run-example-download -- org/model file.gguf
+
+# With credentials
+https_proxy=http://user:password@proxy.example.com:3128 zig build run-example-parallel -- org/model
+```
+
+HTTPS traffic goes through the proxy with a CONNECT tunnel. TLS runs end to end with the target host, so the proxy never sees plaintext.
 
 ## How it works
 

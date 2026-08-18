@@ -11,9 +11,9 @@ keywords:
   - awesome-list
   - bun
   - mach
-date: 2026-08-02
-updated_at: 2026-08-02T08:21:03+00:00
-last_sync: 2026-08-02T08:21:03Z
+date: 2026-08-17
+updated_at: 2026-08-17T10:08:23+00:00
+last_sync: 2026-08-17T10:08:23Z
 package_kind: library
 has_library: false
 has_binary: false
@@ -143,6 +143,7 @@ permalink: /packages/zigcc/awesome-zig/
 - [DonIsaac/zlint](https://github.com/DonIsaac/zlint) - Linter for the Zig programming language.
 - [forketyfork/zwanzig](https://github.com/forketyfork/zwanzig) - Static analyzer for Zig with CFG-based checks (leaks, double-free, optional unwrap, stack escapes).
 - [KurtWagner/zlinter](https://github.com/KurtWagner/zlinter) - Zig linter that is integrated from source into your `build.zig`.
+- [mstdokumaci/zsort](https://github.com/mstdokumaci/zsort) - Import sorter/organizer with pre-commit hook support.
 
 ### Documentation and Testing
 
@@ -553,6 +554,7 @@ permalink: /packages/zigcc/awesome-zig/
 - [meheleventyone/zig-wasm-test](https://github.com/meheleventyone/zig-wasm-test) - A minimal WebAssembly example using Zig's build system.
 - [oltdaniel/zig-js-interplay](https://github.com/oltdaniel/zig-js-interplay) - Seamless integration of Zig and JavaScript in WebAssembly.
 - [ringtailsoftware/zig-wasm-audio-framebuffer](https://github.com/ringtailsoftware/zig-wasm-audio-framebuffer) - Examples of integrating Zig and WebAssembly (and C) for audio and graphics on the web (including DOOM).
+- [zwasm](https://github.com/zwasm/zwasm) - From-scratch WebAssembly runtime in Zig. Full WebAssembly 3.0 with 100% spec conformance, WASI 0.1/0.2/0.3, and interpreter + JIT (arm64/x86_64) + AOT backends.
 
 ## Data & Science
 

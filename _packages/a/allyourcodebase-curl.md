@@ -6,9 +6,9 @@ author: allyourcodebase
 author_github: allyourcodebase
 repository: https://github.com/allyourcodebase/curl
 keywords:
-date: 2026-04-16
-updated_at: 2026-04-16T22:34:14+00:00
-last_sync: 2026-04-16T22:34:14Z
+date: 2026-08-13
+updated_at: 2026-08-13T18:32:30+00:00
+last_sync: 2026-08-13T18:32:30Z
 package_kind: hybrid
 has_library: true
 has_binary: true
