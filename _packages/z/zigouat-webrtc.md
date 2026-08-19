@@ -10,10 +10,10 @@ keywords:
   - media
   - video
   - webrtc
-date: 2026-08-17
+date: 2026-08-19
 category: game-development
-updated_at: 2026-08-17T10:04:53+00:00
-last_sync: 2026-08-17T10:04:53Z
+updated_at: 2026-08-19T07:33:44+00:00
+last_sync: 2026-08-19T07:33:44Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -62,7 +62,7 @@ zig fetch --save git+https://github.com/zigouat/webrtc.git#v0.1.0
 Then, in your `build.zig` file, add the following:
 
 ```zig
-const webrtc = b.dependecy("webrtc", .{ .target = .target, .optimize = optimize });
+const webrtc = b.dependency("webrtc", .{ .target = target, .optimize = optimize });
 
 exe.root_module.addImport("webrtc", webrtc.module("webrtc"));
 ```

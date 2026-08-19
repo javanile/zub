@@ -9,10 +9,10 @@ keywords:
   - linter
   - linters
   - static-analysis
-date: 2026-08-16
+date: 2026-08-19
 category: tooling
-updated_at: 2026-08-16T01:50:24+00:00
-last_sync: 2026-08-16T01:50:24Z
+updated_at: 2026-08-19T09:46:41+00:00
+last_sync: 2026-08-19T09:46:41Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -54,6 +54,7 @@ A **linter** is a tool that automatically checks source code for style issues, b
 - [Custom Rules](#custom-rules)
 - [Custom Formatters](#custom-formatters)
 - [Built-in Rules](RULES.md)
+  - [build_zig_zon](RULES.md#build_zig_zon)
   - [declaration_naming](RULES.md#declaration_naming)
   - [field_ordering](RULES.md#field_ordering)
   - [field_naming](RULES.md#field_naming)

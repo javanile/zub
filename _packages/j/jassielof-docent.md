@@ -7,14 +7,24 @@ author_github: jassielof
 repository: https://github.com/jassielof/docent
 keywords:
   - cli
+  - code-formatter
+  - code-formatting
   - code-quality
+  - cognitive-complexity
   - complexity
+  - cyclomatic-complexity
+  - doc-comment-checking-tool
+  - doc-comments
+  - documentation
+  - formatter
+  - formatting
   - linter
+  - static-analysis
   - style
-date: 2026-08-17
+date: 2026-08-19
 category: tooling
-updated_at: 2026-08-17T01:01:52+00:00
-last_sync: 2026-08-17T01:01:52Z
+updated_at: 2026-08-19T04:40:32+00:00
+last_sync: 2026-08-19T04:40:32Z
 package_kind: hybrid
 has_library: true
 has_binary: true

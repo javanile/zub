@@ -9,10 +9,10 @@ keywords:
   - compute
   - fastly
   - webassembly
-date: 2026-07-02
+date: 2026-08-19
 category: systems
-updated_at: 2026-07-02T12:20:14+00:00
-last_sync: 2026-07-02T12:20:14Z
+updated_at: 2026-08-19T06:39:45+00:00
+last_sync: 2026-08-19T06:39:45Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -60,7 +60,7 @@ pub fn main() !void {
 Add the dependency:
 
 ```sh
-zig fetch --save=zigly https://github.com/jedisct1/zigly/archive/refs/tags/0.1.14.tar.gz
+zig fetch --save=zigly https://github.com/jedisct1/zigly/archive/refs/tags/0.1.20.tar.gz
 ```
 
 In `build.zig`:

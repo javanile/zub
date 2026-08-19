@@ -22,16 +22,16 @@ keywords:
   - uuid
   - web-framework
   - websocket
-date: 2026-08-17
+date: 2026-08-19
 category: tooling
-updated_at: 2026-08-17T10:40:24+00:00
-last_sync: 2026-08-17T10:40:24Z
+updated_at: 2026-08-19T08:06:27+00:00
+last_sync: 2026-08-19T08:06:27Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 9
-distributable_binary_count: 9
+binary_count: 11
+distributable_binary_count: 11
 multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
@@ -54,14 +54,16 @@ point. You import the modules you use, and Zig never compiles the rest.
 
 **It's built for people and for coding agents at the same time**, which turns
 out to be one job rather than two. One rule covers the whole argument list.
-Nothing depends on the order you wrote it in. And 115 error messages are held in
+Nothing depends on the order you wrote it in. And 141 error messages are held in
 place by a build step, so a mistake comes back as a sentence while your code is
 still compiling instead of as a 500 at runtime. That helps you, and it helps
 whatever is writing code next to you.
 [More on that below](#this-is-also-why-agents-do-well-here).
 
-> **0.2.0** · needs **Zig 0.16** · it used to be called `zfast`, and that rename
-> is the only breaking change in this release ([CHANGELOG](./CHANGELOG.md)).
+> **0.2.0** · needs **Zig 0.16** · it used to be called `zfast`. Five things
+> break coming from 0.1.0, and
+> [Upgrading](./CHANGELOG.md#upgrading-from-010) is all of them, with the fix
+> next to each.
 
 ## A route is just a function
 
@@ -251,15 +253,16 @@ redeploying, and finding the next:
 
 ### Passwords are a value
 
+<!-- compiles: body -->
 ```zig
 // signing up
-const stored = try c.hashPassword(gpa, form.password);
-_ = try db.insert(User, conn, .{ .email = form.email, .password = stored.text() });
+const stored = try c.hashPassword(gpa, form.password.view());
+_ = try db.insert(User, c, .{ .email = form.email, .password = stored.text() });
 
 // signing in
-const row = try db.find(User, conn, .{ .email = form.email });
-if (!try c.verifyPassword(gpa, if (row) |r| r.password else null, form.password))
-    return nilo.fail(401, "that is not a sign-in");
+const row = try db.one(User, c, .{ .where = .{ .email = form.email } });
+if (!try c.verifyPassword(gpa, if (row) |r| r.password.view() else null, form.password.view()))
+    return nilo.fail.unauthorized("that is not a sign-in", .{});
 ```
 
 argon2id, stored as a PHC string that any other library can read. One hash costs
@@ -387,7 +390,7 @@ parts of it. [Contributing](#contributing) is what that takes.
 | Module | What it does | Where it is |
 |---|---|---|
 | **`nilo_http`** | routing, typed handlers, middleware, cookies and sessions, static files, streaming, WebSocket, OpenAPI | shipped |
-| **`nilo_sql`** | Postgres. Your struct is the table | shipped: reads, writes, transactions, streaming |
+| **`nilo_sql`** | Postgres and SQLite. Your struct is the table | shipped: reads, writes, transactions, streaming. SQLite refuses batches, row locks and deadlines, and says so while compiling |
 | **`nilo_s3`** | object storage — S3, MinIO, R2. Your bucket is a type | shipped: get, put, range, stream, presign. No `LIST`, no multipart |
 | **`nilo_fetch`** | calling somebody else's HTTP API from inside a request | shipped: the policy in front of `std.http.Client`. No retries, no circuit breaker |
 | **`nilo_config`** | settings out of the environment, every bad one named at once | shipped. It parses no files, and that's a decision |
@@ -465,11 +468,23 @@ are actually properties of the design are the 4,669 and the 1.
 
 Binary size is the fourth number, and it's a large part of why the modules are
 kept apart. Zig doesn't compile what nothing imports, so an HTTP-only project
-pays **zero bytes** for `nilo_sql` and never even fetches a Postgres driver.
-That's measured, not hoped for. A server that does run queries costs 733 KB
-more, and
+pays **zero bytes** for `nilo_sql` and downloads no database driver either —
+the drivers sit behind `.sql = true` on the dependency, and
+`zig build fetch-check -Dnetwork` builds a project that imports only the server
+and fails if anything but zio lands. Both halves are measured, and the second
+one only since
+[ADR 0075](./docs/adr/0075-a-lazy-dependency-is-a-request.md): before it, the
+bytes claim was true and the download claim was 11.1 MB out. A server that does
+run queries costs 733 KB more, and
 [ADR 0040](./docs/adr/0040-a-service-that-needs-the-loop-is-finished-when-the-loop-exists.md)
 accounts for every byte of it.
+
+The same holds one level down. `nilo_sql` now carries two drivers, and a
+program that names only the Postgres one links **zero bytes** of SQLite —
+checked by building two programs that differ by one line and grepping both
+([`bench/result/sql.md`](./bench/result/sql.md) §9). Naming SQLite costs 525 KB,
+which is the amalgamation, and it's the price of a database that ships inside
+the binary.
 
 ### How the trade-offs get made
 

@@ -11,9 +11,9 @@ keywords:
   - nats-jetstream
   - nats-streaming
   - zio
-date: 2026-08-18
-updated_at: 2026-08-18T10:40:25+00:00
-last_sync: 2026-08-18T10:40:25Z
+date: 2026-08-19
+updated_at: 2026-08-19T10:41:50+00:00
+last_sync: 2026-08-19T10:41:50Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -81,6 +81,7 @@ try nc.publish("hello", "Hello, NATS!");
 // Create synchronous subscription
 var counter: u32 = 0;
 const sub = try nc.subscribeSync("hello");
+defer sub.deinit();
 
 // Wait for message with 5 second timeout
 while (true) {
@@ -134,7 +135,16 @@ fn messageHandler(msg: *nats.Message, counter: *u32) void {
 // Subscribe with callback handler
 var counter: u32 = 0;
 const sub = try nc.subscribe("hello", messageHandler, .{&counter});
+defer sub.deinit();
 ```
+
+Subscriptions are owned by whoever created them, not by the connection: every
+subscription must be released with `sub.deinit()` before its connection is
+destroyed. `deinit()` unsubscribes and, for asynchronous subscriptions, waits
+for the handler task to finish, so it is safe to free anything the handler
+captured once it returns. Destroying a connection that still has live
+subscriptions panics with the number outstanding rather than leaving them
+pointing at freed connection state.
 
 ### Send request and wait for reply
 
@@ -175,6 +185,7 @@ fn echoHandler(msg: *nats.Message, context: *MyContext) !void {
 // Subscribe to handle requests
 var context = MyContext{};
 const sub = try nc.subscribe("echo", echoHandler, .{&context});
+defer sub.deinit();
 ```
 
 ### JetStream Stream Management
@@ -318,6 +329,60 @@ If a server rejects the client's credentials with the same authentication
 error twice in a row, the client stops reconnecting to it instead of
 exhausting the reconnect budget; reconnect-time authentication errors are
 also reported through the `error_cb` callback.
+
+### TLS
+
+TLS is enabled with the `tls://` URL scheme, or explicitly through the
+connection options:
+
+```zig
+// tls:// scheme, server certificate verified against the system trust store
+try nc.connect("tls://demo.nats.io:4443");
+
+// Custom CA bundle
+var nc2 = nats.Connection.init(init.gpa, init.io, .{
+    .tls = .{ .ca_file = "/path/to/ca.pem" },
+});
+
+// For servers that expect the TLS handshake before the initial INFO
+// (handshake-first mode, TLS-terminating proxies)
+var nc3 = nats.Connection.init(init.gpa, init.io, .{
+    .tls = .{ .ca_file = "/path/to/ca.pem", .handshake_first = true },
+});
+```
+
+Once enabled, TLS applies to every connection, including cluster members
+discovered at runtime. Certificate files are re-read on every (re)connect,
+so rotated certificates are picked up automatically. Setting
+`insecure_skip_verify` disables server certificate verification entirely;
+it is meant for testing only. Use `server_name` to set the name used for
+SNI and certificate verification when servers are dialed by IP address:
+
+```zig
+var nc4 = nats.Connection.init(init.gpa, init.io, .{
+    .tls = .{ .ca_file = "/path/to/ca.pem", .server_name = "nats.example.com" },
+});
+```
+
+For mutual TLS, provide a client certificate and key:
+
+```zig
+var nc5 = nats.Connection.init(init.gpa, init.io, .{
+    .tls = .{
+        .ca_file = "/path/to/ca.pem",
+        .cert_file = "/path/to/client-cert.pem",
+        .key_file = "/path/to/client-key.pem",
+    },
+});
+```
+
+With the server's `verify_and_map` mode, the client certificate is also
+the authentication: its identity is mapped to a configured user and no
+other credentials are needed.
+
+TLS support is provided by [tls.zig](https://github.com/ianic/tls.zig) and
+can be compiled out with `-Duse_tls=false`, in which case TLS connections
+fail with `error.TlsNotConfigured`.
 
 ## Selecting the I/O Backend
 
