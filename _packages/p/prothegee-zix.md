@@ -22,10 +22,10 @@ keywords:
   - webrtc
   - webserver
   - websockets
-date: 2026-08-16
+date: 2026-08-17
 category: networking
-updated_at: 2026-08-16T09:03:30+00:00
-last_sync: 2026-08-16T09:03:30Z
+updated_at: 2026-08-17T17:42:42+00:00
+last_sync: 2026-08-17T17:42:42Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -164,7 +164,8 @@ permalink: /packages/prothegee/zix/
 </h2>
 <div align="center">
 
-[![kofi](https://img.shields.io/badge/kofi-prothegee-eb7215)](https://ko-fi.com/prothegee)
+[![ko-fi](https://img.shields.io/badge/kofi-prothegee-eb7215)](https://ko-fi.com/prothegee)
+[![github](https://img.shields.io/badge/github-prothegee-d705b4)](https://github.com/sponsors/prothegee)
 [![paypal](https://img.shields.io/badge/paypal-prothegee-2116ce)](https://paypal.me/prothegee)
 [![saweria](https://img.shields.io/badge/saweria-prothegee-fbba2b)](https://saweria.co/prothegee)
 
@@ -173,7 +174,8 @@ permalink: /packages/prothegee/zix/
 <!--
 RESERVED sponsor
 
-kofi: https://ko-fi.com/prothegee
+ko-fi: https://ko-fi.com/prothegee
+github: https://github.com/sponsors/prothegee
 paypal: https://paypal.me/prothegee
 saweria: https://saweria.co/prothegee
 -->
