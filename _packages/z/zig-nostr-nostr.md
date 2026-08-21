@@ -12,10 +12,10 @@ keywords:
   - nostr-protocol
   - protocol
   - secp256k1
-date: 2026-08-15
+date: 2026-08-19
 category: networking
-updated_at: 2026-08-15T07:44:44+00:00
-last_sync: 2026-08-15T07:44:44Z
+updated_at: 2026-08-19T06:59:11+00:00
+last_sync: 2026-08-19T06:59:11Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -47,7 +47,7 @@ it like [Notary](https://github.com/zig-nostr/notary), a remote signer that keep
 your key off every client. Full docs, benchmarks, and the ecosystem overview
 live at [zignostr.com](https://zignostr.com).
 
-> **Status: early (`v0.11.0`).** The library core, transport, local-first store
+> **Status: early (`v0.12.0`).** The library core, transport, local-first store
 > and signer protocol have shipped and are covered by tests. Two native apps run
 > on it today. APIs may still change before 1.0.
 
@@ -108,7 +108,7 @@ Methodology and the full write-up are on the
 Add the library to your `build.zig.zon`:
 
 ```sh
-zig fetch --save https://github.com/zig-nostr/nostr/archive/refs/tags/v0.11.0.tar.gz
+zig fetch --save https://github.com/zig-nostr/nostr/archive/refs/tags/v0.12.0.tar.gz
 ```
 
 Wire the module in `build.zig`:

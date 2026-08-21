@@ -12,9 +12,9 @@ keywords:
   - tupper
   - typst
   - typst-package
-date: 2026-08-15
-updated_at: 2026-08-15T04:53:47+00:00
-last_sync: 2026-08-15T04:53:47Z
+date: 2026-08-16
+updated_at: 2026-08-16T12:08:32+00:00
+last_sync: 2026-08-16T12:08:32Z
 package_kind: hybrid
 has_library: true
 has_binary: true
