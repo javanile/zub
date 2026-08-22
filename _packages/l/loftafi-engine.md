@@ -6,9 +6,9 @@ author: loftafi
 author_github: loftafi
 repository: https://github.com/loftafi/engine
 keywords:
-date: 2026-08-19
-updated_at: 2026-08-19T23:32:50+00:00
-last_sync: 2026-08-19T23:32:50Z
+date: 2026-08-21
+updated_at: 2026-08-21T23:28:05+00:00
+last_sync: 2026-08-21T23:28:05Z
 package_kind: library
 has_library: true
 has_binary: false

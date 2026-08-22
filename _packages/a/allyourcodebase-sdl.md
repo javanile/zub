@@ -6,9 +6,9 @@ author: allyourcodebase
 author_github: allyourcodebase
 repository: https://github.com/allyourcodebase/SDL
 keywords:
-date: 2026-08-06
-updated_at: 2026-08-06T10:34:13+00:00
-last_sync: 2026-08-06T10:34:13Z
+date: 2026-08-22
+updated_at: 2026-08-22T04:55:27+00:00
+last_sync: 2026-08-22T04:55:27Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -115,8 +115,8 @@ This library provides a default configuration for common targets:
   * [x] Steam Deck
 * [x] Windows
 * [x] macOS (no cross compilation due to Apple licensing)
-* [ ] [Emscripten (help wanted!)](https://github.com/allyourcodebase/SDL3/issues/5)
-* [ ] [Consoles (help wanted!)](https://github.com/allyourcodebase/SDL3/issues/6)
+* [ ] [Emscripten (help wanted!)](https://github.com/allyourcodebase/SDL/issues/5)
+* [ ] [Consoles (help wanted!)](https://github.com/allyourcodebase/SDL/issues/6)
 
 You can override the default target configuration by setting `default_target_config` to `false`, and then providing your own configuration. This is typically only necessary when your platform doesn't yet have a default configuration:
 ```zig

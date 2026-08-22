@@ -9,10 +9,10 @@ keywords:
   - sql
   - zig-libary
   - zig-program
-date: 2026-07-14
+date: 2026-08-22
 category: data-formats
-updated_at: 2026-07-14T13:09:22+00:00
-last_sync: 2026-07-14T13:09:22Z
+updated_at: 2026-08-22T10:22:54+00:00
+last_sync: 2026-08-22T10:22:54Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -147,8 +147,9 @@ chooses and adds one.
 Use a driver’s explicit marker for the generic façade, e.g.
 `zsql.Database(zsql.drivers.sqlite.Driver)` or
 `zsql.Pool(zsql.drivers.postgres.Driver)`. The façade selects concrete driver
-types and compile-time validates their lifecycle capabilities; driver authors
-can call `zsql.validateDriver(MyDriver)` directly. It does not normalize SQL
+types and compile-time validates lifecycle capabilities including transactional
+and scoped-savepoint workflows; driver authors can call
+`zsql.validateDriver(MyDriver)` directly. It does not normalize SQL
 dialects or erase useful ownership differences: SQLite `Database` owns the
 database handle and creates lightweight `Conn` wrappers, while PostgreSQL
 `Database` is the network `Conn` itself, so their `open` signatures remain
@@ -182,8 +183,12 @@ transaction.
 dedicated lease for the statement lifetime. The lease is heap-stable so the
 statement's connection pointer remains valid even when `PooledStmt` moves.
 Closing or deinitializing the statement always happens before releasing or
-discarding its lease; a pool shutdown lets the statement finish, then closes
-the connection instead of returning it to idle. Rows returned by
+discarding its lease. If an explicit Close fails, the pooled wrapper finishes
+best-effort statement cleanup, discards the dedicated connection when server
+state is uncertain, and reports the original error rather than exposing that
+uncertainty to another borrower. A pool shutdown
+lets the statement finish, then closes the connection instead of returning it to
+idle. Rows returned by
 `PooledStmt.query` / `queryNamed` own their decoded data and remain valid after
 the statement is closed and the pool is deinitialized.
 
@@ -297,13 +302,51 @@ try pg_pool.withTx({}, struct {
 }.run);
 ```
 
-Transaction state is explicit: starting a nested transaction returns
+Use `withSavepoint` when a nested unit of work should roll back independently
+while the surrounding transaction stays usable:
+
+```zig
+// SQLite: body receives *Tx. PostgreSQL: body receives *Conn.
+try tx.withSavepoint({}, struct {
+    fn run(_: void, tx: *zsql.drivers.sqlite.Tx) !void {
+        _ = try tx.exec("insert into t (id) values (?)", &.{.{ .integer = 1 }});
+    }
+}.run);
+
+// Pools can acquire the lease and begin the surrounding transaction too.
+try pg_pool.withSavepoint({}, struct {
+    fn run(_: void, conn: *zsql.drivers.postgres.Conn) !void {
+        _ = try conn.exec("insert into t (id) values (1)");
+    }
+}.run);
+```
+
+PostgreSQL transactions can start with typed characteristics:
+
+```zig
+try pg_conn.withTxWithOptions({}, .{
+    .isolation = .repeatable_read,
+    .access_mode = .read_only,
+}, struct {
+    fn run(_: void, c: *zsql.drivers.postgres.Conn) !void {
+        _ = try c.execParams("select * from reports", &.{});
+    }
+}.run);
+```
+
+`Conn.transactionOpen` gives both drivers an explicit view of whether a
+transaction boundary is active. SQLite derives this from the database engine's
+autocommit state, so even raw SQL `BEGIN` cannot evade pool health checks. Starting a nested transaction returns
 `error.ConnectionBusy`; committing or rolling back while idle returns
 `error.TransactionClosed`. PostgreSQL commands rejected inside a transaction
 put it into failed state, where `begin`/`commit` return
 `error.TransactionAborted` until `rollback` restores the session.
 `Savepoint.rollback` is also valid in PostgreSQL's failed state and performs
 `ROLLBACK TO` followed by `RELEASE`, restoring the outer transaction for use.
+Generated savepoint IDs reject exhaustion in both drivers instead of wrapping
+into duplicate names. SQLite's best-effort `rollbackIfOpen` keeps a transaction
+open for an explicit retry if that rollback attempt fails, so pool health checks
+still see busy state rather than mistaking cleanup for completion.
 
 Pool acquire timeout: `0` = non-blocking, `std.math.maxInt(u64)` = wait forever
 (condition), any other value = deadline-based wait with ≤1 ms polling.
@@ -322,12 +365,18 @@ statement-cache entries for callers that deliberately need them. The opt-in
 `.discard_all` policy runs PostgreSQL `DISCARD ALL` before an idle connection is
 reused, removing changed settings, temporary objects, LISTEN registrations,
 session advisory locks, and server prepares. zsql clears and rebuilds its client
-statement cache and reapplies the configured `statement_timeout`. Reset traffic
-does not fire application query hooks. Any reset failure consumes the lease and
-closes the connection rather than exposing uncertain state to another borrower.
+statement cache, and pipelines timeout restoration behind cleanup as two
+hook-free Query messages. Their final ReadyForQuery is one round-trip boundary;
+events received through it belong to the previous borrower and are discarded
+rather than delivered later. Any reset failure consumes
+the lease and closes the connection rather than exposing uncertain state to
+another borrower.
 
 Pools retain synchronized connections after recoverable SQL errors and discard
-closed, protocol-broken, or transaction-busy leases. A lease released with an
+closed, protocol-broken, or transaction-busy leases. Destructive PostgreSQL
+cleanup performs protocol I/O outside the accounting mutex, while SQLite moves
+connection setup and idle-handle teardown outside that mutex; neither can freeze
+stats or unrelated lease release. A lease released with an
 open transaction is never returned to another borrower.
 `Pool.init` clones connection configuration needed by future opens: PostgreSQL
 URL fields and optional peer-certificate bytes, or the SQLite database path.
@@ -532,16 +581,50 @@ the connection and frees any not-yet-returned output.
 
 ```zig
 var qb = zsql.QueryBuilder.init(allocator, .postgres);
-// bind accepts Value or common Zig scalars (bool/int/float/[]const u8/?T/null)
+// bind accepts Value, explicit SQL-domain wrappers, or common Zig scalars
+// (bool/int/float/[]const u8/?T/null)
 defer qb.deinit();
 try qb.appendTrustedSql("select * from ");
 try qb.ident("users");
 // or: try qb.identPath("public.users");
 // or: try qb.identSegments(&.{ "public", "users" });
+// or: atomically quote a dynamic list with trusted separators:
+try qb.identJoined(&.{ "id", "name" }, ", ");
 try qb.appendTrustedSql(" where id = ");
 try qb.bind(@as(i64, 1)); // Zig scalars OK
+
+// Bind a tuple/slice atomically; callers supply any needed separators.
+try qb.bindAll(.{ 2, "ada" });
+
+// Or let the builder insert trusted separators between placeholders.
+try qb.bindJoined(.{ 2, "ada" }, ", ");
+// Typed UUIDs are formatted to canonical text and bound through the normal
+// owned-copy path; optional empty values bind SQL null.
+try qb.bindUuid(external_id);
+// The same wrappers work in all-at-once and joined batches.
+try qb.bindAll(.{ external_id, billing_date, reminder_time, updated_at });
+// Compose independently built fragments; PostgreSQL placeholders are renumbered
+// and every bind payload is copied into the destination builder.
+try qb.appendBuilder(&filters);
+// Explicit temporal wrappers bind ISO text without hidden timezone policy.
+try qb.bindDate(billing_date);
+try qb.bindTime(reminder_time);
+try qb.bindTimestampUtc(updated_at);
 // qb.sqlSlice() + qb.bindsSlice() for driver execParams/queryParams
+
+// Reuse the configured builder for another statement.
+qb.reset();
 ```
+
+Builders are deep-copyable. `clone(allocator)` duplicates SQL, placeholder
+state, and owned payload bytes into an independent builder; the source and clone
+can then evolve or reset without affecting each other.
+Use `cloneSql(allocator)` when the rendered statement must outlive the builder
+but bind ownership is still managed by the original builder.
+`appendBuilder` composes another same-dialect builder atomically, renumbering
+PostgreSQL placeholders and copying owned payloads while preserving SQLite `?`
+order. It rejects self-composition and source builders whose placeholder style,
+bind count, or PostgreSQL sequence is inconsistent.
 
 Unsafe raw append is named `rawUnsafe` on purpose.
 `bind` owns copied text/blob payloads and is failure-atomic: allocation failure
@@ -549,6 +632,15 @@ leaves SQL, bind order, ownership, and the next PostgreSQL placeholder unchanged
 so callers may handle OOM and retry the same builder safely.
 Identifier methods have the same retry contract: invalid later path segments or
 allocation failure never leave a partial quoted identifier in the SQL buffer.
+`bindUuid` accepts `zsql.types.Uuid` or an optional UUID, formats the value in a
+fixed stack buffer, and copies it through the same atomic text-bind ownership
+path.
+`bindDate`, `bindTime`, and `bindTimestampUtc` provide the same contract for
+explicit temporal wrappers. The timestamp method always emits a UTC `Z` string,
+matching the wrapper's explicit policy; optional empty values bind SQL null.
+Generic `bind`, `bindAll`, and `bindJoined` also accept `Text`, `Blob`,
+`Numeric`, `Uuid`, and temporal wrappers directly, so typed values can participate
+in atomic batches without first rendering text manually.
 
 ### Query hooks
 
@@ -629,12 +721,32 @@ After `ReadyForQuery`, column-name duplication and final column/row ownership
 transfers are failure-atomic, so an OOM preserves connection reuse without
 leaking any partially collected result storage.
 
-`zsql.types.Text`, `Blob`, `Numeric`, and canonical-text `Uuid` decode through
-the same borrowed row path. PostgreSQL `date`, `time`, `timestamp`, and
-`timestamptz` are intentionally exposed as raw text in this release: parsing
-them implicitly would require timezone and precision policy that zsql does not
-hide. The explicit `Date`, `Time`, and `Timestamp` wrappers are available for
-application-owned conversions.
+`zsql.types.Text`, `Blob`, `Numeric`, canonical-text `Uuid`, and explicit
+temporal wrappers decode through the same borrowed row path. `Uuid.formatCanonical`
+emits lowercase hyphenated text without allocation.
+
+PostgreSQL date/time values remain raw `.text` at the driver boundary: implicit
+parsing would hide timezone and precision policy. When a checked row field or
+`Row.to` field explicitly chooses `types.Date`, `types.Time`, `types.TimeTz`, or
+`types.Timestamp`, zsql applies its strict ISO parser, including signed/expanded
+years across the supported `Date` range. Naive timestamps are interpreted as UTC;
+`Z` and explicit offsets normalize to UTC. The standalone
+`parseIsoTimestamp`, `.parseIsoTimestampTz`, and `.parseIsoTimestampInstant`
+functions expose that choice directly. Wrappers can format back into caller
+buffers without allocation (for example, `timestamp.formatIsoUtc(&buffer)`).
+Each wrapper exposes its exact `iso_buffer_len`, so callers can size stack
+storage without overestimating expanded-year output.
+PostgreSQL's BC era suffix and historical timezone offsets containing seconds are
+accepted during this explicit conversion and normalized to astronomical-year UTC
+instants.
+`types.TimeTz` preserves both wall-clock time and numeric UTC offset; its parser
+accepts historical second-bearing offsets and its formatter keeps the timezone
+policy visible. Callers can combine it with a calendar date through
+`utcTimestamp`, which normalizes across day boundaries in UTC.
+`Timestamp.toUtcDateTime` decomposes an instant into an explicit `Date` and
+nanosecond-precision UTC `Time`; `Date.toUtcDateTime` performs the checked
+inverse. For explicit timezone rendering, `Timestamp.toOffsetDateTime(offset)`
+returns the shifted calendar date plus an offset-preserving `TimeTz`.
 
 ### Offline checks
 
@@ -695,15 +807,25 @@ Every declared row field must map to a returned simple column projection.
 Projection aliases are the result field names and retain the source column's
 type and nullability checks. Qualified and unqualified stars are supported;
 an output name supplied by more than one projection is rejected as ambiguous.
-Portable built-in `COUNT(*)` and `COUNT([DISTINCT] simple_column)` projections
+Portable built-in `COUNT(*)` and `COUNT([ALL | DISTINCT] simple_column)`
+projections
 are also supported when explicitly aliased; their result is checked as
 non-null `INT8` (`i64` in typed rows), and column arguments must resolve in
-scope. Explicitly aliased built-in `MIN(simple_column)` and
-`MAX(simple_column)` preserve the source type and are always checked as
-nullable, so typed row fields must be optional. `GROUP BY` and `ORDER BY` may
-refer to a unique projection alias. Dialect-sensitive `SUM`/`AVG`, casts,
-DISTINCT extrema, window/filter clauses, and arbitrary expression projections
-cannot supply a checked row field and remain outside this bounded checker.
+scope. Explicitly aliased built-in `[ALL | DISTINCT] MIN(simple_column)`,
+`[ALL | DISTINCT] MAX(simple_column)`, and similar aggregate forms are
+supported; MIN/MAX preserve the source type and are always checked as nullable,
+so typed row fields must be optional. `GROUP BY`, `HAVING`, and `ORDER BY` may
+refer to a unique projection alias; HAVING aliases resolve back to their
+supported projection.
+
+For known dialects, explicitly aliased simple-column `SUM` and `AVG` have
+conservative result inference: PostgreSQL maps narrow-integer sums to `INT8`,
+wide/decimal sums and integer or numeric averages to `NUMERIC`, and floating-
+point sums/averages map to their PostgreSQL result width. SQLite integer sums
+map to `INT8`, while real and NUMERIC-source sums and averages map to `FLOAT8`.
+Unsupported source types and unknown dialects return `UnsupportedAggregateType`;
+casts, window/filter clauses, and arbitrary expression projections cannot supply
+a checked row field and remain outside this bounded checker.
 Checker table scope is capped at 16 tables; explicit, extracted, and implicit
 scope overflow returns `TooManyTables` rather than truncating validation.
 
@@ -779,6 +901,12 @@ fails, schema changes roll back and zsql persists that version/checksum as
 `dirty` after rollback. Later applies return `error.MigrationDirty` until an
 operator inspects and repairs or removes the failed record; zsql does not hide
 or automatically retry an uncertain migration.
+zsql owns the surrounding migration transaction. Before pending SQL executes,
+both migrators reject statement-leading `BEGIN`, `START TRANSACTION`, `COMMIT`,
+`END`, `ROLLBACK`, `SAVEPOINT`, `RELEASE`, `ABORT`, and
+`PREPARE TRANSACTION`. Words inside strings, comments, quoted identifiers, and
+dollar-quoted bodies are ignored; SQLite procedural `BEGIN ... END` in a trigger
+remains valid.
 If the post-rollback marker write itself fails, that persistence error takes
 precedence over the original SQL error: zsql never reports the original failure
 as durably guarded when it could not record the guard.
@@ -848,7 +976,8 @@ POSIX platforms; other targets retain atomic visibility and pre-publication
 file synchronization, with power-loss directory durability left to the target.
 
 Generated struct files import `zsql` themselves, map supported SQL domain types
-to `zsql.types.*`, and preserve database nullability with optional Zig fields.
+to `zsql.types.*` (including date, time, timestamp, and timestamptz), and preserve
+database nullability with optional Zig fields.
 Column fields preserve their exact SQL names through Zig's quoted-identifier
 syntax when needed. Table types remain PascalCase; normalization collisions get
 stable ordinal suffixes instead of producing duplicate declarations.
