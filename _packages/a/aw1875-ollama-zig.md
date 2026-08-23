@@ -9,8 +9,8 @@ keywords:
   - ollama
   - ollama-client
 date: 2026-08-21
-updated_at: 2026-08-21T05:34:38+00:00
-last_sync: 2026-08-21T05:34:38Z
+updated_at: 2026-08-21T23:56:26+00:00
+last_sync: 2026-08-21T23:56:26Z
 package_kind: library
 has_library: true
 has_binary: false

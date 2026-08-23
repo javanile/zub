@@ -23,8 +23,8 @@ keywords:
   - style
 date: 2026-08-21
 category: tooling
-updated_at: 2026-08-21T06:30:24+00:00
-last_sync: 2026-08-21T06:30:24Z
+updated_at: 2026-08-21T22:40:28+00:00
+last_sync: 2026-08-21T22:40:28Z
 package_kind: hybrid
 has_library: true
 has_binary: true

@@ -18,10 +18,10 @@ keywords:
   - unicode
   - unicode-characters
   - zero-allocation
-date: 2026-06-29
+date: 2026-08-23
 category: systems
-updated_at: 2026-06-29T11:57:26+00:00
-last_sync: 2026-06-29T11:57:26Z
+updated_at: 2026-08-23T07:40:38+00:00
+last_sync: 2026-08-23T07:40:38Z
 package_kind: hybrid
 has_library: true
 has_binary: true

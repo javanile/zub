@@ -7,10 +7,10 @@ author_github: DISTREAT
 repository: https://github.com/DISTREAT/zig-csv
 keywords:
   - csv
-date: 2026-05-27
+date: 2026-08-22
 category: data-formats
-updated_at: 2026-05-27T21:04:15+00:00
-last_sync: 2026-05-27T21:04:15Z
+updated_at: 2026-08-22T20:07:39+00:00
+last_sync: 2026-08-22T20:07:39Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -87,7 +87,7 @@ const Animal = struct {
 // Parse CSV data into a StructuredTable
 var table = csv.StructuredTable(Animal).init(
     allocator,
-    csv.Settings.default()
+    csv.LexerSettings.default()
 );
 defer table.deinit();
 try table.parse(
@@ -142,7 +142,7 @@ const csv = @import("zig_csv");
 const allocator = std.heap.page_allocator;
 
 // Parse CSV data
-var table = csv.Table.init(allocator, csv.Settings.default());
+var table = csv.Table.init(allocator, csv.LexerSettings.default());
 defer table.deinit();
 try table.parse(
     \\id,animal,color

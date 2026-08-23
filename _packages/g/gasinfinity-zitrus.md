@@ -9,9 +9,9 @@ keywords:
   - 3ds-homebrew
   - homebrew
   - nintendo-3ds
-date: 2026-08-14
-updated_at: 2026-08-14T22:42:36+00:00
-last_sync: 2026-08-14T22:42:36Z
+date: 2026-08-21
+updated_at: 2026-08-21T16:39:38+00:00
+last_sync: 2026-08-21T16:39:38Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -104,7 +104,6 @@ Currently there are multiple examples in the `demo/` directory. To build them, y
 - [info](demo/info) is a simple app that currently shows the console region and model (will be updated to show more info over time).
 - [bitmap](demo/bitmap/) is a port of the bitmap example in libctru's 3ds-examples.
 - [flappy](demo/flappy) is a simple fully functional flappy bird clone written entirely with software blitting.
-- [gpu](demo/gpu/) is a playground for [mango](src/mango.zig), bleeding edge features are tested there. Not really an example per-se.
 
 --- 
 

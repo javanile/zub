@@ -16,10 +16,10 @@ keywords:
   - unicode-library
   - unicode-normalization
   - utf-8
-date: 2026-06-11
+date: 2026-08-23
 category: systems
-updated_at: 2026-06-11T13:35:27+00:00
-last_sync: 2026-06-11T13:35:27Z
+updated_at: 2026-08-23T07:33:42+00:00
+last_sync: 2026-08-23T07:33:42Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -37,7 +37,8 @@ permalink: /packages/shaik-abdul-thouhid/ezi-code/
 
 A Unicode library for Zig. Three layers, stacked:
 
-- **`encoding`** — UTF-8, UTF-16, and UTF-32 codecs.
+- **`encoding`** — UTF-8, UTF-16, and UTF-32 codecs, plus BOM
+  detection/stripping (`encoding.bom`).
 - **`transcoding`** — conversion between the three encoding forms, plus a
   chunked UTF-8 stream decoder.
 - **`unicode`** — character properties and text algorithms backed by the
@@ -52,9 +53,9 @@ committed, so a normal build doesn't touch the network or the `ucd/` inputs.
 
 ## Status
 
-Version `0.4.0-dev` in `main` (latest release: `v0.3.0`). Pre-1.0 in the literal
+Version `0.5.0-dev` in `main` (latest release: `v0.4.1`). Pre-1.0 in the literal
 sense: the API is allowed to change.
-Tracks a recent Zig dev build (`0.17.0-dev.607+456b2ec07` minimum); it does
+Tracks a recent Zig dev build (`0.17.0-dev.657+2faf8debf` minimum); it does
 not build against stable 0.16. If your toolchain isn't on a current `master`,
 this will not compile, and that is the intended trade-off until Zig 0.17 lands.
 
@@ -69,13 +70,13 @@ adversarial test set you'd expect for UAX #9.
 Via git ref (resolves the tag at fetch time):
 
 ```sh
-zig fetch --save git+https://github.com/shaik-abdul-thouhid/ezi-code.git#v0.3.0
+zig fetch --save git+https://github.com/shaik-abdul-thouhid/ezi-code.git#v0.4.1
 ```
 
 Or via plain HTTP tarball (pins the content hash in `build.zig.zon`):
 
 ```sh
-zig fetch --save https://github.com/shaik-abdul-thouhid/ezi-code/archive/refs/tags/v0.3.0.tar.gz
+zig fetch --save https://github.com/shaik-abdul-thouhid/ezi-code/archive/refs/tags/v0.4.1.tar.gz
 ```
 
 Then in `build.zig`:
@@ -91,30 +92,60 @@ exe.root_module.addImport("ezi_code", ezi_code.module("ezi_code"));
 Individual modules (`encoding`, `transcoding`, `unicode`, `utils`) are also
 exported, so you can depend on just the layer you need.
 
+### Tracking `main` (nightly / unreleased features)
+
+To try unreleased work — features staged under `## [Unreleased]` in
+[CHANGELOG.md](CHANGELOG.md) before a version is cut — fetch the `main` branch
+ref instead of a tag:
+
+```sh
+zig fetch --save "git+https://github.com/shaik-abdul-thouhid/ezi-code.git#main"
+```
+
+`main` is pre-release and may change without notice, so pin a tag for anything
+you actually depend on. Re-run the same command to advance to the newest `main`
+commit (delete the dependency's `hash` in `build.zig.zon` first so the fetch
+re-resolves).
+
 ## Quick look
 
 ```zig
 const ezi = @import("ezi_code");
 
 // Decode and iterate UTF-8 scalars.
-const view = try ezi.utf8.initUTF8View("héllo, мир");
-var it = view.iterator();
+var scalar_count: usize = 0;
+const view = try ezi.utf8.initUTF8View("héllo, мир", &scalar_count);
+var it = view.iter();
 while (it.next()) |cp| {
     // cp: u21
     _ = cp;
 }
 
+// Where, not just whether: byte offset of the first malformed sequence.
+if (ezi.utf8.invalidIndex(input_bytes)) |at| return reportInvalidAt(at);
+
+// Detect and strip a leading byte-order mark.
+const body = ezi.bom.strip(file_bytes);
+
 // Convert between encoding forms.
 const utf16 = try ezi.transcoding.utf8ToUtf16(allocator, "Καλημέρα");
 defer allocator.free(utf16);
 
-// Normalize.
-const nfc = try ezi.unicode.nfc(allocator, "café");
-defer allocator.free(nfc);
+// Normalize ([]const CodePoint in, []const CodePoint out).
+const nfc = try ezi.unicode.nfc(allocator, &.{ 'c', 'a', 'f', 'e', 0x0301 });
+defer allocator.free(nfc);   // { 'c', 'a', 'f', 0xE9 }
 
 // Case-fold a UTF-8 string for caseless matching (ß → "ss").
 const folded = try ezi.unicode.casing.foldFullUtf8Alloc(allocator, "Straße");
 defer allocator.free(folded);   // "strasse"
+
+// Caseless search without allocating: "STRASSE" found inside "…Straße…".
+const at = try ezi.unicode.casing.indexOfFold(.full, "die Straße hier", "STRASSE");
+_ = at; // 4
+
+// Titlecase per the Unicode default algorithm (UAX #29 words).
+const titled = try ezi.unicode.casing.titlecaseUtf8Alloc(allocator, "ΜΕΓΑΣ ΣΟΦΟΣ");
+defer allocator.free(titled);   // "Μεγας Σοφος" (final sigma handled)
 
 // Measure display width on a monospace grid (wide CJK counts as 2).
 const cols = try ezi.unicode.width.stringWidth("コード");  // 6
@@ -244,7 +275,7 @@ page loads but shows no declarations, switch to the HTTP-server method above.
 
 ```text
 src/
-  encoding/        UTF-8, UTF-16, UTF-32 codecs + per-module README
+  encoding/        UTF-8, UTF-16, UTF-32 codecs, BOM utilities + per-module README
   transcoding/     Cross-encoding converters and UTF8Stream + per-module README
   unicode/         All UCD-backed properties and algorithms + per-module README
     age/  bidi/  blocks/  casing/  emoji/  hangul/  normalization/
@@ -263,9 +294,25 @@ licences/          Upstream licenses for bundled third-party code and data
 
 - Decode paths come in three flavours everywhere they exist: **strict** (full
   validation, fine-grained errors), **unchecked** (assume valid, skip checks),
-  and **lossy** (replace malformed runs with U+FFFD, never error). Error sets
-  are per-codec; "overlong", "surrogate", and "too large" are different
-  failures because callers want to treat them differently.
+  and **lossy** (replace malformed runs with U+FFFD, never error — there is no
+  panic anywhere on a lossy path). Error sets are per-codec; "overlong",
+  "surrogate", and "too large" are different failures because callers want to
+  treat them differently.
+- **Unchecked means one thing everywhere**: the caller guarantees the
+  documented preconditions; violations are asserted (safety-checked — they
+  trap in Debug/ReleaseSafe and are undefined in ReleaseFast/ReleaseSmall);
+  unchecked functions never return errors and never panic.
+- **`CodePoint` (`u21`) is a contract**: a value of this type is presumed to
+  be a valid Unicode scalar (in range, not a surrogate). APIs that produce one
+  uphold the contract; APIs that accept one — the `[]const CodePoint` variants
+  of casing, search, normalization, collation, and the `encodeCodePoints*`
+  bulk encoders — rely on it and skip decoding and validation entirely. Pass
+  already-decoded text through the CodePoint variants and you pay validation
+  exactly once, at the boundary.
+- Validation answers *where*, not just *whether*: `invalidIndex` on every
+  codec reports the offset of the first malformed sequence, and
+  `utf8.StreamingValidator` does the same across arbitrarily-chunked input
+  with no buffering.
 - The codec layer doesn't allocate. Where you need owned output, there is an
   explicit allocating variant or a buffer variant that writes into your memory.
 - Backward UTF-8 traversal is a first-class operation (`codePointLenReverse`,

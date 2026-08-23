@@ -7,9 +7,9 @@ author_github: VantStudios
 repository: https://github.com/VantStudios/Protocol
 keywords:
   - bedrock
-date: 2026-07-31
-updated_at: 2026-07-31T12:18:09+00:00
-last_sync: 2026-07-31T12:18:09Z
+date: 2026-08-22
+updated_at: 2026-08-22T20:41:32+00:00
+last_sync: 2026-08-22T20:41:32Z
 package_kind: library
 has_library: true
 has_binary: false
