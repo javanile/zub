@@ -11,8 +11,8 @@ keywords:
   - zig-program
 date: 2026-08-22
 category: data-formats
-updated_at: 2026-08-22T10:22:54+00:00
-last_sync: 2026-08-22T10:22:54Z
+updated_at: 2026-08-22T16:59:17+00:00
+last_sync: 2026-08-22T16:59:17Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -610,6 +610,8 @@ try qb.appendBuilder(&filters);
 try qb.bindDate(billing_date);
 try qb.bindTime(reminder_time);
 try qb.bindTimestampUtc(updated_at);
+// Offset decompositions retain their wall clock and numeric UTC offset.
+try qb.bindOffsetDateTime(scheduled_for);
 // qb.sqlSlice() + qb.bindsSlice() for driver execParams/queryParams
 
 // Reuse the configured builder for another statement.
@@ -635,9 +637,10 @@ allocation failure never leave a partial quoted identifier in the SQL buffer.
 `bindUuid` accepts `zsql.types.Uuid` or an optional UUID, formats the value in a
 fixed stack buffer, and copies it through the same atomic text-bind ownership
 path.
-`bindDate`, `bindTime`, and `bindTimestampUtc` provide the same contract for
-explicit temporal wrappers. The timestamp method always emits a UTC `Z` string,
-matching the wrapper's explicit policy; optional empty values bind SQL null.
+`bindDate`, `bindTime`, `bindTimeTz`, `bindTimestampUtc`, and
+`bindOffsetDateTime` provide the same contract for explicit temporal wrappers.
+UTC timestamps emit a `Z` string, while offset date/times preserve their wall
+clock and numeric offset; optional empty values bind SQL null.
 Generic `bind`, `bindAll`, and `bindJoined` also accept `Text`, `Blob`,
 `Numeric`, `Uuid`, and temporal wrappers directly, so typed values can participate
 in atomic batches without first rendering text manually.
@@ -727,13 +730,19 @@ emits lowercase hyphenated text without allocation.
 
 PostgreSQL date/time values remain raw `.text` at the driver boundary: implicit
 parsing would hide timezone and precision policy. When a checked row field or
-`Row.to` field explicitly chooses `types.Date`, `types.Time`, `types.TimeTz`, or
-`types.Timestamp`, zsql applies its strict ISO parser, including signed/expanded
-years across the supported `Date` range. Naive timestamps are interpreted as UTC;
+`Row.to` field explicitly chooses `types.Date`, `types.Time`, `types.TimeTz`,
+`types.Timestamp`, or `types.OffsetDateTime`, zsql applies its strict ISO
+parser, including signed/expanded years across the supported `Date` range.
+Naive timestamps are interpreted as UTC;
 `Z` and explicit offsets normalize to UTC. The standalone
 `parseIsoTimestamp`, `.parseIsoTimestampTz`, and `.parseIsoTimestampInstant`
-functions expose that choice directly. Wrappers can format back into caller
-buffers without allocation (for example, `timestamp.formatIsoUtc(&buffer)`).
+functions expose that choice directly. When the wall clock and offset are the
+important data, `parseIsoOffsetDateTime` instead returns an explicit
+`OffsetDateTime` with up-to-nanosecond precision intact. Wrappers can format
+back into caller buffers without allocation (for example,
+`timestamp.formatIsoUtc(&buffer)`).
+Offline checks accept that offset-preserving wrapper for `timestamptz` sources,
+while the UTC `Timestamp` wrapper remains valid for both timestamp policies.
 Each wrapper exposes its exact `iso_buffer_len`, so callers can size stack
 storage without overestimating expanded-year output.
 PostgreSQL's BC era suffix and historical timezone offsets containing seconds are
@@ -742,11 +751,34 @@ instants.
 `types.TimeTz` preserves both wall-clock time and numeric UTC offset; its parser
 accepts historical second-bearing offsets and its formatter keeps the timezone
 policy visible. Callers can combine it with a calendar date through
-`utcTimestamp`, which normalizes across day boundaries in UTC.
+`utcTimestamp`, which normalizes across day boundaries in UTC but requires a
+microsecond-representable time rather than silently truncating nanoseconds.
+`TimeTz.toOffset(offset)` converts to another explicit offset while retaining
+nanosecond precision, wrapping the wall clock across midnight when needed.
 `Timestamp.toUtcDateTime` decomposes an instant into an explicit `Date` and
 nanosecond-precision UTC `Time`; `Date.toUtcDateTime` performs the checked
-inverse. For explicit timezone rendering, `Timestamp.toOffsetDateTime(offset)`
+inverse for microsecond-representable times and rejects sub-microsecond input
+rather than silently truncating it. For full nanosecond precision, use the
+direct offset date/time decomposition and recomposition APIs. For explicit
+timezone rendering, `Timestamp.toOffsetDateTime(offset)`
 returns the shifted calendar date plus an offset-preserving `TimeTz`.
+`OffsetDateTime.toUtcDateTime` performs the same decomposition directly, so a
+offset date/time keeps all nine fractional digits without an intermediate
+microsecond-only timestamp.
+`Timestamp.UtcDateTime.toOffsetDateTime(offset)` is its direct inverse and also
+preserves nanoseconds across day-boundary shifts.
+`Date.toOffsetDateTime(timeTz)` checks and combines the original wall clock,
+offset, and nanoseconds without normalization.
+`OffsetDateTime.formatIso` renders that local date, time, and numeric offset as
+one string in `types.OffsetDateTime.iso_buffer_len` bytes. Exact day-long
+(`+/-24:00`) offsets are accepted consistently and wider offsets remain invalid.
+`OffsetDateTime.toOffset(offset)` converts the same instant to another explicit
+offset while retaining nanosecond precision and shifting the wall-clock date as
+needed.
+Checked fixed-unit arithmetic is available for explicit domains: `Date.addDays`
+and `Timestamp.addMicros` reject range overflow, while `Time.addNanos`,
+`TimeTz.addNanos`, and `OffsetDateTime.addNanos` preserve nanoseconds and apply
+midnight or timezone shifts explicitly.
 
 ### Offline checks
 
@@ -952,6 +984,8 @@ zig build -Denable-sqlite=true
 
 # Optional schema-to-Zig struct generation:
 ./zig-out/bin/zsql gen structs --schema schema.zon --out src/db/schema.zig
+# Preserve PostgreSQL timezone-aware timestamp wall clocks instead of UTC:
+./zig-out/bin/zsql gen structs --schema schema.zon --out src/db/schema.zig --timestamps=offset
 
 zig build checked-queries-example
 # CI-friendly alias for validating the checked-query schema artifact/example:
@@ -978,6 +1012,9 @@ file synchronization, with power-loss directory durability left to the target.
 Generated struct files import `zsql` themselves, map supported SQL domain types
 to `zsql.types.*` (including date, time, timestamp, and timestamptz), and preserve
 database nullability with optional Zig fields.
+Timestamps default to the normalized UTC wrapper. Pass `--timestamps=offset`
+to map timezone-aware timestamps to `types.OffsetDateTime`; naive timestamps
+remain UTC-backed in that mode.
 Column fields preserve their exact SQL names through Zig's quoted-identifier
 syntax when needed. Table types remain PascalCase; normalization collisions get
 stable ordinal suffixes instead of producing duplicate declarations.

@@ -1,6 +1,6 @@
 ---
 title: matryoshka-tk
-description: Toolkit for Building Multitasking Systems in Zig
+description: Toolkit for Building Background Processes
 license: MIT
 author: g41797
 author_github: g41797
@@ -12,9 +12,9 @@ keywords:
   - multitasking
   - std-io
   - toolkit
-date: 2026-08-20
-updated_at: 2026-08-20T08:06:40+00:00
-last_sync: 2026-08-20T08:06:40Z
+date: 2026-08-24
+updated_at: 2026-08-24T09:25:33+00:00
+last_sync: 2026-08-24T09:25:33Z
 package_kind: library
 has_library: true
 has_binary: false

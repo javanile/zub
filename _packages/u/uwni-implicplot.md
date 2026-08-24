@@ -12,9 +12,9 @@ keywords:
   - tupper
   - typst
   - typst-package
-date: 2026-08-16
-updated_at: 2026-08-16T12:08:32+00:00
-last_sync: 2026-08-16T12:08:32Z
+date: 2026-08-24
+updated_at: 2026-08-24T09:44:36+00:00
+last_sync: 2026-08-24T09:44:36Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -35,9 +35,11 @@ Draw any implicit relation `f(x, y) op g(x, y)` using interval arithmetic.
 ![Five arms of a discrete logarithmic spiral, each one implicit relation](typst/thumbnail.png)
 
 The cover is `floor(15/(2pi) ln r) = floor(15/(2pi) theta) + k (mod 15)` for
-five residues `k`, drawn by this plotter (`typst/make-thumbnail.sh`) - a step
-relation whose solution set has area and no continuity, decided exactly by
-the corner-sampling proof rather than any sign-change argument.
+five residues `k`, drawn by this plotter - a step relation whose solution set
+has area and no continuity, decided exactly by the corner-sampling proof
+rather than any sign-change argument. Two generators draw it:
+`typst/make-thumbnail.sh` through the native CLI in seconds, and
+`typst/thumbnail.typ` purely inside Typst.
 
 ```console
 $ zig build -Doptimize=ReleaseFast
@@ -49,7 +51,9 @@ sin(x^2 + y^2) = cos(x*y)
 ```
 
 `zig build run -- --help` lists the options: image size, ranges, output path,
-sub-pixel refinement depth, worker count, and ASCII output.
+a colour per relation and a background, sub-pixel refinement depth, worker
+count, and ASCII output. Several relations draw into one image, one colour
+each - the cover is a single invocation.
 
 ## How it works
 
@@ -79,9 +83,12 @@ flowchart LR
 | `eval.zig`     | one evaluator, generic over the arithmetic domain                         |
 | `relation.zig` | `f op 0`, and the two questions the plotter asks about a box              |
 | `raster.zig`   | 1 bit per pixel, byte-aligned rows                                        |
-| `png.zig`      | indexed 1-bit PNG encoder                                                 |
 | `plot.zig`     | the quadtree, in pixel-index space, run in parallel                       |
 | `contour.zig`  | the curve as polylines, by subdivision with a guaranteed topology         |
+
+The PNG itself is [zigimg](https://github.com/zigimg/zigimg)'s: the CLI and
+the Typst plugin each unpack the raster into its indexed pixels - two palette
+entries, transparency included - and let it encode.
 
 Three decisions carry most of the design:
 
@@ -123,8 +130,8 @@ typst compile typst/manual.typ
 
 `typst/` is also a complete Typst _package_: `typst.toml` names `lib.typ` as
 the entrypoint, and `zig build wasm` puts the plugin next to it. Link that
-directory into your Typst data directory as `local/implicplot/0.1.0` and it
-imports as `@local/implicplot:0.1.0`; a Typst Universe submission is the same
+directory into your Typst data directory as `local/implicplot/0.3.0` and it
+imports as `@local/implicplot:0.3.0`; a Typst Universe submission is the same
 directory minus the files `typst.toml` excludes (the manual and its assets).
 
 The relation is one string with its comparison inside it, in the same language
@@ -141,6 +148,12 @@ Two questions, two answers, and neither is an image:
 - **`contour`** asks where the curve is and returns **polylines**: arrays of
   `(x, y)`, closed curves repeating their first point, plus a count of cells
   whose topology is not guaranteed. Use it when you need a stroke.
+
+When the raster is only ever going to be drawn, **`plot-png`** returns a
+finished PNG for `image` - an array of relations in one call, one colour
+each, later drawn over earlier, on a background that defaults to transparent.
+The cover image is one such call (`typst/thumbnail.typ`), or one CLI
+invocation (`typst/make-thumbnail.sh`).
 
 `contour` is the algorithm of
 [Plantinga & Vegter, _Isotopic Approximation of Implicit Curves and Surfaces_, SGP 2004](https://pure.rug.nl/ws/files/2952308/2004ProcGeomProcPlantinga.pdf)
@@ -177,12 +190,15 @@ staircase fragments where tracing the field gives one loop.
 
 The plugin speaks the
 [wasm minimal protocol](https://github.com/typst-community/wasm-minimal-protocol).
-Both exports take two arguments: the relation as UTF-8 source text, and 42
-little-endian bytes of options - width and height as `u32`, the four range
-bounds as `f64`, a depth byte (`plot`: sub-pixel refinement; `contour`: extra
-refinement below the requested resolution, default 2), and one final byte only
-`contour` reads: the uncertain-cell policy, 0 to keep arcs apart, 1 to contract
-each uncertain cluster to a junction. The curve has values in those cells - they
+Every export takes the relation as UTF-8 source text and 42 little-endian
+bytes of options - width and height as `u32`, the four range bounds as `f64`,
+a depth byte (the plots: sub-pixel refinement; `contour`: extra refinement
+below the requested resolution, default 2), and one final byte only `contour`
+reads: the uncertain-cell policy, 0 to keep arcs apart, 1 to contract each
+uncertain cluster to a junction. `plot_png`'s relation argument holds any
+number of relations separated by NUL - a byte no relation can contain - and
+its third argument is the palette: the background, then one colour per
+relation, each zigimg's RGBA byte for byte. The curve has values in those cells - they
 sit on the curve - but the gradient vanishes there, so how the arcs connect is
 not computable; the byte is the caller saying which reading their relation
 warrants (a factorable relation genuinely crosses; a near miss does not).
