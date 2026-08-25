@@ -14,10 +14,10 @@ keywords:
   - wasm
   - webassembly
   - zero-dependency
-date: 2026-08-16
+date: 2026-08-24
 category: systems
-updated_at: 2026-08-16T06:01:30+00:00
-last_sync: 2026-08-16T06:01:30Z
+updated_at: 2026-08-24T21:27:43+00:00
+last_sync: 2026-08-24T21:27:43Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -43,7 +43,7 @@ Zignal is a zero-dependency image processing library inspired by [dlib](https://
 - **Core Math:** Matrices (`SMatrix`, `Matrix`, SVD), PCA, ND Geometry (SIMD Points, affine/projective transforms, convex hull), Statistics, Optimization.
 - **Computer Vision:** Feature detection and matching (FAST, ORB), Edge detection (Shen-Castan), Hough Transform, QR code encoding and decoding, Feature Distribution Matching (style transfer).
 - **Image Processing:** Spatial transforms (resize, crop, rotate), morphology, convolution filters (blur, sharpen), thresholding, advanced Color Spaces (Lab, Oklab, Oklch, Xyb, Lms, etc.), Perlin noise generation.
-- **I/O & Graphics:** Pure-Zig PNG/JPEG codecs, Canvas API (antialiasing, Bézier curves), Bitmap/PCF Fonts, Colormaps, Terminal graphics (Kitty/Sixel).
+- **I/O & Graphics:** Pure-Zig PNG/JPEG codecs, Canvas API (antialiasing, Bézier curves, nonzero/even-odd polygon fills), Bitmap (BDF/PCF) and TrueType fonts, Colormaps, Terminal graphics (Kitty/Sixel).
 - **Platform Support:** Native Zig, first-class Python bindings, and WASM compilation for the web.
 
 ## Status

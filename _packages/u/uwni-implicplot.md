@@ -12,9 +12,9 @@ keywords:
   - tupper
   - typst
   - typst-package
-date: 2026-08-24
-updated_at: 2026-08-24T09:44:36+00:00
-last_sync: 2026-08-24T09:44:36Z
+date: 2026-08-25
+updated_at: 2026-08-25T08:11:15+00:00
+last_sync: 2026-08-25T08:11:15Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -37,9 +37,9 @@ Draw any implicit relation `f(x, y) op g(x, y)` using interval arithmetic.
 The cover is `floor(15/(2pi) ln r) = floor(15/(2pi) theta) + k (mod 15)` for
 five residues `k`, drawn by this plotter - a step relation whose solution set
 has area and no continuity, decided exactly by the corner-sampling proof
-rather than any sign-change argument. Two generators draw it:
-`typst/make-thumbnail.sh` through the native CLI in seconds, and
-`typst/thumbnail.typ` purely inside Typst.
+rather than any sign-change argument. Two generators draw it: `zig build
+examples` through the native CLI in seconds, and `typst/thumbnail.typ`
+purely inside Typst.
 
 ```console
 $ zig build -Doptimize=ReleaseFast
@@ -51,9 +51,30 @@ sin(x^2 + y^2) = cos(x*y)
 ```
 
 `zig build run -- --help` lists the options: image size, ranges, output path,
-a colour per relation and a background, sub-pixel refinement depth, worker
-count, and ASCII output. Several relations draw into one image, one colour
-each - the cover is a single invocation.
+a colour per relation and a background, refinement depth, worker count, and
+ASCII output. Several relations draw into one image, one colour each - the
+cover is a single invocation. Algorithm and file format are two independent
+choices: `-t` switches the algorithm from plotting pixels to tracing curves
+with `contour`, and the output path's `.svg` picks the SVG container over
+PNG - fitted cubic Beziers from a trace, the raster embedded whole from a
+plot; a trace written to PNG is rasterized. `-u` picks what a trace draws
+where the topology cannot be certified: `avoid` keeps crossing arcs apart,
+`join` threads them straight through, so genuine crossings cross.
+
+## Gallery
+
+Each image is one CLI invocation; `zig build examples -Doptimize=ReleaseFast`
+redraws them all, cover included. The call picks the algorithm: equalities
+are traced by `contour` and written as SVG polylines (`-t`), inequalities
+plotted by `plot` into rasters - as is the cover, whose step relation has a
+solution set with area, no curve to trace.
+
+|     |     |     |
+| :-: | :-: | :-: |
+| ![rings](example/rings.svg) | ![hyperbolas](example/hyperbolas.svg) | ![cells](example/cells.svg) |
+| `sin(x^2 + y^2) = cos(x*y)` | `x*y*sin(x*y)*cos(x*y) = x + y` | `sin(x^2) + sin(y^2) = 1` |
+| ![halftone](example/halftone.png) | ![fingerprint](example/fingerprint.png) | ![checker](example/checker.png) |
+| `sin(x^2 + y^2) + sin(x*y) > 0.3` | `sin(x^2 + y^2 - 2*atan(y / (sqrt(x^2 + y^2) + x))`<br>`+ sin(x*y) / 2) < 0` | `sin(x^2) * sin(y^2) > 0` |
 
 ## How it works
 
@@ -85,6 +106,8 @@ flowchart LR
 | `raster.zig`   | 1 bit per pixel, byte-aligned rows                                        |
 | `plot.zig`     | the quadtree, in pixel-index space, run in parallel                       |
 | `contour.zig`  | the curve as polylines, by subdivision with a guaranteed topology         |
+| `fit.zig`      | those polylines as G1 cubic Beziers within a tolerance (Schneider, 1990)  |
+| `svg.zig`      | the fitted curves as an SVG document                                      |
 
 The PNG itself is [zigimg](https://github.com/zigimg/zigimg)'s: the CLI and
 the Typst plugin each unpack the raster into its indexed pixels - two palette
@@ -153,7 +176,7 @@ When the raster is only ever going to be drawn, **`plot-png`** returns a
 finished PNG for `image` - an array of relations in one call, one colour
 each, later drawn over earlier, on a background that defaults to transparent.
 The cover image is one such call (`typst/thumbnail.typ`), or one CLI
-invocation (`typst/make-thumbnail.sh`).
+invocation (`zig build examples`).
 
 `contour` is the algorithm of
 [Plantinga & Vegter, _Isotopic Approximation of Implicit Curves and Surfaces_, SGP 2004](https://pure.rug.nl/ws/files/2952308/2004ProcGeomProcPlantinga.pdf)
@@ -175,9 +198,9 @@ first, and `dual.zig` - forward-mode differentiation as another arithmetic
 domain, which `eval.Evaluator` runs without a line of change - for the second.
 
 The tree is adaptive in the way that matters: `n` is how finely the curve is
-resolved, not a grid walked everywhere. A circle in a large empty view costs one
-evaluation per empty cell and comes back as 61 points; empty space is never
-refined.
+resolved, not a grid walked everywhere. A circle in a large empty view costs
+one evaluation per empty cell and comes back as 173 points; empty space is
+never refined.
 
 Where it stops short, it says so. `grad F` vanishes at a self-intersection, so
 neither clause can ever hold there - the paper assumes zero is a regular value.
@@ -212,10 +235,10 @@ exactly one place, `lib.typ` has no table to keep in step with the Zig enums,
 and adding one makes it writable in a document at once.
 
 A relation that does not parse comes back as the protocol's failure message, as
-does one over 64 KiB or nested past 256 levels - limits the parser has because
-a document is untrusted input and freestanding wasm, with panics compiled out,
-would otherwise trap without a word. The message is the caret report the command
-line prints:
+does one nested past 256 levels - a limit the parser has because the recursive
+descent costs stack, and freestanding wasm, with panics compiled out, would
+otherwise trap without a word. The message is the caret report the command line
+prints:
 
 ```text
 error: plugin errored with: unknown name

@@ -22,10 +22,10 @@ keywords:
   - trackpoint
   - winapi
   - windows
-date: 2026-08-19
+date: 2026-08-25
 category: systems
-updated_at: 2026-08-19T21:57:18+00:00
-last_sync: 2026-08-19T21:57:18Z
+updated_at: 2026-08-25T08:56:41+00:00
+last_sync: 2026-08-25T08:56:41Z
 package_kind: binary
 has_library: false
 has_binary: true

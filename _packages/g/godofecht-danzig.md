@@ -12,10 +12,10 @@ keywords:
   - dsp
   - plugin
   - vst3
-date: 2026-07-30
+date: 2026-08-23
 category: game-development
-updated_at: 2026-07-30T16:36:43+00:00
-last_sync: 2026-07-30T16:36:43Z
+updated_at: 2026-08-23T19:45:44+00:00
+last_sync: 2026-08-23T19:45:44Z
 package_kind: hybrid
 has_library: true
 has_binary: true

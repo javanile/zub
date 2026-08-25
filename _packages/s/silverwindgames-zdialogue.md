@@ -8,10 +8,10 @@ repository: https://github.com/silverwindgames/zdialogue
 keywords:
   - gamedev
   - yarnspinner
-date: 2026-07-11
+date: 2026-08-23
 category: game-development
-updated_at: 2026-07-11T01:46:08+00:00
-last_sync: 2026-07-11T01:46:08Z
+updated_at: 2026-08-23T15:44:02+00:00
+last_sync: 2026-08-23T15:44:02Z
 package_kind: hybrid
 has_library: true
 has_binary: true
