@@ -13,10 +13,10 @@ keywords:
   - websocket
   - websocket-client
   - websocket-server
-date: 2026-08-21
+date: 2026-08-26
 category: networking
-updated_at: 2026-08-21T07:24:19+00:00
-last_sync: 2026-08-21T07:24:19Z
+updated_at: 2026-08-26T08:25:10+00:00
+last_sync: 2026-08-26T08:25:10Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -46,7 +46,7 @@ The server API is inspired by Karl Seguin's [http.zig](https://github.com/karlse
 - WebSocket support (RFC 6455)
 - HTTP/HTTPS client with connection pooling
 - Unix domain socket support for client connections
-- Optional TLS support in both client and server (via [tls.zig](https://github.com/ianic/tls.zig))
+- Optional TLS support in both client and server, including mTLS for authentication (via [tls.zig](https://github.com/ianic/tls.zig))
 
 ## Installation
 
@@ -108,6 +108,44 @@ pub fn main(init: std.process.Init) !void {
         std.debug.print("Body: {s}\n", .{body});
     }
 }
+```
+
+### HTTPS and Client Certificates
+
+By default the client verifies servers against the system trust store. `ClientConfig.tls`
+overrides that, and adds a client certificate for servers that require mutual TLS:
+
+```zig
+var client = http.Client.init(init.gpa, init.io, .{
+    .tls = .{
+        // .system (default), .{ .file = ... }, .{ .dir = ... }, or .none
+        .ca = .{ .file = .{ .path = "ca.pem" } },
+        // Presented when the server asks the client to authenticate itself.
+        .client_certificate = .{ .cert_path = "client.pem", .key_path = "client.key" },
+    },
+});
+```
+
+The key must be an unencrypted PKCS#8 (`BEGIN PRIVATE KEY`) or SEC1 (`BEGIN EC PRIVATE KEY`) PEM file.
+
+These settings apply to every connection a client makes; connections are pooled and reused
+across requests, so they cannot be varied per request. Use a separate `Client` per identity.
+
+The server side is symmetric — `client_auth` makes it ask connecting clients for a certificate:
+
+```zig
+var server = http.Server(void).init(gpa, io, .{
+    .tls = .{
+        .cert_path = "server.pem",
+        .key_path = "server.key",
+        .client_auth = .{
+            .ca = .{ .file = .{ .path = "client-ca.pem" } },
+            // .require (default) rejects a client that sends no certificate;
+            // .request asks for one but accepts an empty reply.
+            .mode = .require,
+        },
+    },
+}, {});
 ```
 
 ### Unix Socket Client Example

@@ -12,9 +12,9 @@ keywords:
   - multitasking
   - std-io
   - toolkit
-date: 2026-08-25
-updated_at: 2026-08-25T10:05:51+00:00
-last_sync: 2026-08-25T10:05:51Z
+date: 2026-08-26
+updated_at: 2026-08-26T06:18:56+00:00
+last_sync: 2026-08-26T06:18:56Z
 package_kind: library
 has_library: true
 has_binary: false

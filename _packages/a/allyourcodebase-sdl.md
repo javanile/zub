@@ -6,9 +6,9 @@ author: allyourcodebase
 author_github: allyourcodebase
 repository: https://github.com/allyourcodebase/SDL
 keywords:
-date: 2026-08-22
-updated_at: 2026-08-22T04:55:27+00:00
-last_sync: 2026-08-22T04:55:27Z
+date: 2026-08-25
+updated_at: 2026-08-25T06:00:38+00:00
+last_sync: 2026-08-25T06:00:38Z
 package_kind: hybrid
 has_library: true
 has_binary: true
