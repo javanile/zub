@@ -15,10 +15,10 @@ keywords:
   - qt-widgets
   - qt6
   - qt6-widgets
-date: 2026-07-30
+date: 2026-08-27
 category: systems
-updated_at: 2026-07-30T05:53:23+00:00
-last_sync: 2026-07-30T05:53:23Z
+updated_at: 2026-08-27T19:19:18+00:00
+last_sync: 2026-08-27T19:19:18Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -208,7 +208,7 @@ Prefixed libraries have per-library options that can be used to enable or disabl
 zig build -Denable-charts -Denable-qscintilla=false
 ```
 
-In the event that one or more extra library include paths are needed e.g. a locally compiled extra library in a non-standard path, the `extra-paths` option supports this use case:
+In the event that one or more extra library include paths are needed, e.g. a locally compiled extra library in a non-standard path, the `extra-paths` option supports this use case:
 
 ```bash
 zig build -Dextra-paths="C:/Qt/6/llvm-mingw_64"
@@ -314,7 +314,7 @@ flatpak run --device=dri --filesystem=home --share=ipc --share=network --socket=
 For macOS, currently the Qt 6 framework and select third-party modules are available via [Homebrew](https://brew.sh/). Installation via this method should require no further steps.
 
 ```bash
-brew install qt6 karchive ki18n qscintilla2 qtkeychain
+brew install qt6 karchive ki18n poppler-qt6 qscintilla2 qtkeychain
 ```
 
 > [!IMPORTANT]
@@ -545,7 +545,7 @@ Under normal conditions, the first compilation of the entire library should take
 
 ### Q3. How does the `libqt6c` API differ from the official Qt C++ API?
 
-Supported Qt C++ class methods are implemented 1:1 as C functions where the function names in C correspond to the snake_case equivalent of the combined Qt C++ class and method names, with the `Q` prefix altered to `q_`. [The official Qt documentation](https://doc.qt.io/qt-6/classes.html) should be used for reference and is included in the library wrapper header code (though not all links are guaranteed to work perfectly, nor is this functionality in scope for this project). Some of the main concepts are described below with a table of code equivalents following for reference.
+Supported Qt C++ class methods are implemented 1:1 as C functions where the function names in C correspond to the snake_case equivalent of the combined Qt C++ class and method names, with the `Q` prefix altered to `q_`. [The official Qt documentation](https://doc.qt.io/qt-6/classes.html) or the third-party library links should be used for reference and is included in the library wrapper header code (though not all links are guaranteed to work perfectly, nor is this functionality in scope for this project). Some of the main concepts are described below with a table of code equivalents following for reference.
 
 - `QWidget::show()` is projected as `q_widget_show(void*)`
 - `QPushButton::setText(QString)` is projected as `q_pushbutton_set_text(void*, const char*)`
@@ -560,7 +560,7 @@ The library tries to adhere to idiomatic C where possible but is still bound by 
 - [Qt's Meta-Object system](https://doc.qt.io/qt-6/metaobjects.html)
 - [Qt widgets](https://doc.qt.io/qt-6/examples-widgets.html)
 
-The `QAnyStringView`, `QByteArray`, `QByteArrayView`, `QLatin1String`, `QLatin1StringView`, `QString`, and `QStringView` types are projected as plain C types: `char*` and `const char*`. The `QList<T>`, `QSpan<T>`, `QVector<T>`, and `QSet<T>` types are projected as `T**` or `T*[]` when used as an input parameter and supported by the helper library as `libqt_list<T>` when used as a return type. The `QHash<K,V>` and `QMap<K,V>` types are supported by the helper library as `libqt_map<K,V>` but are limited beyond basic capacities with no goal of feature expansion beyond the functionality required for adequate operation in the library. The same applies for the `QMultiHash<K,V>` and `QMultiMap<K,V>` types that are represented as `libqt_map<K,V*>`. Consumers of this library are free to use types from other libraries as well, especially for hash types. The [included helper library](https://github.com/rcalixte/libqt6c/blob/master/include/qtlibc.h) is not meant to be robust but to provide containers and functions for porting the Qt C++ API to a consumable C ABI API, however there are convenience macros and functions available for use. By default, this library does not expose the raw C ABI bindings and instead only makes the wrapper constructs and C ABI pointer types for the Qt C++ API available. Therefore, it is not possible call the raw C ABI or any of the Qt type's methods and some C equivalent method from the wrappers must be used instead. This library was constructed with the goal of enabling single-language application development. Anything beyond that boundary is up to the developer to implement.
+The `QAnyStringView`, `QByteArray`, `QByteArrayView`, `QLatin1String`, `QLatin1StringView`, `QString`, and `QStringView` types are projected as plain C types: `char*` and `const char*`. The `QList<T>`, `QSpan<T>`, `QVector<T>`, and `QSet<T>` types are projected as `T**` or `T*[]` when used as an input parameter and supported by the helper library as `libqt_list<T>` when used as a return type. The `QHash<K,V>` and `QMap<K,V>` types are supported by the helper library as `libqt_map<K,V>` but are limited beyond basic capacities with no goal of feature expansion beyond the functionality required for adequate operation in the library. The same applies for the `QMultiHash<K,V>` and `QMultiMap<K,V>` types that are represented as `libqt_map<K,V*>`. Consumers of this library are free to use types from other libraries as well, especially for hash types. The [included helper library](https://github.com/rcalixte/libqt6c/blob/master/include/qtlibc.h) is not meant to be robust but to provide containers and functions for porting the Qt C++ API to a consumable C ABI API, however there are convenience macros and functions available for use. By default, this library does not expose the raw C ABI bindings and instead only makes the wrapper constructs and C ABI pointer types for the Qt C++ API available. Therefore, it is not possible to call the raw C ABI or any of the Qt type's methods and some C equivalent method from the wrappers must be used instead. This library was constructed with the goal of enabling single-language application development. Anything beyond that boundary is up to the developer to implement.
 
 - C string types are internally converted to `QString` using `QString::fromUtf8`. Therefore, the C string input must be UTF-8 to avoid [mojibake](https://en.wikipedia.org/wiki/Mojibake). If the C input string contains binary data, the conversion would corrupt such bytes into U+FFFD (�). On return to C space, this becomes `\xEF\xBF\xBD`.
 
@@ -574,7 +574,7 @@ The `connect(targetObject, SIGNAL(signal()), targetSlot, SLOT(slot()))` methods 
   - `on_paint_event`: Set an override callback function to be called when `paint_event` is invoked. For certain methods, even with the override set, the base class implementation can still be called by Qt internally and these calls can not be prevented.
   - `super_paint_event`: Invoke the base class implementation of `paint_event`. This is useful for when the custom implementation requires the base class implementation. (When there is no override set, the `super_paint_event` implementation is equivalent to `paint_event`.)
 
-Due to current limitations, QPainter does not reliably initialize within paint event callbacks, even when using manual `begin()` and `end()` calls. The result is warnings such as "A paint device can only be painted by one painter at a time" and "Painter not active." As a workaround, use QStylePainter instead for painting operations. QStylePainter inherits from QPainter, meaning that it provides access to the same drawing methods (`drawRect`, `drawLine`, `setBrush`, etc.), but it properly handles the painting context that fails to be managed with the standard QPainter. This is not Qt's official recommendation, but for practical purposes, when using this library, use QStylePainter as your standard painter class for paint event implementations.
+In some instances, there is the scenario that either a base class cannot be passed as a parent class when the parent class is not the primary inherited class or a return type from a secondary class may require downcasting to a known derived class object. As an example, `QWidget` inherits from `QObject` and `QPaintDevice` where `QPaintDevice` is the secondary parent class. Therefore, in order to pass a type of `QWidget` (or that inherits from `QWidget`) as an object of type `QPaintDevice`, such as initializing a `QPainter` object in a paint event callback, a manual upcast must be used instead, e.g. to reliably initialize a `QPainter` object, `q_painter_new2(q_widget_as_q_paint_device(widget))`. The same is true for methods that return `QPaintDevice` and where downcasting is desired, such as `q_painter_device()`. Where supported, in order to safely downcast, the method's return value must be wrapped, e.g. `q_widget_from_q_paint_device(q_painter_device(painter))`. Calling a method defined in `QPaintDevice` from an inherited class such as `QWidget` is automatically handled by the library via upcasting. For the full list of base classes that have secondary class inheritance, refer to the [manual casts due to multiple inheritance reference document](https://github.com/rcalixte/libqt6c/tree/master/INHERITANCE.md). For example usages, please refer to the examples.
 
 Qt class inherited types are projected via void pointers and type casting in C. For example, to pass a `QLabel* myLabel` to a function taking only the `QWidget*` base class, it should be sufficient to pass `myLabel` and the library will automatically cast it to the correct type and Qt vtable reference.
 
@@ -592,7 +592,7 @@ Qt C++ enums are projected as PascalCase C typedef enums, replacing namespace in
 
 ```cpp
 // Qt 6 C++ API
-QWidget* widget = new QWidget();
+QWidget* widget = new QWidget;
 widget->setWindowTitle("Hello world!");
 widget->show();
 
