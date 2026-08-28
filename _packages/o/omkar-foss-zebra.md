@@ -7,9 +7,10 @@ author_github: omkar-foss
 repository: https://github.com/omkar-foss/zebra
 keywords:
   - config-loader
-date: 2026-07-21
-updated_at: 2026-07-21T14:03:30+00:00
-last_sync: 2026-07-21T14:03:30Z
+  - noai
+date: 2026-08-19
+updated_at: 2026-08-19T15:14:41+00:00
+last_sync: 2026-08-19T15:14:41Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -93,8 +94,6 @@ Refer to [integration.zig](./tests/integration.zig) for detailed usage examples.
 
 I'd really appreciate any help from the community towards making Zebra better. Please check out [CONTRIBUTING.md](CONTRIBUTING.md) to get started!
 
-### Note on AI usage
+### Note on AI/LLM use
 
-Automated PRs without clear human oversight will be closed. I welcome the use of AI as a
-productivity tool, but all PRs must be authored, reviewed, and justified by a human who takes full
-responsibility for the logic, security, and maintenance of the code.
+This project follows a [strict no-AI policy](https://ziglang.org/code-of-conduct/#strict-no-llm-no-ai-policy) and does not accept contributions with AI/LLM use in any form.

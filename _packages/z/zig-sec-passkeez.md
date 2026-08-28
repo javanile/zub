@@ -16,10 +16,10 @@ keywords:
   - passkey
   - passkeys
   - webauthn
-date: 2026-08-16
+date: 2026-08-28
 category: systems
-updated_at: 2026-08-16T18:17:40+00:00
-last_sync: 2026-08-16T18:17:40Z
+updated_at: 2026-08-28T19:20:18+00:00
+last_sync: 2026-08-28T19:20:18Z
 package_kind: binary
 has_library: false
 has_binary: true
@@ -44,16 +44,62 @@ Since version `0.7.4` PassKeeZ is fully compatible with [KeePassDX](https://www.
 > [!IMPORTANT]
 > If you like this project, you can contribute in many forms, e.g., if you know how to package software for different distros you can help with making the installation process better.
 
-**To get started, please visit the [Wiki](https://codeberg.org/r4gus/PassKeeZ/wiki)**. The video below shows the full installation via the installer script.
+## Installing PassKeez
 
-[![Installing PassKeeZ Video](https://img.youtube.com/vi/_Z2yj9kszvU/0.jpg)](https://www.youtube.com/watch?v=_Z2yj9kszvU)
+### via Package Manager
 
-**Quick Install** (For "lazy" people. If in doubt please read the script before running it.)
+#### Arch
+
+The [Arch User Repository (AUR)](https://aur.archlinux.org/packages/passkeez) offers a package maintained by the community.
+
+#### Debian/ Ubuntu
+
+Follow these steps to install PassKeeZ using `apt`.
+
+##### Import the public key
+
+From a terminal, install `gnupg` and `curl` if they are not already available:
+
+```bash
+sudo apt install gnupg curl
+```
+
+To import the PassKeeZ public GPG-key, run the following command:
+
+```bash
+curl -fsSL https://pgp.passkeez.org/passkeez.asc | sudo gpg -o /usr/share/keyrings/passkeez.gpg --dearmor
+```
+
+##### Import the list file
+
+Create the list file `/etc/apt/sources.list.d/passkeez.list`:
+
+```bash
+echo "deb [ arch=amd64 signed-by=/usr/share/keyrings/passkeez.gpg ] https://ppa.passkeez.org/ stable main" | sudo tee /etc/apt/sources.list.d/passkeez.list
+```
+
+##### Reload package database and install PassKeeZ
+
+First update the package database with:
+```
+sudo apt update
+```
+
+Next, install the latest stable version of PassKeeZ:
+```
+sudo apt install passkeez
+```
+
+### Install Script
+
+> For "lazy" people. If in doubt please read the script before running it.
 
 | Version | Command |
 |:--------|:--------|
 | 0.6.3   | `sudo bash -c "$(curl -fsSL https://codeberg.org/r4gus/PassKeeZ/raw/branch/master/script/install-linux.sh)" install-linux.sh --vpasskeez 0.6.3 --vzig 0.15.2 --vzigenity 0.7.1`|
 | 0.7.4   | `sudo bash -c "$(curl -fsSL https://codeberg.org/r4gus/PassKeeZ/raw/branch/master/script/install-linux.sh)"` |
+
+You can find more info in the [Wiki](https://codeberg.org/r4gus/PassKeeZ/wiki).
 
 **Browsers**
 

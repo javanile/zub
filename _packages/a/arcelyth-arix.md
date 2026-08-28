@@ -9,9 +9,9 @@ keywords:
   - dom
   - html
   - html-parser
-date: 2026-08-24
-updated_at: 2026-08-24T07:10:48+00:00
-last_sync: 2026-08-24T07:10:48Z
+date: 2026-08-28
+updated_at: 2026-08-28T17:54:17+00:00
+last_sync: 2026-08-28T17:54:17Z
 package_kind: binary
 has_library: false
 has_binary: true
@@ -27,4 +27,15 @@ permalink: /packages/Arcelyth/arix/
 
 # Arix
 
-A HTML parser written in Zig.
+Arix is an HTML parser written in Zig for the purpose of high performance and minimal memory usage. It currently includes an encoding
+sniffer, an HTML tokenizer, a TreeBuilder for tree construction, and a small DOM implementation.
+Parser behavior is tested against the [html5lib test suite](https://github.com/html5lib/html5lib-tests).
+
+Build and run the test: 
+```sh
+zig build test
+```
+
+You can add `debug` flag to show the debug informations. <br>
+Add `-- [test_name]` to filter tests. <br>
+For example: `zig build test --summary all -- tokenizer`.

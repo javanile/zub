@@ -1,6 +1,6 @@
 ---
 title: zix
-description: "A high-performance network backend library & http engine written in Zig. Where the wire meets the will. Every byte owned, every thread deliberate, every route explicit. (MIRRORED)"
+description: "A high-performance network backend library & http engine written in Zig. Where the wire meets the will. Every byte owned, every thread deliberate, every route explicit. Built for REST APIs, WebSocket, SSE, gRPC, and microservices. (MIRRORED)"
 license: BSD-3-Clause
 author: prothegee
 author_github: prothegee
@@ -22,10 +22,10 @@ keywords:
   - webrtc
   - webserver
   - websockets
-date: 2026-08-26
+date: 2026-08-28
 category: networking
-updated_at: 2026-08-26T09:07:28+00:00
-last_sync: 2026-08-26T09:07:28Z
+updated_at: 2026-08-28T17:04:44+00:00
+last_sync: 2026-08-28T17:04:44Z
 package_kind: hybrid
 has_library: true
 has_binary: true

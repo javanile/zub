@@ -6,15 +6,15 @@ author: loftafi
 author_github: loftafi
 repository: https://github.com/loftafi/praxis
 keywords:
-date: 2026-07-15
-updated_at: 2026-07-15T02:59:34+00:00
-last_sync: 2026-07-15T02:59:34Z
-package_kind: library
+date: 2026-08-19
+updated_at: 2026-08-19T22:22:56+00:00
+last_sync: 2026-08-19T22:22:56Z
+package_kind: hybrid
 has_library: true
-has_binary: false
-has_distributable_binary: false
-binary_count: 0
-distributable_binary_count: 0
+has_binary: true
+has_distributable_binary: true
+binary_count: 1
+distributable_binary_count: 1
 multiple_binaries: false
 is_sponsor: false
 sync_priority: normal

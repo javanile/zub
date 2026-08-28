@@ -12,8 +12,8 @@ keywords:
   - nats-streaming
   - zio
 date: 2026-08-19
-updated_at: 2026-08-19T10:41:50+00:00
-last_sync: 2026-08-19T10:41:50Z
+updated_at: 2026-08-19T12:34:59+00:00
+last_sync: 2026-08-19T12:34:59Z
 package_kind: hybrid
 has_library: true
 has_binary: true
