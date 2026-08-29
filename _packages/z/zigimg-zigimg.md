@@ -14,9 +14,9 @@ keywords:
   - pcx
   - png
   - png-decoder
-date: 2026-06-28
-updated_at: 2026-06-28T07:58:14+00:00
-last_sync: 2026-06-28T07:58:14Z
+date: 2026-08-27
+updated_at: 2026-08-27T19:13:08+00:00
+last_sync: 2026-08-27T19:13:08Z
 package_kind: library
 has_library: true
 has_binary: false

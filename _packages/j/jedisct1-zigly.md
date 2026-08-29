@@ -9,10 +9,10 @@ keywords:
   - compute
   - fastly
   - webassembly
-date: 2026-08-19
+date: 2026-08-29
 category: systems
-updated_at: 2026-08-19T06:39:45+00:00
-last_sync: 2026-08-19T06:39:45Z
+updated_at: 2026-08-29T13:13:51+00:00
+last_sync: 2026-08-29T13:13:51Z
 package_kind: hybrid
 has_library: true
 has_binary: true

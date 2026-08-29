@@ -12,10 +12,10 @@ keywords:
   - memory-allocator
   - no-std
   - rust
-date: 2026-08-16
+date: 2026-08-29
 category: systems
-updated_at: 2026-08-16T20:33:39+00:00
-last_sync: 2026-08-16T20:33:39Z
+updated_at: 2026-08-29T13:59:26+00:00
+last_sync: 2026-08-29T13:59:26Z
 package_kind: library
 has_library: false
 has_binary: false
@@ -44,13 +44,13 @@ A Rust and Zig port of Dimitar Lazarov's **HPHA** (2007).
 [![Zig](https://img.shields.io/badge/Zig-0.16.0-f7a41d?logo=zig)](https://ziglang.org/)
 [![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue)](#license)
 
-**Working draft — v0.4. Both the `orisnik` (Rust) and `orisnitsa` (Zig) v0.1.0 allocator cores are implemented and passing their full verification gauntlets. Both ports release together, in lockstep, once v0.1.0 is tagged.**
+**Document revision 0.4. v0.1.1 has shipped: both the `orisnik` (Rust) and `orisnitsa` (Zig) allocator cores are released, in lockstep.**
 
 ## Status
 
-- **`orisnik` (Rust)** — the v0.1.0 allocator core is implemented: the bucket (small-allocation) and red-black-tree best-fit (large-allocation) sub-allocators, plus the three public surfaces (`oris_*` C-ABI, `GlobalAlloc`, an optional `Allocator` trait). 80+ tests, most Miri-covered. Not yet released — see [Rust/README.md](Rust/README.md) for details and [CHANGELOG.md](CHANGELOG.md) for what shipped.
-- **`orisnitsa` (Zig)** — the v0.1.0 allocator core is implemented: the same bucket and red-black-tree best-fit sub-allocators, plus the three public surfaces (`Orisnitsa`'s own methods, a `std.mem.Allocator` vtable, the `oris_*` C-ABI). 80+ tests, verified in Debug/ReleaseSafe/ReleaseFast across all three OSes — Zig's analog of the Rust port's Miri gate. Not yet released — see [Zig/README.md](Zig/README.md) for details and [CHANGELOG.md](CHANGELOG.md) for what shipped.
-- Both ports **ship in lockstep** (see [Versioning policy](ROADMAP.md#versioning-policy)): one version number means the same feature set and the same internal state transitions on both sides. With both cores now feature-complete, v0.1.0 is ready to tag once the release ceremony runs.
+- **`orisnik` (Rust)** — v0.1.1 is released: the bucket (small-allocation) and red-black-tree best-fit (large-allocation) sub-allocators, plus the three public surfaces (`oris_*` C-ABI, `GlobalAlloc`, an optional `Allocator` trait). 94 tests, the entire public surface Miri-covered. See [Rust/README.md](Rust/README.md) for details and [CHANGELOG.md](CHANGELOG.md) for what shipped.
+- **`orisnitsa` (Zig)** — v0.1.1 is released: the same bucket and red-black-tree best-fit sub-allocators, plus the three public surfaces (`Orisnitsa`'s own methods, a `std.mem.Allocator` vtable, the `oris_*` C-ABI). 96 tests, verified in Debug/ReleaseSafe/ReleaseFast across all three OSes — Zig's analog of the Rust port's Miri gate. See [Zig/README.md](Zig/README.md) for details and [CHANGELOG.md](CHANGELOG.md) for what shipped.
+- Both ports **ship in lockstep** (see [Versioning policy](ROADMAP.md#versioning-policy)): one version number means the same feature set and the same internal state transitions on both sides. See [RELEASING.md](RELEASING.md) for the checklist that cuts each release.
 
 The two foundational documents:
 
@@ -60,8 +60,8 @@ The two foundational documents:
 ## Structure
 
 - **[Cpp/](Cpp/)** — the canonical HPHA reference source from 2007, included for diff and reference purposes. See [Cpp/NOTICE.md](Cpp/NOTICE.md) for the license trail.
-- **[Rust/](Rust/)** — the `orisnik` crate (targets Rust 1.85 / edition 2024). v0.1.0 allocator core implemented, pending release; name reserved on crates.io at `0.0.0` in the meantime.
-- **[Zig/](Zig/)** — the `orisnitsa` module (targets Zig 0.16.0). v0.1.0 allocator core implemented, pending release.
+- **[Rust/](Rust/)** — the `orisnik` crate (targets Rust 1.85 / edition 2024), released at v0.1.1 on crates.io.
+- **[Zig/](Zig/)** — the `orisnitsa` module (targets Zig 0.16.0), released at v0.1.1 as a GitHub Release asset.
 - **[.github/workflows/](.github/workflows/)** — CI for both ports (3-OS matrix; Rust adds a Miri soundness lane) plus tag-driven publishing: crates.io via Trusted Publishing, and a re-rooted Zig release asset — both fire off the same `vX.Y.Z` tag.
 
 ## Coding conventions

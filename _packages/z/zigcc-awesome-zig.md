@@ -11,9 +11,9 @@ keywords:
   - awesome-list
   - bun
   - mach
-date: 2026-08-19
-updated_at: 2026-08-19T07:23:46+00:00
-last_sync: 2026-08-19T07:23:46Z
+date: 2026-08-29
+updated_at: 2026-08-29T10:27:40+00:00
+last_sync: 2026-08-29T10:27:40Z
 package_kind: library
 has_library: false
 has_binary: false

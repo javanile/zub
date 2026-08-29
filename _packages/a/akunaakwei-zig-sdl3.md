@@ -6,9 +6,9 @@ author: akunaakwei
 author_github: akunaakwei
 repository: https://github.com/akunaakwei/zig-sdl3
 keywords:
-date: 2026-08-26
-updated_at: 2026-08-26T06:09:02+00:00
-last_sync: 2026-08-26T06:09:02Z
+date: 2026-08-29
+updated_at: 2026-08-29T06:58:10+00:00
+last_sync: 2026-08-29T06:58:10Z
 package_kind: library
 has_library: true
 has_binary: false

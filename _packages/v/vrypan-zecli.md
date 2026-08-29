@@ -7,10 +7,10 @@ author_github: vrypan
 repository: https://github.com/vrypan/zecli
 keywords:
   - cli
-date: 2026-08-28
+date: 2026-08-29
 category: tooling
-updated_at: 2026-08-28T20:26:45+00:00
-last_sync: 2026-08-28T20:26:45Z
+updated_at: 2026-08-29T09:12:35+00:00
+last_sync: 2026-08-29T09:12:35Z
 package_kind: library
 has_library: true
 has_binary: false

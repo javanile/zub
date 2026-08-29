@@ -16,10 +16,10 @@ keywords:
   - passkey
   - passkeys
   - webauthn
-date: 2026-08-28
+date: 2026-08-29
 category: systems
-updated_at: 2026-08-28T19:20:18+00:00
-last_sync: 2026-08-28T19:20:18Z
+updated_at: 2026-08-29T06:51:34+00:00
+last_sync: 2026-08-29T06:51:34Z
 package_kind: binary
 has_library: false
 has_binary: true
@@ -134,6 +134,20 @@ To get started please visit the [wiki](https://codeberg.org/r4gus/PassKeeZ/wiki/
 
 - KDBX: You can manage your `.kdbx` database with [KeePassXC](https://keepassxc.org/) or KeePass.
     - _We recommend making regular backups of your KDBX database._
+
+### Configuring PassKeeZ
+
+PassKeeZ can be configured via `~/.passkeez/config.json` using the following options:
+
+- `"db_path"`: path to the .kdbx database. If the file doesn't exist, a new file will be created.
+- `"lang"`: the language of the application (currently supports `"english"` and `"german"`).
+- `"mlock"` (default: `false`): lock the memory using mlock. This will most likely require raising the limits in `/etc/security/limits.conf` to something like:
+```
+hard    memlock          65536
+soft    memlock          65536
+```
+- `"tout_up"` (default: `10` seconds): grace window in which a new User Presence (UP) request is auto-accepted without re-prompting.
+- `"tout_db"` (default: `60` seconds): after this idle period the database is fully deinitialized.
 
 ### File synchronization
 
