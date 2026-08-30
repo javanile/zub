@@ -7,10 +7,10 @@ author_github: vrypan
 repository: https://github.com/vrypan/zecli
 keywords:
   - cli
-date: 2026-08-29
+date: 2026-08-30
 category: tooling
-updated_at: 2026-08-29T09:12:35+00:00
-last_sync: 2026-08-29T09:12:35Z
+updated_at: 2026-08-30T07:32:51+00:00
+last_sync: 2026-08-30T07:32:51Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -138,15 +138,29 @@ alphanumeric. This grammar is what makes generated completions safe in all
 three shells. Descriptions, usage text, value names, and completion values are
 arbitrary UTF-8 and are quoted by the generators.
 
-Run validation at compile time so a mistake is a build error:
+`comptimeValidated` runs that check at compile time and returns the
+specification unchanged, so a mistake is a build error and the validation code
+never reaches the binary:
 
 ```zig
-comptime {
-    cli.validateApplicationSpec(application) catch |err| {
-        @compileError("invalid application specification: " ++ @errorName(err));
-    };
-}
+const application = cli.comptimeValidated(.{
+    .name = "demo",
+    .description = "A demo",
+    .usage = "demo [options] <command>",
+    .commands = &commands,
+});
 ```
+
+A duplicate command name then fails the build with
+`invalid ApplicationSpec 'demo': DuplicateName`, pointing at the declaration.
+Every field must be comptime-known; a specification assembled at runtime calls
+`validateApplicationSpec` directly instead.
+
+Validation compares every pair of names in a scope, so it can exceed Zig's
+default limit of 1000 backwards branches. `comptimeValidated` raises the limit
+to a bound computed from the specification, so no call site needs
+`@setEvalBranchQuota`. Because `@setEvalBranchQuota` only ever raises the
+limit, a caller that has already asked for more keeps it.
 
 ## Parsing
 
@@ -378,6 +392,23 @@ generated help, and bash/zsh/fish completion.
 Out of scope: nested subcommands, action callbacks, middleware, dependency
 injection, prompts or terminal UI, configuration-file support, Windows shell
 completion, and delegating completion to a wrapped command after `--`.
+
+## Migrating from 0.2.1
+
+`0.2.2` changes one signature. `printCommandList` no longer takes an
+allocator, because it now measures and writes labels without building them:
+
+| 0.2.1 | 0.2.2 |
+|---|---|
+| `cli.printCommandList(allocator, writer, commands)` | `cli.printCommandList(writer, commands)` |
+
+`printApplicationHelp`, `printCommandHelp`, and `printOptions` keep their
+signatures. Help printing no longer allocates for anything but an unusually
+long `[choices: ...]` or `[default: ...]` suffix, which still needs the
+allocator those three take.
+
+`cli.comptimeValidated` is new and additive; the hand-written `comptime`
+block it replaces keeps working.
 
 ## Migrating from 0.1.x
 

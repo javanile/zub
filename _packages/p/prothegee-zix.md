@@ -22,10 +22,10 @@ keywords:
   - webrtc
   - webserver
   - websockets
-date: 2026-08-28
+date: 2026-08-30
 category: networking
-updated_at: 2026-08-28T17:04:44+00:00
-last_sync: 2026-08-28T17:04:44Z
+updated_at: 2026-08-30T14:45:49+00:00
+last_sync: 2026-08-30T14:45:49Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -62,6 +62,18 @@ permalink: /packages/prothegee/zix/
 <hr>
 
 <h4 align="center">
+    <b><i>License:</i></b>
+</h4>
+
+<div align="center">
+
+[BSD-3-Clause](LICENSE-BSD)
+
+</div>
+
+<br>
+
+<h4 align="center">
     <b><i>Repositories:</i></b>
 </h4>
 
@@ -74,24 +86,24 @@ permalink: /packages/prothegee/zix/
 <br>
 
 <h4 align="center">
-    <b><i>License:</i></b>
+    <b><i>Documentations:</i></b>
 </h4>
 
 <div align="center">
 
-[BSD-3-Clause License](LICENSE-BSD)
+[Bahasa - id](README-id.md) | [English - en](README-en.md)
 
 </div>
 
 <br>
 
 <h4 align="center">
-    <b><i>Languages Documentation:</i></b>
+    <b><i>Important Informations:</i></b>
 </h4>
 
 <div align="center">
 
-[Bahasa - id](README-id.md) | [English - en](README-en.md)
+[Announcement & Breaking Changes](https://codeberg.org/prothegee/zix/issues/238)
 
 </div>
 

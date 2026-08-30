@@ -17,9 +17,9 @@ keywords:
   - zig-progressbar
   - zig-progressbar-library
   - zig-spinner
-date: 2026-08-15
-updated_at: 2026-08-15T23:57:11+00:00
-last_sync: 2026-08-15T23:57:11Z
+date: 2026-08-30
+updated_at: 2026-08-30T08:58:16+00:00
+last_sync: 2026-08-30T08:58:16Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -82,7 +82,7 @@ permalink: /packages/muhammad-fiaz/loaders.zig/
 ### Option A — Stable Release (Recommended for Production)
 
 ```bash
-zig fetch --save https://github.com/muhammad-fiaz/loaders.zig/archive/refs/tags/0.0.4.tar.gz
+zig fetch --save https://github.com/muhammad-fiaz/loaders.zig/archive/refs/tags/0.0.5.tar.gz
 ```
 
 ### Option B — Nightly / Beta (Latest Main Branch)

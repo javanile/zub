@@ -12,9 +12,9 @@ keywords:
   - uuid-v7
   - uuid-zig
   - uuidv4
-date: 2026-08-13
-updated_at: 2026-08-13T01:19:47+00:00
-last_sync: 2026-08-13T01:19:47Z
+date: 2026-08-17
+updated_at: 2026-08-17T17:48:58+00:00
+last_sync: 2026-08-17T17:48:58Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -146,7 +146,7 @@ zig build -Dtarget=aarch64-macos
 ### Method 1: Zig Fetch (Recommended)
 
 ```bash
-zig fetch --save https://github.com/muhammad-fiaz/uuid.zig/archive/refs/tags/v0.0.1.tar.gz
+zig fetch --save https://github.com/muhammad-fiaz/uuid.zig/archive/refs/tags/0.0.1.tar.gz
 ```
 
 ### Method 2: Zig Fetch (Main Branch)
@@ -162,7 +162,7 @@ Add the dependency to your `build.zig.zon` file.
 ```zig
 .dependencies = .{
     .uuid = .{
-        .url = "https://github.com/muhammad-fiaz/uuid.zig/archive/refs/tags/v0.0.1.tar.gz",
+        .url = "https://github.com/muhammad-fiaz/uuid.zig/archive/refs/tags/0.0.1.tar.gz",
         .hash = "...", // Run `zig fetch --save <url>` to generate the hash.
     },
 },

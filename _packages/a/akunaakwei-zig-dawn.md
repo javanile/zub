@@ -6,9 +6,9 @@ author: akunaakwei
 author_github: akunaakwei
 repository: https://github.com/akunaakwei/zig-dawn
 keywords:
-date: 2026-08-23
-updated_at: 2026-08-23T09:20:48+00:00
-last_sync: 2026-08-23T09:20:48Z
+date: 2026-08-30
+updated_at: 2026-08-30T09:14:01+00:00
+last_sync: 2026-08-30T09:14:01Z
 package_kind: hybrid
 has_library: true
 has_binary: true
