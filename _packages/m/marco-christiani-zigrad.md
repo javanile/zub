@@ -11,9 +11,9 @@ keywords:
   - machine-learning
   - neural-network
   - tensor
-date: 2026-07-30
-updated_at: 2026-07-30T17:33:40+00:00
-last_sync: 2026-07-30T17:33:40Z
+date: 2026-08-23
+updated_at: 2026-08-23T13:46:29+00:00
+last_sync: 2026-08-23T13:46:29Z
 package_kind: hybrid
 has_library: true
 has_binary: true

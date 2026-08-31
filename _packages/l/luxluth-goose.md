@@ -10,9 +10,9 @@ keywords:
   - goose
   - networking
   - tools
-date: 2026-08-14
-updated_at: 2026-08-14T23:43:52+00:00
-last_sync: 2026-08-14T23:43:52Z
+date: 2026-08-27
+updated_at: 2026-08-27T16:07:06+00:00
+last_sync: 2026-08-27T16:07:06Z
 package_kind: hybrid
 has_library: true
 has_binary: true

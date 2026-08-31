@@ -8,9 +8,9 @@ repository: https://github.com/kobolds-io/stdx
 keywords:
   - data-structures-and-algorithms
   - std
-date: 2026-08-15
-updated_at: 2026-08-15T19:23:42+00:00
-last_sync: 2026-08-15T19:23:42Z
+date: 2026-08-21
+updated_at: 2026-08-21T23:29:08+00:00
+last_sync: 2026-08-21T23:29:08Z
 package_kind: hybrid
 has_library: true
 has_binary: true

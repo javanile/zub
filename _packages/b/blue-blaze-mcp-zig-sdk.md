@@ -11,10 +11,10 @@ keywords:
   - mcp
   - model-context-protocol
   - oauth2
-date: 2026-08-14
+date: 2026-08-28
 category: networking
-updated_at: 2026-08-14T05:19:26+00:00
-last_sync: 2026-08-14T05:19:26Z
+updated_at: 2026-08-28T18:23:39+00:00
+last_sync: 2026-08-28T18:23:39Z
 package_kind: hybrid
 has_library: true
 has_binary: true

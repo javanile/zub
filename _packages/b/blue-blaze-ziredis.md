@@ -11,10 +11,10 @@ keywords:
   - redis
   - redis-client
   - redisson
-date: 2026-08-14
+date: 2026-08-28
 category: data-formats
-updated_at: 2026-08-14T14:30:28+00:00
-last_sync: 2026-08-14T14:30:28Z
+updated_at: 2026-08-28T18:25:13+00:00
+last_sync: 2026-08-28T18:25:13Z
 package_kind: hybrid
 has_library: true
 has_binary: true
