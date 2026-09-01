@@ -6,15 +6,15 @@ author: eggyengine
 author_github: eggyengine
 repository: https://github.com/eggyengine/vitellus
 keywords:
-date: 2026-07-30
-updated_at: 2026-07-30T04:28:33+00:00
-last_sync: 2026-07-30T04:28:33Z
-package_kind: hybrid
+date: 2026-09-01
+updated_at: 2026-09-01T00:55:25+00:00
+last_sync: 2026-09-01T00:55:25Z
+package_kind: library
 has_library: true
-has_binary: true
-has_distributable_binary: true
-binary_count: 1
-distributable_binary_count: 1
+has_binary: false
+has_distributable_binary: false
+binary_count: 0
+distributable_binary_count: 0
 multiple_binaries: false
 is_sponsor: false
 sync_priority: normal

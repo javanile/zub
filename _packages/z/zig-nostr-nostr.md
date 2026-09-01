@@ -12,10 +12,10 @@ keywords:
   - nostr-protocol
   - protocol
   - secp256k1
-date: 2026-08-21
+date: 2026-08-28
 category: networking
-updated_at: 2026-08-21T15:45:53+00:00
-last_sync: 2026-08-21T15:45:53Z
+updated_at: 2026-08-28T13:14:12+00:00
+last_sync: 2026-08-28T13:14:12Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -47,7 +47,7 @@ it like [Notary](https://github.com/zig-nostr/notary), a remote signer that keep
 your key off every client. Full docs, benchmarks, and the ecosystem overview
 live at [zignostr.com](https://zignostr.com).
 
-> **Status: early (`v0.12.0`).** The library core, transport, local-first store
+> **Status: early (`v0.13.0`).** The library core, transport, local-first store
 > and signer protocol have shipped and are covered by tests. Two native apps run
 > on it today. APIs may still change before 1.0.
 
