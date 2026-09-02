@@ -6,9 +6,9 @@ author: neurocyte
 author_github: neurocyte
 repository: https://github.com/neurocyte/flow-themes
 keywords:
-date: 2026-08-21
-updated_at: 2026-08-21T09:34:42+00:00
-last_sync: 2026-08-21T09:34:42Z
+date: 2026-08-27
+updated_at: 2026-08-27T09:40:46+00:00
+last_sync: 2026-08-27T09:40:46Z
 package_kind: binary
 has_library: false
 has_binary: true

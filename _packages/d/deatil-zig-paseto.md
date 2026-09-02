@@ -10,9 +10,9 @@ keywords:
   - paseto
   - token
   - zig-paseto
-date: 2026-08-25
-updated_at: 2026-08-25T10:14:47+00:00
-last_sync: 2026-08-25T10:14:47Z
+date: 2026-09-02
+updated_at: 2026-09-02T09:50:59+00:00
+last_sync: 2026-09-02T09:50:59Z
 package_kind: library
 has_library: true
 has_binary: false

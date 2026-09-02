@@ -8,9 +8,9 @@ repository: https://github.com/deatil/zig-jwt
 keywords:
   - jwt
   - zig-jwt
-date: 2026-08-25
-updated_at: 2026-08-25T10:16:34+00:00
-last_sync: 2026-08-25T10:16:34Z
+date: 2026-09-02
+updated_at: 2026-09-02T09:52:44+00:00
+last_sync: 2026-09-02T09:52:44Z
 package_kind: library
 has_library: true
 has_binary: false
