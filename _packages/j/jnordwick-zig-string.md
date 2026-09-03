@@ -6,9 +6,9 @@ author: jnordwick
 author_github: jnordwick
 repository: https://github.com/jnordwick/zig-string
 keywords:
-date: 2026-05-28
-updated_at: 2026-05-28T23:25:58+00:00
-last_sync: 2026-05-28T23:25:58Z
+date: 2026-09-03
+updated_at: 2026-09-03T14:22:50+00:00
+last_sync: 2026-09-03T14:22:50Z
 package_kind: library
 has_library: true
 has_binary: false

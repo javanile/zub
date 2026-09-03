@@ -11,9 +11,9 @@ keywords:
   - lambda
   - server
   - serverless
-date: 2026-05-14
-updated_at: 2026-05-14T09:57:45+00:00
-last_sync: 2026-05-14T09:57:45Z
+date: 2026-08-26
+updated_at: 2026-08-26T15:27:38+00:00
+last_sync: 2026-08-26T15:27:38Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -66,6 +66,7 @@ Minimal [Hello World](#hello-world) demo:
 - [x] CloudWatch & X-Ray integration
 - [ ] Lifecycle hooks
 - [x] Build system target configuration
+- [x] Build system zip packaging
 - [ ] Testing utilities
 
 ### Service Events
@@ -92,7 +93,8 @@ _Feel free to open an issue for additional integrations, or better yet, open a p
     zig build --release -Darch=x86
     zig build --release -Darch=arm
     ```
-5. Archive the executable into a zip:
+5. Archive the executable into a zip. Add a [package step](#packaging) to the
+   build script, or archive it by hand:
     ```console
     zip -qj lambda.zip zig-out/bin/bootstrap
     ```
@@ -214,8 +216,31 @@ pub fn build(b: *std.Build) void {
         .root_module = mod
     });
     b.installArtifact(exe);
+
+    // Pack the executable into `zig-out/lambda.zip`, ready to deploy.
+    const archive = lambda.addPackageStep(b, exe);
+    b.getInstallStep().dependOn(&b.addInstallFile(archive, "lambda.zip").step);
 }
 ```
+
+#### Packaging
+AWS Lambda deploys a zip archive that has a single executable named _bootstrap_.
+
+`lambda.addPackageStep(*std.Build, *std.Build.Step.Compile)` builds that archive. It returns the archive’s path inside the build cache, so the build script can install it or pass it to another step:
+
+```zig
+// Compile an executable.
+const exe = b.addExecutable(.{
+    .name = "bootstrap", // The executable name must be "bootstrap"!
+    .root_module = mod,
+});
+
+// Pack it into `zig-out/lambda.zip`, ready to deploy.
+const archive = lambda.addPackageStep(b, exe);
+b.getInstallStep().dependOn(&b.addInstallFile(archive, "lambda.zip").step);
+```
+
+The archive has a fixed timestamp, so the same executable always produces the same bytes. The build system caches it by the executable’s content and only repacks when the executable changes.
 
 ### Event Handler
 The event handler is the entry point for the Lambda function.
@@ -223,6 +248,15 @@ The event handler is the entry point for the Lambda function.
 The library provides a runtime that handles the event lifecycle and communication with the Lambda’s execution environment. With it, you can focus on implementing only the meaningful part of processing and responding to the event.
 
 Since the library manages the lifecycle, it expects the handler to have a specific signature. _Note that [response streaming](#response-streaming) has a dedicated lifecycle and handler signature._
+
+The runtime provides four entry points, each with its own handler signature:
+
+| Entry point | The handler’s response | Use it when |
+| ----------- | ---------------------- | ----------- |
+| `lambda.handle` | Returns the payload. | The payload is a single slice. |
+| `lambda.handleWriter` | Writes the payload into a [response writer](#response-writer). | The payload is built in parts. |
+| `lambda.handleAsync` | No payload. | The client does not expect a response. |
+| `lambda.handleStream` | Writes the payload into a [stream](#response-streaming). | The client should get the response while it is still built. |
 
 ```zig
 const std = @import("std");
@@ -233,6 +267,9 @@ const lambda = @import("aws-lambda");
 pub fn main(init: std.process.Init) void {
     // Bind the handler to the runtime:
     lambda.handle(init, handlerSync, .{});
+
+    // Alternatively, to build the response with a writer:
+    lambda.handleWriter(init, handlerWriter, .{});
 
     // Alternatively, for asynchronous handlers:
     lambda.handleAsync(init, handlerAsync, .{});
@@ -249,6 +286,17 @@ fn handlerSync(
     };
 }
 
+fn handlerWriter(
+    ctx: lambda.Context,                // Metadata and utilities
+    event: []const u8,                  // Raw event payload (JSON)
+    response: *lambda.ResponseWriter,   // Response delegate
+) !void {
+    // Process the `event` payload and build a response payload in parts.
+    const w = response.writer();
+    try w.writeAll("Received a payload of ");
+    try w.print("{d} bytes.", .{event.len});
+}
+
 fn handlerAsync(
     ctx: lambda.Context,    // Metadata and utilities
     event: []const u8,      // Raw event payload (JSON)
@@ -256,6 +304,18 @@ fn handlerAsync(
     // Process the `event` payload...
 }
 ```
+
+#### Response Writer
+Instead of returning the payload from the handler, a writer handler builds it with the _response writer_.
+
+The runtime sends the payload to the client after the handler returns.
+Sending it earlier is optional; after calling `response.send()` the handler may keep working.
+
+| Method | Description |
+| ------ | ----------- |
+| `response.writer()` | The `std.Io.Writer` that builds the response payload. |
+| `response.send()` | Optionally send the response to the client while continuing to process the event. |
+| `response.isSent()` | Whether the response was already sent to the client. |
 
 #### Errors & Logging
 When a handler returns an error, the runtime will log it to _CloudWatch_ and return an error response to the client.
@@ -304,6 +364,18 @@ Per-invocation metadata is provided by the _handler context_ `ctx.request` field
 | `deadline_ms` | `u64` | Function execution deadline counted in milliseconds since the _Unix epoch_. |
 | `client_context` | `[]const u8` | Information about the client application and device when invoked through the AWS Mobile SDK. |
 | `cognito_identity` | `[]const u8` | Information about the Amazon Cognito identity provider when invoked through the AWS Mobile SDK. |
+
+#### X-Ray Trace
+AWS libraries read the current invocation’s trace from the `_X_AMZN_TRACE_ID` environment value. The runtime refreshes it before each invocation, so it always matches `ctx.request.xray_trace`:
+
+```zig
+const trace = ctx.env("_X_AMZN_TRACE_ID");
+```
+
+> [!NOTE]
+> The runtime refreshes its own copy of the environment, not the operating system’s.
+> A library that calls the C `getenv` still reads the value the function started with.
+> Zig has no portable way to set an environment value without linking _libc_.
 
 #### Configuration Metadata
 Static config metadata is provided by the _handler context_ `ctx.config` field. It contains the following fields:
@@ -407,9 +479,10 @@ _Closing the stream is optional._
 | `stream.close()` | Optionally conclude the response stream while continuing to process the event. |
 
 ## Demos
+Each demo installs both `zig-out/bin/bootstrap` and `zig-out/lambda.zip`.
 
 ### Hello World
-Returns a short message.
+Writes a short message with a [response writer](#response-writer).
 
 ```console
 zig build demo:hello --release -Darch=ARCH_OPTION

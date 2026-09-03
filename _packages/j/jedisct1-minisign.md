@@ -12,10 +12,10 @@ keywords:
   - gpg
   - pgp
   - signatures
-date: 2026-05-14
+date: 2026-09-02
 category: systems
-updated_at: 2026-05-14T10:13:20+00:00
-last_sync: 2026-05-14T10:13:20Z
+updated_at: 2026-09-02T18:02:07+00:00
+last_sync: 2026-09-02T18:02:07Z
 package_kind: hybrid
 has_library: true
 has_binary: true

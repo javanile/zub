@@ -6,9 +6,9 @@ author: justinGrosvenor
 author_github: justinGrosvenor
 repository: https://github.com/justinGrosvenor/nether
 keywords:
-date: 2026-08-04
-updated_at: 2026-08-04T19:37:51+00:00
-last_sync: 2026-08-04T19:37:51Z
+date: 2026-08-25
+updated_at: 2026-08-25T18:25:54+00:00
+last_sync: 2026-08-25T18:25:54Z
 package_kind: binary
 has_library: false
 has_binary: true
@@ -64,8 +64,10 @@ real time on resume; forks reseed their CRNG so siblings don't share randomness.
   developed path: it boots Linux, runs SMP, virtio-blk/net/rng/vsock, a control
   plane, snapshot + COW fork + park/resume, an egress plane, and a read-only web
   console.
-- **Reference backend: KVM on Linux / x86-64.** The original backend; PVH-boots
-  Linux 6.12 to an interactive shell over virtio-pci. It trails the HVF path.
+- **Reference backend: KVM on Linux / x86-64.** The original backend, now at parity
+  with HVF for the platform primitive: PVH-boots Linux 6.12, runs SMP,
+  virtio-blk/net/vsock, the control plane, and the cross-process snapshot + COW fork
+  + park, all run-verified on bare metal. No GPU yet.
 - The hypervisor is a **compile-time backend seam**, so the guest-facing device and
   protocol code is shared across both.
 - **Optional, off by default:** per-VM usage metering with an x402 settlement
@@ -125,6 +127,10 @@ Every latency and behavior claim above has a live proof script under `scripts/`;
 **Provisioning a base to fork:** [`docs/provisioning.md`](docs/provisioning.md) walks the path
 from a guest image to a warm base to a fork, driven by a declarative recipe
 ([`examples/base.nether.toml`](examples/base.nether.toml), run with `scripts/bake.py`).
+
+**Swerver in every fork:** [`docs/swerver-guest.md`](docs/swerver-guest.md) builds
+the real HttpArena Swerver application into a warm guest, then routes a unique
+tenant request through a host Swerver gateway to a fresh copy-on-write VM.
 
 ## Layout
 
