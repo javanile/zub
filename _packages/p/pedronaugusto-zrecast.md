@@ -1,15 +1,15 @@
 ---
 title: zrecast
 description: Zig bindings for recastnavigation — bake a navmesh from level geometry, then path over it at runtime. Vendored pinned upstream, real C ABI, host allocator injection, ABI drift guarded by tests.
-license: NOASSERTION
+license: MIT
 author: pedronaugusto
 author_github: pedronaugusto
 repository: https://github.com/pedronaugusto/zrecast
 keywords:
   - zig-gamedev
-date: 2026-09-03
-updated_at: 2026-09-03T12:03:56+00:00
-last_sync: 2026-09-03T12:03:56Z
+date: 2026-09-04
+updated_at: 2026-09-04T14:25:52+00:00
+last_sync: 2026-09-04T14:25:52Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -571,13 +571,13 @@ file is the authority on whether those runs have actually happened and passed.**
 | **945** | of them reachable through the C boundary (`BOUND`) |
 | **91** | C++-only surface a C boundary cannot carry (`LANGUAGE`), each with the reason |
 | **53** | reimplemented on the Zig side (`ZIG`), each naming its mirror |
-| **152** | Zig tests `zig build test` executes |
+| **153** | Zig tests `zig build test` executes |
 | **975** | assertions in the standalone C smoke test |
 | **26** | vendored recastnavigation translation units `build.zig` compiles |
 | **18165** | C boundary lines (`ffi/`) |
-| **17653** | Zig source lines (`src/`) |
+| **17744** | Zig source lines (`src/`) |
 | **93** | invariants `ci/probe.sh` mutates, each with the test that must notice |
-| **31** | steps `ci/run.sh` runs |
+| **32** | steps `ci/run.sh` runs |
 | **8** | further targets `ci/run.sh` cross-compiles |
 <!-- END GENERATED -->
 
@@ -738,5 +738,6 @@ there are no globs, so nothing starts compiling by accident.
 
 ## Licence
 
-MIT, see [LICENSE](LICENSE). Vendored recastnavigation is zlib-licensed,
-copyright Mikko Mononen and contributors.
+MIT, see [LICENSE](LICENSE), which covers this package's own code. Vendored
+recastnavigation is zlib-licensed, copyright Mikko Mononen and contributors;
+its licence text ships with the package at `libs/recastnavigation/License.txt`.

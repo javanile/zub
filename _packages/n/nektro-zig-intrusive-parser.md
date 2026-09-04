@@ -6,9 +6,9 @@ author: nektro
 author_github: nektro
 repository: https://github.com/nektro/zig-intrusive-parser
 keywords:
-date: 2026-06-04
-updated_at: 2026-06-04T04:58:02+00:00
-last_sync: 2026-06-04T04:58:02Z
+date: 2026-08-24
+updated_at: 2026-08-24T19:28:43+00:00
+last_sync: 2026-08-24T19:28:43Z
 package_kind: library
 has_library: true
 has_binary: false

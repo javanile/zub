@@ -11,13 +11,16 @@ keywords:
   - javascript
   - nodejs
   - nwjs
+  - php
+  - php8
+  - phpextension
   - rollup-plugin
   - wasm
   - webpack-plugin
-date: 2026-08-04
+date: 2026-09-04
 category: systems
-updated_at: 2026-08-04T10:37:58+00:00
-last_sync: 2026-08-04T10:37:58Z
+updated_at: 2026-09-04T12:28:33+00:00
+last_sync: 2026-09-04T12:28:33Z
 package_kind: library
 has_library: false
 has_binary: false
@@ -55,14 +58,7 @@ and tutorials.
 ## Versioning
 
 The major and minor version numbers of Zigar correspond to the version of the Zig compiler
-it's designed for. The current version is 0.15.2. It works with Zig 0.15.x.
-
-Version 0.14.3 has the same feature set as 0.15.2 and works with Zig 0.14.x. 
-
-The upcoming version is 0.15.3. The biggest addition will be suppport for the PHP language. It's
-been under development for the past 7 months and is at the moment being polished and stabilized for
-release. Once that happens, development will transit immediately to upgrading the entire suite to 
-Zig 0.16.
+it's designed for. The current version is 0.15.3. It works with Zig 0.15.x.
 
 ## Technical support
 

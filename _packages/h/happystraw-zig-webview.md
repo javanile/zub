@@ -11,9 +11,9 @@ keywords:
   - js
   - web
   - webview
-date: 2026-07-07
-updated_at: 2026-07-07T07:55:21+00:00
-last_sync: 2026-07-07T07:55:21Z
+date: 2026-08-25
+updated_at: 2026-08-25T03:19:06+00:00
+last_sync: 2026-08-25T03:19:06Z
 package_kind: hybrid
 has_library: true
 has_binary: true

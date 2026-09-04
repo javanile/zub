@@ -1,15 +1,15 @@
 ---
 title: zozz
 description: Zig bindings for the ozz-animation runtime — vendored upstream ozz, real C ABI, host allocator injection, ABI drift guarded by tests
-license: NOASSERTION
+license: MIT
 author: pedronaugusto
 author_github: pedronaugusto
 repository: https://github.com/pedronaugusto/zozz
 keywords:
   - zig-gamedev
-date: 2026-09-03
-updated_at: 2026-09-03T12:04:20+00:00
-last_sync: 2026-09-03T12:04:20Z
+date: 2026-09-04
+updated_at: 2026-09-04T14:25:35+00:00
+last_sync: 2026-09-04T14:25:35Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -190,10 +190,21 @@ That header also records the allocator the block came from, which is what makes
 swapping one Zig allocator for another safe with blocks outstanding: each frees
 through its own producer rather than through whoever happens to be installed at
 destruction. Below the Zig layer the C seam cannot do that -- it holds one
-`ZozzAllocator` -- so `zozzSetAllocator` refuses a *different* allocator, and
-refuses NULL, while `zozzAllocatorLiveBlocks()` is non-zero, and reports
-`ZOZZ_RESULT_ALLOCATOR_IN_USE`. That counter doubles as a leak check for a host
-whose own allocator has none.
+`ZozzAllocator` -- so `zozzSetAllocator` refuses any call that would change
+where a free lands, and reports `ZOZZ_RESULT_ALLOCATOR_IN_USE`, for as long as
+`zozzAllocatorLiveBlocks()` is non-zero. A call that leaves the same allocator
+in place is not such a change: reinstalling the identical one, or resetting
+while none is installed, always succeeds. That counter doubles as a leak check
+for a host whose own allocator has none.
+
+The counter has to see *every* outstanding block for that refusal to mean
+anything, including the ones ozz's own allocator handed out before any host was
+installed -- ozz frees through whichever allocator is installed at destruction
+time, not through the one that made the block, so a load before `setAllocator`
+and a `deinit` after it would otherwise hand malloc'd memory to the Zig bridge.
+So zozz takes ozz's global allocator slot at start-up and forwards to ozz's own
+allocator until a host arrives, which is what makes the count total and the
+refusal honest.
 
 **Thread safety, and what it rests on.** Distinct handles may be used
 concurrently as long as the installed allocator is thread-safe, because every
@@ -389,15 +400,15 @@ NaN ratio that is refused.
 | **21** | installed public headers |
 | **97** | ozz public names with a binding |
 | **418** | ozz public names in the bound areas |
-| **197** | Zig tests `zig build test` executes |
+| **199** | Zig tests `zig build test` executes |
 | **10** | tests it skips, each needing a build option or an on-disk asset |
-| **200** | assertions in the standalone C smoke test |
+| **206** | assertions in the standalone C smoke test |
 | **41** | vendored ozz translation units `build.zig` compiles |
 | **20** | zozz C++ translation units (`ffi/*.cpp`) |
-| **14629** | Zig source lines (`src/`) |
-| **9669** | C++ source lines (`ffi/`) |
+| **14690** | Zig source lines (`src/`) |
+| **9728** | C++ source lines (`ffi/`) |
 | **18** | deliberate drifts `ci/check-abi-drift.sh` must refuse |
-| **30** | steps `ci/run.sh` runs |
+| **32** | steps `ci/run.sh` runs |
 | **7** | further targets `ci/run.sh` cross-compiles |
 <!-- END GENERATED -->
 
@@ -550,5 +561,7 @@ there are no globs, so nothing starts compiling by accident.
 
 ## Licence
 
-MIT, see [LICENSE](LICENSE). Vendored ozz-animation is MIT, copyright Guillaume
-Blanc and contributors.
+MIT, see [LICENSE](LICENSE), which covers this package's own code. Vendored
+ozz-animation is MIT, copyright Guillaume Blanc and contributors; its licence
+text ships with the package at `libs/ozz/LICENSE.md` and its authors at
+`libs/ozz/AUTHORS.md`.

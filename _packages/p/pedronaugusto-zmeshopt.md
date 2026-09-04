@@ -7,9 +7,9 @@ author_github: pedronaugusto
 repository: https://github.com/pedronaugusto/zmeshopt
 keywords:
   - zig-gamedev
-date: 2026-09-03
-updated_at: 2026-09-03T13:25:57+00:00
-last_sync: 2026-09-03T13:25:57Z
+date: 2026-09-04
+updated_at: 2026-09-04T14:24:20+00:00
+last_sync: 2026-09-04T14:24:20Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -146,9 +146,15 @@ a named panic in safe builds instead of a heap corruption in all of them.
 Vertex data is a `comptime V: type` and a `[]const V`: the stride is
 `@sizeOf(V)`, and `src/contract.zig` refuses at compile time a `V` that
 cannot carry the leading floats upstream reads (too small, misaligned, or not
-a multiple of the scalar size). Functions that read only positions take the
+a multiple of the scalar size) or that overruns the stride ceiling upstream
+asserts (over `256` bytes). Functions that read only positions take the
 same `V` and use its leading three floats, which is exactly upstream's
 `vertex_positions` + stride contract.
+
+Every other precondition upstream states is carried over whole rather than in
+part: both ends of a range, and the whole-triangles rule on any index buffer
+that stands for a mesh. A range the wrapper keeps only the upper half of is
+a gate that passes the arguments most likely to be wrong.
 
 Upstream's return-code conventions become error unions where they signal
 failure — an encoder that returns 0 for "buffer too small" returns
@@ -217,7 +223,9 @@ code path, tested everywhere. Runtime canaries hard-assert the shim path
 argument for argument, and a toolchain watch asserts the raw shapes stay
 broken where they were measured broken, so a Zig release that fixes a
 backend fails the watch — the signal to retire the shim rather than
-fossilise it. See [BINDING.md](BINDING.md).
+fossilise it. Zig 0.17 fixes both x86-64 shapes and leaves the aarch64 one,
+so that watch will fire on the next pin bump; [BINDING.md](BINDING.md) has
+the measurement, the single defect underneath both shapes, and what retires.
 
 ### Build hygiene
 
@@ -271,10 +279,10 @@ artifact are each driven by a real consumer there.
 | **85** | upstream C entry points (`MESHOPTIMIZER_API`/`_EXPERIMENTAL` in the vendored header) |
 | **85** | Zig externs (`pub extern fn` in `src/c/*.zig`) |
 | **8** | of them marked experimental by upstream, bound and labelled |
-| **66** | Zig tests `zig build test` executes |
+| **71** | Zig tests `zig build test` executes |
 | **8** | assertions in the standalone C smoke test |
 | **20** | vendored meshoptimizer translation units `build.zig` compiles |
-| **3707** | Zig source lines (`src/`) |
+| **3859** | Zig source lines (`src/`) |
 | **22** | deliberate drifts `ci/check-abi-drift.sh` must refuse |
 | **24** | steps `ci/run.sh` runs |
 | **7** | further targets `ci/run.sh` cross-compiles |
@@ -361,7 +369,13 @@ incomplete. The only exports not bound are the ones not in the header; see
 The idiomatic layer is the intended surface, and `ci/check-coverage.sh`
 enforces that it reaches every extern — both directions, so an excuse file
 with a stale entry fails too. The raw externs stay public under `zmeshopt.c`
-for a caller that wants the C contract verbatim.
+for a caller that wants the C contract verbatim, with one caveat that is easy
+to miss: the functions listed in
+[`tools/zig_surface_exceptions.txt`](tools/zig_surface_exceptions.txt) are the
+ones whose caller shape [The ABI guard](#the-abi-guard) reports measured
+miscompiled, so calling *those* through `zmeshopt.c` reproduces the miscompile
+the idiomatic layer routes around — silently, and only on the affected
+targets.
 
 Deliberately out of scope: file formats, glTF, and scene handling. Those
 belong to a host or to a sibling package — this one binds exactly one

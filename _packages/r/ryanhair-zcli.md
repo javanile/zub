@@ -11,10 +11,10 @@ keywords:
   - command-line
   - developer-tools
   - terminal
-date: 2026-08-14
+date: 2026-08-24
 category: tooling
-updated_at: 2026-08-14T18:59:18+00:00
-last_sync: 2026-08-14T18:59:18Z
+updated_at: 2026-08-24T22:50:58+00:00
+last_sync: 2026-08-24T22:50:58Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -110,7 +110,7 @@ The framework itself is an ordinary Zig dependency — the meta-CLI is optional:
 Pin the release in your `build.zig.zon` with an immutable hash:
 
 ```bash
-zig fetch --save https://github.com/ryanhair/zcli/archive/refs/tags/v0.24.0.tar.gz
+zig fetch --save https://github.com/ryanhair/zcli/archive/refs/tags/v0.25.0.tar.gz
 ```
 
 To track the development branch instead, fetch `.../archive/refs/heads/main.tar.gz` — its hash changes with every commit, so re-run the command to update.
@@ -192,9 +192,11 @@ Hello, world!
 
 **Files are commands.** Build-time discovery, zero-cost dispatch, comptime-checked args and options, aliases, nested groups — plus auto-generated help, version, shell completions, and "did you mean?" suggestions.
 
-**The whole terminal toolkit.** Eight interactive prompts (text, confirm, select, multi-select, password, search, number, editor), spinners and progress bars with ETA, semantic theming that adapts to terminal capabilities, markdown-to-terminal rendering. Every piece is a standalone package that works without the framework.
+**The whole terminal toolkit.** Seven primary interactive prompts (text, confirm, select, multi-select, password, number, editor), with optional searchable select and multi-select, spinners and progress bars with ETA, semantic theming that adapts to terminal capabilities, markdown-to-terminal rendering. Every piece is a standalone package that works without the framework.
 
 **Production polish for free.** Config files (JSON/TOML/YAML) with per-command scoping, secrets in the OS keychain, self-upgrade from GitHub releases, man/HTML/markdown doc generation on every build, and a virtual-terminal test harness that can assert "this output is green and bold."
+
+**Safe defaults where it counts.** `zcli.http` gives you an HTTPS-only client with enforced TLS verification, timeouts, and bounded responses; `zcli.process` gives you a subprocess runner that can't deadlock on a large payload, caps what it captures, resolves the program itself rather than letting PATH decide, and takes its environment from the command context instead of the ambient process. ([HTTP](https://zcli.sh/docs/http/), [subprocesses](https://zcli.sh/docs/subprocess/).)
 
 ## Why zcli?
 
@@ -215,7 +217,15 @@ If you want one dependency that covers the whole terminal experience, that's the
 
 ## Interactive prompts
 
-Eight prompt types with arrow-key navigation, live filtering, and unicode-correct editing. Every prompt falls back to plain line input when stdin isn't a TTY, so scripts and pipes keep working.
+Seven primary prompt types with arrow-key navigation, optional live filtering,
+and unicode-correct editing. Set `.search = true` on `select` or `multiSelect`
+for a searchable list. Plain `select` accepts Space like Enter. In searchable
+lists, printable characters other than ASCII Space filter; the Space key
+selects or toggles instead of becoming query text. Every prompt falls back to
+plain line input when stdin or stdout isn't a terminal, so scripts and pipes keep
+working — and a command that genuinely needs a terminal opts out of that fallback
+with one `try p.requireInteractive()`, which fails with `error.NotInteractive`
+before any question is asked.
 
 ```zig
 // In a zcli command — pre-wired to the command's streams, allocator, and theme.
@@ -237,7 +247,7 @@ const pw = try p.password(.{
 });
 ```
 
-Also: `confirm`, `multiSelect`, `search` (type-to-filter), `number` (range-validated), and `editor` (opens `$EDITOR`). Full API in [packages/prompts](packages/prompts/).
+Also: `confirm`, `multiSelect`, `number` (range-validated), and `editor` (opens `$EDITOR`). Searchable selection is `p.select(.{ .search = true, ... })` or `p.multiSelect(.{ .search = true, ... })`. Full API in [packages/prompts](packages/prompts/).
 
 ## Progress indicators
 
@@ -360,7 +370,7 @@ The HTML output is a styled, dark-mode-aware static site with navigation.
 
 ## Example
 
-The [showcase](examples/tasks/) is a fully functional task tracker CLI — the app in the demo GIF above — that exercises most zcli features: 14 commands with nested groups and aliases, six of the eight prompt types, spinners and progress bars, themed output, JSON persistence, config files, completions, and doc generation.
+The [showcase](examples/tasks/) is a fully functional task tracker CLI — the app in the demo GIF above — that exercises most zcli features: 14 commands with nested groups and aliases, five of the primary prompt types, spinners and progress bars, themed output, JSON persistence, config files, completions, and doc generation.
 
 ```bash
 cd examples/tasks && zig build
@@ -377,10 +387,10 @@ What a real zcli app looks like. The meta-CLI you install is one; the rest are t
 | App | What it is |
 |-----|------------|
 | [**zcli**](projects/zcli) — the meta-CLI | Itself a zcli app: `init`, `add`, `mv`, `rm`, `tree`, `dev`, `guide`, and `release` are files in its `commands/` directory, running on the framework's own plugins (help, completions, "did you mean?", GitHub self-upgrade). |
-| [**tasks**](examples/tasks) | A full task tracker — the app in the demo GIF above. 14 commands with nested groups and aliases, six of the eight prompt types, spinners and progress bars, themed output, JSON persistence, config files, and completions. |
+| [**tasks**](examples/tasks) | A full task tracker — the app in the demo GIF above. 14 commands with nested groups and aliases, five of the primary prompt types, spinners and progress bars, themed output, JSON persistence, config files, and completions. |
 | [**ghauth**](examples/ghauth) | GitHub device-flow companion: stashes an API token in the OS keychain via `zcli_secrets`, then uses `zcli.http` to call the API as `whoami`. |
 | [**oauth-device**](examples/oauth-device) | Mints a token from scratch by running GitHub's OAuth device flow (RFC 8628), then keychains it — freeform command code, not a framework feature. |
-| [**notes**](examples/notes) | A tiny note keeper: saves and loads a typed struct as a JSON file and shares one `store` module across three commands. |
+| [**notes**](examples/notes) | A tiny note keeper: saves and loads a typed struct as a JSON file, plus a lock-protected append-only log that stays safe under concurrent readers and writers, shared across its commands as modules. |
 | [**repostat**](examples/repostat) | Prints stats for a public GitHub repo — the minimal `zcli.http` + typed-JSON example, with safe client defaults out of the box. |
 | [**ext-plugin**](examples/ext-plugin) | Registers a third-party plugin shipped as its own Zig package (`.dependency = greet_plugin_dep`), contrasting the local-path and built-in plugin styles used elsewhere. |
 | [**vault**](examples/vault) | A secrets-backed CLI combining `zcli_secrets` (OS keychain), `zcli_config`, dynamic completions, and password prompts in one app. |
@@ -399,7 +409,7 @@ Building something with zcli? Open a PR to add it here.
 |---------|-------------|
 | [**core**](packages/core/) | Command discovery, argument parsing, plugin system, registry |
 | [**ui**](packages/ui/) | Terminal-native layout engine (CLI/TUI hybrid, focusable widgets, full-screen mode) |
-| [**prompts**](packages/prompts/) | Interactive prompts (text, confirm, select, password, search, number, editor) |
+| [**prompts**](packages/prompts/) | Interactive prompts (text, confirm, select, multi-select, password, number, editor), with optional searchable lists |
 | [**progress**](packages/progress/) | Spinners and progress bars |
 | [**theme**](packages/theme/) | Terminal theming with semantic colors and capability detection |
 | [**markdown**](packages/markdown/) | Markdown-to-terminal formatting with semantic tags |

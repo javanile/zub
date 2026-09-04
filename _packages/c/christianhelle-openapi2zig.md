@@ -7,9 +7,9 @@ author_github: christianhelle
 repository: https://github.com/christianhelle/openapi2zig
 keywords:
   - openapi
-date: 2026-09-03
-updated_at: 2026-09-03T14:20:37+00:00
-last_sync: 2026-09-03T14:20:37Z
+date: 2026-09-04
+updated_at: 2026-09-04T13:29:16+00:00
+last_sync: 2026-09-04T13:29:16Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -33,16 +33,6 @@ A CLI tool and Zig library that generates type-safe API client code from OpenAPI
 
 > **Note**: This project provides both a CLI tool for generating Zig code from OpenAPI specs and a library for parsing and working with OpenAPI documents programmatically in Zig.
 
-## Supported Specifications
-
-This tool supports the following OpenAPI and Swagger specifications:
-- **Swagger v2.0** - Full support
-- **OpenAPI v3.0** - Full support
-- **OpenAPI v3.1** - Full support
-- **OpenAPI v3.2** - Full support
-
-All specifications are supported in JSON and YAML format.
-
 ## Features
 
 - Parse and generate from Swagger v2.0, OpenAPI v3.0, v3.1, and v3.2 specifications
@@ -51,36 +41,6 @@ All specifications are supported in JSON and YAML format.
 - Cross-platform support (Linux, macOS, Windows)
 - Available as both CLI tool and Zig library
 - Unified document representation for all OpenAPI and Swagger versions
-
-## Prerequisites
-
-- [Zig](https://ziglang.org/download/) v0.16.0
-
-## Development Environment
-
-### Option 1: GitHub Codespaces (Recommended for Contributors)
-
-The fastest way to get started with development is using GitHub Codespaces, which provides a pre-configured development environment with Zig, ZLS (Zig Language Server), and all necessary VS Code extensions.
-
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/christianhelle/openapi2zig)
-
-1. Click the badge above or navigate to the repository on GitHub
-2. Click "Code" → "Codespaces" → "Create codespace"
-3. Wait for the environment to set up (2-3 minutes)
-4. Start coding! Everything is pre-configured.
-
-### Option 2: VS Code Dev Containers (Local)
-
-If you prefer local development with Docker:
-
-1. Install [VS Code](https://code.visualstudio.com/) and the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
-2. Clone the repository and open it in VS Code
-3. When prompted, click "Reopen in Container"
-4. VS Code will build and configure the development environment automatically
-
-### Option 3: Manual Setup
-
-Install Zig locally following the official [installation guide](https://ziglang.org/download/).
 
 ## Installation
 
@@ -134,17 +94,7 @@ Install the latest build for Linux from the Snap Store:
 snap install --edge openapi2zig
 ```
 
-### Option 4: Build from Source
-
-Make sure you have Zig installed (version 0.16.0 or newer).
-
-```bash
-git clone https://github.com/christianhelle/openapi2zig.git
-cd openapi2zig
-zig build
-```
-
-### Option 5: Use Docker
+### Option 4: Use Docker
 
 The openapi2zig is available as a Docker image on Docker Hub at `christianhelle/openapi2zig`.
 
@@ -159,85 +109,39 @@ docker run --rm -v "$PWD:/app" christianhelle/openapi2zig \
 
 The image's entrypoint is the binary itself, so arguments are passed straight through and `docker run --rm christianhelle/openapi2zig` prints the usage text. Paths are resolved inside the container, relative to the `/app` working directory, so mount the directory holding your spec there. The container runs as UID 1001; on Linux the mounted directory must be writable by that user for the output to be written.
 
+### Option 5: Build from Source
+
+Requires [Zig](https://ziglang.org/download/) v0.16.0.
+
+```bash
+git clone https://github.com/christianhelle/openapi2zig.git
+cd openapi2zig
+zig build
+```
+
+The compiled binary will be available at `zig-out/bin/openapi2zig`. See [Development](#development) below for running the test suite and other contributor workflows.
+
 ## Quick Start
 
-### Building from Source
-
-1. Clone the repository:
-
-   ```bash
-   git clone https://github.com/christianhelle/openapi2zig.git
-   cd openapi2zig
-   ```
-
-2. Build the project:
-
-   ```bash
-   zig build
-   ```
-
-3. Run tests to verify everything works:
-
-   ```bash
-   zig build test
-   ```
-
-4. The compiled binary will be available in `zig-out/bin/openapi2zig`
-
-### Development
-
-For development builds with debug information:
+Generate a Zig client from an OpenAPI spec:
 
 ```bash
-zig build -Doptimize=Debug
+openapi2zig generate -i openapi/v3.0/petstore.json -o api.zig
 ```
 
-To run tests during development:
+This writes a single self-contained `api.zig` file with the models, HTTP client, and endpoint functions. Then call it from your code:
 
-```bash
-zig build test
+```zig
+var client = api.Client.init(allocator, io, "");
+defer client.deinit();
+client.withBaseUrl("https://petstore3.swagger.io/api/v3");
+
+var pet = try api.getPetById(&client, 1);
+defer pet.deinit();
+std.debug.print("pet name: {s}\n", .{pet.value().name});
 ```
 
-To check code formatting:
-
-```bash
-zig fmt --check src/
-zig fmt --check build.zig
-```
-
-### Smoke tests
-
-Run the broad smoke-test script to validate code generation against every supported sample specification:
-
-```bash
-pwsh test/smoke-tests.ps1
-```
-
-What it does:
-
-- Validates all eligible JSON and YAML API specs under `openapi/v2.0`, `openapi/v3.0`, `openapi/v3.1`, and `openapi/v3.2`.
-- Runs each spec through every resource-wrapper mode: `none`, `tags`, `paths`, and `hybrid`, plus `PerTag` and `PerEndpoint` multiple-client modes when `-MultipleClients` is passed (default smoke runs use resource-wrapper modes only).
-- Ignores the meta-schema documents under `openapi/json-schema/`, which are outside the smoke-test discovery roots.
-- Writes generated outputs to `test/output/` (gitignored), with filenames shaped like `<basename>__<format>__<mode>.zig` so JSON/YAML sibling fixtures do not collide.
-- Continues through individual failures and prints a final summary listing every failing spec/mode combination, then exits non-zero if any case failed.
-- Honors a temporary denylist for known-unsupported spec/mode combinations so the PR gate can stay green while generator gaps are tracked explicitly.
-
-In CI, the same script runs in the `smoke-tests` job on pull requests and `main`, alongside the existing `zig build run-generate` + `zig run generated/main.zig` curated sample harness. The broad smoke discovery does not require JSON/YAML twins: YAML-only roots such as `openapi/v3.0/bot.paths.yaml` are still included when they live under the covered version folders. When the smoke-tests job fails, `test/output/` is uploaded as a workflow artifact for triage.
-
-### Cross-compilation
-
-Build for different targets:
-
-```bash
-# Windows
-zig build -Dtarget=x86_64-windows
-
-# macOS
-zig build -Dtarget=x86_64-macos
-
-# Linux ARM64
-zig build -Dtarget=aarch64-linux
-```
+See [Usage](#usage) below for the full set of CLI options, and [Using as a Library](#using-as-a-library) to call openapi2zig programmatically from Zig instead of shelling out to the CLI.
 
 ## Usage
 
@@ -249,22 +153,21 @@ The `generate` command reads a JSON or YAML OpenAPI/Swagger document from a loca
 
 ### Options
 
-| Flag | Description |
-| :--- | :--- |
-| `-i`, `--input <PATH_OR_URL>` | OpenAPI/Swagger spec from a file path or `http`/`https` URL. The format is chosen from the suffix, so the path or URL must end in `.json`, `.yaml`, or `.yml` — an extensionless URL such as `https://example.com/api/v3/openapi` fails with `UnsupportedExtension`. Required, except with `--runtime-only` where it is ignored. |
-| `-o`, `--output <path>` | Where the generated code is written. Without `--multiple-files` this is a file path, defaulting to `generated.zig` (or `runtime.zig` with `--runtime-only`). With `--multiple-files` it is the output directory instead, defaulting to `generated/`. Parent directories are created when needed. |
-| `--base-url <url>` | Base URL baked into the generated `Client`. Defaults to the server URL from the OpenAPI/Swagger document. |
-| `--resource-wrappers <mode>` | Generate resource wrapper namespaces. Modes: `none`, `tags`, `paths`, `hybrid`. Defaults to `paths`, except with `--multiple-clients`, where it defaults to `none`. |
-| `--multiple-clients <mode>` | Generate per-tag or per-endpoint client structs that delegate to the flat API functions. Modes: `PerTag` (default when the flag is given without a value) and `PerEndpoint`. Mutually exclusive with a non-`none` `--resource-wrappers` and with `--models-only`. |
-| `--tag <name>` | Include only operations carrying the specified OpenAPI tag. Schemas are removed only when unreachable from retained operations; transitively referenced schemas remain preserved. Operations without any of the requested tags (including untagged operations) are skipped. The `--tag` option can be specified multiple times, e.g. `--tag pet --tag store --tag user`. |
-| `--models-only` | Generate only Zig models, skipping the API client. |
-| `--multiple-files` | Generate separate output files for models, runtime, and API client into the output directory specified by `-o`. |
-| `--file-name <kind>=<name>` | Customize an output file name in `--multiple-files` mode. `<kind>` is `models`, `runtime`, or `client`. `<name>` may include a relative subpath (e.g. `models=gen/types.zig`); any required parent directories are created automatically. Can be specified multiple times. |
-| `--runtime-module <path>` | Re-use an existing `runtime.zig` instead of generating a new one. The path is a Zig import path relative to the generated `client.zig` (e.g. `../runtime.zig` or `../shared/my_runtime.zig`). Requires `--multiple-files` and is mutually exclusive with `--file-name runtime=...`. When given, no `runtime.zig` is emitted; the client imports the supplied path and derives the import alias from the file basename (`my_runtime` for `my_runtime.zig`). |
-| `--runtime-only` | Generate only the runtime module. No input spec is required; when `-i` is given it is ignored entirely. Without `--multiple-files`, writes the runtime module to `-o` (default `runtime.zig`). With `--multiple-files`, writes only the runtime file into the output directory (honors `--file-name runtime=...`). Mutually exclusive with `--models-only`, `--runtime-module`, and all client-related options. |
-| `--force` | Force overwriting output even when unchanged (skip unchanged-content check). |
-| `--parameters-as-struct` | Wrap the method parameters of each operation in a single `options` struct instead of emitting them as individual function arguments. Optional query parameters become nullable fields defaulting to `null`; required path and query parameters stay non-optional. The request body, when present, remains a separate `requestBody` argument. |
-
+| Flag                          | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| :---------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `-i`, `--input <PATH_OR_URL>` | OpenAPI/Swagger spec from a file path or `http`/`https` URL. The format is chosen from the suffix, so the path or URL must end in `.json`, `.yaml`, or `.yml` — an extensionless URL such as `https://example.com/api/v3/openapi` fails with `UnsupportedExtension`. Required, except with `--runtime-only` where it is ignored.                                                                                                                           |
+| `-o`, `--output <path>`       | Where the generated code is written. Without `--multiple-files` this is a file path, defaulting to `generated.zig` (or `runtime.zig` with `--runtime-only`). With `--multiple-files` it is the output directory instead, defaulting to `generated/`. Parent directories are created when needed.                                                                                                                                                           |
+| `--base-url <url>`            | Base URL baked into the generated `Client`. Defaults to the server URL from the OpenAPI/Swagger document.                                                                                                                                                                                                                                                                                                                                                  |
+| `--resource-wrappers <mode>`  | Generate resource wrapper namespaces. Modes: `none`, `tags`, `paths`, `hybrid`. Defaults to `paths`, except with `--multiple-clients`, where it defaults to `none`.                                                                                                                                                                                                                                                                                        |
+| `--multiple-clients <mode>`   | Generate per-tag or per-endpoint client structs that delegate to the flat API functions. Modes: `PerTag` (default when the flag is given without a value) and `PerEndpoint`. Mutually exclusive with a non-`none` `--resource-wrappers` and with `--models-only`.                                                                                                                                                                                          |
+| `--tag <name>`                | Include only operations carrying the specified OpenAPI tag. Schemas are removed only when unreachable from retained operations; transitively referenced schemas remain preserved. Operations without any of the requested tags (including untagged operations) are skipped. The `--tag` option can be specified multiple times, e.g. `--tag pet --tag store --tag user`.                                                                                   |
+| `--models-only`               | Generate only Zig models, skipping the API client.                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `--multiple-files`            | Generate separate output files for models, runtime, and API client into the output directory specified by `-o`.                                                                                                                                                                                                                                                                                                                                            |
+| `--file-name <kind>=<name>`   | Customize an output file name in `--multiple-files` mode. `<kind>` is `models`, `runtime`, or `client`. `<name>` may include a relative subpath (e.g. `models=gen/types.zig`); any required parent directories are created automatically. Can be specified multiple times.                                                                                                                                                                                 |
+| `--runtime-module <path>`     | Re-use an existing `runtime.zig` instead of generating a new one. The path is a Zig import path relative to the generated `client.zig` (e.g. `../runtime.zig` or `../shared/my_runtime.zig`). Requires `--multiple-files` and is mutually exclusive with `--file-name runtime=...`. When given, no `runtime.zig` is emitted; the client imports the supplied path and derives the import alias from the file basename (`my_runtime` for `my_runtime.zig`). |
+| `--runtime-only`              | Generate only the runtime module. No input spec is required; when `-i` is given it is ignored entirely. Without `--multiple-files`, writes the runtime module to `-o` (default `runtime.zig`). With `--multiple-files`, writes only the runtime file into the output directory (honors `--file-name runtime=...`). Mutually exclusive with `--models-only`, `--runtime-module`, and all client-related options.                                            |
+| `--force`                     | Force overwriting output even when unchanged (skip unchanged-content check).                                                                                                                                                                                                                                                                                                                                                                               |
+| `--parameters-as-struct`      | Wrap the method parameters of each operation in a single `options` struct instead of emitting them as individual function arguments. Optional query parameters become nullable fields defaulting to `null`; required path and query parameters stay non-optional. The request body, when present, remains a separate `requestBody` argument.                                                                                                               |
 
 ### Unchanged output is not rewritten
 
@@ -293,46 +196,53 @@ cannot alter the file behind the checksum's back.
 
 Pass `--force` to bypass the check and always rewrite the output.
 
-
 ### Examples
 
 **From a local file:**
+
 ```bash
 openapi2zig generate -i openapi/v3.0/petstore.json -o api.zig
 ```
 
 **From a local YAML file:**
+
 ```bash
 openapi2zig generate -i openapi/v3.0/petstore.yaml -o api.zig
 ```
 
 **From a remote URL:**
+
 ```bash
 openapi2zig generate -i https://petstore3.swagger.io/api/v3/openapi.json -o api.zig
 ```
 
 **Override the generated client's base URL:**
+
 ```bash
 openapi2zig generate -i openapi/v3.0/petstore.json -o api.zig --base-url https://petstore3.swagger.io/api/v3
 ```
 
 **Disable resource wrapper namespaces and keep only flat endpoint functions:**
+
 ```bash
 openapi2zig generate -i openapi/v3.0/petstore.json -o api.zig --resource-wrappers none
 ```
 
 **Generate per-tag client structs (default when the flag is given without a value):**
+
 ```bash
 openapi2zig generate -i openapi/v3.0/petstore.json -o api.zig --multiple-clients
 openapi2zig generate -i openapi/v3.0/petstore.json -o api.zig --multiple-clients PerTag
 ```
 
 **Generate per-endpoint client structs:**
+
 ```bash
 openapi2zig generate -i openapi/v3.0/petstore.json -o api.zig --multiple-clients PerEndpoint
 ```
 
 **Wrap method parameters in a single `options` struct:**
+
 ```bash
 openapi2zig generate -i openapi/v3.0/petstore.json -o api.zig --parameters-as-struct
 ```
@@ -352,6 +262,7 @@ defer pets.deinit();
 Required path and query parameters are emitted as non-optional struct fields, and the request body stays a separate `requestBody` argument. The struct is generated alongside the operation and named `<operationId>Options`, so `findPetsByStatus` gets a `findPetsByStatusOptions` you can name explicitly instead of relying on `.{ ... }` inference. Resource wrapper, per-tag, and per-endpoint methods follow the same shape.
 
 **Generate only endpoints and models for selected tags:**
+
 ```bash
 openapi2zig generate -i openapi/v3.0/petstore.json -o api.zig --tag pet --tag store
 ```
@@ -385,6 +296,7 @@ defer pet.deinit();
 `--runtime-only` rejects every flag that only makes sense for a spec-driven build: `--models-only`, `--multiple-clients`, `--runtime-module`, `--tag`, `--base-url`, `--parameters-as-struct`, an explicit `--resource-wrappers` (even `none`), and `--file-name models` / `--file-name client`. Passing any of them is a parse error. No input is required, and `-i` is ignored when given.
 
 **Generate only the runtime module:**
+
 ```bash
 # Single file (no input needed)
 openapi2zig generate --runtime-only -o runtime.zig
@@ -395,6 +307,7 @@ openapi2zig generate --runtime-only --multiple-files -o generated/shared --file-
 ```
 
 **Re-use an existing runtime when generating multiple clients (avoid duplicate `runtime.zig`):**
+
 ```bash
 # Generate a shared runtime once
 openapi2zig generate -i openapi/v3.0/petstore.json -o generated/shared --multiple-files
@@ -407,6 +320,7 @@ openapi2zig generate -i openapi/v3.1/openai.json -o generated/openai --multiple-
 # With custom models file name, the same pattern applies:
 openapi2zig generate -i openapi/v3.1/lmstudio.json -o generated/lmstudio --multiple-files --file-name models=contracts.zig --runtime-module ../shared/runtime.zig
 ```
+
 When `--runtime-module` is given, no `runtime.zig` is emitted in the output directory; `client.zig` instead contains `const runtime = @import("../shared/runtime.zig");` (alias derived from the file basename, e.g. `my_runtime` for `my_runtime.zig`) and re-exports `Owned`, `RawResponse`, etc. from that module. The flag requires `--multiple-files` and is mutually exclusive with `--file-name runtime=...`. If the target file does not yet exist, generation still succeeds with an info log so you can generate the shared runtime first, for example with `openapi2zig generate --runtime-only -o generated/shared --multiple-files`.
 
 ### Upgrading
@@ -426,35 +340,6 @@ executable (resolving symlinks, e.g. winget `Links`), and removes the temporary 
 files. The helper survives the parent process, so the new version is in place the next
 time the command is run.
 
-### Generated sample files
-
-The build script also includes curated sample-generation targets used by the checked-in generated harness:
-
-```bash
-zig build run-generate-v2   # openapi/v2.0/petstore.json  -> generated/generated_v2.zig
-zig build run-generate-v2-yaml  # openapi/v2.0/petstore.yaml -> generated/generated_v2_yaml.zig
-zig build run-generate-v3   # openapi/v3.0/petstore.json  -> generated/generated_v3.zig
-zig build run-generate-v3-yaml  # openapi/v3.0/petstore.yaml -> generated/generated_v3_yaml.zig
-zig build run-generate-v3-multiclient-tag  # petstore -> generated/generated_v3_multiclient_tag.zig (PerTag)
-zig build run-generate-v3-multiclient-endpoint  # petstore -> generated/generated_v3_multiclient_endpoint.zig (PerEndpoint)
-zig build run-generate-v3-multiclient-tag-multi  # petstore -> generated/multiple-clients/tag/ (PerTag, multi-file)
-zig build run-generate-v3-multiclient-endpoint-multi  # petstore -> generated/multiple-clients/endpoint/ (PerEndpoint, multi-file)
-zig build run-generate-v31  # openapi/v3.1/webhook-example.json -> generated/generated_v31.zig
-zig build run-generate-v31-yaml # openapi/v3.1/webhook-example.yaml -> generated/generated_v31_yaml.zig
-zig build run-generate-v32  # openapi/v3.2/petstore.json  -> generated/generated_v32.zig
-zig build run-generate      # runs all of the above
-```
-
-This quick harness is intentionally selective: it covers the curated v2/v3 petstore JSON+YAML outputs, the v3.1 webhook JSON+YAML outputs, and the v3.2 JSON output. `openapi/v3.2` remains JSON-only here because the repository does not currently ship a v3.2 YAML root fixture. For broader JSON+YAML fixture coverage across the sample tree, use `pwsh test/smoke-tests.ps1`. `generated/main.zig` imports the curated v2/v3 JSON+YAML modules plus the v3.1 YAML module, initializes `Client` values, and exercises memory-managed endpoint calls. `generated/compile_generated.zig` extends compile coverage across all curated generated artifacts. When Zig is available, validate generated examples with:
-
-```bash
-zig build run-generate
-zig build test
-zig test generated/compile_generated.zig
-zig build-exe generated/main.zig -fno-emit-bin
-zig build test-package
-```
-
 ## Using as a Library
 
 openapi2zig can also be used as a Zig library for parsing OpenAPI/Swagger specifications and generating code programmatically.
@@ -465,7 +350,7 @@ Let Zig write the entry for you rather than hand-editing `build.zig.zon`. In a n
 
 ```bash
 zig init   # only if you do not already have a build.zig.zon
-zig fetch --save https://github.com/christianhelle/openapi2zig/archive/refs/tags/v0.5.2.tar.gz
+zig fetch --save https://github.com/christianhelle/openapi2zig/archive/refs/tags/v0.5.5.tar.gz
 ```
 
 That adds an entry to `.dependencies` like this one — leave the `.hash` exactly as `zig fetch` wrote it, since it, not the URL, is what identifies the package:
@@ -473,8 +358,8 @@ That adds an entry to `.dependencies` like this one — leave the `.hash` exactl
 ```zig
     .dependencies = .{
         .openapi2zig = .{
-            .url = "https://github.com/christianhelle/openapi2zig/archive/refs/tags/v0.5.2.tar.gz",
-            .hash = "openapi2zig-0.2.0-ykENAgs6qADVacteBBRku7J9q6iFkS-wpPGW06fdrVNx",
+            .url = "https://github.com/christianhelle/openapi2zig/archive/refs/tags/v0.5.5.tar.gz",
+            .hash = "openapi2zig-0.5.5-ykENAm1sqADagDkLvb-Zf4595K-VteB1X5KjVDXk83Hk",
         },
     },
 ```
@@ -492,44 +377,161 @@ exe.root_module.addImport("openapi2zig", openapi2zig_dep.module("openapi2zig"));
 
 The repository includes a minimal downstream consumer fixture in `examples/package_consumer/`, and `zig build test-package` builds it against a clean package snapshot so ignored local files cannot mask packaging issues.
 
-### Library Usage Example
+### Library Usage Examples
+
+#### Generate code from a specification
+
+Use `generateFromSpec` to run the same loading, filtering, generation, and file-writing pipeline as the CLI without shelling out to the `openapi2zig` executable:
 
 ```zig
 const std = @import("std");
 const openapi2zig = @import("openapi2zig");
 
 pub fn main(init: std.process.Init) !void {
-    const allocator = init.gpa;
-    const io = init.io;
-
-    // Read OpenAPI specification
-    const content = try std.Io.Dir.cwd().readFileAlloc(io, "api.json", allocator, .limited(1024 * 1024));
-    defer allocator.free(content);
-
-    // Detect version
-    const version = try openapi2zig.detectVersion(allocator, content);
-    std.debug.print("Detected version: {}\n", .{version});
-
-    // Parse to unified document representation
-    var unified_doc = try openapi2zig.parseToUnified(allocator, content);
-    defer unified_doc.deinit(allocator);
-
-    std.debug.print("API: {s} v{s}\n", .{ unified_doc.info.title, unified_doc.info.version });
-
-    // Generate Zig code
-    const args = openapi2zig.CliArgs{
-        .input_path = "api.json",
-        .output_path = null,
+    try openapi2zig.generateFromSpec(init.gpa, init.io, .{
+        .input_path = "openapi/api.json",
+        .output_path = "src/generated/api.zig",
         .base_url = "https://api.example.com",
-    };
-
-    const generated_code = try openapi2zig.generateCode(allocator, io, unified_doc, args);
-    defer allocator.free(generated_code);
-
-    // Write generated code to file
-    try std.Io.Dir.cwd().writeFile(io, .{ .sub_path = "generated.zig", .data = generated_code });
+    });
 }
 ```
+
+Input and output paths are resolved relative to the process's working directory. The input can also be a YAML file or an `http`/`https` URL ending in `.json`, `.yaml`, or `.yml`.
+
+#### Inspect a specification
+
+Use the lower-level APIs when you need to inspect or transform a specification before generating code:
+
+```zig
+const std = @import("std");
+const openapi2zig = @import("openapi2zig");
+
+pub fn main(init: std.process.Init) !void {
+    const content = try std.Io.Dir.cwd().readFileAlloc(
+        init.io,
+        "openapi/api.json",
+        init.gpa,
+        .limited(1024 * 1024),
+    );
+    defer init.gpa.free(content);
+
+    const version = try openapi2zig.detectVersion(init.gpa, content);
+    std.debug.print("Detected version: {}\n", .{version});
+
+    var document = try openapi2zig.parseToUnified(init.gpa, content);
+    defer document.deinit(init.gpa);
+
+    std.debug.print("API: {s} v{s}\n", .{
+        document.info.title,
+        document.info.version,
+    });
+}
+```
+
+#### Generate clients from a build step
+
+For generated clients that are committed to your repository, keep regeneration opt-in so ordinary builds and tests do not fetch or run the generator. This pattern mirrors `puny`'s [`regenerate-providers` build step](https://github.com/christianhelle/puny/blob/main/build.zig) and [generation tool](https://github.com/christianhelle/puny/blob/main/tools/generate_providers.zig).
+
+First, mark the dependency as lazy in `build.zig.zon`. Omit `.lazy = true` when application source imports `openapi2zig` and therefore needs it on every build.
+
+```zig
+.dependencies = .{
+    .openapi2zig = .{
+        .url = "https://github.com/christianhelle/openapi2zig/archive/refs/tags/v0.5.5.tar.gz",
+        .hash = "openapi2zig-0.5.5-ykENAm1sqADagDkLvb-Zf4595K-VteB1X5KjVDXk83Hk",
+        .lazy = true,
+    },
+},
+```
+
+If your manifest has a `.paths` allowlist, include the `tools` directory and any local OpenAPI specifications needed by the generator.
+
+Add an opt-in step to `build.zig`. The generator executable targets `b.graph.host`, so it still runs on the development machine when the main project is cross-compiled.
+
+```zig
+const std = @import("std");
+
+pub fn build(b: *std.Build) void {
+    // Configure the application's normal build graph here.
+    addRegenerateApiStep(b);
+}
+
+fn addRegenerateApiStep(b: *std.Build) void {
+    const regenerate = b.option(
+        bool,
+        "regenerate-api",
+        "Fetch openapi2zig and regenerate the API client",
+    ) orelse false;
+    const regenerate_step = b.step(
+        "regenerate-api",
+        "Regenerate the API client from its OpenAPI specification",
+    );
+
+    if (regenerate) {
+        if (b.lazyDependency("openapi2zig", .{
+            .target = b.graph.host,
+            .optimize = .ReleaseSafe,
+        })) |openapi2zig_dep| {
+            const generator = b.addExecutable(.{
+                .name = "generate_api",
+                .root_module = b.createModule(.{
+                    .root_source_file = b.path("tools/generate_api.zig"),
+                    .target = b.graph.host,
+                    .optimize = .ReleaseSafe,
+                }),
+            });
+            generator.root_module.addImport(
+                "openapi2zig",
+                openapi2zig_dep.module("openapi2zig"),
+            );
+
+            const run_generator = b.addRunArtifact(generator);
+            run_generator.has_side_effects = true;
+            run_generator.setCwd(b.path("."));
+            regenerate_step.dependOn(&run_generator.step);
+        }
+    } else {
+        regenerate_step.dependOn(&b.addFail(
+            "pass -Dregenerate-api=true to fetch openapi2zig and regenerate the API client",
+        ).step);
+    }
+}
+```
+
+The boolean option is intentional: Zig evaluates `build()` before it knows which named steps will run, so gating `lazyDependency` prevents plain `zig build` and `zig build test` invocations from fetching a build-only dependency.
+
+Finally, put the generation logic in `tools/generate_api.zig`. This example generates one shared runtime and a filtered, multi-file client that imports it:
+
+```zig
+const std = @import("std");
+const openapi2zig = @import("openapi2zig");
+
+pub fn main(init: std.process.Init) !void {
+    try openapi2zig.generateFromSpec(init.gpa, init.io, .{
+        .input_path = "",
+        .output_path = "src/generated/runtime.zig",
+        .runtime_only = true,
+    });
+
+    try openapi2zig.generateFromSpec(init.gpa, init.io, .{
+        .input_path = "openapi/api.json",
+        .output_path = "src/generated/api/",
+        .base_url = "https://api.example.com",
+        .multiple_files = true,
+        .file_names = .{ .models = "contracts.zig" },
+        .runtime_module = "../runtime.zig",
+        .tags = &.{ "Pets", "Users" },
+    });
+}
+```
+
+Run the step explicitly:
+
+```bash
+zig build regenerate-api -Dregenerate-api=true
+```
+
+`run_generator.setCwd(b.path("."))` makes the paths passed to `generateFromSpec` relative to the consuming project's root. `has_side_effects = true` ensures an explicitly requested regeneration is not skipped by the build cache.
 
 ### Library API Reference
 
@@ -600,17 +602,17 @@ Parsed JSON responses use `.ignore_unknown_fields = true` so compatible provider
 
 Schemas map to Zig types as follows:
 
-| OpenAPI schema | Generated Zig type |
-| :--- | :--- |
-| `$ref` | the referenced declaration |
-| `type: string` | `[]const u8` (string enums stay strings, they do not become Zig enums) |
-| `type: integer` | `i64` |
-| `type: number` | `f64` |
-| `type: boolean` | `bool` |
-| `type: array` with a known `items` type | `[]const T` |
-| `type: array` with no usable `items` type | `[]const std.json.Value` |
-| schema with `properties` | a generated `struct`, even when `type` is omitted |
-| free-form object, `oneOf`/`anyOf` without a usable discriminator, unknown schema | `std.json.Value` |
+| OpenAPI schema                                                                   | Generated Zig type                                                     |
+| :------------------------------------------------------------------------------- | :--------------------------------------------------------------------- |
+| `$ref`                                                                           | the referenced declaration                                             |
+| `type: string`                                                                   | `[]const u8` (string enums stay strings, they do not become Zig enums) |
+| `type: integer`                                                                  | `i64`                                                                  |
+| `type: number`                                                                   | `f64`                                                                  |
+| `type: boolean`                                                                  | `bool`                                                                 |
+| `type: array` with a known `items` type                                          | `[]const T`                                                            |
+| `type: array` with no usable `items` type                                        | `[]const std.json.Value`                                               |
+| schema with `properties`                                                         | a generated `struct`, even when `type` is omitted                      |
+| free-form object, `oneOf`/`anyOf` without a usable discriminator, unknown schema | `std.json.Value`                                                       |
 
 Fields not listed in `required` are emitted as optionals defaulting to `null`.
 
@@ -777,6 +779,132 @@ switch (result) {
 // Default path resource wrappers are also exported:
 var wrapped = try api.pet.get(&client, 1);
 defer wrapped.deinit();
+```
+
+## Development
+
+This section covers setting up the repository for development and contributing to openapi2zig. If you just want to use the CLI or library, see [Installation](#installation) and [Quick Start](#quick-start) above.
+
+### Prerequisites
+
+- [Zig](https://ziglang.org/download/) v0.16.0
+
+### Development Environment
+
+#### Option 1: GitHub Codespaces (Recommended for Contributors)
+
+The fastest way to get started with development is using GitHub Codespaces, which provides a pre-configured development environment with Zig, ZLS (Zig Language Server), and all necessary VS Code extensions.
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/christianhelle/openapi2zig)
+
+1. Click the badge above or navigate to the repository on GitHub
+2. Click "Code" → "Codespaces" → "Create codespace"
+3. Wait for the environment to set up (2-3 minutes)
+4. Start coding! Everything is pre-configured.
+
+#### Option 2: VS Code Dev Containers (Local)
+
+If you prefer local development with Docker:
+
+1. Install [VS Code](https://code.visualstudio.com/) and the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+2. Clone the repository and open it in VS Code
+3. When prompted, click "Reopen in Container"
+4. VS Code will build and configure the development environment automatically
+
+#### Option 3: Manual Setup
+
+Install Zig locally following the official [installation guide](https://ziglang.org/download/), then clone the repository:
+
+```bash
+git clone https://github.com/christianhelle/openapi2zig.git
+cd openapi2zig
+zig build
+```
+
+The compiled binary will be available in `zig-out/bin/openapi2zig`.
+
+### Building and testing
+
+For development builds with debug information:
+
+```bash
+zig build -Doptimize=Debug
+```
+
+To run tests during development:
+
+```bash
+zig build test
+```
+
+To check code formatting:
+
+```bash
+zig fmt --check src/
+zig fmt --check build.zig
+```
+
+### Smoke tests
+
+Run the broad smoke-test script to validate code generation against every supported sample specification:
+
+```bash
+pwsh test/smoke-tests.ps1
+```
+
+What it does:
+
+- Validates all eligible JSON and YAML API specs under `openapi/v2.0`, `openapi/v3.0`, `openapi/v3.1`, and `openapi/v3.2`.
+- Runs each spec through every resource-wrapper mode: `none`, `tags`, `paths`, and `hybrid`, plus `PerTag` and `PerEndpoint` multiple-client modes when `-MultipleClients` is passed (default smoke runs use resource-wrapper modes only).
+- Ignores the meta-schema documents under `openapi/json-schema/`, which are outside the smoke-test discovery roots.
+- Writes generated outputs to `test/output/` (gitignored), with filenames shaped like `<basename>__<format>__<mode>.zig` so JSON/YAML sibling fixtures do not collide.
+- Continues through individual failures and prints a final summary listing every failing spec/mode combination, then exits non-zero if any case failed.
+- Honors a temporary denylist for known-unsupported spec/mode combinations so the PR gate can stay green while generator gaps are tracked explicitly.
+
+In CI, the same script runs in the `smoke-tests` job on pull requests and `main`, alongside the existing `zig build run-generate` + `zig run generated/main.zig` curated sample harness. The broad smoke discovery does not require JSON/YAML twins: YAML-only roots such as `openapi/v3.0/bot.paths.yaml` are still included when they live under the covered version folders. When the smoke-tests job fails, `test/output/` is uploaded as a workflow artifact for triage.
+
+### Cross-compilation
+
+Build for different targets:
+
+```bash
+# Windows
+zig build -Dtarget=x86_64-windows
+
+# macOS
+zig build -Dtarget=x86_64-macos
+
+# Linux ARM64
+zig build -Dtarget=aarch64-linux
+```
+
+### Generated sample files
+
+The build script also includes curated sample-generation targets used by the checked-in generated harness:
+
+```bash
+zig build run-generate-v2   # openapi/v2.0/petstore.json  -> generated/generated_v2.zig
+zig build run-generate-v2-yaml  # openapi/v2.0/petstore.yaml -> generated/generated_v2_yaml.zig
+zig build run-generate-v3   # openapi/v3.0/petstore.json  -> generated/generated_v3.zig
+zig build run-generate-v3-yaml  # openapi/v3.0/petstore.yaml -> generated/generated_v3_yaml.zig
+zig build run-generate-v3-multiclient-tag  # petstore -> generated/generated_v3_multiclient_tag.zig (PerTag)
+zig build run-generate-v3-multiclient-endpoint  # petstore -> generated/generated_v3_multiclient_endpoint.zig (PerEndpoint)
+zig build run-generate-v3-multiclient-tag-multi  # petstore -> generated/multiple-clients/tag/ (PerTag, multi-file)
+zig build run-generate-v3-multiclient-endpoint-multi  # petstore -> generated/multiple-clients/endpoint/ (PerEndpoint, multi-file)
+zig build run-generate-v31  # openapi/v3.1/webhook-example.json -> generated/generated_v31.zig
+zig build run-generate-v31-yaml # openapi/v3.1/webhook-example.yaml -> generated/generated_v31_yaml.zig
+zig build run-generate-v32  # openapi/v3.2/petstore.json  -> generated/generated_v32.zig
+zig build run-generate      # runs all of the above
+```
+
+This quick harness is intentionally selective: it covers the curated v2/v3 petstore JSON+YAML outputs, the v3.1 webhook JSON+YAML outputs, and the v3.2 JSON output. `openapi/v3.2` remains JSON-only here because the repository does not currently ship a v3.2 YAML root fixture. For broader JSON+YAML fixture coverage across the sample tree, use `pwsh test/smoke-tests.ps1`. `generated/main.zig` imports the curated v2/v3 JSON+YAML modules plus the v3.1 YAML module, initializes `Client` values, and exercises memory-managed endpoint calls. `generated/compile_generated.zig` extends compile coverage across all curated generated artifacts. When Zig is available, validate generated examples with:
+
+```bash
+zig build run-generate
+zig build test
+zig test generated/compile_generated.zig
+zig build-exe generated/main.zig -fno-emit-bin
+zig build test-package
 ```
 
 ## Contributing
