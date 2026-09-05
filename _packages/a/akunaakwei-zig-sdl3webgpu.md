@@ -6,9 +6,19 @@ author: akunaakwei
 author_github: akunaakwei
 repository: https://github.com/akunaakwei/zig-sdl3webgpu
 keywords:
-date: 2026-04-15
-updated_at: 2026-04-15T07:14:48+00:00
-last_sync: 2026-04-15T07:14:48Z
+date: 2026-09-05
+updated_at: 2026-09-05T07:36:42+00:00
+last_sync: 2026-09-05T07:36:42Z
+package_kind: library
+has_library: true
+has_binary: false
+has_distributable_binary: false
+binary_count: 0
+distributable_binary_count: 0
+multiple_binaries: false
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
 permalink: /packages/akunaakwei/zig-sdl3webgpu/
 ---
 
@@ -37,23 +47,12 @@ pub fn build(b: *std.Build) void {
     const sdl3webgpu_dep = b.dependency("sdl3webgpu", .{
         .target = target,
         .optimize = optimize,
-        .sdl3_headers = sdl3_lib.getEmittedIncludeTree(),
-        .sdl3_library = sdl3_lib.getEmittedBin(),
-        .webgpu_headers = webgpu_lib.getEmittedIncludeTree(),
-        .webgpu_library = webgpu_lib.getEmittedBin(),
     });
+    const sdl3webgpu_lib = sdl3webgpu_dep.artifact("sdl3webgpu");
+    sdl3webgpu_lib.root_module.linkLibrary(sdl3_lib);
+    sdl3webgpu_lib.root_module.linkLibrary(webgpu_lib);
 
-    const exe = b.addExecutable(.{
-        .name = "example",
-        .root_module = b.createModule(.{
-            .root_source_file = b.path("src/main.zig"),
-            .target = target,
-            .optimize = optimize,
-        }),
-    });
-    exe.root_module.addImport("sdl3", sdl3_mod);
-    exe.root_module.addImport("webgpu", webgpu_mod);
-    exe.root_module.addImport("sdl3webgpu", sdl3webgpu_mod);
+    // ...
 }
 ```
 

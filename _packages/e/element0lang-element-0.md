@@ -11,10 +11,11 @@ keywords:
   - lisp-dialect
   - programming-language
   - r5rs
+  - r7rs-small
   - scheme
-date: 2026-05-12
-updated_at: 2026-05-12T21:18:31+00:00
-last_sync: 2026-05-12T21:18:31Z
+date: 2026-09-05
+updated_at: 2026-09-05T13:24:14+00:00
+last_sync: 2026-09-05T13:24:14Z
 package_kind: hybrid
 has_library: true
 has_binary: true

@@ -6,9 +6,9 @@ author: nektro
 author_github: nektro
 repository: https://github.com/nektro/zig-flag
 keywords:
-date: 2026-07-08
-updated_at: 2026-07-08T10:29:45+00:00
-last_sync: 2026-07-08T10:29:45Z
+date: 2026-08-24
+updated_at: 2026-08-24T19:29:25+00:00
+last_sync: 2026-08-24T19:29:25Z
 package_kind: binary
 has_library: false
 has_binary: true

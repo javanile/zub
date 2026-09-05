@@ -9,10 +9,10 @@ keywords:
   - sql
   - zig-libary
   - zig-program
-date: 2026-08-22
+date: 2026-08-24
 category: data-formats
-updated_at: 2026-08-22T16:59:17+00:00
-last_sync: 2026-08-22T16:59:17Z
+updated_at: 2026-08-24T12:09:01+00:00
+last_sync: 2026-08-24T12:09:01Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -741,6 +741,7 @@ important data, `parseIsoOffsetDateTime` instead returns an explicit
 `OffsetDateTime` with up-to-nanosecond precision intact. Wrappers can format
 back into caller buffers without allocation (for example,
 `timestamp.formatIsoUtc(&buffer)`).
+ISO times may omit seconds; malformed trailing separators still fail explicitly.
 Offline checks accept that offset-preserving wrapper for `timestamptz` sources,
 while the UTC `Timestamp` wrapper remains valid for both timestamp policies.
 Each wrapper exposes its exact `iso_buffer_len`, so callers can size stack
@@ -775,6 +776,9 @@ one string in `types.OffsetDateTime.iso_buffer_len` bytes. Exact day-long
 `OffsetDateTime.toOffset(offset)` converts the same instant to another explicit
 offset while retaining nanosecond precision and shifting the wall-clock date as
 needed.
+`compare` provides chronological ordering for explicit domains, while
+`compareInstant`/`eqlInstant` compare timezone-aware values by absolute instant
+rather than their spelling.
 Checked fixed-unit arithmetic is available for explicit domains: `Date.addDays`
 and `Timestamp.addMicros` reject range overflow, while `Time.addNanos`,
 `TimeTz.addNanos`, and `OffsetDateTime.addNanos` preserve nanoseconds and apply

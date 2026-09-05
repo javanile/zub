@@ -6,9 +6,9 @@ author: agagniere
 author_github: agagniere
 repository: https://github.com/agagniere/cgrpc_wrapper
 keywords:
-date: 2026-07-18
-updated_at: 2026-07-18T21:29:34+00:00
-last_sync: 2026-07-18T21:29:34Z
+date: 2026-09-05
+updated_at: 2026-09-05T13:02:43+00:00
+last_sync: 2026-09-05T13:02:43Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -33,10 +33,11 @@ This wrapper is a zig interface over libgrpc's core library.
 | `x86_64`          | ✅    | ✅    |
 | `arm64`           | ✅    | ✅    |
 
-| Branch name | Zig version        |
-|:------------|:-------------------|
-| `master`    | `0.16.x`, `master` |
-| `zig-0.15`  | `0.15.x`           |
+| Branch name | Zig version |
+|:------------|:------------|
+| `master`    | `master`    |
+| `zig-0.16`  | `0.16.x`    |
+| `zig-0.15`  | `0.15.x`    |
 
 ## Use
 
