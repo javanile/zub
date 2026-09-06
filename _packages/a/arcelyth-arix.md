@@ -13,9 +13,9 @@ keywords:
   - web
   - webbrowser
   - webengine
-date: 2026-09-05
-updated_at: 2026-09-05T13:25:30+00:00
-last_sync: 2026-09-05T13:25:30Z
+date: 2026-09-06
+updated_at: 2026-09-06T09:40:24+00:00
+last_sync: 2026-09-06T09:40:24Z
 package_kind: binary
 has_library: false
 has_binary: true

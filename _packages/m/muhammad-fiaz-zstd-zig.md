@@ -18,10 +18,10 @@ keywords:
   - zstd-zig-bindings
   - zstd-zig-compression
   - zstd-zig-implementation
-date: 2026-08-24
+date: 2026-09-06
 category: systems
-updated_at: 2026-08-24T00:08:12+00:00
-last_sync: 2026-08-24T00:08:12Z
+updated_at: 2026-09-06T10:14:19+00:00
+last_sync: 2026-09-06T10:14:19Z
 package_kind: hybrid
 has_library: true
 has_binary: true

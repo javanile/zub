@@ -1,0 +1,82 @@
+---
+title: zstring
+description: Zig string library that includes small string optimization on the stack
+license: BSD-2-Clause
+author: jnordwick
+author_github: jnordwick
+repository: https://github.com/jnordwick/zstring
+keywords:
+date: 2026-09-06
+updated_at: 2026-09-06T12:14:03+00:00
+last_sync: 2026-09-06T12:14:03Z
+package_kind: library
+has_library: true
+has_binary: false
+has_distributable_binary: false
+binary_count: 0
+distributable_binary_count: 0
+multiple_binaries: false
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
+permalink: /packages/jnordwick/zstring/
+---
+
+* Introduction
+
+UPDATE: I had to change the name because I was having problems
+with the dash in the package name with zig tooling.
+
+This is a simple string library that implements an in situ buffer for
+the small string optimization. It can store up to 23 bytes without
+spill into an external allocation.
+
+A lot of basic functionality, such as looping over the contents of the
+string, it is easier to just get a slice from the string and use that
+so things like basic iterators are not implemented, and I feel would
+just clutter the API, be slower, and be more places for bugs, so
+String.slice() and String.const_slice() are the main ways to interface
+with it. There are some methods that use String, but mostly around
+functions with possible allocations.
+
+Since 0.0.1, I tried to make the API more conventional and use as many
+std function as I can. I added a HashContext that uses FVN-1a (but
+might change if I can find a better short ASCII string hash function).
+
+* Implementation
+This implementaiton I wanted to try something new. Since the length of
+small string will always be less than 32 bytes, the 6th through 8th
+bits of the capacity can be used to signal that the string is in large
+mode. This means there is no shifting, just see if any of those bits
+are set. For a large string, the length can't be controlled so
+capacity is put first in the struct and it always need to generate a
+capaciity where of of those bits is set (it does this by checking if
+one of 0b11100000 is set, and if not, add 0x20 in).
+
+* UTF-8
+The string can contain any bytes, but there are no special functions
+for it.
+
+* Using the SmallString and LargeString directly
+There are also function specifically for getting the large or small
+internal representaiton. If you need to work on a string a lot and
+getting the slice doesn't cover your use cases, get the internal
+representation and use that directly to avoid marshalling costs.
+
+* More string functions
+I added a shift-or string matcher since that tends to work very well
+with small patterns. There is also Boyer-Moore-Harspool. Can't
+remember why I added that. I had a reason for it at one point.
+
+* TODO
+- [ ] better documentation
+- [ ] refine shift xor search, add to API
+- [ ] N-way Rabin-Karp
+- [ ] Add asserts or other safe build protections
+
+* AI
+Most of the tests are written by an LLM. None of the code (it was
+written mostly before LLMs were a thing), and the few changes I was
+using it for, I had to edit heavily bc LLMs write extremely average
+code. I'll probably get an LLM to generate docs for me too if I
+decide to.

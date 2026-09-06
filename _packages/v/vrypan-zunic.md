@@ -1,14 +1,14 @@
 ---
 title: zunic
 description: Allocation-free Unicode primitives for Zig terminal applications.
-license: ""
+license: MIT
 author: vrypan
 author_github: vrypan
 repository: https://github.com/vrypan/zunic
 keywords:
-date: 2026-09-05
-updated_at: 2026-09-05T12:33:10+00:00
-last_sync: 2026-09-05T12:33:10Z
+date: 2026-09-06
+updated_at: 2026-09-06T11:43:10+00:00
+last_sync: 2026-09-06T11:43:10Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -43,12 +43,40 @@ The iterator is allocation-free and reports default UAX #14 opportunities only.
 Choosing a break for a terminal width, locale/CLDR tailoring, dictionary
 segmentation, and emergency breaks remain caller responsibilities.
 
+## Why zunic
+
+- **No allocator, anywhere.** No API takes an `std.mem.Allocator`, so
+  nothing can fail on allocation. Iterators return borrowed byte offsets
+  into the caller's input; state lives in the iterator struct.
+- **No dependencies.** Zig standard library only. The Unicode tables are
+  generated into the source tree, so there is no build-time download,
+  code generation step, or C library to link.
+- **Conformance-tested, not hand-tuned.** `zig build test` runs the
+  official Unicode 16.0.0 `GraphemeBreakTest` and `LineBreakTest`
+  fixtures, embedded in the repository, over every case they define.
+- **Tolerant.** Malformed UTF-8 never errors and never
+  panics. An invalid byte is consumed as one span with defined fallback
+  properties, so a terminal reading arbitrary bytes keeps making
+  progress.
+- **One pass over the text.** `scalar.iterator` yields the byte span,
+  the decoded code point, the cell width, and the grapheme and
+  line-break properties together, instead of forcing a separate pass per
+  property.
+- **Optimized wrapping.** Grapheme segmentation, UAX #14 boundaries,
+  and terminal cell widths are used by `zunic.wrap` to provide out-of-the-box
+  text wrapping.
+- **Checked ASCII fast path.** Runs of plain ASCII take a vectorized
+  scan on aarch64 and x86_64. It is portable `@Vector` code with no
+  intrinsics, checked against the scalar implementation for every byte
+  value at every alignment. It needs no configuration, and the backend
+  is selectable at build time.
+
 ## Usage
 
 Add the dependency:
 
 ```sh
-zig fetch --save git+https://github.com/vrypan/zunic.git#v0.2.0
+zig fetch --save git+https://github.com/vrypan/zunic.git#v0.2.2
 ```
 
 Add the module in your application's `build.zig`:
@@ -57,6 +85,19 @@ Add the module in your application's `build.zig`:
 const zunic = b.dependency("zunic", .{});
 exe.root_module.addImport("zunic", zunic.module("zunic"));
 ```
+
+No build flags are required. The vectorized ASCII fast path is enabled by
+default wherever a backend exists, currently aarch64 and x86_64, and falls
+back to the scalar path everywhere else. To pin a backend, pass the option
+through the dependency rather than to your own build:
+
+```zig
+const zunic = b.dependency("zunic", .{ .@"wrap-fast-path" = .off });
+```
+
+Accepted values are `.auto` (the default), `.scalar`, `.simd`, and `.off`.
+`-Dwrap-fast-path` applies when building zunic itself, such as running its
+tests or benchmarks.
 
 Then import `zunic` in application code. This example iterates user-visible
 graphemes, measures their terminal width, and prints only usable line-break

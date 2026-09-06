@@ -8,10 +8,10 @@ repository: https://github.com/floooh/sokol-zig
 keywords:
   - crossplatform
   - sokol
-date: 2026-08-30
+date: 2026-09-06
 category: game-development
-updated_at: 2026-08-30T08:43:07+00:00
-last_sync: 2026-08-30T08:43:07Z
+updated_at: 2026-09-06T13:08:56+00:00
+last_sync: 2026-09-06T13:08:56Z
 package_kind: hybrid
 has_library: true
 has_binary: true

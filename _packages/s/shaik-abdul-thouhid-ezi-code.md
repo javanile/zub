@@ -16,10 +16,10 @@ keywords:
   - unicode-library
   - unicode-normalization
   - utf-8
-date: 2026-08-25
+date: 2026-09-04
 category: systems
-updated_at: 2026-08-25T03:10:47+00:00
-last_sync: 2026-08-25T03:10:47Z
+updated_at: 2026-09-04T05:42:13+00:00
+last_sync: 2026-09-04T05:42:13Z
 package_kind: hybrid
 has_library: true
 has_binary: true

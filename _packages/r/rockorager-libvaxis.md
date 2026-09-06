@@ -7,16 +7,16 @@ author_github: rockorager
 repository: https://github.com/rockorager/libvaxis
 keywords:
   - tui
-date: 2026-08-27
+date: 2026-09-06
 category: tooling
-updated_at: 2026-08-27T19:32:37+00:00
-last_sync: 2026-08-27T19:32:37Z
+updated_at: 2026-09-06T13:16:23+00:00
+last_sync: 2026-09-06T13:16:23Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 4
-distributable_binary_count: 4
+binary_count: 5
+distributable_binary_count: 5
 multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
