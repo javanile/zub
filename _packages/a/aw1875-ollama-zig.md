@@ -1,16 +1,16 @@
 ---
 title: ollama.zig
 description: A light weight Ollama client for zig
-license: ""
+license: MIT
 author: aw1875
 author_github: aw1875
 repository: https://github.com/aw1875/ollama.zig
 keywords:
   - ollama
   - ollama-client
-date: 2026-08-21
-updated_at: 2026-08-21T23:56:26+00:00
-last_sync: 2026-08-21T23:56:26Z
+date: 2026-09-03
+updated_at: 2026-09-03T03:04:44+00:00
+last_sync: 2026-09-03T03:04:44Z
 package_kind: library
 has_library: true
 has_binary: false

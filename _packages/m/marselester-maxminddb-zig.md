@@ -8,9 +8,9 @@ repository: https://github.com/marselester/maxminddb.zig
 keywords:
   - maxmind
   - maxmind-db
-date: 2026-08-27
-updated_at: 2026-08-27T01:22:14+00:00
-last_sync: 2026-08-27T01:22:14Z
+date: 2026-09-03
+updated_at: 2026-09-03T21:21:03+00:00
+last_sync: 2026-09-03T21:21:03Z
 package_kind: hybrid
 has_library: true
 has_binary: true

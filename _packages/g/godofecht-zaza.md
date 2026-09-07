@@ -16,10 +16,10 @@ keywords:
   - rust
   - wasm
   - webassembly
-date: 2026-08-23
+date: 2026-09-07
 category: tooling
-updated_at: 2026-08-23T19:46:20+00:00
-last_sync: 2026-08-23T19:46:20Z
+updated_at: 2026-09-07T14:54:21+00:00
+last_sync: 2026-09-07T14:54:21Z
 package_kind: binary
 has_library: false
 has_binary: true

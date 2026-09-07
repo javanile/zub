@@ -11,10 +11,10 @@ keywords:
   - code-generation
   - cue
   - deterministic-builds
-date: 2026-08-23
+date: 2026-09-07
 category: tooling
-updated_at: 2026-08-23T19:54:40+00:00
-last_sync: 2026-08-23T19:54:40Z
+updated_at: 2026-09-07T14:53:34+00:00
+last_sync: 2026-09-07T14:53:34Z
 package_kind: hybrid
 has_library: true
 has_binary: true

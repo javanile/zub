@@ -8,9 +8,9 @@ repository: https://github.com/deatil/zig-jwt
 keywords:
   - jwt
   - zig-jwt
-date: 2026-09-02
-updated_at: 2026-09-02T09:52:44+00:00
-last_sync: 2026-09-02T09:52:44Z
+date: 2026-09-03
+updated_at: 2026-09-03T19:58:06+00:00
+last_sync: 2026-09-03T19:58:06Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -114,7 +114,7 @@ pub fn main(init: std.process.Init) !void {
     const p = jwt.SigningMethodEdDSA.init(alloc);
     var token = try p.parse(token_string, kp.public_key);
 
-    defer p.deinit();
+    defer token.deinit();
     
     // output: 
     // claims aud: example.com

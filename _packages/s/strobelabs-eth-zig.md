@@ -1,6 +1,6 @@
 ---
 title: eth.zig
-description: Zig Ethereum client library. Faster than alloy.rs on 20/26 benchmarks.
+description: Zig Ethereum client library. Faster than alloy.rs on 18/26 benchmarks.
 license: MIT
 author: StrobeLabs
 author_github: StrobeLabs
@@ -24,10 +24,10 @@ keywords:
   - secp256k1
   - web3
   - zig-ethereum
-date: 2026-08-21
+date: 2026-09-05
 category: systems
-updated_at: 2026-08-21T06:24:15+00:00
-last_sync: 2026-08-21T06:24:15Z
+updated_at: 2026-09-05T03:57:38+00:00
+last_sync: 2026-09-05T03:57:38Z
 package_kind: hybrid
 has_library: true
 has_binary: true
