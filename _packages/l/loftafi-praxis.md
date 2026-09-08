@@ -6,9 +6,9 @@ author: loftafi
 author_github: loftafi
 repository: https://github.com/loftafi/praxis
 keywords:
-date: 2026-08-19
-updated_at: 2026-08-19T22:22:56+00:00
-last_sync: 2026-08-19T22:22:56Z
+date: 2026-09-08
+updated_at: 2026-09-08T12:31:43+00:00
+last_sync: 2026-09-08T12:31:43Z
 package_kind: hybrid
 has_library: true
 has_binary: true

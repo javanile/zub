@@ -12,9 +12,9 @@ keywords:
   - file-encryption
   - turbo
   - turbocrypt
-date: 2026-04-27
-updated_at: 2026-04-27T08:46:05+00:00
-last_sync: 2026-04-27T08:46:05Z
+date: 2026-09-08
+updated_at: 2026-09-08T11:37:52+00:00
+last_sync: 2026-09-08T11:37:52Z
 package_kind: binary
 has_library: false
 has_binary: true

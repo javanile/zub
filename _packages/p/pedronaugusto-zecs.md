@@ -11,8 +11,8 @@ keywords:
   - zig-gamedev
 date: 2026-09-04
 category: game-development
-updated_at: 2026-09-04T14:23:33+00:00
-last_sync: 2026-09-04T14:23:33Z
+updated_at: 2026-09-04T17:23:33+00:00
+last_sync: 2026-09-04T17:23:33Z
 package_kind: hybrid
 has_library: true
 has_binary: true

@@ -8,8 +8,8 @@ repository: https://github.com/pedronaugusto/zozz
 keywords:
   - zig-gamedev
 date: 2026-09-04
-updated_at: 2026-09-04T14:25:35+00:00
-last_sync: 2026-09-04T14:25:35Z
+updated_at: 2026-09-04T17:34:56+00:00
+last_sync: 2026-09-04T17:34:56Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -394,7 +394,7 @@ NaN ratio that is refused.
 <!-- BEGIN GENERATED ci/measurements.sh --markdown -->
 | | |
 |---:|---|
-| **0.4.0** | version, the same in `build.zig.zon` and `ffi/zozz_core.h` |
+| **0.5.0** | version, the same in `build.zig.zon` and `ffi/zozz_core.h` |
 | **359** | C entry points (`ZOZZ_API` in `ffi/*.h`) |
 | **359** | Zig externs (`pub extern fn` in `src/c.zig`) |
 | **21** | installed public headers |
@@ -406,7 +406,7 @@ NaN ratio that is refused.
 | **41** | vendored ozz translation units `build.zig` compiles |
 | **20** | zozz C++ translation units (`ffi/*.cpp`) |
 | **14690** | Zig source lines (`src/`) |
-| **9728** | C++ source lines (`ffi/`) |
+| **9730** | C++ source lines (`ffi/`) |
 | **18** | deliberate drifts `ci/check-abi-drift.sh` must refuse |
 | **32** | steps `ci/run.sh` runs |
 | **7** | further targets `ci/run.sh` cross-compiles |

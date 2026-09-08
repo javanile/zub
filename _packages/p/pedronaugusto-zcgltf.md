@@ -7,9 +7,9 @@ author_github: pedronaugusto
 repository: https://github.com/pedronaugusto/zcgltf
 keywords:
   - zig-gamedev
-date: 2026-09-03
-updated_at: 2026-09-03T16:32:42+00:00
-last_sync: 2026-09-03T16:32:42Z
+date: 2026-09-04
+updated_at: 2026-09-04T22:09:07+00:00
+last_sync: 2026-09-04T22:09:07Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -231,7 +231,7 @@ and the C artifact are each driven by a real consumer there.
 <!-- BEGIN GENERATED ci/measurements.sh --markdown -->
 | | |
 |---:|---|
-| **0.1.1** | version (one home: `build.zig.zon`) |
+| **0.1.2** | version (one home: `build.zig.zon`) |
 | **39** | upstream C entry points (declared in the vendored `cgltf.h` + `cgltf_write.h`) |
 | **39** | Zig externs (`pub extern fn` in `src/c/*.zig`) |
 | **49** | structs mirrored field-by-field (`src/c/types.zig`) |

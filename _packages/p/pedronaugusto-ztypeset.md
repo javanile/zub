@@ -8,8 +8,8 @@ repository: https://github.com/pedronaugusto/ztypeset
 keywords:
   - zig-gamedev
 date: 2026-09-04
-updated_at: 2026-09-04T14:23:55+00:00
-last_sync: 2026-09-04T14:23:55Z
+updated_at: 2026-09-04T19:04:04+00:00
+last_sync: 2026-09-04T19:04:04Z
 package_kind: hybrid
 has_library: true
 has_binary: true

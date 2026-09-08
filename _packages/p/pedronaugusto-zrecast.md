@@ -8,8 +8,8 @@ repository: https://github.com/pedronaugusto/zrecast
 keywords:
   - zig-gamedev
 date: 2026-09-04
-updated_at: 2026-09-04T14:25:52+00:00
-last_sync: 2026-09-04T14:25:52Z
+updated_at: 2026-09-04T17:26:52+00:00
+last_sync: 2026-09-04T17:26:52Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -564,7 +564,7 @@ file is the authority on whether those runs have actually happened and passed.**
 <!-- BEGIN GENERATED ci/measurements.sh --markdown -->
 | | |
 |---:|---|
-| **0.1.0** | version (one home: `build.zig.zon`) |
+| **0.1.1** | version (one home: `build.zig.zon`) |
 | **313** | C entry points (`ZRC_API` in `ffi/*.h`) |
 | **313** | Zig externs (`pub extern fn` in `src/`) |
 | **1089** | public Recast/Detour names, each carrying a verdict in `tools/` |

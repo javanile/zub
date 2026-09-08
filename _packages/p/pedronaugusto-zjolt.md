@@ -1,15 +1,15 @@
 ---
 title: zjolt
 description: Zig bindings for Jolt Physics — vendored upstream Jolt, real C ABI with plain function-pointer callbacks, host allocator injection, ABI drift guarded by tests
-license: NOASSERTION
+license: MIT
 author: pedronaugusto
 author_github: pedronaugusto
 repository: https://github.com/pedronaugusto/zjolt
 keywords:
   - zig-gamedev
-date: 2026-09-03
-updated_at: 2026-09-03T12:03:33+00:00
-last_sync: 2026-09-03T12:03:33Z
+date: 2026-09-04
+updated_at: 2026-09-04T17:27:24+00:00
+last_sync: 2026-09-04T17:27:24Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -51,7 +51,7 @@ ragdolls, soft bodies and hair.
   reach has been turned into a returned error, with a test that fails if the
   guard is removed.
 
-Status: **v0.2.0.** Every Jolt subsystem is bound and the surface is complete
+Status: **v0.2.1.** Every Jolt subsystem is bound and the surface is complete
 enough to build against. Still pre-1.0, so naming and shape can change between
 minor versions — but a change will be a change, not a silent one: the ABI
 cross-check makes any drift between the header and the Zig side a build
@@ -671,8 +671,8 @@ ci/install-hooks.sh  # run the inner loop automatically before every push
 
 The default is trimmed rather than complete, which is a concession to what Jolt
 is: 179 translation units per configuration, so one is tens of seconds rather
-than the couple of seconds a smaller library would take. `--full` is 36 checks
-— 28 of them run on this host, 8 cross-compiling — which is minutes from a
+than the couple of seconds a smaller library would take. `--full` is 38 checks
+— 30 of them run on this host, 8 cross-compiling — which is minutes from a
 cold cache; the default is under a minute once the cache is warm. The host
 checks include the MSVC ABI ones, which only a Windows host can execute and
 which are skipped elsewhere.
@@ -861,5 +861,6 @@ there are no globs, so nothing starts compiling by accident.
 
 ## Licence
 
-MIT, see [LICENSE](LICENSE). Vendored Jolt Physics is MIT, copyright Jorrit
-Rouwe and contributors.
+MIT, see [LICENSE](LICENSE), which covers this package's own code. Vendored
+Jolt Physics is MIT, copyright Jorrit Rouwe and contributors; its licence text
+ships with the package at `libs/JoltPhysics/LICENSE`.
