@@ -6,9 +6,9 @@ author: cacticrown
 author_github: cacticrown
 repository: https://github.com/cacticrown/crownlet
 keywords:
-date: 2026-09-08
-updated_at: 2026-09-08T08:37:17+00:00
-last_sync: 2026-09-08T08:37:17Z
+date: 2026-09-09
+updated_at: 2026-09-09T11:33:21+00:00
+last_sync: 2026-09-09T11:33:21Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -68,7 +68,7 @@ pub fn main() !void {
 Fetch and save crownlet to your `build.zig.zon` by running this command:
 
 ```bash
-zig fetch --save=crownlet git+https://github.com/cacticrown/crownlet.git
+zig fetch --save git+https://github.com/cacticrown/crownlet
 ```
 
 Then in your `build.zig`, add the dependency and import the `crownlet` module into whatever module/executable needs it:

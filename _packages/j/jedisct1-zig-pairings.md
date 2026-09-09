@@ -11,9 +11,9 @@ keywords:
   - pairing
   - pairing-cryptography
   - pairings
-date: 2026-09-07
-updated_at: 2026-09-07T09:33:20+00:00
-last_sync: 2026-09-07T09:33:20Z
+date: 2026-09-09
+updated_at: 2026-09-09T09:34:50+00:00
+last_sync: 2026-09-09T09:34:50Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -33,7 +33,7 @@ A pairing-friendly elliptic curve library for Zig, implementing BLS12-381 and BN
 
 Useful for BLS signatures, zero-knowledge proofs, etc.
 
-This work is based on the [`draft-irtf-cfrg-pairing-friendly-curves`](https://datatracker.ietf.org/doc/draft-irtf-cfrg-pairing-friendly-curves/) draft.
+This work is based on [`draft-irtf-cfrg-pairing-friendly-curves-14`](https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-pairing-friendly-curves-14).
 
 ## Curves
 

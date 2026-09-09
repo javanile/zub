@@ -8,9 +8,9 @@ repository: https://github.com/C-BJ/awesome-zig
 keywords:
   - awesome
   - awesome-list
-date: 2026-06-14
-updated_at: 2026-06-14T20:42:12+00:00
-last_sync: 2026-06-14T20:42:12Z
+date: 2026-09-08
+updated_at: 2026-09-08T17:18:12+00:00
+last_sync: 2026-09-08T17:18:12Z
 package_kind: library
 has_library: false
 has_binary: false
@@ -1031,6 +1031,8 @@ permalink: /packages/C-BJ/awesome-zig/
   [antiphony🗒️A zig remote procedure call solution](https://github.com/ziglibs/antiphony) 
   - ![Star](https://img.shields.io/github/stars/mitchellh/libflightplan?color=orange)
   [libflightplan🗒️A library for reading and writing flight plans in various formats. Available as both a C and Zig library](https://github.com/mitchellh/libflightplan) 
+  - ![Star](https://img.shields.io/github/stars/zig-nostr/nostr?color=orange)
+  [nostr🗒️The Nostr protocol natively in Zig: secp256k1/Schnorr keys, events, relay transport with the outbox model, a local-first LMDB event store, NIP-46 remote signing, and more.](https://github.com/zig-nostr/nostr)
   - ![Star](https://img.shields.io/github/stars/mailmug/zigmailer?color=orange)
   [SMTP Server🗒️Create custom SMTP servers on the fly](https://github.com/mailmug/zigmailer)
   - ![Star](https://img.shields.io/github/stars/karlseguin/smtp_client.zig?color=orange)
