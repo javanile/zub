@@ -6,9 +6,9 @@ author: cacticrown
 author_github: cacticrown
 repository: https://github.com/cacticrown/crownlet
 keywords:
-date: 2026-09-09
-updated_at: 2026-09-09T11:33:21+00:00
-last_sync: 2026-09-09T11:33:21Z
+date: 2026-09-10
+updated_at: 2026-09-10T14:05:40+00:00
+last_sync: 2026-09-10T14:05:40Z
 package_kind: hybrid
 has_library: true
 has_binary: true

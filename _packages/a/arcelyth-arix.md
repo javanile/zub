@@ -13,9 +13,9 @@ keywords:
   - web
   - webbrowser
   - webengine
-date: 2026-09-09
-updated_at: 2026-09-09T14:35:48+00:00
-last_sync: 2026-09-09T14:35:48Z
+date: 2026-09-10
+updated_at: 2026-09-10T11:09:45+00:00
+last_sync: 2026-09-10T11:09:45Z
 package_kind: binary
 has_library: false
 has_binary: true
@@ -56,4 +56,15 @@ Add `-- [test_name]` to filter tests. <br>
 For example: 
 ```sh
 zig build test --summary all -- tokenizer
+```
+
+## Benchmarks
+
+Compiled in `ReleaseFast` mode and run benchmarks: 
+```sh
+zig build bench -- [--iterations N] FILE.html FILE.css ...
+```
+or you can directly use commands in Makefile: 
+```sh
+make bench_html/bench_css
 ```
