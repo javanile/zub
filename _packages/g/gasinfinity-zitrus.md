@@ -9,9 +9,9 @@ keywords:
   - 3ds-homebrew
   - homebrew
   - nintendo-3ds
-date: 2026-08-21
-updated_at: 2026-08-21T16:39:38+00:00
-last_sync: 2026-08-21T16:39:38Z
+date: 2026-09-11
+updated_at: 2026-09-11T13:00:08+00:00
+last_sync: 2026-09-11T13:00:08Z
 package_kind: hybrid
 has_library: true
 has_binary: true

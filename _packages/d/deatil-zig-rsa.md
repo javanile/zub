@@ -8,9 +8,9 @@ repository: https://github.com/deatil/zig-rsa
 keywords:
   - rsa
   - zig-rsa
-date: 2026-09-03
-updated_at: 2026-09-03T12:13:56+00:00
-last_sync: 2026-09-03T12:13:56Z
+date: 2026-09-11
+updated_at: 2026-09-11T10:23:13+00:00
+last_sync: 2026-09-11T10:23:13Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -26,7 +26,7 @@ permalink: /packages/deatil/zig-rsa/
 
 ## Zig-rsa 
 
-A RSA library for zig.
+An RSA library for zig.
 
 
 ### Env
@@ -85,9 +85,14 @@ pub fn main(init: std.process.Init) !void {
 
     const kp = try rsa.generate_key(alloc, random, 1024);
 
+    var secret_key = kp.secret_key;
+    defer secret_key.deinit(alloc);
+
+    const public_key = kp.public_key;
+
     const msg = "hello rsa";
 
-    const signature = try rsa.signPkcs1v15(alloc, kp.secret_key, Sha256, msg);
+    const signature = try rsa.signPkcs1v15(alloc, secret_key, Sha256, msg);
     defer alloc.free(signature);
     
     // output: 
@@ -96,7 +101,7 @@ pub fn main(init: std.process.Init) !void {
 
     // ==============
 
-    const veri = rsa.verifyPkcs1v15(kp.public_key, Sha256, msg, signature);
+    const veri = rsa.verifyPkcs1v15(public_key, Sha256, msg, signature);
     var status: bool = true;
     if (veri) |_| {
         status = true;

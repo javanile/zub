@@ -8,10 +8,10 @@ repository: https://github.com/ziglibs/ini
 keywords:
   - ini
   - ini-parser
-date: 2026-04-26
+date: 2026-09-08
 category: data-formats
-updated_at: 2026-04-26T09:41:32+00:00
-last_sync: 2026-04-26T09:41:32Z
+updated_at: 2026-09-08T20:58:29+00:00
+last_sync: 2026-09-08T20:58:29Z
 package_kind: hybrid
 has_library: true
 has_binary: true
