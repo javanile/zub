@@ -7,9 +7,9 @@ author_github: christianhelle
 repository: https://github.com/christianhelle/openapi2zig
 keywords:
   - openapi
-date: 2026-09-04
-updated_at: 2026-09-04T13:29:16+00:00
-last_sync: 2026-09-04T13:29:16Z
+date: 2026-09-12
+updated_at: 2026-09-12T12:33:17+00:00
+last_sync: 2026-09-12T12:33:17Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -23,15 +23,14 @@ sync_source: zigistry
 permalink: /packages/christianhelle/openapi2zig/
 ---
 
-# openapi2zig
-
 [![CI](https://github.com/christianhelle/openapi2zig/actions/workflows/ci.yml/badge.svg)](https://github.com/christianhelle/openapi2zig/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/christianhelle/openapi2zig/graph/badge.svg?token=F7YxJ0hTqr)](https://codecov.io/gh/christianhelle/openapi2zig)
 [![Zig Version](https://img.shields.io/badge/zig-0.16.0%2B-orange.svg)](https://ziglang.org/download/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A CLI tool and Zig library that generates type-safe API client code from OpenAPI specifications.
+# openapi2zig
 
-> **Note**: This project provides both a CLI tool for generating Zig code from OpenAPI specs and a library for parsing and working with OpenAPI documents programmatically in Zig.
+A CLI tool and Zig library that generates type-safe models and API client code in Zig from OpenAPI specifications.
 
 ## Features
 
@@ -116,7 +115,7 @@ Requires [Zig](https://ziglang.org/download/) v0.16.0.
 ```bash
 git clone https://github.com/christianhelle/openapi2zig.git
 cd openapi2zig
-zig build
+zig build install-release
 ```
 
 The compiled binary will be available at `zig-out/bin/openapi2zig`. See [Development](#development) below for running the test suite and other contributor workflows.
@@ -725,6 +724,14 @@ pub const Client = struct {
 ```
 
 ### Endpoint functions
+
+Function names come from the operation's `operationId`. An id that is already a
+valid Zig identifier is used as-is; anything else is camel cased, so GitHub's
+`repos/list-pull-requests-associated-with-commit` becomes
+`reposListPullRequestsAssociatedWithCommit` rather than a quoted
+`@"repos/list-pull-requests-associated-with-commit"`. When two ids camel case to
+the same name, or one lands on another operation's `Raw`/`Result` function, the
+later one (in path order) gets a trailing underscore.
 
 ```zig
 pub fn getPetById(client: *Client, petId: i64) !Owned(Pet) {

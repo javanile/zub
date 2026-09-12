@@ -6,9 +6,9 @@ author: M3dry
 author_github: M3dry
 repository: https://github.com/M3dry/zprobe
 keywords:
-date: 2026-08-01
-updated_at: 2026-08-01T13:06:41+00:00
-last_sync: 2026-08-01T13:06:41Z
+date: 2026-09-12
+updated_at: 2026-09-12T13:29:45+00:00
+last_sync: 2026-09-12T13:29:45Z
 package_kind: library
 has_library: true
 has_binary: false

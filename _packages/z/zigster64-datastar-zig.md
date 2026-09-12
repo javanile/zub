@@ -8,9 +8,9 @@ repository: https://github.com/zigster64/datastar.zig
 keywords:
   - data-star
   - datastar
-date: 2026-08-13
-updated_at: 2026-08-13T00:41:36+00:00
-last_sync: 2026-08-13T00:41:36Z
+date: 2026-09-12
+updated_at: 2026-09-12T13:13:47+00:00
+last_sync: 2026-09-12T13:13:47Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -26,7 +26,7 @@ permalink: /packages/zigster64/datastar.zig/
 
 # datastar.zig - A Web Framework for Zig 0.16
 
-**A Datastar-aware HTTP server for Zig 0.16. using Datastar v1.0.2**
+**A Datastar-aware HTTP server for Zig 0.16. using Datastar v1.0.3**
 
 
 Build realtime collaborative web apps where the backend pushes DOM patches, signal updates, and browser scripts to connected clients over a fast SSE pipe. Single binary, no JS bundler, no frontend framework.
