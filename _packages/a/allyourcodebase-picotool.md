@@ -9,9 +9,9 @@ keywords:
   - microzig
   - pico
   - raspberry
-date: 2026-08-20
-updated_at: 2026-08-20T19:20:50+00:00
-last_sync: 2026-08-20T19:20:50Z
+date: 2026-09-13
+updated_at: 2026-09-13T11:08:35+00:00
+last_sync: 2026-09-13T11:08:35Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -33,15 +33,20 @@ permalink: /packages/allyourcodebase/picotool/
 
 ## Picotool
 
-this repo builds the raspberry picotool from the sdk source on the zig buildsystem:
+this repo builds the raspberry picotool from the sdk source on the zig buildsystem.
+
+At the moment Debug and ReleaseSafe builds crash in libusb, use ReleaseFast or
+ReleaseSmall builds for flashing.
+
+you can run it directy from zig build:
 
 ```console
-foo@bar:~$ zig build run -- version
-picotool v2.3.0 (2.3.0, zig-0.16.0)
+foo@bar:~$ zig build -Doptimize=ReleaseSmall run -- version
+picotool v2.3.1 (2.3.1, zig-0.16.0)
 ```
 
 ```console
-foo@bar:~$ zig build run
+foo@bar:~$ zig build -Doptimize=ReleaseSmall run
 PICOTOOL:
     Tool for interacting with RP-series device(s) in BOOTSEL mode, or with an RP-series binary
 

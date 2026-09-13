@@ -9,10 +9,10 @@ keywords:
   - bgfx
   - bgfx-graphics-library
   - gamedev
-date: 2026-08-31
+date: 2026-09-13
 category: game-development
-updated_at: 2026-08-31T15:31:23+00:00
-last_sync: 2026-08-31T15:31:23Z
+updated_at: 2026-09-13T12:02:01+00:00
+last_sync: 2026-09-13T12:02:01Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -66,9 +66,17 @@ Minimal is `0.16.0`. But you know try your version and believe.
 
 ## Bgfx version
 
-- [BX](https://github.com/bkaradzic/bx/compare/cac72f6cfa0893393ea12692ebfacb4495f8c826...master)
-- [BImg](https://github.com/bkaradzic/bimg/compare/9114b47f532ce59cd0c6c9f8932df2c48888d4c1...master)
-- [BGFX](https://github.com/bkaradzic/bgfx/compare/8532b2c45d2f4332a9ac9734b85c2ea2253cb8d5...master)
+See `build.zig.zon` for pinned commits.
+
+- [BX](https://github.com/bkaradzic/bx/compare/f86bece7967be1b8a7fd39262cdc8ce99d123c3b...master)
+- [BImg](https://github.com/bkaradzic/bimg/compare/ddbeeae05779f84f97694553eb41605a60f86f0a...master)
+- [BGFX](https://github.com/bkaradzic/bgfx/compare/9499caafb06706715da78a7436a85de00ffc2497...master)
+
+### Upgrade BGFX by your self.
+- Uncomment deps in `build.zig.zon`.
+- Change commit ref and hash for deps you need.
+- `zig build -Dwith_sync sync`.
+- `zig build`.
 
 ## Useful tools
 - [bgfx_shader_analyzer](https://github.com/r0ckHopper/bgfx_shader_analyzer) - LSP for bgfx shaders.
@@ -125,7 +133,7 @@ zig build
 Minimal setup with GLFW for window and input.
 
 ```sh
-examples/zig-out/bin/minimal-glfw
+zig-out/bin/minimal-glfw
 ```
 
 | Key | Description  |
@@ -138,7 +146,7 @@ examples/zig-out/bin/minimal-glfw
 Basic usage of shaders compiled in build and embed to zig module.
 
 ```sh
-examples/zig-out/bin/shader-embed
+zig-out/bin/shader-embed
 ```
 
 | Key | Description  |
@@ -152,7 +160,7 @@ Basic usage of shader compile in runtime.
 Try edit shaders in `zig-out/bin/shaders` and hit `r` to recompile.
 
 ```sh
-examples/zig-out/bin/shader-runtime
+zig-out/bin/shader-runtime
 ```
 
 | Key | Description                 |
@@ -166,7 +174,7 @@ examples/zig-out/bin/shader-runtime
 Minimal setup for zgui/ImGui.
 
 ```sh
-examples/zig-out/bin/zgui
+zig-out/bin/zgui
 ```
 
 | Key | Description  |
@@ -179,7 +187,7 @@ examples/zig-out/bin/zgui
 DebugDraw api usage example.
 
 ```sh
-examples/zig-out/bin/debugdraw
+zig-out/bin/debugdraw
 ```
 
 | Key | Description  |

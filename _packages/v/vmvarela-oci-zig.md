@@ -10,9 +10,9 @@ keywords:
   - docker-registry
   - oci
   - oci-registry
-date: 2026-09-01
-updated_at: 2026-09-01T10:50:05+00:00
-last_sync: 2026-09-01T10:50:05Z
+date: 2026-09-13
+updated_at: 2026-09-13T11:59:56+00:00
+last_sync: 2026-09-13T11:59:56Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -135,8 +135,8 @@ Private registries with self-signed or private-CA certificates:
 
 ```zig
 // ca_pem_bytes: PEM bytes of the CA certificate (caller-owned).
-// .fromDer(der_bytes) also works for DER-encoded certificates.
-var ca_certs = [_]oci.tls.Certificate{oci.tls.Certificate.fromPem(ca_pem_bytes)};
+// Use .encoding = .der with DER bytes instead.
+var ca_certs = [_]oci.tls.Certificate{.{ .encoding = .pem, .data = ca_pem_bytes }};
 
 var client = oci.client.Client.init(gpa.allocator(), .{
     .protocol = .https,

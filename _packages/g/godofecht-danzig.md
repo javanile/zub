@@ -1,6 +1,6 @@
 ---
 title: danzig
-description: VST3 plugin framework in pure Zig — zero dependencies, lock-free params, WebView UI
+description: A VST3 plugin framework in pure Zig. Zero dependencies, lock-free parameters, WebView UI.
 license: MIT
 author: godofecht
 author_github: godofecht
@@ -12,10 +12,10 @@ keywords:
   - dsp
   - plugin
   - vst3
-date: 2026-09-07
+date: 2026-09-10
 category: game-development
-updated_at: 2026-09-07T14:53:50+00:00
-last_sync: 2026-09-07T14:53:50Z
+updated_at: 2026-09-10T11:53:28+00:00
+last_sync: 2026-09-10T11:53:28Z
 package_kind: hybrid
 has_library: true
 has_binary: true

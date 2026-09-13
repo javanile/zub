@@ -1,6 +1,6 @@
 ---
 title: azazel
-description: CUE + Zig deterministic build system. No JSON runtime, no flags, no ceremony.
+description: A deterministic build system in CUE and Zig. No JSON runtime, no flags, no ceremony.
 license: MIT
 author: godofecht
 author_github: godofecht
@@ -11,10 +11,10 @@ keywords:
   - code-generation
   - cue
   - deterministic-builds
-date: 2026-09-07
+date: 2026-09-10
 category: tooling
-updated_at: 2026-09-07T14:53:34+00:00
-last_sync: 2026-09-07T14:53:34Z
+updated_at: 2026-09-10T11:42:58+00:00
+last_sync: 2026-09-10T11:42:58Z
 package_kind: hybrid
 has_library: true
 has_binary: true

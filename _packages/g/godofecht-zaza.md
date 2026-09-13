@@ -1,6 +1,6 @@
 ---
 title: zaza
-description: A Zig-driven build system for modern C, C++, Zig, CMake-interop, and WebAssembly workflows.
+description: A Zig-driven build system for modern C, C++, Zig, CMake interop and WebAssembly workflows.
 license: MIT
 author: godofecht
 author_github: godofecht
@@ -16,10 +16,10 @@ keywords:
   - rust
   - wasm
   - webassembly
-date: 2026-09-07
+date: 2026-09-10
 category: tooling
-updated_at: 2026-09-07T14:54:21+00:00
-last_sync: 2026-09-07T14:54:21Z
+updated_at: 2026-09-10T11:53:32+00:00
+last_sync: 2026-09-10T11:53:32Z
 package_kind: binary
 has_library: false
 has_binary: true
