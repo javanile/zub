@@ -13,9 +13,9 @@ keywords:
   - r5rs
   - r7rs-small
   - scheme
-date: 2026-09-05
-updated_at: 2026-09-05T13:24:14+00:00
-last_sync: 2026-09-05T13:24:14Z
+date: 2026-09-07
+updated_at: 2026-09-07T07:14:26+00:00
+last_sync: 2026-09-07T07:14:26Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -50,30 +50,21 @@ A small embeddable Lisp for the Zig ecosystem λ
 
 ---
 
-Element 0 programming language is a new Lisp dialect inspired by Scheme.
-It aims to be compliant with the [R5RS](https://conservatory.scheme.org/schemers/Documents/Standards/R5RS/) standard to a good degree,
-but not limited to it.
+Element 0 is a small scripting language that can be embedded in Zig applications.
+It is a new Lisp dialect inspired by Scheme with features like first-class functions, macros, and a simple syntax.
 
-This project provides a bytecode compiler and virtual machine for the Element 0 language, written in Zig.
-The implementation is named Elz (pronounced "el-zee") and can be integrated into Zig applications as a scripting engine.
-In addition, Elz comes with a read-eval-print loop (REPL) for interactive development and testing, and
-it can easily be extended using Zig code via the foreign function interface (FFI) or Element 0 code.
-
-### Why Element 0?
-
-Having an embeddable scripting language is useful in a Zig project.
-For example, you can write the core parts of your application in Zig for performance.
-Then you can write features like plugins or configuration files in Element 0.
-This lets you change parts of your application without the need to recompile the entire project.
+This project provides an implementation of Element 0 (the compiler and virtual machine).
+The implementation is named Elz (pronounced "el-zee") and can be easily integrated into Zig applications as a scripting engine.
 
 ### Key Features
 
-* A good level of R5RS compliance with a growing standard library (see [std.elz](src/stdlib/std.elz))
-* Easy to integrate into Zig projects as a lightweight scripting engine (with a VM)
-* Easy to extend with Zig functions via the use of FFI or writing Element 0 code
-* Prepacked with a REPL (for interactive development)
+* Small language with a growing standard library (see [std.elz](src/stdlib/std.elz))
+* Easy to integrate into Zig projects as a lightweight scripting engine
+* Easy to extend with Zig functions via the use of FFI or directly writing Element 0 code
+* A good tradeoff between performance and simplicity
 
-See the [ROADMAP.md](ROADMAP.md) for the list of implemented and planned features.
+See the [ROADMAP.md](ROADMAP.md) for the list of implemented and planned features. The language follows R7RS-small;
+the vendored conformance suite (`make test-conformance`) shows the current coverage.
 
 > [!IMPORTANT]
 > This project is in early development, so bugs and breaking changes are expected.
@@ -99,13 +90,15 @@ You can download the release binaries for Elz from the [release page](https://gi
 
 2. Build and run the REPL
    ```sh
-   zig build repl && ./zig-out/bin/elz-repl
+   zig build && ./zig-out/bin/elz-repl
    ```
 
 3. Run an Element 0 script file
     ```sh
-    ./zig-out/bin/elz-repl --file examples/elz/e13-hello-world.elz
+    ./zig-out/bin/elz-repl examples/elz/e13-hello-world.elz
     ```
+
+   Run `./zig-out/bin/elz-repl --help` for the other flags, and type `.help` in the REPL for its commands.
 
 #### Embedding Elz in Zig Projects
 
@@ -135,9 +128,11 @@ pub fn build(b: *std.Build) void {
 
     const exe = b.addExecutable(.{
         .name = "your-app",
-        .root_source_file = b.path("src/main.zig"),
-        .target = target,
-        .optimize = optimize,
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/main.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
     });
 
     // 1. Get the Elz dependency object from the builder.
@@ -179,7 +174,7 @@ pub fn main() !void {
 
     var buffer: [4096]u8 = undefined;
     const stdout_file = std.Io.File.stdout();
-    var stdout_writer = stdout_file.writer(interpreter.io, &buffer);
+    var stdout_writer = stdout_file.writerStreaming(interpreter.io, &buffer);
     const stdout = &stdout_writer.interface;
 
     // --- Example 1: Evaluate a simple string of Elz code ---
@@ -223,14 +218,30 @@ When you build and run this program, the output will be:
 Result of (* 10 5) is: 50
 
 --- Calling a Zig function from Elz ---
-Result of (zig-mul 7 6) is: 42
+Result of (zig-mul 7 6) is: 42.0
+```
+
+The result is `42.0` rather than `42` because `zig_multiply` returns an `f64`, which becomes an inexact number.
+
+##### Restricting What a Script Can Do
+
+`Interpreter.init` takes a `SandboxFlags` value that selects which built-in capabilities the script can reach.
+Every group is enabled by default.
+
+```zig
+var interpreter = try elz.Interpreter.init(.{
+    .enable_filesystem = false, // No file ports, `load`, `include`, or module imports
+    .enable_process = false, // No `exit` and no environment variables
+    .time_limit_ms = 100, // Give up after 100 milliseconds
+});
 ```
 
 -----
 
 ### Documentation
 
-You can find the full API documentation for the latest release of Elz [here](https://element0lang.github.io/element-0/).
+The project documentation is available [here](https://element0lang.github.io/element-0/).
+The Zig API reference is available [here](https://element0lang.github.io/element-0/zig-api/).
 
 #### Standard Library
 
@@ -254,6 +265,6 @@ Element 0 is licensed under the Apache License, Version 2.0 (see [LICENSE](LICEN
 
 * The logo is made by [Conrad Barski, M.D.](https://www.lisperati.com/logo.html) with a few changes.
 * [Bestline](https://github.com/jart/bestline) is used for the REPL's line editing and history features.
-* [Chibi-Scheme](https://github.com/ashinn/chibi-scheme) R5RS test suite is used for compliance testing.
+* [Chibi-Scheme](https://github.com/ashinn/chibi-scheme) R7RS test suite is used for conformance testing.
 * [Chilli](https://github.com/CogitatorTech/chilli) is used for the CLI.
 * [BDWGC](https://github.com/bdwgc/bdwgc) is used for the garbage collector.

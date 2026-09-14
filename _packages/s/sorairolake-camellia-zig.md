@@ -10,9 +10,9 @@ keywords:
   - camellia
   - cipher
   - cryptography
-date: 2026-05-12
-updated_at: 2026-05-12T17:10:34+00:00
-last_sync: 2026-05-12T17:10:34Z
+date: 2026-09-07
+updated_at: 2026-09-07T07:27:04+00:00
+last_sync: 2026-09-07T07:27:04Z
 package_kind: library
 has_library: true
 has_binary: false

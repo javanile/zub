@@ -11,10 +11,10 @@ keywords:
   - fast
   - http
   - rest
-date: 2026-06-11
+date: 2026-09-14
 category: networking
-updated_at: 2026-06-11T22:00:55+00:00
-last_sync: 2026-06-11T22:00:55Z
+updated_at: 2026-09-14T07:58:55+00:00
+last_sync: 2026-09-14T07:58:55Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -26,6 +26,21 @@ is_sponsor: false
 sync_priority: normal
 sync_source: zigistry
 permalink: /packages/zigzap/zap/
+---
+
+# This repository has been archived
+
+**Thank you to all contributors!** Whether you contributed code, documentation,
+bug reports, testing, ideas, or support for other users, you helped make Zap what
+it is. Thank you for helping build and improve Zap.
+
+But fear not! An alternative is on the way:
+**[Baz — Bounded Async Zap](https://github.com/technologylab-ai/baz)**
+([website & documentation](https://technologylab-ai.github.io/baz/)),
+a pure Zig successor built for Zig 0.16.0, based on
+**[bounded/http](https://github.com/technologylab-ai/bounded-http)**
+([website & documentation](https://technologylab-ai.github.io/bounded-http/)).
+
 ---
 
 # ⚡zap⚡ - blazingly fast backends in zig

@@ -10,10 +10,10 @@ keywords:
   - libfyaml
   - parser
   - yaml
-date: 2026-09-07
+date: 2026-09-14
 category: data-formats
-updated_at: 2026-09-07T08:46:03+00:00
-last_sync: 2026-09-07T08:46:03Z
+updated_at: 2026-09-14T13:35:10+00:00
+last_sync: 2026-09-14T13:35:10Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -62,7 +62,7 @@ Zig 0.16.x is supported; `build.zig.zon` sets 0.16.0 as the minimum, and CI pins
 Add the package, pinned to a release:
 
 ```sh
-zig fetch --save git+https://github.com/npmonster/yayl#v0.18.0
+zig fetch --save git+https://github.com/npmonster/yayl#v0.19.2
 ```
 
 That records the resolved commit and a content hash in your `build.zig.zon`, so your build stays reproducible even if the tag later moves or disappears. Leave off `#v0.18.0` and you pin whatever `main` happens to be at that moment, which is rarely what you want.
@@ -254,7 +254,7 @@ Deliberate for v1:
 - No parse cache. A `Document` is mutable, so a cache would have to hand out deep clones, which is not clearly cheaper than re-parsing. See the note in `src/file.zig`.
 - Emission buffers the whole output; there is no writer-based sink. This is not an oversight to be tidied up later: byte-faithful emission needs random access to what it has already written — it inserts separators and newlines behind the cursor — so a forward-only writer cannot express it. `doc.write` and `yaml.writeAll` return an owned slice, and `yaml.file.writeFile` puts it on disk atomically.
 - Duplicate mapping keys are kept, not rejected. YAML 1.2 §3.2.1.1 requires keys to be unique, but real-world files carry duplicates and dropping one silently is worse than surfacing it. Both entries survive a round trip; `lookup` and path reads return the first.
-- Merge keys (`<<: *base`) are not resolved. `<<` parses as an ordinary key whose value is an alias, which is correct for YAML 1.2 — merge keys are a 1.1-era extension — but it will surprise anyone arriving from Kubernetes or GitLab configs, so it is called out rather than left to be discovered.
+- Merge keys (`<<: *base`) are resolved only on request. YAML 1.2 dropped them (they are a 1.1-era extension, still common in Kubernetes, GitLab CI and Ansible configs), so a default parse keeps `<<` as an ordinary key whose value is an alias and round-trips it byte for byte. Pass `ParseOptions.resolve_merge_keys = true`, or call `Document.resolveMergeKeys`, to expand them: an explicit key wins over a merged one, the earliest source in a sequence wins, and a quoted `"<<"` is an ordinary key. See [docs/design/merge-keys.md](docs/design/merge-keys.md).
 - `yaml.value` and `yaml.schema` bound alias expansion. They expand aliases by copying, so output is a function of the expanded tree rather than the input; both cap that by default and return `error.LimitExceeded` past it. See the memory notes in [docs/USAGE.md](docs/USAGE.md).
 
 ## Development
