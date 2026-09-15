@@ -10,10 +10,10 @@ keywords:
   - libfyaml
   - parser
   - yaml
-date: 2026-09-14
+date: 2026-09-15
 category: data-formats
-updated_at: 2026-09-14T13:35:10+00:00
-last_sync: 2026-09-14T13:35:10Z
+updated_at: 2026-09-15T10:16:30+00:00
+last_sync: 2026-09-15T10:16:30Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -33,7 +33,7 @@ A YAML parser, document model, and emitter for Zig. Parse a config, change one v
 
 Most YAML libraries parse into a plain map and drop everything else, so writing the file back reformats it and your comments are gone. yayl keeps the source layout in the tree and re-emits from it.
 
-> **Status: feature complete.** Scanner, parser, a document model that keeps source spans, and an emitter. Passes the full yaml-test-suite corpus, does byte-faithful round trips, and ships an editing API, a value runtime, optional schema validation, and bounded file I/O. `make verify` gates all of it; the numbers are under [Development](#development).
+> **Status: feature complete.** Scanner, parser, a document model that keeps source spans, and an emitter. Passes the named yaml-test-suite corpus (15 unnamed sub-cases are tracked skips, listed in `tests/conformance.zig`), does byte-faithful round trips, and ships an editing API, a value runtime, optional schema validation, and bounded file I/O. `make verify` gates all of it; the numbers are under [Development](#development).
 
 > **Written by AI agents** under human direction. See the [disclosure](#ai-development-disclosure) below.
 
@@ -62,10 +62,10 @@ Zig 0.16.x is supported; `build.zig.zon` sets 0.16.0 as the minimum, and CI pins
 Add the package, pinned to a release:
 
 ```sh
-zig fetch --save git+https://github.com/npmonster/yayl#v0.19.2
+zig fetch --save git+https://github.com/npmonster/yayl#v0.19.3
 ```
 
-That records the resolved commit and a content hash in your `build.zig.zon`, so your build stays reproducible even if the tag later moves or disappears. Leave off `#v0.18.0` and you pin whatever `main` happens to be at that moment, which is rarely what you want.
+That records the resolved commit and a content hash in your `build.zig.zon`, so your build stays reproducible even if the tag later moves or disappears. Leave off `#v0.19.3` and you pin whatever `main` happens to be at that moment, which is rarely what you want.
 
 Wire the module into your `build.zig`:
 
@@ -276,9 +276,9 @@ The gates, in both Debug and ReleaseSafe:
 
 | Gate | Result |
 | --- | --- |
-| yaml-test-suite conformance | 351/351, zero skips |
-| byte-faithful round trips | 269/269, no skips, plus real-world fixtures |
-| edit preservation | every addressable edit position across the real-world fixtures, plus a bounded pass over the corpus |
+| yaml-test-suite conformance | 382/397 pass, 15 tracked skips (unnamed sub-cases), 0 fail |
+| byte-faithful round trips | 297/303 pass, 6 tracked skips, 0 fail, plus real-world fixtures |
+| edit preservation | 296 corpus documents under edits (the 6 unparseable sub-cases and 1 preservation gap are skipped), plus every fixture position |
 | event-tree parity vs libfyaml | 269/269 compared, zero mismatches |
 | emission oracle (libfyaml parses what we emit) | 539 documents across both emission paths, zero findings |
 | allocation-failure injection | zero leaks |

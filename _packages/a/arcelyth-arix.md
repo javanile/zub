@@ -13,9 +13,9 @@ keywords:
   - web
   - webbrowser
   - webengine
-date: 2026-09-11
-updated_at: 2026-09-11T12:04:10+00:00
-last_sync: 2026-09-11T12:04:10Z
+date: 2026-09-15
+updated_at: 2026-09-15T12:37:42+00:00
+last_sync: 2026-09-15T12:37:42Z
 package_kind: binary
 has_library: false
 has_binary: true
@@ -68,3 +68,7 @@ or you can directly use commands in Makefile:
 ```sh
 make bench_html/bench_css
 ```
+
+## Contributing
+
+See [CONTRIBUTING](CONTRIBUTING.md)

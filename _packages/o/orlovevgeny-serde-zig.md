@@ -9,10 +9,10 @@ keywords:
   - json-serialization
   - parser
   - serde
-date: 2026-09-08
+date: 2026-09-15
 category: data-formats
-updated_at: 2026-09-08T11:12:50+00:00
-last_sync: 2026-09-08T11:12:50Z
+updated_at: 2026-09-15T09:18:05+00:00
+last_sync: 2026-09-15T09:18:05Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -34,7 +34,76 @@ permalink: /packages/OrlovEvgeny/serde.zig/
 
 Serialization framework for Zig
 
-Uses Zig's comptime reflection (`@typeInfo`) to serialize and deserialize any Zig type across JSON, MessagePack, Erlang ETF, TOML, YAML, XML, ZON, TOON, and CSV without macros, code generation, or runtime type information.
+Uses Zig's comptime reflection (`@typeInfo`) to serialize and deserialize supported Zig types across JSON, MessagePack, Erlang ETF, TOML, YAML, XML, ZON, TOON, and CSV without macros, code generation, or runtime type information.
+
+## Quick Start
+
+Add the v1.2.2 dependency:
+
+```sh
+zig fetch --save https://github.com/OrlovEvgeny/serde.zig/archive/refs/tags/v1.2.2.tar.gz
+```
+
+In `build.zig`, connect the public module to your executable:
+
+```zig
+const serde_dep = b.dependency("serde", .{ .target = target, .optimize = optimize });
+exe.root_module.addImport("serde", serde_dep.module("serde"));
+```
+
+This complete program serializes a value and releases both the output bytes and
+the managed parse result. [Run the example](examples/managed_json/main.zig)
+with `zig build example-managed-json`.
+
+```zig
+const std = @import("std");
+const serde = @import("serde");
+const User = struct { name: []const u8, age: u32, email: ?[]const u8 = null };
+
+pub fn main() !void {
+    const allocator = std.heap.page_allocator;
+    const bytes = try serde.json.toSlice(allocator, User{ .name = "Alice", .age = 30 });
+    defer allocator.free(bytes);
+    var parsed = try serde.json.fromSliceManaged(User, allocator, bytes);
+    defer parsed.deinit();
+    std.debug.print("{s}: {d}\n", .{ parsed.value.name, parsed.value.age });
+}
+```
+
+Choose a guide: [application author](docs/application-author.md),
+[type or adapter author](docs/type-author.md), or [format author](docs/format-author.md).
+The [extension contract](docs/extension-contract.md) and
+[capability matrix](docs/capabilities.md) define what integrations can rely on.
+
+## Installation
+
+To track development instead of a release:
+
+```sh
+zig fetch --save git+https://github.com/OrlovEvgeny/serde.zig
+```
+
+Supports Zig 0.15.2 and 0.16.0; CI also tracks Zig master.
+
+Supported Zig versions:
+
+| Zig version           | Status                                                            |
+| --------------------- | ----------------------------------------------------------------- |
+| `0.16.0`              | default toolchain, required in docs CI                               |
+| `0.15.2`              | supported compatibility baseline                                  |
+| `0.17-dev` / `master` | supported against current development snapshots and tracked in CI |
+
+## Why serde.zig?
+
+**Inferred mappings.** Declare a supported struct and serialize it without macros or code generation. Comptime reflection chooses its mapping; parsing and input validation happen at runtime.
+
+**Nine formats, shared core.** JSON, MessagePack, Erlang ETF, TOML, YAML, XML, ZON, TOON, and CSV share a generic core and similar convenience functions. Root types, writer arguments, and format capabilities differ; consult the capability matrix.
+
+**Out-of-band schemas.** Serialize the same type differently in different contexts without modifying the type itself. Essential for third-party types and API versioning.
+
+**Zero-copy JSON.** `fromSliceBorrowed` returns string slices that point directly into the input buffer when no escape sequences are present. String views avoid copying; containers and custom hooks can still allocate.
+
+**Comptime validation.** Unsupported type operations and ambiguous field names can be rejected at compile time. Missing input fields and malformed input are runtime errors. Structural backend checks are opt-in.
 
 ## Table of Contents
 
@@ -46,7 +115,7 @@ Uses Zig's comptime reflection (`@typeInfo`) to serialize and deserialize any Zi
 - [Erlang ETF / OTP 29](#erlang-etf--otp-29)
 - [Examples](#examples)
   - [Nested structs](#nested-structs)
-  - [Arena allocator](#arena-allocator-recommended-for-deserialization)
+  - [Arena allocator](#arena-allocator)
   - [Zero-copy deserialization](#zero-copy-deserialization)
   - [Pretty-printed output](#pretty-printed-output)
   - [Tagged unions](#tagged-unions)
@@ -73,79 +142,11 @@ Uses Zig's comptime reflection (`@typeInfo`) to serialize and deserialize any Zi
 - [Out-of-Band Schema](#out-of-band-schema)
 - [Out-of-Band Type Overrides](#out-of-band-type-overrides)
 - [Custom Serialization](#custom-serialization)
+- [JSON diagnostics](#json-diagnostics)
 - [Error Handling](#error-handling)
 - [Performance](#performance)
 - [Tests](#tests)
 - [License](#license)
-
-## Why serde.zig?
-
-**No boilerplate.** No macros, no code generation, no build steps. Just declare a struct and serialize it. Zig's comptime reflection handles everything at compile time.
-
-**Nine formats, one API.** JSON, MessagePack, Erlang ETF, TOML, YAML, XML, ZON, TOON, and CSV share the same `toSlice`/`fromSlice`/`toWriter`/`fromReader` shape. Learn once, use everywhere.
-
-**Out-of-band schemas.** Serialize the same type differently in different contexts without modifying the type itself. Essential for third-party types and API versioning.
-
-**Zero-copy JSON.** `fromSliceBorrowed` returns string slices that point directly into the input buffer when no escape sequences are present. No allocation, no copying.
-
-**Comptime validation.** Invalid types, missing fields, and incorrect option names are caught at compile time, not at runtime.
-
-## Quick Start
-
-```zig
-const serde = @import("serde");
-
-const User = struct {
-    name: []const u8,
-    age: u32,
-    email: ?[]const u8 = null,
-};
-
-// Serialize to JSON
-const json_bytes = try serde.json.toSlice(allocator, User{
-    .name = "Alice",
-    .age = 30,
-    .email = "alice@example.com",
-});
-// => {"name":"Alice","age":30,"email":"alice@example.com"}
-
-// Deserialize from JSON
-const user = try serde.json.fromSlice(User, allocator, json_bytes);
-```
-
-## Installation
-
-Latest version from master:
-
-```sh
-zig fetch --save git+https://github.com/OrlovEvgeny/serde.zig
-```
-
-Specific release:
-
-```sh
-zig fetch --save https://github.com/OrlovEvgeny/serde.zig/archive/refs/tags/v1.1.0.tar.gz
-```
-
-Then in your `build.zig`:
-
-```zig
-const serde_dep = b.dependency("serde", .{
-    .target = target,
-    .optimize = optimize,
-});
-exe.root_module.addImport("serde", serde_dep.module("serde"));
-```
-
-Requires Zig 0.15.2 or later, including current Zig 0.17 development builds.
-
-Supported Zig versions:
-
-| Zig version           | Status                                                            |
-| --------------------- | ----------------------------------------------------------------- |
-| `0.16.0`              | current stable, required in docs CI                               |
-| `0.15.2`              | previous stable, fully supported                                  |
-| `0.17-dev` / `master` | supported against current development snapshots and tracked in CI |
 
 ## Formats
 
@@ -161,7 +162,7 @@ Supported Zig versions:
 | TOON                | `serde.toon`    | +         | +           |
 | CSV                 | `serde.csv`     | +         | +           |
 
-Every format exposes the same API:
+The common convenience API is illustrated below using JSON. Some formats require extra writer arguments or restrict root types:
 
 ```zig
 // Serialization
@@ -220,16 +221,45 @@ const xml = try serde.xml.toSlice(allocator, person);
 const toon = try serde.toon.toSlice(allocator, person);
 ```
 
-### Arena allocator (recommended for deserialization)
+### Managed parsing and memory ownership
 
-Deserialization allocates memory for strings, slices, and nested structures. Use an `ArenaAllocator` for easy cleanup:
+Every format provides `fromSliceManaged(T, allocator, input)` and
+`fromSliceManagedSchema(T, allocator, input, schema)`. They return `serde.Parsed(T)`:
 
 ```zig
-var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-defer arena.deinit();
+var parsed = try serde.json.fromSliceManaged(User, allocator, json_bytes);
+defer parsed.deinit();
+useUser(parsed.value);
+```
 
+The result owns a separate arena with a stable address, including allocations
+made by custom adapters through their provided arena allocator. Move the result freely,
+but keep one owner and call `deinit` exactly once. Do not separately free its
+fields. This API owns allocated output independently of the input; static Zig
+and schema defaults remain static. It does not close resources such as files
+opened by custom hooks.
+
+Existing `fromSlice` signatures are unchanged. They allocate strings and
+containers with the caller's allocator; an arena remains convenient for batch
+parsing:
+
+```zig
+var arena = std.heap.ArenaAllocator.init(allocator);
+defer arena.deinit();
 const user = try serde.json.fromSlice(User, arena.allocator(), json_bytes);
 ```
+
+For ordinary derived values, `serde.core.freeAllocated(T, value, allocator)`
+recursively frees owned output and preserves defaults; use
+`freeAllocatedSchema` when parsing with an external schema. Prefer managed
+parsing or your own arena for custom types whose ownership cannot be inferred
+from their fields. A nonallocating field `with.deserialize` may retain its wire
+value; an allocating `with.deserializeAlloc` must produce an independent result.
+
+Formats retain their root restrictions and writer signatures: CSV reads rows
+into a slice of structs, TOML reads a struct/table, and XML adds a root element.
+Managed parsing does not change these representations. `fromReader` variants
+own their temporary input buffers and release them after conversion.
 
 ### Zero-copy deserialization
 
@@ -240,6 +270,11 @@ const input = "{\"name\":\"alice\",\"id\":1}";
 const msg = try serde.json.fromSliceBorrowed(Msg, allocator, input);
 // msg.name points into input, input must outlive msg
 ```
+
+Borrowed JSON requires the input to outlive the result. Escaped strings are
+rejected with `InvalidEscape`; the API does not silently allocate replacements.
+This applies inside arrays and nested containers too. Use a separate arena for
+container metadata, and do not pass borrowed results to `freeAllocated`.
 
 ### Pretty-printed output
 
@@ -646,6 +681,19 @@ const Secret = struct {
 };
 ```
 
+Directional skip maps can be used in `pub const serde` or an external schema:
+
+```zig
+pub const serde = .{
+    .skip_serializing = .{ .secret = true },
+    .skip_deserializing = .{ .computed = true },
+};
+```
+
+`skip.always` skips both directions. A schema entry, including explicit `false`,
+overrides the corresponding in-type setting. Skipped input fields still need a
+Zig/schema default or an optional type to construct the result.
+
 ### Default values
 
 Zig's struct default values are used during deserialization when a field is absent from the input:
@@ -660,6 +708,13 @@ const Config = struct {
 const cfg = try serde.json.fromSlice(Config, allocator, "{\"name\":\"app\"}");
 // cfg.retries == 3, cfg.timeout == 30
 ```
+
+Struct input rejects repeated fields with `DuplicateField`, including a primary
+name followed by its alias. Maps keep the last value. Recursive `flatten` uses
+the nested fields' names, skips, defaults and required-field checks; ambiguous
+names or aliases across fields are compile errors. Internal and adjacent union
+tags may appear before or after their payload. `Value.fromAny` and `Value.toType`
+use the same core field and union rules as format conversion.
 
 ### Deny unknown fields
 
@@ -787,7 +842,7 @@ const compact = try serde.json.toSliceSchema(allocator, point, compact_schema);
 // => {"a":1.0e0,"b":2.0e0}
 ```
 
-Schema supports all the same options as `pub const serde`: `rename`, `rename_all`, `rename_serialize`, `rename_deserialize`, `rename_all_serialize`, `rename_all_deserialize`, `alias`, `skip`, `default`, `with`, `deny_unknown_fields`, `flatten`, `tag`, `tag_field`, `content_field`, `enum_repr`.
+Schema supports all the same options as `pub const serde`: `rename`, `rename_all`, `rename_serialize`, `rename_deserialize`, `rename_all_serialize`, `rename_all_deserialize`, `alias`, `skip`, `skip_serializing`, `skip_deserializing`, `default`, `with`, `deny_unknown_fields`, `flatten`, `tag`, `tag_field`, `content_field`, `enum_repr`.
 
 When both an external schema and `pub const serde` exist on a type, the external schema takes priority.
 
@@ -863,7 +918,8 @@ When serde encounters a type that matches a map entry, it calls the adapter inst
 
 ### Available functions
 
-Every format module provides map-aware variants:
+JSON provides the following map-aware convenience functions (TOON and ETF also
+provide format-specific map variants). Other formats use the core functions:
 
 ```zig
 // Serialize
@@ -889,7 +945,7 @@ When multiple customization mechanisms apply to the same type:
 
 1. `zerdeSerialize` / `zerdeDeserialize` on the type itself (highest priority)
 2. Out-of-band map entry
-3. Default comptime-derived behavior (lowest priority
+3. Default comptime-derived behavior (lowest priority)
 
 ### Example: `std.ArrayList(u8)` as string
 
@@ -905,11 +961,10 @@ const ArrayListAdapter = struct {
         d: anytype,
     ) @TypeOf(d.*).Error!std.ArrayList(u8) {
         const str = try d.deserializeString(allocator);
+        defer serde.core.releaseString(d, allocator, str);
         var list = std.ArrayList(u8).empty;
-        // steal the allocated string buffer
-        list.items = @constCast(str);
-        list.capacity = str.len;
-        list.items.len = str.len;
+        errdefer list.deinit(allocator);
+        try list.appendSlice(allocator, str);
         return list;
     }
 };
@@ -955,14 +1010,22 @@ const StringWrappedU64 = struct {
         deserializer: anytype,
     ) @TypeOf(deserializer.*).Error!@This() {
         const str = try deserializer.deserializeString(allocator);
-        defer allocator.free(str);
-        return .{ .inner = std.fmt.parseInt(u64, str, 10) catch return error.InvalidNumber };
+        defer serde.core.releaseString(deserializer, allocator, str);
+        return .{ .inner = std.fmt.parseInt(u64, str, 10) catch return deserializer.raiseError(error.InvalidNumber) };
     }
 };
 
 const bytes = try serde.json.toSlice(allocator, StringWrappedU64{ .inner = 12345 });
 // => "12345"
 ```
+
+## JSON diagnostics
+
+Use `json.fromSliceManagedWithDiagnostics(T, allocator, input, options, &diagnostics)`
+with `var diagnostics = serde.json.Diagnostics.init(&path_buffer)` to retain the
+original error, JSON pointer, byte offset, line, and byte column. The path uses only
+the supplied buffer; a short buffer sets `path_truncated` without changing the error.
+See the [application guide](docs/application-author.md#json-diagnostics).
 
 ## Error Handling
 
@@ -1062,44 +1125,31 @@ behavior.
 
 ## Performance
 
-Run the benchmark suite with:
-
 ```sh
 zig build bench
-zig build bench -Dbench-format=json
-zig build bench -Dbench-filter=json
-zig build bench -Dbench-compare-std-json
+zig build bench -Dbench-format=json -Dbench-compare-std-json=true
+zig build bench -Dbench-filter=json -Dbench-out=bench/results.json
 ```
 
-Benchmark options are passed as `-D` build options. Run `zig build --help` to see the full list (`-Dbench-format`,
-`-Dbench-filter`, `-Dbench-compare-std-json`, `-Dbench-baseline`,
-`-Dbench-threshold`, `-Dbench-out`), alongside `-Dbench-optimize` which
-controls the optimize mode for the benchmark executable and the imported
-`serde` module (defaults to the release-fast equivalent).
+Results use schema version 3. Each operation reports the median and min/max of
+seven samples; allocation counts are measured in a separate probe. `warm` and
+`cold` measure complete operations including allocation; these labels control
+warmup, not hardware cache flushing. Complete calls use `std.heap.smp_allocator`.
+`cpu` uses a retained arena or fixed output buffer. Input generation,
+MessagePack encoding for decode tests, and map setup
+happen outside measurements. NDJSON measures the actual streaming reader.
 
-Metrics include `ns/op`, `allocations/op`, `bytes allocated/op`, throughput
-MB/s, average output size, warm runs, and selected cold runs. JSON output also
-records Zig version, target, optimize mode, implementation, format, case, and
-operation so CI artifacts can be compared over time.
+The suite includes wide structs, reordered keys and aliases, long and escaped
+strings, nested collections, MessagePack and `std.json`. Throughput uses the
+actual input/output size. Run with one compiler, target, optimization mode, and
+harness for both revisions; avoid concurrent builds. Results from versions 1
+and 2 are not comparable and are rejected as baselines.
 
-Representative local run, Apple Silicon macOS, Zig 0.16.0, `ReleaseFast`,
-April 24, 2026:
-
-| Case                  | Operation   | Implementation | ns/op   | allocs/op | bytes/op | MB/s   |
-| --------------------- | ----------- | -------------- | ------- | --------- | -------- | ------ |
-| flat struct JSON      | serialize   | serde          | 1916.44 | 1.00      | 132.00   | 25.88  |
-| flat struct JSON      | serialize   | std_json       | 1608.86 | 1.00      | 132.00   | 30.82  |
-| flat struct JSON      | deserialize | serde          | 1633.18 | 1.00      | 70.00    | 30.37  |
-| flat struct JSON      | deserialize | std_json       | 1769.35 | 1.00      | 256.00   | 28.03  |
-| borrowed JSON strings | deserialize | serde          | 78.17   | 0.00      | 0.00     | 817.44 |
-| array of structs JSON | roundtrip   | serde          | 5115.59 | 2.00      | 1888.00  | 78.11  |
-
-CI uploads benchmark baseline/result artifacts for Zig 0.15.2 and 0.16.0. The
-test matrix also runs Zig master, which currently tracks 0.17 development
-snapshots. On pull requests, CI compares the PR against the base SHA on the same
-runner when the base branch already has `zig build bench`; otherwise it falls
-back to the checked-in empty baseline. Regressions over the configured threshold
-are shown in the GitHub Actions summary without failing the PR.
+See [the implementation and benchmark report](docs/core-serde-improvements.md)
+for local before/after measurements, reproducible commands, and remaining costs.
+CI copies the current harness into the PR base checkout before comparing it.
+The default benchmark optimize mode is `ReleaseFast`; `zig build --help` lists
+filters, baseline and threshold options.
 
 ## Tests
 

@@ -7,10 +7,10 @@ author_github: DISTREAT
 repository: https://github.com/DISTREAT/zig-csv
 keywords:
   - csv
-date: 2026-08-22
+date: 2026-09-05
 category: data-formats
-updated_at: 2026-08-22T20:07:39+00:00
-last_sync: 2026-08-22T20:07:39Z
+updated_at: 2026-09-05T21:45:19+00:00
+last_sync: 2026-09-05T21:45:19Z
 package_kind: library
 has_library: true
 has_binary: false

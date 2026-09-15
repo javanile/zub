@@ -15,10 +15,10 @@ keywords:
   - oklch
   - parser
   - rgb
-date: 2026-09-07
+date: 2026-09-15
 category: tooling
-updated_at: 2026-09-07T18:39:07+00:00
-last_sync: 2026-09-07T18:39:07Z
+updated_at: 2026-09-15T09:18:24+00:00
+last_sync: 2026-09-15T09:18:24Z
 package_kind: library
 has_library: true
 has_binary: false

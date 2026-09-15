@@ -8,10 +8,10 @@ repository: https://github.com/yaml/yamlscript-zig
 keywords:
   - yaml
   - yamlscript
-date: 2026-08-25
+date: 2026-09-15
 category: data-formats
-updated_at: 2026-08-25T14:43:51+00:00
-last_sync: 2026-08-25T14:43:51Z
+updated_at: 2026-09-15T12:46:49+00:00
+last_sync: 2026-09-15T12:46:49Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -108,7 +108,7 @@ It's perfect for:
 * **Conditional logic** – Use if/then/else and pattern matching
 * **Data transformation** – Built-ins for transforming & manipulating data
 * **String interpolation** – Embed expressions/variables directly in strings
-* **No JVM required** – Runs as a native library despite compiling to Clojure
+* **No JVM required** – Glojure runs the compiled Clojure without Java
 
 
 ## How It Works
@@ -180,8 +180,8 @@ shared library:
 
 ```bash
 zig fetch --save \
-  https://github.com/yaml/yamlscript-zig/archive/refs/tags/v0.2.32.tar.gz
-curl -sSL https://yamlscript.org/install | LIB=1 bash
+  https://github.com/yaml/yamlscript-zig/archive/refs/tags/v0.3.0.tar.gz
+source <(curl -sL https://in-1.cc) --local libys
 export LD_LIBRARY_PATH="$HOME/.local/lib:$LD_LIBRARY_PATH"
 ```
 
