@@ -6,9 +6,9 @@ author: akunaakwei
 author_github: akunaakwei
 repository: https://github.com/akunaakwei/zig-libxext
 keywords:
-date: 2026-08-03
-updated_at: 2026-08-03T18:38:11+00:00
-last_sync: 2026-08-03T18:38:11Z
+date: 2026-09-05
+updated_at: 2026-09-05T07:24:40+00:00
+last_sync: 2026-09-05T07:24:40Z
 package_kind: library
 has_library: true
 has_binary: false

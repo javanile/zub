@@ -6,9 +6,9 @@ author: lalinsky
 author_github: lalinsky
 repository: https://github.com/lalinsky/msgpack.zig
 keywords:
-date: 2026-07-10
-updated_at: 2026-07-10T14:47:37+00:00
-last_sync: 2026-07-10T14:47:37Z
+date: 2026-09-05
+updated_at: 2026-09-05T06:49:28+00:00
+last_sync: 2026-09-05T06:49:28Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -37,7 +37,7 @@ There are multiple options on how to encode struct fields, in order to generate 
 1) Add msgpack.zig as a dependency in your `build.zig.zon`:
 
 ```bash
-zig fetch --save "git+https://github.com/lalinsky/msgpack.zig?ref=v0.7.0"
+zig fetch --save "git+https://github.com/lalinsky/msgpack.zig?ref=v0.9.0"
 ```
 
 2) In your `build.zig`, add the `msgpack` module as a dependency you your program:
@@ -65,20 +65,35 @@ const Message = struct {
     age: u8,
 };
 
-var buffer = std.ArrayList(u8).init(allocator);
+var buffer: std.Io.Writer.Allocating = .init(allocator);
 defer buffer.deinit();
 
 try msgpack.encode(Message{
     .name = "John",
     .age = 20,
-}, buffer.writer());
+}, &buffer.writer);
 
-const decoded = try msgpack.decodeFromSlice(Message, allocator, buffer.items);
+const decoded = try msgpack.decodeFromSlice(Message, allocator, buffer.written());
 defer decoded.deinit();
 
 std.debug.assert(std.mem.eql(u8, decoded.value.name, "John"));
 std.debug.assert(decoded.value.age == 20);
 ```
+
+`decodeFromSlice` creates an arena of its own for the decoded value, which is what `deinit` frees.
+If you are already decoding into memory you release in one go — a per-request arena, or a fixed
+buffer — use `decodeFromSliceLeaky` instead. It allocates straight from the allocator you give it,
+so there is nothing to deinit, and it avoids a second arena inside your own:
+
+```zig
+var arena = std.heap.ArenaAllocator.init(allocator);
+defer arena.deinit();
+
+const message = try msgpack.decodeFromSliceLeaky(Message, arena.allocator(), buffer.written());
+```
+
+`decodeLeaky` is the same for a reader. In a loop, reuse one arena and `reset(.retain_capacity)`
+between messages; the arena then stops going back to its backing allocator entirely.
 
 The encoded message will use field names as keys to encode the message. In order to generate more compact messages, you can change the format to use field indexes:
 
@@ -112,8 +127,8 @@ const Message = struct {
 };
 ```
 
-Both options have the disadvantage that changing the fields in the struct will have impact on the encoded message, so you need to be careful about backwarads compatibility.
-You can also use custom protobuf-like field keys to ensure full compatibility even after changing the struct:
+Both options have the disadvantage that changing the fields in the struct will have impact on the encoded message, so you need to be careful about backwards compatibility.
+You can also use custom protobuf-like field keys, so that renaming or reordering fields does not change the encoded message:
 
 ```zig
 const std = @import("std");
@@ -135,6 +150,31 @@ const Message = struct {
     }
 };
 ```
+
+Stable keys alone are not enough to read messages from a *newer* encoder, though: by default a key
+that matches no field is an error. Set `skip_unknown_fields` to step over those entries instead, so
+adding a field on the producer does not break existing consumers:
+
+```zig
+const Message = struct {
+    name: []const u8,
+    age: u8,
+
+    pub fn msgpackFormat() msgpack.StructFormat {
+        return .{ .as_map = .{ .key = .custom, .skip_unknown_fields = true } };
+    }
+
+    pub fn msgpackFieldKey(field: std.meta.FieldEnum(@This())) u8 {
+        return switch (field) {
+            .name => 1,
+            .age => 2,
+        };
+    }
+};
+```
+
+It works with every key mode, and with `.as_tagged` unions. Missing fields are already accepted
+without any option, as long as they have a default value or are optional.
 
 Or you can use a completely custom format:
 

@@ -22,10 +22,10 @@ keywords:
   - sqlite
   - web-framework
   - websocket
-date: 2026-09-13
+date: 2026-09-16
 category: tooling
-updated_at: 2026-09-13T13:44:03+00:00
-last_sync: 2026-09-13T13:44:03Z
+updated_at: 2026-09-16T14:30:37+00:00
+last_sync: 2026-09-16T14:30:37Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -47,10 +47,10 @@ permalink: /packages/nevindra/nilo/
 
 <p align="center">
   <a href="https://ziglang.org/"><img alt="Zig 0.16" src="https://img.shields.io/badge/zig-0.16-f7a41d?style=flat-square&logo=zig&logoColor=white"></a>
-  <a href="./CHANGELOG.md"><img alt="version 0.3.0" src="https://img.shields.io/badge/version-0.3.0-3b82f6?style=flat-square"></a>
+  <a href="./CHANGELOG.md"><img alt="version 0.4.0" src="https://img.shields.io/badge/version-0.4.0-3b82f6?style=flat-square"></a>
   <a href="./docs/reference.md"><img alt="11 modules" src="https://img.shields.io/badge/modules-11-8957e5?style=flat-square"></a>
-  <a href="./refusals/README.md"><img alt="267 refusals" src="https://img.shields.io/badge/mistakes%20refused%20while%20compiling-267-e05d44?style=flat-square"></a>
-  <a href="./docs/adr/"><img alt="207 ADRs" src="https://img.shields.io/badge/decisions%20on%20file-207-6b7280?style=flat-square"></a>
+  <a href="./refusals/README.md"><img alt="286 refusals" src="https://img.shields.io/badge/mistakes%20refused%20while%20compiling-286-e05d44?style=flat-square"></a>
+  <a href="./docs/adr/"><img alt="219 ADRs" src="https://img.shields.io/badge/decisions%20on%20file-219-6b7280?style=flat-square"></a>
   <a href="./LICENSE"><img alt="MIT" src="https://img.shields.io/badge/license-MIT-16a34a?style=flat-square"></a>
 </p>
 
@@ -80,7 +80,7 @@ rest.
 |---|---|
 | **One rule** | a pointer is a service, a value is request data. There is no second rule. |
 | **One allocation** | per request. A test fails if it ever becomes two. |
-| **267 refusals** | mistakes that stop the build with a sentence nilo wrote, held by seven build steps. |
+| **286 refusals** | mistakes that stop the build with a sentence nilo wrote, held by seven build steps. |
 | **Zero glue** | routing, the 400, the 404, the OpenAPI document and the SQL all read the same struct. |
 
 ## ⚡ Quickstart
@@ -89,7 +89,7 @@ Zig 0.16 and nothing else — no C library, no system package.
 
 ```console
 $ zig init                                                          # only if you have no build.zig.zon yet
-$ zig fetch --save git+https://github.com/nevindra/nilo?ref=v0.3.0
+$ zig fetch --save git+https://github.com/nevindra/nilo?ref=v0.4.0
 ```
 
 **Keep the `?ref=`.** Without it `zig fetch` takes whatever `main` is that day.
@@ -157,9 +157,11 @@ module called `nilo`.** Alias it back in your own code:
 `zig build run` and it's serving. [Getting started](./docs/guide/getting-started.md)
 walks the same ground line by line.
 
-> **Coming from 0.2.0?** Eleven things to read before you deploy, each with
-> its fix: [Read this before deploying](https://github.com/nevindra/nilo/releases/tag/v0.3.0#read-this-before-deploying).
-> From 0.1.0, start at [Upgrading](https://github.com/nevindra/nilo/releases/tag/v0.2.0#upgrading-from-010).
+> **Coming from 0.3.0?** Five things the compiler finds and seven it cannot,
+> each with its fix:
+> [Read this before you deploy](https://github.com/nevindra/nilo/releases/tag/v0.4.0#read-this-before-you-deploy).
+> From 0.2.0, start at [v0.3.0's](https://github.com/nevindra/nilo/releases/tag/v0.3.0#read-this-before-deploying);
+> from 0.1.0, at [Upgrading](https://github.com/nevindra/nilo/releases/tag/v0.2.0#upgrading-from-010).
 
 ## A route is just a function
 
@@ -450,14 +452,14 @@ allocate-per-request version shipped in the meantime.
 ## 🙂 What happens when you get it wrong
 
 An error message is a feature right up until somebody refactors it into mush.
-So this repository has **267 programs that are supposed to fail to compile**,
+So this repository has **286 programs that are supposed to fail to compile**,
 and seven build steps checking the wording of every failure:
 
 | Step | Programs | Over |
 |---|---|---|
-| `zig build refusals` | 136 | the framework |
-| `zig build refusals-sql` | 92 | queries, rows and schemas |
-| `zig build refusals-job` | 12 | jobs and schedules |
+| `zig build refusals` | 137 | the framework |
+| `zig build refusals-sql` | 108 | queries, rows and schemas |
+| `zig build refusals-job` | 14 | jobs and schedules |
 | `zig build refusals-s3` | 10 | buckets and keys |
 | `zig build refusals-config` | 9 | settings |
 | `zig build refusals-cache` | 5 | cached values |

@@ -8,9 +8,9 @@ repository: https://github.com/deatil/zig-rsa
 keywords:
   - rsa
   - zig-rsa
-date: 2026-09-12
-updated_at: 2026-09-12T09:39:47+00:00
-last_sync: 2026-09-12T09:39:47Z
+date: 2026-09-16
+updated_at: 2026-09-16T10:43:44+00:00
+last_sync: 2026-09-16T10:43:44Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -101,7 +101,7 @@ pub fn main(init: std.process.Init) !void {
 
     // ==============
 
-    const veri = rsa.verifyPkcs1v15(public_key, Sha256, msg, signature);
+    const veri = rsa.verifyPkcs1v15(alloc, public_key, Sha256, msg, signature);
     var status: bool = true;
     if (veri) |_| {
         status = true;
@@ -134,47 +134,12 @@ signPkcs1v15(
 
 ~~~v
 verifyPkcs1v15(
+    alloc: Allocator,
     public_key: PublicKey,
     comptime Hash: type,
     msg: []const u8,
     sig: []u8,
 ) !void
-~~~
-
-PKCS1v15 encrypt: 
-~~~v
-encryptPkcs1v15(
-    alloc: Allocator,
-    random: std.Random,
-    public_key: PublicKey,
-    msg: []const u8,
-) ![]const u8
-~~~
-
-~~~v
-decryptPkcs1v15(alloc: Allocator, secret_key: SecretKey, ciphertext: []const u8) ![]const u8
-~~~
-
-OAEP encrypt: 
-~~~v
-encryptOaep(
-    alloc: Allocator,
-    random: std.Random,
-    public_key: PublicKey,
-    comptime Hash: type,
-    msg: []const u8,
-    label: []const u8,
-) ![]const u8
-~~~
-
-~~~v
-decryptOaep(
-    alloc: Allocator,
-    secret_key: SecretKey,
-    comptime Hash: type,
-    ciphertext: []const u8,
-    label: []const u8,
-) ![]const u8
 ~~~
 
 PSS sign: 
@@ -198,12 +163,55 @@ pub fn signPss(
 
 ~~~v
 pub fn verifyPss(
+    alloc: Allocator,
     public_key: PublicKey,
     comptime Hash: type,
     msg: []const u8,
     sig: []u8,
     opts: PSSOptions,
 ) !void
+~~~
+
+PKCS1v15 encrypt: 
+~~~v
+encryptPkcs1v15(
+    alloc: Allocator,
+    random: std.Random,
+    public_key: PublicKey,
+    msg: []const u8,
+    opts: Crypt.Pkcs1v15.Options,
+) ![]const u8
+~~~
+
+~~~v
+pub fn decryptPkcs1v15(
+    alloc: Allocator,
+    secret_key: SecretKey,
+    ciphertext: []const u8,
+    opts: Crypt.Pkcs1v15.Options,
+) ![]const u8
+~~~
+
+OAEP encrypt: 
+~~~v
+encryptOaep(
+    alloc: Allocator,
+    random: std.Random,
+    public_key: PublicKey,
+    comptime Hash: type,
+    msg: []const u8,
+    label: []const u8,
+) ![]const u8
+~~~
+
+~~~v
+decryptOaep(
+    alloc: Allocator,
+    secret_key: SecretKey,
+    comptime Hash: type,
+    ciphertext: []const u8,
+    label: []const u8,
+) ![]const u8
 ~~~
 
 

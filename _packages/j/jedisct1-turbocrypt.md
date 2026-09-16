@@ -14,9 +14,9 @@ keywords:
   - repositories
   - turbo
   - turbocrypt
-date: 2026-09-09
-updated_at: 2026-09-09T13:51:58+00:00
-last_sync: 2026-09-09T13:51:58Z
+date: 2026-09-16
+updated_at: 2026-09-16T14:07:25+00:00
+last_sync: 2026-09-16T14:07:25Z
 package_kind: binary
 has_library: false
 has_binary: true
@@ -36,43 +36,50 @@ permalink: /packages/jedisct1/turbocrypt/
 
 # TurboCrypt
 
-A fast, easy-to-use, and secure command-line tool for encrypting and decrypting
-files, Git repositories, and directory trees.
+A universal file encryption tool.
 
-## Installation
+TurboCrypt encrypts anything from a single document to a whole directory of backups. You can also use it to open encrypted folders as local volumes or keep private files in a public Git repository.
 
-Linux, macOS, and Windows binaries are available from the
-[releases page](https://github.com/jedisct1/turbocrypt/releases).
+- **Easy to use:** create a key, then encrypt and decrypt files with a single command.
+- **Small and portable:** written in Zig and runs on Linux, macOS, Windows, and BSD.
+- **Fast:** processes files in parallel, whether you're working with a few documents or a large directory tree.
+- **Modern cryptography:** built on Argon2, AEGIS, HCTR2, and TurboSHAKE, with no insecure options.
+- **Encrypted folders you can work in:** mount a folder and use your usual apps to read and edit its files. The encrypted folder can be on your own disk or on remote storage you've connected to your computer.
+- **Private files in Git alongside public code:** commit encrypted notes, scripts, or unfinished work to Git, and optionally share the key with other maintainers who need access.
 
-To build an optimized binary locally, install the master version of
-[Zig](https://ziglang.org/download/), then run:
+## Install TurboCrypt
+
+On macOS, install the signed universal binary with Homebrew. Trust the tap first, then install:
+
+```sh
+brew trust jedisct1/turbocrypt
+brew install jedisct1/turbocrypt/turbocrypt
+```
+
+You can also download the archive for your system from the [releases page](https://github.com/jedisct1/turbocrypt/releases), extract it, and put `turbocrypt` somewhere on your `PATH`.
+
+If you'd rather build it yourself, install the master version of [Zig](https://ziglang.org/download/), then run:
 
 ```bash
 git clone https://github.com/jedisct1/turbocrypt.git
 cd turbocrypt
-zig build -Doptimize=ReleaseFast
+zig build --release=fast
 ```
 
-The binary is written to `zig-out/bin/turbocrypt`.
+You'll find the program in `zig-out/bin/`. The [getting started guide](docs/getting-started.md) walks you through installation and your first encrypted files.
 
-See the [getting started guide](docs/getting-started.md) for a detailed
-walkthrough.
+## Encrypt your first folder
 
-## Quick start
-
-Create a key and save it as the default:
+First, create a key and save it as your default:
 
 ```bash
 turbocrypt keygen secret.key
 turbocrypt config set-key secret.key
 ```
 
-Keep a backup of the key somewhere separate.
+Keep a backup of `secret.key` somewhere separate from your encrypted files. You'll need that key to get them back, and anyone who has it can read them.
 
-Losing it means losing access to the encrypted files, and anyone with a copy
-can decrypt them.
-
-Encrypt a directory, authenticate the encrypted copy, and decrypt it again:
+Now encrypt a folder, check the encrypted copy, and restore it to a new folder:
 
 ```bash
 turbocrypt encrypt my-documents/ encrypted-documents/
@@ -80,30 +87,53 @@ turbocrypt verify encrypted-documents/
 turbocrypt decrypt encrypted-documents/ restored-documents/
 ```
 
-The same commands work on individual files.
+Your original files stay where they are. The same commands work on individual files, too.
 
-Read [Getting started](docs/getting-started.md) for the full tutorial or the
-[command reference](docs/command-reference.md) for the complete command set.
+## Open an encrypted folder
 
-## Documentation
+On Linux and macOS, you can work with encrypted files through a normal folder:
 
-- [Getting started](docs/getting-started.md): installation and a first
-  encrypted file or directory
+```bash
+mkdir -p ~/Volumes/documents
+turbocrypt mount --daemon encrypted-documents/ ~/Volumes/documents
+```
 
-- [Usage guide](docs/usage.md): password-protected keys, contexts, filenames,
-  exclusions, verification, and other common workflows
+Open `~/Volumes/documents` in your editor or file manager. When you're done, close the files and unmount it:
 
-- [Private files in Git](docs/git.md): encrypted files in public repositories,
-  setup, collaboration, and conflict handling
+```bash
+turbocrypt unmount ~/Volumes/documents
+```
 
-- [Command reference](docs/command-reference.md): commands and processing
-  options at a glance
+This uses FUSE and needs a one-time installation of `fuse3` on Linux or [fuse-t](https://github.com/macos-fuse-t/fuse-t) on macOS. After setup, you can mount your files without running TurboCrypt as root. On macOS, no kernel extension is needed.
 
-- [Configuration](docs/configuration.md): saved settings, precedence,
-  environment variables, and file portability
+For large files that change often, `turbocrypt init` creates a container made for random access. Files in it are read and written in encrypted chunks, so the mount keeps nothing in memory and has no file-size limit:
 
-- [Safety](docs/safety.md): key handling, backups, verification, and
-  performance considerations
+```bash
+turbocrypt init encrypted-container/
+turbocrypt mount --daemon encrypted-container/ ~/Volumes/documents
+```
 
-- [Troubleshooting](docs/troubleshooting.md): common errors and Git integration
-  problems
+See [Work with an encrypted folder](docs/mount.md) for setup, remote folders, file-size limits, and containers.
+
+## Keep maintainer files in Git
+
+From an existing checkout with a default key set, choose the files that should stay private:
+
+```bash
+turbocrypt git init
+turbocrypt git add NOTES.md ops/
+git commit -m "Add maintainer files"
+```
+
+You keep editing the files at their usual paths, while Git stores encrypted copies. Other maintainers can restore them with the key; everyone else sees the public project.
+
+The [Git guide](docs/git.md) covers setup, everyday commits, and restoring private files in another clone.
+
+## More things you can do
+
+- [Encrypt files and folders](docs/usage.md): hide filenames, skip files, and check your backups.
+- [Everyday tasks](docs/command-reference.md): send a file, restore a backup, or use a different key.
+- [Save your preferences](docs/configuration.md): choose a default key and avoid repeating options.
+- [Keep your files recoverable](docs/safety.md): back up keys and check that you can restore your data.
+- [Understand what encryption protects](docs/cryptography.md): learn what stays private and what others can still see.
+- [Fix a problem](docs/troubleshooting.md): get help with file errors, mounts, and Git.

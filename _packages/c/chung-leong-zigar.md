@@ -17,10 +17,10 @@ keywords:
   - rollup-plugin
   - wasm
   - webpack-plugin
-date: 2026-09-04
+date: 2026-09-16
 category: systems
-updated_at: 2026-09-04T12:28:33+00:00
-last_sync: 2026-09-04T12:28:33Z
+updated_at: 2026-09-16T10:59:56+00:00
+last_sync: 2026-09-16T10:59:56Z
 package_kind: library
 has_library: false
 has_binary: false
@@ -58,7 +58,8 @@ and tutorials.
 ## Versioning
 
 The major and minor version numbers of Zigar correspond to the version of the Zig compiler
-it's designed for. The current version is 0.15.3. It works with Zig 0.15.x.
+it's designed for. The current version is 0.16.0. It works with Zig 0.16.0. The 0.17.0 alpha 
+version is designed to work with master (downloaded on Sept. 8 2026).
 
 ## Technical support
 

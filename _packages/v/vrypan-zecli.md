@@ -7,10 +7,10 @@ author_github: vrypan
 repository: https://github.com/vrypan/zecli
 keywords:
   - cli
-date: 2026-08-31
+date: 2026-09-16
 category: tooling
-updated_at: 2026-08-31T17:32:54+00:00
-last_sync: 2026-08-31T17:32:54Z
+updated_at: 2026-09-16T10:25:20+00:00
+last_sync: 2026-09-16T10:25:20Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -133,6 +133,25 @@ const child_argv = command.passthrough() orelse &.{};
 
 `passthrough()` returns `null` when no separator was supplied. A trailing `--`
 returns a non-null empty slice.
+
+This is the default `.passthrough` behavior for `CommandSpec.double_dash`. Set
+it to `.positionals` for a command where `--` should only mark the end of
+options, not the start of a wrapped command's argv:
+
+```zig
+.{
+    .name = "cat",
+    .usage = "app cat [options] <REF>...",
+    .arguments = &.{.{ .name = "REF", .required = true, .repeatable = true }},
+    .double_dash = .positionals,
+}
+```
+
+With `.positionals`, everything after `--` is combined, in order, with any
+positionals given before it, so `app cat -- @42/out` and
+`app cat @42/out -- @43/out` both satisfy a required `REF` argument.
+`passthrough()` returns `null` and generated completions keep offering
+positional candidates across the delimiter instead of stopping at it.
 
 ### Reading results
 
