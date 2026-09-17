@@ -7,9 +7,9 @@ author_github: neurocyte
 repository: https://github.com/neurocyte/flow-syntax
 keywords:
   - tree-sitter
-date: 2026-09-13
-updated_at: 2026-09-13T13:16:35+00:00
-last_sync: 2026-09-13T13:16:35Z
+date: 2026-09-17
+updated_at: 2026-09-17T12:02:46+00:00
+last_sync: 2026-09-17T12:02:46Z
 package_kind: hybrid
 has_library: true
 has_binary: true

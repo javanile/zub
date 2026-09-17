@@ -7,10 +7,10 @@ author_github: neurocyte
 repository: https://github.com/neurocyte/cbor
 keywords:
   - cbor
-date: 2026-06-05
+date: 2026-09-17
 category: data-formats
-updated_at: 2026-06-05T13:02:30+00:00
-last_sync: 2026-06-05T13:02:30Z
+updated_at: 2026-09-17T11:31:01+00:00
+last_sync: 2026-09-17T11:31:01Z
 package_kind: library
 has_library: true
 has_binary: false

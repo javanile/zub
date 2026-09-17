@@ -15,9 +15,9 @@ keywords:
   - cipher
   - cryptography
   - libaegis
-date: 2026-09-15
-updated_at: 2026-09-15T14:47:51+00:00
-last_sync: 2026-09-15T14:47:51Z
+date: 2026-09-17
+updated_at: 2026-09-17T11:25:18+00:00
+last_sync: 2026-09-17T11:25:18Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -47,7 +47,7 @@ Portable C implementations of the [AEGIS](https://datatracker.ietf.org/doc/draft
 - Encryption and decryption with attached and detached tags
 - Incremental encryption and decryption.
 - Random-access encrypted file API (RAF) for building encrypted filesystems and databases.
-- Unauthenticated encryption and decryption (not recommended - only implemented for specific protocols)
+- Unauthenticated encryption and decryption as a stream cipher (not recommended - only implemented for specific protocols)
 - Deterministic pseudorandom stream generation.
 
 ## Installation
@@ -185,6 +185,22 @@ int main(void) {
 ```
 
 The same key must not be used for both MAC and encryption. If you need to authenticate multiple messages with the same key, clone the initialized state with `aegis256_mac_state_clone()` or reset it with `aegis256_mac_reset()` rather than re-initializing.
+
+### Unauthenticated encryption
+
+Some protocols bring their own authentication scheme and only need a stream cipher. For them, `aegis256_stream_xor()` XORs the input with the AEGIS keystream. The same function encrypts and decrypts. The output buffer can also be the input buffer.
+
+```c
+/* Encrypt in place */
+aegis256_stream_xor(buf, buf, buf_len, nonce, key);
+
+/* Decrypt in place */
+aegis256_stream_xor(buf, buf, buf_len, nonce, key);
+```
+
+This mode does not detect changes to the data. Use it only when something else authenticates the data. Never use a nonce twice with the same key.
+
+`aegis256_encrypt_unauthenticated()` and `aegis256_decrypt_unauthenticated()` are deprecated. Their output is different from the output of `aegis256_stream_xor()`. Keep them only for data in the old format.
 
 ### Random-Access File API
 
