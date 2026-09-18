@@ -6,9 +6,9 @@ author: loftafi
 author_github: loftafi
 repository: https://github.com/loftafi/praxis
 keywords:
-date: 2026-09-08
-updated_at: 2026-09-08T12:31:43+00:00
-last_sync: 2026-09-08T12:31:43Z
+date: 2026-09-18
+updated_at: 2026-09-18T12:43:24+00:00
+last_sync: 2026-09-18T12:43:24Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -32,7 +32,7 @@ languages.
 
 Care has been taken to carefully name and document each struct and
 important public method. See `praxis.zig` for the public interface, or
-view the zig [API documentation](https://loftafi.github.io/praxis/docs/).
+view the zig [API documentation](https://loftafi.github.io/praxis/).
 If anything is unclear please raise a Github issue.
 
 ## License

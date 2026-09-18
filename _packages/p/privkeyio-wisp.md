@@ -10,10 +10,10 @@ keywords:
   - nostr-relay
   - self-hosted
   - websocket
-date: 2026-08-07
+date: 2026-09-15
 category: networking
-updated_at: 2026-08-07T10:57:12+00:00
-last_sync: 2026-08-07T10:57:12Z
+updated_at: 2026-09-15T18:12:41+00:00
+last_sync: 2026-09-15T18:12:41Z
 package_kind: binary
 has_library: false
 has_binary: true
@@ -45,7 +45,7 @@ A fast, lightweight [nostr](https://github.com/nostr-protocol/nostr) relay writt
 ### Docker
 
 ```sh
-docker run -d -p 7777:7777 -v wisp-data:/data ghcr.io/privkeyio/wisp --spider-admin npub1yourkey...
+docker run -d --restart unless-stopped -p 7777:7777 -v wisp-data:/data ghcr.io/privkeyio/wisp --spider-admin npub1yourkey...
 ```
 
 ### Build from source

@@ -6,9 +6,9 @@ author: loftafi
 author_github: loftafi
 repository: https://github.com/loftafi/resources
 keywords:
-date: 2026-09-05
-updated_at: 2026-09-05T03:19:05+00:00
-last_sync: 2026-09-05T03:19:05Z
+date: 2026-09-18
+updated_at: 2026-09-18T13:04:51+00:00
+last_sync: 2026-09-18T13:04:51Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -33,7 +33,7 @@ of the original file to make copyright and licence management easier.
 This project provides a command line tool for collecting resources, and a zig
 api for in game access to these resources.
 
-See the Zig [API documentation](https://loftafi.github.io/resources/docs/) for
+See the Zig [API documentation](https://loftafi.github.io/resources/) for
 API details.
 
 ## ⚡️ Introduction
