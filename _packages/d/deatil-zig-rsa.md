@@ -8,9 +8,9 @@ repository: https://github.com/deatil/zig-rsa
 keywords:
   - rsa
   - zig-rsa
-date: 2026-09-16
-updated_at: 2026-09-16T10:43:44+00:00
-last_sync: 2026-09-16T10:43:44Z
+date: 2026-09-19
+updated_at: 2026-09-19T10:59:56+00:00
+last_sync: 2026-09-19T10:59:56Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -179,7 +179,6 @@ encryptPkcs1v15(
     random: std.Random,
     public_key: PublicKey,
     msg: []const u8,
-    opts: Crypt.Pkcs1v15.Options,
 ) ![]const u8
 ~~~
 
@@ -188,7 +187,6 @@ pub fn decryptPkcs1v15(
     alloc: Allocator,
     secret_key: SecretKey,
     ciphertext: []const u8,
-    opts: Crypt.Pkcs1v15.Options,
 ) ![]const u8
 ~~~
 

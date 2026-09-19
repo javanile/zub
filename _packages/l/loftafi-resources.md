@@ -6,9 +6,10 @@ author: loftafi
 author_github: loftafi
 repository: https://github.com/loftafi/resources
 keywords:
-date: 2026-09-18
-updated_at: 2026-09-18T13:04:51+00:00
-last_sync: 2026-09-18T13:04:51Z
+  - zig-packages
+date: 2026-09-19
+updated_at: 2026-09-19T09:32:49+00:00
+last_sync: 2026-09-19T09:32:49Z
 package_kind: hybrid
 has_library: true
 has_binary: true
