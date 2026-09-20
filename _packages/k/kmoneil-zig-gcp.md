@@ -13,9 +13,9 @@ keywords:
   - messaging
   - pubsub
   - rest-client
-date: 2026-09-19
-updated_at: 2026-09-19T13:34:48+00:00
-last_sync: 2026-09-19T13:34:48Z
+date: 2026-09-20
+updated_at: 2026-09-20T14:06:03+00:00
+last_sync: 2026-09-20T14:06:03Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -38,10 +38,13 @@ modules it imports.
 | Module | Covers | Stability |
 | --- | --- | --- |
 | `pubsub` | Pub/Sub v1: publish, pull, acknowledge, and topic and subscription management | beta |
+| `auth` | Credentials for the service modules: `findDefault` picks between the metadata server on Google Cloud, the login `gcloud auth application-default login` saves, and a file the environment names. | experimental |
+| `core` | What the service modules share: the HTTP transport, retries, `Diagnostics`, the `TokenProvider` seam, and test fakes. Services re-export what their callers need. | beta |
 
 - Zig **0.16.0** (`minimum_zig_version` enforces it). No dependencies.
-- Tested with 140 unit, property and fuzz tests, and 20 integration tests
-  that pass against both the emulator and production.
+- Tested with 280 unit, property and fuzz tests; 20 Pub/Sub integration
+  tests that pass against both the emulator and production; and 3 auth tests
+  against Google's token endpoint.
 - Until 1.0, a minor release may break any module. `CHANGELOG.md` says how.
 
 ## Install
@@ -54,6 +57,7 @@ zig fetch --save git+https://github.com/kmoneil/zig-gcp#v0.3.0
 // build.zig
 const gcp = b.dependency("gcp", .{ .target = target, .optimize = optimize });
 exe.root_module.addImport("pubsub", gcp.module("pubsub"));
+exe.root_module.addImport("auth", gcp.module("auth")); // for credentials
 ```
 
 ## Pub/Sub
@@ -99,20 +103,59 @@ such as `orders`. Creating one sends nothing. The operations:
 | --- | --- | --- |
 | `listTopics`, `listSubscriptions` | `create`, `get`, `delete`, `publish` | `create`, `get`, `delete`, `pull`, `ack`, `modifyAckDeadline`, `nack` |
 
-See `examples/publish.zig` and `examples/worker.zig` for complete programs.
+See `examples/publish.zig` and `examples/worker.zig` for complete programs,
+and `examples/whoami.zig` for one that finds its own credentials.
 
 ### Production credentials
 
-Production needs a `TokenProvider`. Loading credentials from the metadata
-server or from gcloud's login is planned for an `auth` module in this
-package. Until then, a static token works for about an hour:
+Production needs a `TokenProvider`. `auth.findDefault` picks one the way
+Google's own libraries do, so the same binary runs on a laptop and on Cloud
+Run without a flag:
+
+```zig
+var arena: std.heap.ArenaAllocator = .init(gpa);
+defer arena.deinit();
+const lookup = try auth.Lookup.fromEnv(init.environ_map, arena.allocator());
+var creds = try auth.findDefault(gpa, io, lookup, .{});
+defer creds.deinit();
+std.log.info("credentials from {t}", .{creds.source});
+
+var client = try pubsub.Client.init(gpa, io, .{
+    .project_id = "my-project",
+    .token_provider = creds.provider(),
+});
+```
+
+`creds.provider()` also carries the project to charge for quota, which
+user credentials name: the client sends it as `x-goog-user-project`, and
+`send_quota_project` turns that off. When a call comes back 401, the client
+drops the cached token, fetches another and tries once more.
+
+It looks in three places, in this order:
+
+1. The credentials file `GOOGLE_APPLICATION_CREDENTIALS` names.
+2. The file `gcloud auth application-default login` writes, under
+   `$HOME/.config/gcloud` or `%APPDATA%\gcloud`.
+3. The metadata server, on Cloud Run, GKE, GCE or Cloud Functions, which
+   hands out tokens for the workload's service account with nothing stored
+   on disk.
+
+The first place that has something decides it. A credential that is there
+but unusable is an error, never a reason to try the next place: running as
+somebody else, quietly, would be worse. With nothing anywhere, the error is
+`NoCredentialsFound` and `Diagnostics` lists what was tried.
+
+To choose a source yourself, use `auth.AuthorizedUser.initFromFile` for a
+credentials file, or `auth.MetadataServer` on Google Cloud, whose `probe`
+answers whether there is a metadata server to ask (in half a second on a
+machine that has none) and whose `projectId` says which project it runs in.
+Neither may move while a client uses its provider; the `Credentials` that
+`findDefault` returns may, because it keeps the provider on the heap.
+
+A static token also works, for about an hour:
 
 ```zig
 var token: pubsub.StaticToken = .{ .token = access_token }; // gcloud auth print-access-token
-var client = try pubsub.Client.init(gpa, io, .{
-    .project_id = "my-project",
-    .token_provider = token.provider(),
-});
 ```
 
 Emulator endpoints never receive a token, even when a provider is set, and
@@ -129,9 +172,10 @@ of a call. Handles borrow their client and id, so they must not outlive them.
 
 Every call returns `pubsub.Error`, a closed error set: one error per API
 status (`error.NotFound`, `error.AlreadyExists`, ...), the transport's errors
-(`error.ConnectionRefused`, `error.TlsFailure`, ...), and client-side checks
-(`error.InvalidMessage`, `error.InvalidResourceId`). Errors carry no payload;
-the details of the last failed call go to `Diagnostics`:
+(`error.ConnectionRefused`, `error.TlsFailure`, ...), the token provider's
+(`error.RefreshTokenInvalid`, `error.TokenUnavailable`, ...), and client-side
+checks (`error.InvalidMessage`, `error.InvalidResourceId`). Errors carry no
+payload; the details of the last failed call go to `Diagnostics`:
 
 ```zig
 orders.create(.{}) catch |err| {
@@ -149,9 +193,9 @@ Transient failures are retried with full-jitter exponential backoff
 RESOURCE_EXHAUSTED, INTERNAL, UNAVAILABLE (and HTTP 502), DEADLINE_EXCEEDED,
 connections that were refused, reset or timed out, and failed TLS handshakes
 (std reports a connection dropped mid-handshake as a TLS failure). A retried
-publish can store messages twice; set `retry_publish = false` to opt out, and
-note that such a publish also fails, rather than retries, when the server has
-closed an idle connection. Retried creates and deletes can report
+publish can store messages twice; set `Client.Options.retry_publish = false`
+to opt out, and note that such a publish also fails, rather than retries, when
+the server has closed an idle connection. Retried creates and deletes can report
 `AlreadyExists` or `NotFound` for an attempt that succeeded but whose
 response was lost.
 
@@ -203,13 +247,14 @@ precise than the documentation.
 
 ### Logging
 
-The library logs through `std.log.scoped(.pubsub)`: each request at `debug`
-(method, path, status, attempt, time) and each retry at `warn`. It never logs
-tokens, message data or attribute values. Filter it in your root file:
+The library logs through `std.log.scoped(.gcp_pubsub)`: each request at
+`debug` (method, path, status, attempt, time) and each retry at `warn`. It
+never logs tokens, message data or attribute values. Filter it in your root
+file:
 
 ```zig
 pub const std_options: std.Options = .{
-    .log_scope_levels = &.{.{ .scope = .pubsub, .level = .warn }},
+    .log_scope_levels = &.{.{ .scope = .gcp_pubsub, .level = .warn }},
 };
 ```
 
@@ -217,7 +262,10 @@ pub const std_options: std.Options = .{
 
 Implement `pubsub.transport.Transport` (one `send` function) and pass it as
 `Client.Options.transport` to answer requests from your tests instead of a
-server.
+server. The `core` module has ready-made fakes: `core.testing.FakeTransport`
+answers from a script and records every request, and
+`core.testing.FakeTokenProvider` stands in for credentials. Add
+`gcp.module("core")` to your test build to use them.
 
 ### The emulator is not production
 
@@ -238,7 +286,7 @@ fail later in production.
 ## Zig 0.16 standard library issues handled here
 
 The HTTP transport works around these, each covered by a regression test in
-`src/pubsub/transport.zig`:
+`src/core/transport.zig`:
 
 - A chunk size near 2^64 panics `std.http`'s chunked decoder (integer
   overflow), so the transport decodes chunked bodies itself.
@@ -250,6 +298,10 @@ The HTTP transport works around these, each covered by a regression test in
   failed.
 - The TLS certificate clock is read once per client; the transport reloads it
   hourly and after a TLS failure.
+- On Windows, a refused connection and a peer that hangs up both come back
+  as `error.Unexpected`, because std does not map their NTSTATUS codes. The
+  transport reports a dropped connection, so the call is retried; it cannot
+  tell the two apart.
 - `zig build test --fuzz` does not compile; see `-Dfuzz-runner` below.
 
 ## Development
@@ -257,22 +309,38 @@ The HTTP transport works around these, each covered by a regression test in
 ```
 zig build test                         # unit, property and fuzz-corpus tests
 zig build test --seed 0x1234           # same, with different pseudo-random inputs
+zig build test -Doptimize=ReleaseFast  # same, optimized; also ReleaseSafe
 zig build test -Dfuzz-runner --fuzz    # coverage-guided fuzzing (see below)
 zig build test-integration             # needs a server, see below
+zig build coverage                     # line coverage; needs kcov (see below)
 zig build example-publish -- orders 5
 zig build example-worker -- orders orders-worker
+zig build example-whoami               # which credentials, and the topics they see
 zig build fmt                          # zig fmt --check
 ```
 
 Every fuzz property also runs in `zig build test`: on its seed corpus and on a
-few hundred pseudo-random inputs. When the fuzzer finds a failing input, add
-it to that property's corpus so it stays covered. Zig 0.16.0's own test
-runner does not compile in fuzz mode, and its default x86_64 backend emits
-no coverage instrumentation. `-Dfuzz-runner` fixes both: it swaps in
+few hundred pseudo-random inputs. Zig 0.16.0's own test runner does not
+compile in fuzz mode, and its default x86_64 backend emits no coverage
+instrumentation. `-Dfuzz-runner` fixes both: it swaps in
 `tools/test_runner.zig`, a copy with a one-line fix, and builds the tests
-with LLVM. The fuzzer keeps its
-corpus in `.zig-cache/f`, so only one fuzzing run per checkout at a time;
-`-Dtest-filter=fuzz` skips the unit tests that are not fuzz targets.
+with LLVM. The fuzzer keeps its corpus in `.zig-cache/f`, so only one
+fuzzing run per checkout at a time; `-Dtest-filter=fuzz` skips the unit
+tests that are not fuzz targets. When it finds a failing input, it saves it
+to `.zig-cache/f/crash`: a 4-byte little-endian length, then the input. Add
+the input to that property's corpus, so the fix stays covered.
+
+`zig build coverage` runs the unit tests under
+[kcov](https://github.com/SimonKagstrom/kcov) and writes the report to
+`zig-out/coverage/index.html`. `tools/coverage_summary.py` prints it as
+Markdown, including every line no test reached. kcov counts lines, not
+branches, and sees only code the compiler kept.
+
+CI runs the unit tests on Linux, macOS and Windows, and on Linux also in
+ReleaseSafe and ReleaseFast; the integration tests and examples against the
+emulator; and coverage, whose summary and report are attached to each run. Every night it
+also fuzzes, starting from the corpus that earlier nights built up. A failing
+input is attached to the run as `fuzz-failure`.
 
 Integration tests skip unless a server is configured:
 
@@ -283,6 +351,11 @@ PUBSUB_EMULATOR_HOST=127.0.0.1:8085 zig build test-integration
 # Or a real project. Every test creates zigps-* resources and deletes them.
 PUBSUB_TEST_PROJECT=my-project PUBSUB_TEST_TOKEN=$(gcloud auth print-access-token) \
     zig build test-integration
+
+# auth against Google's token endpoint, with the file gcloud's login wrote,
+# and a read-only Pub/Sub call with the token it gets.
+AUTH_TEST_CREDENTIALS=$HOME/.config/gcloud/application_default_credentials.json \
+    PUBSUB_TEST_PROJECT=my-project zig build test-integration
 ```
 
 The emulator binds to IPv6 localhost unless given `--host-port`.

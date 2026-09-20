@@ -15,9 +15,9 @@ keywords:
   - zig-parser
   - zig-programming-language
   - zig-tree-sitter
-date: 2026-09-07
-updated_at: 2026-09-07T16:38:45+00:00
-last_sync: 2026-09-07T16:38:45Z
+date: 2026-09-14
+updated_at: 2026-09-14T08:22:46+00:00
+last_sync: 2026-09-14T08:22:46Z
 package_kind: hybrid
 has_library: true
 has_binary: true
