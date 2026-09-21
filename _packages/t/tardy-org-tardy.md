@@ -14,10 +14,10 @@ keywords:
   - net
   - runtime
   - tardy
-date: 2026-08-22
+date: 2026-09-21
 category: networking
-updated_at: 2026-08-22T09:48:54+00:00
-last_sync: 2026-08-22T09:48:54Z
+updated_at: 2026-09-21T09:27:19+00:00
+last_sync: 2026-09-21T09:27:19Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -51,7 +51,7 @@ tardy is a thread-local, I/O driven runtime for Zig, providing the core implemen
 
 ## Installing
 
-Main line Compatible Zig Version: `0.17.0-dev.1454+5faa79730`
+Main line Compatible Zig Version: `0.17.0-dev.2248+3f6a02acd`
 
 ```elvish
 zig fetch --save 'git+https://github.com/tardy-org/tardy?ref=main#commit_hash'

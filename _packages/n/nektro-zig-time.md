@@ -8,15 +8,15 @@ repository: https://github.com/nektro/zig-time
 keywords:
   - time
   - wristwatch
-date: 2026-07-30
-updated_at: 2026-07-30T21:46:24+00:00
-last_sync: 2026-07-30T21:46:24Z
-package_kind: library
+date: 2026-09-20
+updated_at: 2026-09-20T15:43:59+00:00
+last_sync: 2026-09-20T15:43:59Z
+package_kind: hybrid
 has_library: true
-has_binary: false
-has_distributable_binary: false
-binary_count: 0
-distributable_binary_count: 0
+has_binary: true
+has_distributable_binary: true
+binary_count: 1
+distributable_binary_count: 1
 multiple_binaries: false
 is_sponsor: false
 sync_priority: normal

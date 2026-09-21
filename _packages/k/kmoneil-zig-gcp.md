@@ -1,6 +1,6 @@
 ---
 title: zig-gcp
-description: "Google Cloud clients for Zig 0.16, over the REST APIs, one module per service. Pub/Sub: publish, pull, ack, and topic and subscription management. Works with the emulator and production."
+description: "Google Cloud clients for Zig 0.16, over the REST APIs, one module per service: Pub/Sub, Secret Manager (secret bytes in memory that is wiped on release), and credentials from ADC, service account keys or workload identity federation. No dependencies."
 license: MIT
 author: kmoneil
 author_github: kmoneil
@@ -10,12 +10,18 @@ keywords:
   - gcp-pubsub
   - google-cloud
   - google-cloud-pubsub
+  - google-cloud-secret-manager
   - messaging
+  - oauth2
   - pubsub
   - rest-client
-date: 2026-09-20
-updated_at: 2026-09-20T14:06:03+00:00
-last_sync: 2026-09-20T14:06:03Z
+  - secret-manager
+  - secrets-management
+  - service-account
+  - workload-identity-federation
+date: 2026-09-21
+updated_at: 2026-09-21T15:25:22+00:00
+last_sync: 2026-09-21T15:25:22Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -38,19 +44,24 @@ modules it imports.
 | Module | Covers | Stability |
 | --- | --- | --- |
 | `pubsub` | Pub/Sub v1: publish, pull, acknowledge, and topic and subscription management | beta |
-| `auth` | Credentials for the service modules: `findDefault` picks between the metadata server on Google Cloud, the login `gcloud auth application-default login` saves, and a file the environment names. | experimental |
+| `secret_manager` | Secret Manager v1: read a secret's bytes, add versions, and manage secrets and their versions, global or regional | experimental |
+| `auth` | Credentials for the service modules: `findDefault` picks between the metadata server on Google Cloud, the login `gcloud auth application-default login` saves (impersonating a service account or not), and a file the environment names. | experimental |
 | `core` | What the service modules share: the HTTP transport, retries, `Diagnostics`, the `TokenProvider` seam, and test fakes. Services re-export what their callers need. | beta |
 
 - Zig **0.16.0** (`minimum_zig_version` enforces it). No dependencies.
-- Tested with 280 unit, property and fuzz tests; 20 Pub/Sub integration
-  tests that pass against both the emulator and production; and 3 auth tests
-  against Google's token endpoint.
+- Tested with 487 unit, property and fuzz tests; 23 Pub/Sub integration
+  tests that pass against both the emulator and production, and 16 more
+  through a proxy that drops, cuts and stalls the connection; 12 Secret
+  Manager tests against a real project, since it has no emulator; 10 auth
+  tests against Google's token, STS and IAM Credentials endpoints; and a
+  run on a Compute Engine VM, where the metadata server is the one that
+  answers.
 - Until 1.0, a minor release may break any module. `CHANGELOG.md` says how.
 
 ## Install
 
 ```
-zig fetch --save git+https://github.com/kmoneil/zig-gcp#v0.3.0
+zig fetch --save git+https://github.com/kmoneil/zig-gcp#v0.11.0
 ```
 
 ```zig
@@ -58,6 +69,7 @@ zig fetch --save git+https://github.com/kmoneil/zig-gcp#v0.3.0
 const gcp = b.dependency("gcp", .{ .target = target, .optimize = optimize });
 exe.root_module.addImport("pubsub", gcp.module("pubsub"));
 exe.root_module.addImport("auth", gcp.module("auth")); // for credentials
+exe.root_module.addImport("secret_manager", gcp.module("secret_manager"));
 ```
 
 ## Pub/Sub
@@ -106,6 +118,49 @@ such as `orders`. Creating one sends nothing. The operations:
 See `examples/publish.zig` and `examples/worker.zig` for complete programs,
 and `examples/whoami.zig` for one that finds its own credentials.
 
+### A worker loop
+
+Consuming a subscription for real means more than `pull` and `ack`: leases
+must be extended while a handler runs, failures released for redelivery,
+work bounded, and shutdown clean. `Subscriber` is that loop:
+
+```zig
+const Printer = struct {
+    fn handler(self: *Printer) pubsub.Subscriber.Handler {
+        return .{ .ptr = self, .vtable = &.{ .handle = handle } };
+    }
+    fn handle(ptr: *anyopaque, io: std.Io, message: pubsub.ReceivedMessage) anyerror!void {
+        std.debug.print("{s}\n", .{message.data}); // return acks; an error releases
+        _ = .{ ptr, io };
+    }
+};
+
+var subscriber = try pubsub.Subscriber.init(gpa, io, .{
+    .subscription_id = "orders-worker",
+    .client = .{ .project_id = "my-project", .token_provider = creds.provider() },
+    .concurrency = 4,
+});
+defer subscriber.deinit();
+try subscriber.run(printer.handler()); // until subscriber.stop(), or a fatal error
+```
+
+`run` blocks and runs everything else on tasks of its own: one puller, one
+janitor that batches acknowledgements, releases and lease extensions, and
+`concurrency` handler tasks. A handler returning acknowledges its message;
+an error releases it for redelivery, so delivery is at least once and a
+handler must tolerate a duplicate. Leases are extended for as long as a
+handler runs, up to `max_extension_s`, after which the handler is presumed
+dead and the server redelivers elsewhere. `max_outstanding` bounds how many
+unresolved messages are held at once, and pulling pauses at the cap.
+
+Transient failures anywhere are retried forever, further and further
+apart; an error retrying cannot fix, such as the subscription being
+deleted, stops the loop and comes back from `run` with the diagnostics
+filled. `stop` is safe to call from a handler or another task: pulling
+stops, running handlers finish and their messages resolve, buffered ones
+are released unhandled, and the last acknowledgements are flushed.
+`stats()` is a consistent snapshot of the counters at any time.
+
 ### Production credentials
 
 Production needs a `TokenProvider`. `auth.findDefault` picks one the way
@@ -130,10 +185,17 @@ var client = try pubsub.Client.init(gpa, io, .{
 user credentials name: the client sends it as `x-goog-user-project`, and
 `send_quota_project` turns that off. When a call comes back 401, the client
 drops the cached token, fetches another and tries once more.
+`creds.projectId(io, arena)` says which project the program runs in, when
+the credentials know: the metadata server does, and a service account key
+file names the project it belongs to; a user login does not. On Google
+Cloud that means a program needs no configuration at all.
 
 It looks in three places, in this order:
 
-1. The credentials file `GOOGLE_APPLICATION_CREDENTIALS` names.
+1. The credentials file `GOOGLE_APPLICATION_CREDENTIALS` names: a user
+   login (`authorized_user`), a service account key (`service_account`),
+   workload identity federation (`external_account`), or a login that acts
+   as a service account (`impersonated_service_account`).
 2. The file `gcloud auth application-default login` writes, under
    `$HOME/.config/gcloud` or `%APPDATA%\gcloud`.
 3. The metadata server, on Cloud Run, GKE, GCE or Cloud Functions, which
@@ -146,11 +208,48 @@ somebody else, quietly, would be worse. With nothing anywhere, the error is
 `NoCredentialsFound` and `Diagnostics` lists what was tried.
 
 To choose a source yourself, use `auth.AuthorizedUser.initFromFile` for a
-credentials file, or `auth.MetadataServer` on Google Cloud, whose `probe`
-answers whether there is a metadata server to ask (in half a second on a
-machine that has none) and whose `projectId` says which project it runs in.
-Neither may move while a client uses its provider; the `Credentials` that
-`findDefault` returns may, because it keeps the provider on the heap.
+user login, `auth.ServiceAccount.initFromFile` for a key file,
+`auth.ExternalAccount.initFromFile` for federation,
+`auth.ImpersonatedServiceAccount.initFromFile` for impersonation, or
+`auth.MetadataServer` on Google Cloud, whose `probe` answers whether there
+is a metadata server to ask (in half a second on a machine that has none)
+and whose `projectId` says which project it runs in. None of them may move
+while a client uses its provider; the `Credentials` that `findDefault`
+returns may, because it keeps the provider on the heap.
+
+A `ServiceAccount` signs a short-lived JWT with the key file's RSA key
+(RS256, via `std.crypto`, checked against the key's own public half before
+anything is sent) and trades it at the token endpoint. Its tokens are
+minted for particular scopes, so the first `getToken` fixes them; use a
+second provider for a second scope set.
+
+An `ExternalAccount` is workload identity federation: no stored Google key
+at all. Each fetch reads the third-party subject token from the file's
+credential source (a file, as GitHub Actions and Kubernetes write, or a
+URL, as Azure's metadata service answers), trades it at Google's STS, and,
+when the file names a service account to impersonate, trades once more at
+the IAM Credentials API. Subject tokens rotate, so each fetch reads anew.
+AWS credential sources (which need request signing) and executable sources
+(which run a subprocess) are refused by name. Scopes fix on first use, as
+for a service account.
+
+An `ImpersonatedServiceAccount` is a login that acts as a service account,
+which Google recommends over key files for running locally as one: nothing
+of the service account is stored, only the right to act as it. It is the
+file this writes, which `findDefault` then picks up like any other:
+
+```
+gcloud auth application-default login --impersonate-service-account=SA_EMAIL
+```
+
+Each fetch takes a token from the file's source credentials (a user login,
+or a service account key) and trades it at the IAM Credentials API for one
+that is the service account's. The source keeps its own cached token, so
+most fetches cost one request. Only the account's email is read from the
+file's URL: the request always goes to Google's endpoint, as Google's own
+libraries do, so a crafted file cannot send your token anywhere else. The
+login needs `roles/iam.serviceAccountTokenCreator` on the service account,
+and a refusal says so. Scopes fix on first use, as for a service account.
 
 A static token also works, for about an hour:
 
@@ -199,10 +298,20 @@ the server has closed an idle connection. Retried creates and deletes can report
 `AlreadyExists` or `NotFound` for an attempt that succeeded but whose
 response was lost.
 
-`std.http.Client` has no per-request timeout in 0.16, and the library adds
-none: bounding a call is up to the caller's `std.Io`. A canceled call returns
-`error.Canceled` promptly and the client stays usable. To race a call against
-a timer (this exact code runs in the integration tests):
+`std.http.Client` has no per-request timeout in 0.16, so the library adds
+one: every request is raced against a timer, and one that outlives
+`Client.Options.request_timeout_ms` (3 minutes by default) is
+`error.TimedOut` and is retried like any other transient failure. The
+default is generous because an empty pull is held open by the server; lower
+it for calls that should fail fast, or set 0 to remove the limit. A request
+that times out takes its connection with it, and the client stays usable.
+Where the runtime offers no second thread, there is no timer to race, and
+the request runs unbounded as before.
+
+That bounds one request, not a whole call: five attempts with backoff can
+still take longer. A canceled call returns `error.Canceled` promptly, so to
+bound everything, race the call itself against a timer (this exact code runs
+in the integration tests):
 
 ```zig
 const Race = union(enum) {
@@ -283,6 +392,134 @@ fail later in production.
 | Empty pull hold | about 90 s | about 20 s |
 | A literal `%25` in an id | decoded twice | decoded once |
 
+## Secret Manager
+
+A client for the Secret Manager v1 REST API. The call most applications
+want is `access`: it fetches the bytes of a secret version, verifies the
+CRC-32C stored beside them, and hands them over in memory that is wiped
+when it is released.
+
+```zig
+const std = @import("std");
+const auth = @import("auth");
+const secret_manager = @import("secret_manager");
+
+pub fn main(init: std.process.Init) !void {
+    const arena = init.arena.allocator();
+    const lookup = try auth.Lookup.fromEnv(init.environ_map, arena);
+    var creds = try auth.findDefault(init.gpa, init.io, lookup, .{});
+    defer creds.deinit();
+
+    // There is no emulator and no unauthenticated mode: credentials are
+    // a required option, not an optional one.
+    var secrets = try secret_manager.Client.init(init.gpa, init.io, .{
+        .project_id = "my-project",
+        .token_provider = creds.provider(),
+    });
+    defer secrets.deinit();
+
+    var password = try secrets.secret("db-password").access(.latest);
+    defer password.deinit(); // wipes the bytes
+    std.log.info("using {s}", .{password.version_name});
+
+    try db.connect(.{ .user = "app", .password = password.bytes() });
+}
+```
+
+Read secrets at startup, or on a timer, rather than on every request:
+access calls are quota-limited and billed per call. The library never keeps
+a secret after the call returns, so caching is the application's to decide.
+
+`examples/secret.zig` is the whole of the above as a program:
+`zig build example-secret -- db-password latest`.
+
+### The bytes
+
+`access` returns a `SecretValue`, not an `Owned(T)`, because the result
+needs more care than other results do.
+
+- Everything the call touched lives in one arena over
+  `core.WipingAllocator`: the response body, which carries the secret in
+  base64, the JSON parser's scratch space, the decoded bytes, and the
+  bearer token the request was made with. `deinit` zeroes all of it.
+- `value.bytes()` reads the secret. There is no `data` field on purpose:
+  `{}` and `{any}` print a struct's fields whatever its `format` method
+  says, so the bytes are held as a pointer and a length. Printing a
+  `SecretValue` any way at all gives `[REDACTED]`.
+- Nothing about a secret is logged: not the bytes, not their length, not
+  their checksum. Sizes and timings are logged for other things; here the
+  length of a password is information too.
+- The bytes are never altered. A secret written with `echo` ends in a
+  newline, and it is still there; trim it with `std.mem.trimRight` if you
+  want it gone.
+- Pass a `SecretValue` by pointer. A copy that is also `deinit`ed frees the
+  same memory twice.
+
+Wiping is not a guarantee against swap, a core dump or a debugger, and the
+HTTP and TLS layers have buffers of their own that this library cannot
+reach. It narrows the window in which a later bug can find the secret.
+
+### What it covers
+
+| Call | What it does |
+| --- | --- |
+| `client.secret(id).access(ref)` | The bytes of a version: `.latest`, `.{ .number = 3 }` or `.{ .alias = "prod" }` |
+| `.addVersion(bytes)` | Stores a new version, with a CRC-32C the server checks |
+| `.create(config)`, `.get()`, `.delete()` | The secret itself: replication and labels, then metadata, then gone |
+| `client.listSecrets(options)` | One page of secrets, with `filter`, `page_size` and `page_token` |
+| `.listVersions(options)` | One page of versions, newest first |
+| `.version(ref).get()` | A version's state, times and etag |
+| `.version(.{ .number = n }).enable()`, `.disable()`, `.destroy()` | Change what a version serves |
+
+`enable`, `disable` and `destroy` take a version number and refuse
+`.latest` and aliases with `error.ExplicitVersionRequired`: "whatever is
+latest right now" is the wrong target for a change that lasts. Production
+refuses `latest` for those three as well. Enabling and disabling are
+idempotent; destroying is not, and a second destroy answers
+`error.FailedPrecondition`, which means the first one worked.
+
+Not in this version: `patch` (so no labels, aliases, expiry or rotation
+after creation), IAM policy calls, notification topics, customer-managed
+encryption keys, and etag preconditions.
+
+### Checksums
+
+Secret Manager stores a CRC-32C with every version. `addVersion` always
+computes one over the raw bytes and sends it, so a payload that arrives
+changed is refused with `INVALID_ARGUMENT` rather than stored. On the way
+back, `Options.verify_checksum` decides:
+
+| Mode | The server sent a checksum | It sent none |
+| --- | --- | --- |
+| `.required` | Verified; a mismatch is an error | `error.MissingChecksum` |
+| `.if_present` (default) | Verified; a mismatch is an error | The bytes, with `checksum_verified = false` |
+| `.off` | Ignored | The bytes, with `checksum_verified = false` |
+
+A mismatch means the bytes changed between Google's storage and this
+process. Since access is idempotent, the client wipes them and asks again
+under the retry policy; if the last attempt still mismatches, it returns
+`error.ChecksumMismatch` and the bytes are never handed over.
+
+### Regional secrets
+
+`Options.location` decides both the host and the resource names, so a
+client is global or regional for its whole life:
+
+```zig
+var eu = try secret_manager.Client.init(gpa, io, .{
+    .project_id = "my-project",
+    .location = "europe-west3", // secretmanager.europe-west3.rep.googleapis.com
+    .token_provider = creds.provider(),
+});
+```
+
+The two are separate namespaces: a global client asking for a regional
+secret gets `NotFound`, and the reverse. An application that needs both
+makes two clients. A regional secret sends no `replication`, because its
+location decides where the bytes live; a global one must name it, and it
+cannot be changed afterwards. `location` is checked against a strict
+pattern before it becomes part of a host name.
+
 ## Zig 0.16 standard library issues handled here
 
 The HTTP transport works around these, each covered by a regression test in
@@ -298,10 +535,12 @@ The HTTP transport works around these, each covered by a regression test in
   failed.
 - The TLS certificate clock is read once per client; the transport reloads it
   hourly and after a TLS failure.
-- On Windows, a refused connection and a peer that hangs up both come back
-  as `error.Unexpected`, because std does not map their NTSTATUS codes. The
-  transport reports a dropped connection, so the call is retried; it cannot
-  tell the two apart.
+- On Windows, std maps neither `0xC0000236` (connection refused) nor
+  `0xC000013B` (the peer hung up), so both arrive as `error.Unexpected`.
+  The transport reads that as a dropped connection and retries, which is
+  right for those two and is also what any other unmapped Windows error
+  gets: a retry it may not deserve. On other platforms `error.Unexpected`
+  stays a permanent `NetworkFailure`.
 - `zig build test --fuzz` does not compile; see `-Dfuzz-runner` below.
 
 ## Development
@@ -339,8 +578,10 @@ branches, and sees only code the compiler kept.
 CI runs the unit tests on Linux, macOS and Windows, and on Linux also in
 ReleaseSafe and ReleaseFast; the integration tests and examples against the
 emulator; and coverage, whose summary and report are attached to each run. Every night it
-also fuzzes, starting from the corpus that earlier nights built up. A failing
-input is attached to the run as `fuzz-failure`.
+also fuzzes, one job per module, each starting from the corpus that earlier
+nights built up for it, with auth's RSA-signing property in a job of its
+own. A failing input is attached to the run as `fuzz-failure-<job>`, such
+as `fuzz-failure-pubsub`.
 
 Integration tests skip unless a server is configured:
 
@@ -356,6 +597,13 @@ PUBSUB_TEST_PROJECT=my-project PUBSUB_TEST_TOKEN=$(gcloud auth print-access-toke
 # and a read-only Pub/Sub call with the token it gets.
 AUTH_TEST_CREDENTIALS=$HOME/.config/gcloud/application_default_credentials.json \
     PUBSUB_TEST_PROJECT=my-project zig build test-integration
+
+# Secret Manager has no emulator, so its tests need a real project. They
+# create zigps-* secrets labelled zig-gcp-test and delete them, and sweep
+# up anything a crashed run left behind. GCP_TEST_LOCATION adds the
+# regional tests.
+GCP_TEST_PROJECT=my-project GCP_TEST_TOKEN=$(gcloud auth application-default print-access-token) \
+    zig build test-integration-gcp
 ```
 
 The emulator binds to IPv6 localhost unless given `--host-port`.

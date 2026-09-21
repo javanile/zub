@@ -22,10 +22,10 @@ keywords:
   - sqlite
   - web-framework
   - websocket
-date: 2026-09-19
+date: 2026-09-21
 category: tooling
-updated_at: 2026-09-19T13:36:28+00:00
-last_sync: 2026-09-19T13:36:28Z
+updated_at: 2026-09-21T13:35:58+00:00
+last_sync: 2026-09-21T13:35:58Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -49,7 +49,7 @@ permalink: /packages/nevindra/nilo/
   <a href="https://ziglang.org/"><img alt="Zig 0.16" src="https://img.shields.io/badge/zig-0.16-f7a41d?style=flat-square&logo=zig&logoColor=white"></a>
   <a href="./CHANGELOG.md"><img alt="version 0.5.0" src="https://img.shields.io/badge/version-0.5.0-3b82f6?style=flat-square"></a>
   <a href="./docs/reference/"><img alt="11 modules" src="https://img.shields.io/badge/modules-11-8957e5?style=flat-square"></a>
-  <a href="./refusals/README.md"><img alt="369 refusals" src="https://img.shields.io/badge/mistakes%20refused%20while%20compiling-369-e05d44?style=flat-square"></a>
+  <a href="./refusals/README.md"><img alt="372 refusals" src="https://img.shields.io/badge/mistakes%20refused%20while%20compiling-372-e05d44?style=flat-square"></a>
   <a href="./docs/adr/"><img alt="264 ADRs" src="https://img.shields.io/badge/decisions%20on%20file-264-6b7280?style=flat-square"></a>
   <a href="./LICENSE"><img alt="MIT" src="https://img.shields.io/badge/license-MIT-16a34a?style=flat-square"></a>
 </p>
@@ -78,7 +78,7 @@ rest.
 
 - **One rule.** A pointer is a service, a value is request data. There is no second rule.
 - **One allocation** per request. A test fails if it ever becomes two.
-- **369 refusals.** Mistakes that stop the build with a sentence nilo wrote, held by eight build steps.
+- **372 refusals.** Mistakes that stop the build with a sentence nilo wrote, held by eight build steps.
 - **Zero glue.** Routing, the 400, the 404, the OpenAPI document and the SQL all read the same struct.
 
 ## ⚡ Quickstart
@@ -413,8 +413,8 @@ allocate-per-request version shipped in the meantime.
 ## 🙂 What happens when you get it wrong
 
 An error message is a feature right up until somebody refactors it into mush.
-So this repository has **369 programs that are supposed to fail to compile**,
-and eight build steps checking the wording of every failure: `refusals` (163,
+So this repository has **372 programs that are supposed to fail to compile**,
+and eight build steps checking the wording of every failure: `refusals` (166,
 the framework), `refusals-sql` (145), `refusals-job` (17), `refusals-fetch`
 (15), `refusals-s3` (10), `refusals-config` (9), `refusals-cache` (6) and
 `refusals-pw` (4). Every one says what you did *and* what to do about it:

@@ -6,9 +6,9 @@ author: allyourcodebase
 author_github: allyourcodebase
 repository: https://github.com/allyourcodebase/grpc
 keywords:
-date: 2026-09-03
-updated_at: 2026-09-03T16:40:33+00:00
-last_sync: 2026-09-03T16:40:33Z
+date: 2026-09-21
+updated_at: 2026-09-21T09:33:31+00:00
+last_sync: 2026-09-21T09:33:31Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -33,6 +33,7 @@ permalink: /packages/allyourcodebase/grpc/
 
 | Refname    | libGRPC version        | Core version | Zig `0.17-dev` | Zig `0.16.x` | Zig `0.15.x` |
 |:-----------|:-----------------------|-------------:|:--------------:|:------------:|:------------:|
+| `1.84.0`   | `v1.84.0` "gimbal"     |     `56.0.0` | ✅             | ✅           | ✅           |
 | `1.83.1`   | `v1.83.1` "garden"     |     `56.0.0` | ✅             | ✅           | ✅           |
 | `1.82.2`   | `v1.82.2` "glacier"    |     `55.0.0` | ✅             | ✅           | ✅           |
 | `1.81.1`   | `v1.81.1` "graphic"    |     `54.0.0` | ✅             | ✅           | ✅           |
@@ -49,7 +50,7 @@ zig fetch --save git+https://github.com/allyourcodebase/grpc#master
 
 Then, in your `build.zig`:
 ```zig
-const grpc = b.dependency("grpc", {
+const grpc = b.dependency("grpc", .{
 	.target = target,
 	.optimize = optimize,
 	.link_mode = .dynamic,

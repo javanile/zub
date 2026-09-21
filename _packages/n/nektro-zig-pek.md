@@ -6,9 +6,9 @@ author: nektro
 author_github: nektro
 repository: https://github.com/nektro/zig-pek
 keywords:
-date: 2026-09-09
-updated_at: 2026-09-09T09:40:53+00:00
-last_sync: 2026-09-09T09:40:53Z
+date: 2026-09-13
+updated_at: 2026-09-13T03:56:09+00:00
+last_sync: 2026-09-13T03:56:09Z
 package_kind: library
 has_library: true
 has_binary: false
