@@ -17,10 +17,10 @@ keywords:
   - kqueue
   - networking
   - poll
-date: 2026-09-15
+date: 2026-09-22
 category: networking
-updated_at: 2026-09-15T12:51:14+00:00
-last_sync: 2026-09-15T12:51:14Z
+updated_at: 2026-09-22T13:00:31+00:00
+last_sync: 2026-09-22T13:00:31Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -82,7 +82,7 @@ A runtime can run single-threaded, or multi-threaded in one of two modes. With w
 1) Add zio as a dependency in your `build.zig.zon`:
 
 ```bash
-zig fetch --save "git+https://github.com/lalinsky/zio#v0.17.0"
+zig fetch --save "git+https://github.com/lalinsky/zio#v0.18.0"
 ```
 
 2) In your `build.zig`, add the `zio` module as a dependency to your program:

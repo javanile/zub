@@ -11,10 +11,10 @@ keywords:
   - command-line
   - developer-tools
   - terminal
-date: 2026-08-24
+date: 2026-09-10
 category: tooling
-updated_at: 2026-08-24T22:50:58+00:00
-last_sync: 2026-08-24T22:50:58Z
+updated_at: 2026-09-10T03:50:14+00:00
+last_sync: 2026-09-10T03:50:14Z
 package_kind: library
 has_library: true
 has_binary: false

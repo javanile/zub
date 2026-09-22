@@ -10,9 +10,9 @@ keywords:
   - fsl-v1
   - virtual-machine
   - wayob
-date: 2026-09-04
-updated_at: 2026-09-04T11:56:13+00:00
-last_sync: 2026-09-04T11:56:13Z
+date: 2026-09-11
+updated_at: 2026-09-11T09:54:44+00:00
+last_sync: 2026-09-11T09:54:44Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -160,4 +160,4 @@ More information on the entities inside this library can be obtained by cloning 
 ## NOTE
 
 - *Wayob* by *Alyx Shang*.
-- Licensed under the [FSL v1](https://alyxshang.boo/fair-software-license).
+- Licensed under the [FSL v1](https://alyxshang.boo/content/fair-software-license).

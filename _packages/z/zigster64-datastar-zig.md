@@ -9,8 +9,8 @@ keywords:
   - data-star
   - datastar
 date: 2026-09-12
-updated_at: 2026-09-12T13:13:47+00:00
-last_sync: 2026-09-12T13:13:47Z
+updated_at: 2026-09-12T16:42:59+00:00
+last_sync: 2026-09-12T16:42:59Z
 package_kind: hybrid
 has_library: true
 has_binary: true

@@ -19,9 +19,9 @@ keywords:
   - secrets-management
   - service-account
   - workload-identity-federation
-date: 2026-09-21
-updated_at: 2026-09-21T15:25:22+00:00
-last_sync: 2026-09-21T15:25:22Z
+date: 2026-09-22
+updated_at: 2026-09-22T14:52:24+00:00
+last_sync: 2026-09-22T14:52:24Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -43,25 +43,28 @@ modules it imports.
 
 | Module | Covers | Stability |
 | --- | --- | --- |
-| `pubsub` | Pub/Sub v1: publish, pull, acknowledge, and topic and subscription management | beta |
+| `pubsub` | Pub/Sub v1: publish, one call at a time or batched from many tasks, pull, a worker loop, acknowledge, and topic and subscription management | beta |
 | `secret_manager` | Secret Manager v1: read a secret's bytes, add versions, and manage secrets and their versions, global or regional | experimental |
+| `storage` | Cloud Storage JSON API: buckets, object metadata and listings, uploads from memory or any reader and downloads into any writer, streamed in constant memory, resumed after failures and checksummed both ways, preconditions, and server-side copies | experimental |
 | `auth` | Credentials for the service modules: `findDefault` picks between the metadata server on Google Cloud, the login `gcloud auth application-default login` saves (impersonating a service account or not), and a file the environment names. | experimental |
 | `core` | What the service modules share: the HTTP transport, retries, `Diagnostics`, the `TokenProvider` seam, and test fakes. Services re-export what their callers need. | beta |
 
 - Zig **0.16.0** (`minimum_zig_version` enforces it). No dependencies.
-- Tested with 487 unit, property and fuzz tests; 23 Pub/Sub integration
-  tests that pass against both the emulator and production, and 16 more
-  through a proxy that drops, cuts and stalls the connection; 12 Secret
-  Manager tests against a real project, since it has no emulator; 10 auth
-  tests against Google's token, STS and IAM Credentials endpoints; and a
-  run on a Compute Engine VM, where the metadata server is the one that
-  answers.
+- Tested with 692 unit, property and fuzz tests; 28 Pub/Sub integration
+  tests that pass against both the emulator and production, and 20 more
+  through a proxy that drops, cuts and stalls the connection; 16 Cloud
+  Storage tests against fake-gcs-server and 9 against a real bucket,
+  where uploads and downloads cut off mid-body resume against Google
+  itself; 12 Secret Manager tests against a real project, since it has
+  no emulator; 10 auth tests against Google's token, STS and IAM
+  Credentials endpoints; and a run on a Compute Engine VM, where the
+  metadata server is the one that answers.
 - Until 1.0, a minor release may break any module. `CHANGELOG.md` says how.
 
 ## Install
 
 ```
-zig fetch --save git+https://github.com/kmoneil/zig-gcp#v0.11.0
+zig fetch --save git+https://github.com/kmoneil/zig-gcp#v0.14.1
 ```
 
 ```zig
@@ -70,6 +73,7 @@ const gcp = b.dependency("gcp", .{ .target = target, .optimize = optimize });
 exe.root_module.addImport("pubsub", gcp.module("pubsub"));
 exe.root_module.addImport("auth", gcp.module("auth")); // for credentials
 exe.root_module.addImport("secret_manager", gcp.module("secret_manager"));
+exe.root_module.addImport("storage", gcp.module("storage"));
 ```
 
 ## Pub/Sub
@@ -115,8 +119,9 @@ such as `orders`. Creating one sends nothing. The operations:
 | --- | --- | --- |
 | `listTopics`, `listSubscriptions` | `create`, `get`, `delete`, `publish` | `create`, `get`, `delete`, `pull`, `ack`, `modifyAckDeadline`, `nack` |
 
-See `examples/publish.zig` and `examples/worker.zig` for complete programs,
-and `examples/whoami.zig` for one that finds its own credentials.
+See `examples/publish.zig`, `examples/publisher.zig` and `examples/worker.zig`
+for complete programs, and `examples/whoami.zig` for one that finds its own
+credentials.
 
 ### A worker loop
 
@@ -160,6 +165,71 @@ filled. `stop` is safe to call from a handler or another task: pulling
 stops, running handlers finish and their messages resolve, buffered ones
 are released unhandled, and the last acknowledgements are flushed.
 `stats()` is a consistent snapshot of the counters at any time.
+
+### Publishing at volume
+
+`Topic.publish` sends one request per call, and a client serves one task at
+a time. An application that publishes a message at a time from many tasks
+wants `Publisher`: any task hands it messages, it batches them into
+requests, and it sends those on tasks of its own.
+
+```zig
+var publisher = try pubsub.Publisher.init(gpa, io, .{
+    .topic_id = "orders",
+    .client = .{ .project_id = "my-project", .token_provider = creds.provider() },
+});
+defer publisher.deinit();
+var running = try io.concurrent(pubsub.Publisher.run, .{&publisher});
+defer {
+    publisher.stop(); // sends what is left; run returns when all of it has resolved
+    running.await(io) catch {};
+}
+
+// From any task:
+const receipt = try publisher.publish(.{ .data = "hello" }, .{});
+defer receipt.release();
+const id = try receipt.wait(); // the server's message id, or the error
+```
+
+A request with a hundred small messages takes about as long as one with a
+single message (27 ms against 26, measured against production), and Google
+bills every request as at least 1,000 bytes. From a laptop, the example
+publishes 10,000 messages from 8 tasks in 102 requests and about a second.
+A batch goes out when one of `concurrency` connections (4) is free and the
+batch is full, at `max_batch_messages` (100) or `max_batch_bytes` of request
+body as sent (1,000,000), or its first message has waited
+`max_batch_delay_ms` (10); until a connection takes it, it keeps filling.
+Release every receipt, whether or not anyone waits on it. A failure no one
+waits for still counts in `stats()` and is logged.
+
+What a publisher holds is capped at 1,000 messages and 10,000,000 bytes by
+default (`max_outstanding`, `max_outstanding_bytes`), counting everything
+accepted and not yet resolved. At a cap `publish` waits for room, or with
+`when_full = .fail` returns `error.PublisherFull` at once, for a server that
+would rather shed load. Each cap must hold a full batch, so raising
+`max_batch_bytes` toward the 10,485,760-byte limit means raising
+`max_outstanding_bytes` with it.
+
+Transient failures are retried, with the statuses Google's own clients
+retry for publishing, until `publish_timeout_ms` (60 s) after the message
+was published. Each attempt is also bounded by the client's
+`request_timeout_ms`, whose 3-minute default is sized for held pulls; a
+publisher is better served by about 30 seconds. As with `Topic.publish`, a
+retry after a lost response can store a message twice, with a new message
+id. `flush` sends everything at once and waits for what was published
+before it. `stop` sends what is left; canceling `run` gives up on it, and
+those receipts report `error.PublisherStopped`.
+
+Ordering keys need `enable_message_ordering`. Messages with the same key
+reach an ordered subscription in publish order: no request mixes keys, and
+a key has one request in flight at a time. When one of a key's batches
+fails for good, the key pauses: the messages queued behind it fail with
+`error.OrderingKeyPaused` without being sent, and `publish` refuses the key
+until `resumePublish(key)`, so a message is never stored ahead of one that
+failed. Google requires every message of a key to be published in one
+region. A publisher outside Google Cloud, or spread across regions, should
+use a locational endpoint, such as
+`.endpoint = .{ .url = "https://us-east1-pubsub.googleapis.com" }`.
 
 ### Production credentials
 
@@ -291,8 +361,9 @@ Transient failures are retried with full-jitter exponential backoff
 (`RetryPolicy`: 5 attempts, 100 ms doubling to at most 10 s). Retried:
 RESOURCE_EXHAUSTED, INTERNAL, UNAVAILABLE (and HTTP 502), DEADLINE_EXCEEDED,
 connections that were refused, reset or timed out, and failed TLS handshakes
-(std reports a connection dropped mid-handshake as a TLS failure). A retried
-publish can store messages twice; set `Client.Options.retry_publish = false`
+(std reports a connection dropped mid-handshake as a TLS failure). A publish
+is also retried on ABORTED, CANCELLED, and UNKNOWN answered with a 5xx, as
+Google's own clients retry it. A retried publish can store messages twice; set `Client.Options.retry_publish = false`
 to opt out, and note that such a publish also fails, rather than retries, when
 the server has closed an idle connection. Retried creates and deletes can report
 `AlreadyExists` or `NotFound` for an attempt that succeeded but whose
@@ -520,6 +591,161 @@ location decides where the bytes live; a global one must name it, and it
 cannot be changed afterwards. `location` is checked against a strict
 pattern before it becomes part of a host name.
 
+## Cloud Storage
+
+A client for the Cloud Storage JSON API. Objects of any size stream both
+ways in constant memory, pick up where they stopped after a dropped
+connection, and are checked against the CRC-32C Cloud Storage keeps for
+every object.
+
+```zig
+const std = @import("std");
+const auth = @import("auth");
+const storage = @import("storage");
+
+pub fn main(init: std.process.Init) !void {
+    const arena = init.arena.allocator();
+    const lookup = try auth.Lookup.fromEnv(init.environ_map, arena);
+    var creds = try auth.findDefault(init.gpa, init.io, lookup, .{});
+    defer creds.deinit();
+
+    var gcs = try storage.Client.init(init.gpa, init.io, .{
+        .token_provider = creds.provider(),
+    });
+    defer gcs.deinit();
+    const report = gcs.bucket("my-bucket").object("reports/2026/q3.txt");
+
+    // Bytes in memory go up in one request whose metadata carries their
+    // CRC-32C, so a body changed on the way is refused, never stored.
+    var info = try report.upload("hello world\n", .{
+        .content_type = "text/plain",
+        .preconditions = .does_not_exist, // create-only, and safe to retry
+    });
+    defer info.deinit();
+
+    // And come back verified, up to a cap.
+    var copy = try report.downloadAlloc(1024 * 1024, .{});
+    defer copy.deinit();
+    std.log.info("generation {d}: {s}", .{ copy.value.result.generation, copy.value.data });
+}
+```
+
+Against the `fake-gcs-server` emulator, pass
+`.endpoint = storage.Endpoint.fromEnv(init.environ_map)`, which honors
+`STORAGE_EMULATOR_HOST`, and no credentials: the emulator speaks plain
+HTTP and never receives a token.
+
+### Files of any size
+
+`uploadFrom` reads from any `std.Io.Reader`, and `download` writes into any
+`std.Io.Writer`:
+
+```zig
+const file = try std.Io.Dir.cwd().openFile(io, "backup.tar", .{});
+defer file.close(io);
+var buffer: [64 * 1024]u8 = undefined;
+var reader = file.reader(io, &buffer);
+const size = (try file.stat(io)).size;
+var uploaded = try bucket.object("backups/backup.tar").uploadFrom(&reader.interface, .{ .size = size });
+defer uploaded.deinit();
+```
+
+- An upload goes through the resumable protocol in `chunk_size` pieces,
+  8 MiB by default and always a multiple of 256 KiB. One chunk stays in
+  memory until the server confirms it, so a resume never needs the reader
+  to go backwards; after a failure the client asks the server how much it
+  kept and carries on from there. `upload` does the same above
+  `single_request_limit` (8 MiB), slicing chunks from the caller's memory
+  instead of copying them. When the session itself is lost, `upload`
+  starts over from its bytes; `uploadFrom` cannot, since the reader has
+  moved on, so it returns `error.UploadSessionLost` for the caller to
+  reopen the source and try again.
+- A download writes into the caller's writer as the bytes arrive, and
+  never flushes it: the buffer is the caller's. A connection that drops
+  mid-body resumes at the byte it stopped at, pinned to the generation the
+  first response named, so an overwrite in between is `error.NotFound`
+  rather than a file spliced from two objects. `range` reads part of an
+  object.
+- `examples/gcs_cp.zig` copies a file up or down, as
+  `zig build example-gcs_cp -- backup.tar gs://my-bucket/backups/backup.tar`
+  and back. Copying a 1 GiB file each way with it, the process peaked at
+  15 MiB resident going up and 5.5 MiB coming down.
+
+### Checksums
+
+Every object has a CRC-32C, and it is checked in both directions:
+
+| Call | Checked by | On a mismatch |
+| --- | --- | --- |
+| `upload` | The server, against the checksum the request carries | `error.InvalidArgument` (HTTP 400); nothing is stored |
+| `uploadFrom` with `options.crc32c` | The server, once the last chunk is in | The same |
+| `uploadFrom` without it | The client, which hashes the stream and compares it with the finished object | `error.ChecksumMismatch`; the object is deleted again, pinned to its generation |
+| `download`, `downloadAlloc` | The client, which hashes the bytes as they pass | `error.ChecksumMismatch`; the writer holds bytes to discard |
+
+`checksum_verified = false` means there was nothing to check against: a
+`range` read, whose bytes are only part of what the checksum covers, or an
+object stored gzip-compressed, which Cloud Storage decompresses for a
+client that did not ask for gzip, so the bytes that arrive are not the
+ones the checksum covers. A resumed download is still verified: Cloud
+Storage names no checksum on a partial range, so the client holds it to
+the one its first response named. `Options.verify_checksums = false` turns
+all of this off.
+
+### Preconditions and retries
+
+`Preconditions` compare against an object's generation, which changes with
+every overwrite, or its metageneration, which changes with every metadata
+update, on gets, downloads, deletes, uploads and copies.
+`.does_not_exist` makes an upload create-only.
+
+Retries follow what is safe to repeat. Reads always retry, and resumable
+chunks always resume from what the server confirmed. A write is retried
+only when repeating it cannot do harm: an upload or copy carrying
+`if_generation_match`, or a delete naming a `generation`, whose repeat
+fails cleanly if the first attempt landed, instead of overwriting or
+deleting whatever is there by then. `Options.retry_unconditional_writes`
+opts every write in. A 412 on a write that may have been retried says so
+in `Diagnostics`: the first attempt may have succeeded, so `get` the object
+and compare checksums. An `if_generation_not_match` or
+`if_metageneration_not_match` met by the current object is
+`error.NotModified`, an answer rather than a failure.
+
+### What it covers
+
+| Call | What it does |
+| --- | --- |
+| `client.bucket(name).create(config)`, `.get()`, `.delete()` | A bucket, in the project `Options.project_id` names |
+| `client.listBuckets(page)` | One page of the project's buckets |
+| `bucket.listObjects(options)` | One page of objects, with `prefix`, a `delimiter` for folders, and paging |
+| `bucket.object(name).get(options)`, `.exists()`, `.delete(options)` | An object's metadata, whether it exists, and deleting it or one generation of it |
+| `.upload(data, options)`, `.uploadFrom(reader, options)` | Bytes in memory, or any reader |
+| `.download(writer, options)`, `.downloadAlloc(max_bytes, options)` | Into any writer, or into memory up to a cap |
+| `.copyTo(dest, options)` | A server-side copy, across buckets too |
+
+The default OAuth scope is `devstorage.read_write`; `Options.scope` picks
+`.read_only` or `.cloud_platform` instead. Not in this version: signed
+URLs, metadata updates after upload (`patch`), compose, resumable sessions
+that outlive the process, parallel downloads, requester pays,
+customer-supplied encryption keys, listing old versions or soft-deleted
+objects, and gRPC.
+
+### The emulator is not production
+
+The integration suite runs against `fake-gcs-server`, and a second suite
+against a real bucket covers what the emulator cannot be trusted on. The
+differences it found:
+
+- The emulator enforces preconditions on uploads, but not on deletes, and
+  never answers 304.
+- It takes a resumable upload's status query for the final request, and
+  finishes a truncated object. The client refuses that answer with
+  `error.InvalidResponse` and deletes the object, so an interrupted upload
+  can only be tested against Google.
+- It checks a declared CRC-32C on multipart uploads, not on resumable
+  ones.
+- It names the object's checksum on every range read; Cloud Storage names
+  it only for a range that spans the whole object.
+
 ## Zig 0.16 standard library issues handled here
 
 The HTTP transport works around these, each covered by a regression test in
@@ -535,6 +761,10 @@ The HTTP transport works around these, each covered by a regression test in
   failed.
 - The TLS certificate clock is read once per client; the transport reloads it
   hourly and after a TLS failure.
+- Streaming a body larger than the connection's read buffer into a writer
+  with no buffer of its own trips an assertion in std's readers, which
+  need somewhere writable; the transport passes bodies through a small
+  buffer of its own.
 - On Windows, std maps neither `0xC0000236` (connection refused) nor
   `0xC000013B` (the peer hung up), so both arrive as `error.Unexpected`.
   The transport reads that as a dropped connection and retries, which is
@@ -579,9 +809,11 @@ CI runs the unit tests on Linux, macOS and Windows, and on Linux also in
 ReleaseSafe and ReleaseFast; the integration tests and examples against the
 emulator; and coverage, whose summary and report are attached to each run. Every night it
 also fuzzes, one job per module, each starting from the corpus that earlier
-nights built up for it, with auth's RSA-signing property in a job of its
-own. A failing input is attached to the run as `fuzz-failure-<job>`, such
-as `fuzz-failure-pubsub`.
+nights built up for it, and one job for each property too slow to share
+one: auth's RSA signing, and pubsub's Publisher and Subscriber models. A
+test that fails while being fuzzed fails its job, and the input is
+attached to the run as `fuzz-failure-<job>`, such as
+`fuzz-failure-pubsub`.
 
 Integration tests skip unless a server is configured:
 
@@ -603,6 +835,20 @@ AUTH_TEST_CREDENTIALS=$HOME/.config/gcloud/application_default_credentials.json 
 # up anything a crashed run left behind. GCP_TEST_LOCATION adds the
 # regional tests.
 GCP_TEST_PROJECT=my-project GCP_TEST_TOKEN=$(gcloud auth application-default print-access-token) \
+    zig build test-integration-gcp
+
+# Cloud Storage against fake-gcs-server. Every test creates a zigps-*
+# bucket and deletes it.
+docker run -d -p 4443:4443 fsouza/fake-gcs-server -scheme http -port 4443
+STORAGE_EMULATOR_HOST=http://127.0.0.1:4443 zig build test-integration
+
+# And against a real bucket, for what an emulator cannot show: every
+# precondition enforced, checksums checked by the server, gzip transcoding,
+# and uploads and downloads cut mid-body that resume against Google itself.
+# Objects live under zig-gcp-test/ and are deleted. The token needs Storage
+# Object Admin on the bucket, which must not have object versioning on. It
+# moves about 230 MiB over the wire, 100 MiB of it in one object each way.
+GCP_TEST_BUCKET=my-bucket GCP_TEST_TOKEN=$(gcloud auth application-default print-access-token) \
     zig build test-integration-gcp
 ```
 

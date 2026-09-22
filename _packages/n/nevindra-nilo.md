@@ -22,16 +22,16 @@ keywords:
   - sqlite
   - web-framework
   - websocket
-date: 2026-09-21
+date: 2026-09-22
 category: tooling
-updated_at: 2026-09-21T13:35:58+00:00
-last_sync: 2026-09-21T13:35:58Z
+updated_at: 2026-09-22T15:04:16+00:00
+last_sync: 2026-09-22T15:04:16Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 18
-distributable_binary_count: 18
+binary_count: 21
+distributable_binary_count: 21
 multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
@@ -87,10 +87,10 @@ Zig 0.16 and nothing else — no C library, no system package.
 
 ```console
 $ zig init                                                          # only if you have no build.zig.zon yet
-$ zig fetch --save git+https://github.com/nevindra/nilo?ref=v0.5.0
+$ zig fetch --save 'git+https://github.com/nevindra/nilo?ref=v0.5.0#c7147f9b4af692c67701b3189afe39757a744cf0'
 ```
 
-**Keep the `?ref=`.** Without it `zig fetch` takes whatever `main` is that day.
+**Keep the `#commit`.** The tag is annotated and Zig 0.16's `zig fetch` does not peel one: `?ref=v0.5.0` on its own hands you whatever `main` is that day.
 
 ```zig
 const std = @import("std");
@@ -203,7 +203,7 @@ test "getUser" {
 
 Each module, and what is deliberately not in it:
 
-- **`nilo_http`** — routing, typed handlers, middleware, cookies and sessions, static files, streaming, WebSocket, OpenAPI, metrics, rate limiting. *Not:* templates and TLS, both on the record below.
+- **`nilo_http`** — routing, typed handlers, middleware, cookies and sessions, static files, streaming, WebSocket, OpenAPI, metrics, rate limiting, gzip, and TLS 1.3 in a build that asks for it. *Not:* templates, on the record below.
 - **`nilo_sql`** — Postgres and SQLite. Your struct is the table, and it makes the table: reads, writes, transactions, streaming, the schema, the diff and the ledger. *Not:* joins, aggregates and `GROUP BY`, which go through `db.raw`; a migration `down`.
 - **`nilo_s3`** — object storage: S3, MinIO, R2. Your bucket is a type. Get, put, range, stream, list a page, presigned GET and POST. *Not:* `COPY`, multipart.
 - **`nilo_fetch`** — calling somebody else's HTTP API from inside a request: the policy in front of `std.http.Client`. *Not:* retries, circuit breaker.
@@ -406,9 +406,13 @@ That trade runs on four axes, not one
 - **Memory per idle connection** — fixed. Every feature states its own cost.
 - **Binary size** — anything the linker can't drop states its measured cost.
 
-Response compression is what "doesn't ship in a worse shape" looks like in
-practice: the shape that would fit is known, it hasn't been built, and no
-allocate-per-request version shipped in the meantime.
+Response compression is what "doesn't ship in a worse shape" looked like in
+practice: for a year the shape that would fit was known, it hadn't been built,
+and no allocate-per-request version shipped in the meantime. It shipped when it
+fit ([ADR 0287](./docs/adr/0287-a-response-is-compressed-on-a-compressor-borrowed-from-a-pool.md)):
+one compressor per thread, borrowed for the microseconds a body takes and
+never on a connection's stack, where the standard library's own `init` would
+have put 99 KB of it.
 
 ## 🙂 What happens when you get it wrong
 
@@ -462,7 +466,7 @@ whole, and the running server serves its own contract at `/openapi.json`.
 ## 🚫 What it won't do
 
 - **Templates.** Rendering means a string per request, which is an allocation per request, and that number is fixed. If your app's job is HTML, [jetzig](https://www.jetzig.dev/) is built for it.
-- **TLS**, and so HTTP/2 and gRPC. Terminate it in front; the [deploying guide](./docs/guide/deploying.md#tls-and-the-proxy-in-front) has the five lines ([ADR 0028](./docs/adr/0028-tls-is-terminated-in-front.md)).
+- **TLS by default**, and HTTP/2 and gRPC at all. Terminate it in front; the [deploying guide](./docs/guide/deploying.md#tls-and-the-proxy-in-front) has the five lines ([ADR 0028](./docs/adr/0028-tls-is-terminated-in-front.md)). A build that passes `.tls = true` gets a TLS 1.3 listener for the server with nothing in front of it, and pays 560 KB of binary and a page per idle connection for it, stated where the option is ([ADR 0288](./docs/adr/0288-tls-is-an-option-a-build-asks-for.md)).
 - **Revoking a session.** `Session(T)` is sealed into the cookie, so there is no table, no sweep, and no way to revoke one ([ADR 0035](./docs/adr/0035-a-session-is-sealed-into-the-cookie.md)).
 - **Parsing config files.** `nilo_config` reads the environment; a TOML parser taxes every project that imports the module ([ADR 0043](./docs/adr/0043-a-setting-is-a-field-and-every-bad-one-is-named-at-once.md)).
 
@@ -472,7 +476,7 @@ you think a decision is wrong there's something specific to argue with;
 
 ## 🧪 Examples
 
-Nine runnable examples live in [`examples/`](./examples/), and their tests run
+Ten runnable examples live in [`examples/`](./examples/), and their tests run
 in the same suite:
 
 ```console
@@ -485,10 +489,14 @@ $ zig build run-stream     # a streamed report, an event stream, an upload
 $ zig build run-chat       # a WebSocket, browser page included
 $ zig build run-scheduled  # work that is not a request, owned by the server
 $ zig build run-outbound   # calling somebody else's API from inside a handler
+$ zig build run-sqlite     # two Rows on one SQLite file: tables at boot, a paged join, a report, a transaction
 ```
 
-`zig build dev-hello` is the same server restarted on every save
-([getting started](./docs/guide/getting-started.md#restarting-on-every-save)).
+On a host whose glibc was built by GCC 16 the native link can stop at
+`.sframe` in `crt1.o`; add `-Dtarget=x86_64-linux-gnu` or `-Dllvm` to the
+line ([why](./docs/guide/getting-started.md#if-the-link-fails-on-sframe)).
+
+`zig build dev-hello` is the same server restarted on every save to the Zig it is built from, and on nothing else in the checkout: a front end kept beside it keeps its own dev server ([getting started](./docs/guide/getting-started.md#restarting-on-every-save)).
 Read **`rest`** first, **`orders`** when you hit "yes, but what about…", and
 **`forms`** if you're building a web page rather than an API.
 

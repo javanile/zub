@@ -9,9 +9,9 @@ keywords:
   - 3ds-homebrew
   - homebrew
   - nintendo-3ds
-date: 2026-09-17
-updated_at: 2026-09-17T12:01:47+00:00
-last_sync: 2026-09-17T12:01:47Z
+date: 2026-09-22
+updated_at: 2026-09-22T14:18:55+00:00
+last_sync: 2026-09-22T14:18:55Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -104,6 +104,11 @@ Currently there are multiple examples in the `demo/` directory. To build them, y
 - [info](demo/info) is a simple app that currently shows the console region and model (will be updated to show more info over time).
 - [bitmap](demo/bitmap/) is a port of the bitmap example in libctru's 3ds-examples.
 - [flappy](demo/flappy) is a simple fully functional flappy bird clone written entirely with software blitting.
+
+### Lower level (and somewhat experimental/REALLY unstable)
+
+- [ztr-pdn](https://codeberg.org/GasInfinity/ztr-pdn) is literally what it says, a reimplementation of the `pdn` sysmodule using zitrus.
+- [ztr-mic](https://codeberg.org/GasInfinity/ztr-mic) is a reimplementation of the `mic` sysmodule using zitrus.
 
 --- 
 

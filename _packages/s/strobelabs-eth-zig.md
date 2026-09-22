@@ -24,10 +24,10 @@ keywords:
   - secp256k1
   - web3
   - zig-ethereum
-date: 2026-09-05
+date: 2026-09-21
 category: systems
-updated_at: 2026-09-05T03:57:38+00:00
-last_sync: 2026-09-05T03:57:38Z
+updated_at: 2026-09-21T20:16:21+00:00
+last_sync: 2026-09-21T20:16:21Z
 package_kind: hybrid
 has_library: true
 has_binary: true
