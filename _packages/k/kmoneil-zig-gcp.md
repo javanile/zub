@@ -19,9 +19,9 @@ keywords:
   - secrets-management
   - service-account
   - workload-identity-federation
-date: 2026-09-22
-updated_at: 2026-09-22T14:52:24+00:00
-last_sync: 2026-09-22T14:52:24Z
+date: 2026-09-23
+updated_at: 2026-09-23T14:34:35+00:00
+last_sync: 2026-09-23T14:34:35Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -45,26 +45,27 @@ modules it imports.
 | --- | --- | --- |
 | `pubsub` | Pub/Sub v1: publish, one call at a time or batched from many tasks, pull, a worker loop, acknowledge, and topic and subscription management | beta |
 | `secret_manager` | Secret Manager v1: read a secret's bytes, add versions, and manage secrets and their versions, global or regional | experimental |
-| `storage` | Cloud Storage JSON API: buckets, object metadata and listings, uploads from memory or any reader and downloads into any writer, streamed in constant memory, resumed after failures and checksummed both ways, preconditions, and server-side copies | experimental |
-| `auth` | Credentials for the service modules: `findDefault` picks between the metadata server on Google Cloud, the login `gcloud auth application-default login` saves (impersonating a service account or not), and a file the environment names. | experimental |
-| `core` | What the service modules share: the HTTP transport, retries, `Diagnostics`, the `TokenProvider` seam, and test fakes. Services re-export what their callers need. | beta |
+| `storage` | Cloud Storage JSON API: buckets, object metadata and listings, uploads from memory or any reader and downloads into any writer, streamed in constant memory, resumed after failures and checksummed both ways, preconditions, server-side copies, and signed URLs | experimental |
+| `auth` | Credentials for the service modules: `findDefault` picks between the metadata server on Google Cloud, the login `gcloud auth application-default login` saves (impersonating a service account or not), and a file the environment names. They sign signed URLs too, on this machine or through IAM. | experimental |
+| `core` | What the service modules share: the HTTP transport, retries, `Diagnostics`, the `TokenProvider` and `Signer` seams, and test fakes. Services re-export what their callers need. | beta |
 
 - Zig **0.16.0** (`minimum_zig_version` enforces it). No dependencies.
-- Tested with 692 unit, property and fuzz tests; 28 Pub/Sub integration
-  tests that pass against both the emulator and production, and 20 more
-  through a proxy that drops, cuts and stalls the connection; 16 Cloud
-  Storage tests against fake-gcs-server and 9 against a real bucket,
-  where uploads and downloads cut off mid-body resume against Google
-  itself; 12 Secret Manager tests against a real project, since it has
-  no emulator; 10 auth tests against Google's token, STS and IAM
-  Credentials endpoints; and a run on a Compute Engine VM, where the
-  metadata server is the one that answers.
+- Tested with 749 unit, property and fuzz tests, Google's 29 V4 signing
+  vectors among them; 28 Pub/Sub integration tests that pass against both
+  the emulator and production, and 20 more through a proxy that drops,
+  cuts and stalls the connection; 18 Cloud Storage tests against
+  fake-gcs-server and 9 against a real bucket, where uploads and
+  downloads cut off mid-body resume against Google itself; 12 Secret
+  Manager tests against a real project, since it has no emulator; 10 auth
+  tests against Google's token, STS and IAM Credentials endpoints; and a
+  run on a Compute Engine VM, where the metadata server is the one that
+  answers.
 - Until 1.0, a minor release may break any module. `CHANGELOG.md` says how.
 
 ## Install
 
 ```
-zig fetch --save git+https://github.com/kmoneil/zig-gcp#v0.14.1
+zig fetch --save git+https://github.com/kmoneil/zig-gcp#v0.15.0
 ```
 
 ```zig
@@ -710,6 +711,83 @@ and compare checksums. An `if_generation_not_match` or
 `if_metageneration_not_match` met by the current object is
 `error.NotModified`, an answer rather than a failure.
 
+### Signed URLs
+
+A signed URL lets someone with no credentials make one request on one
+object until it expires: a browser downloading a private file, or
+uploading straight into a bucket without the bytes passing through the
+application.
+
+```zig
+var creds = try auth.findDefault(gpa, io, lookup, .{});
+defer creds.deinit();
+const signer = creds.signer() orelse return error.CannotSign;
+
+var url = try gcs.bucket("photos").object("cats/tom.jpg").signedUrl(signer, .{
+    .expires_in_s = 15 * 60,
+    .query = &.{.{ .name = "response-content-disposition", .value = "attachment; filename=\"tom.jpg\"" }},
+});
+defer url.deinit();
+```
+
+An upload URL can pin what the holder may send:
+
+```zig
+var put = try object.signedUrl(signer, .{
+    .method = .PUT,
+    .expires_in_s = 10 * 60,
+    .headers = &.{
+        .{ .name = "content-type", .value = "image/png" },
+        .{ .name = "x-goog-content-length-range", .value = "0,5242880" },
+        .{ .name = "x-goog-if-generation-match", .value = "0" },
+    },
+});
+```
+
+The holder must send every signed header with the same value, and cannot
+add a query parameter of their own: Cloud Storage refuses the request
+otherwise. They must also send no `Authorization` header, even an empty
+one, which would turn the request into an ordinary authenticated one.
+
+Who can sign, as `Credentials.signer()` decides:
+
+| Credentials | Signs | What it needs |
+| --- | --- | --- |
+| A service account key file | on this machine | nothing else |
+| A login impersonating a service account | through IAM, as the target | the Token Creator role impersonation already needs |
+| A workload on Google Cloud | through IAM, as its attached account | Token Creator on itself, and the `cloud-platform` access scope |
+| A user's own login, or workload identity federation | nothing: `signer()` is null | name an account through `auth.IamSigner` |
+
+Google rotates the key IAM signs with and promises each for 12 hours, so
+a URL signed through IAM may last no longer, and `signedUrl` refuses a
+longer one before asking IAM. A key file's URL may last the seven days
+Cloud Storage allows.
+
+The URL points at the client's endpoint, so a client on the emulator
+makes emulator URLs. `.style` chooses `.path` (the default),
+`.virtual_hosted` for `bucket.storage.googleapis.com`, or a
+`.bucket_bound` domain that serves one bucket.
+
+Treat the URL as a password: it is a bearer credential until it expires.
+The library never logs it or puts it in `Diagnostics`, and wipes the
+memory its signature passed through. `examples/gcs_sign.zig` prints one,
+with the `curl` line that uses it:
+
+```
+zig build example-gcs_sign -- gs://my-bucket/reports/q3.txt
+```
+
+What Cloud Storage answers, measured against a real bucket on 2026-09-22:
+
+| The request | The answer |
+| --- | --- |
+| A URL past its expiry | 400 `ExpiredToken` |
+| A URL dated more than 15 minutes ahead | 403 `AccessDenied` |
+| A changed signature, header or parameter | 403 `SignatureDoesNotMatch`, carrying the canonical request Google computed |
+| A signed DELETE | 204 |
+| A signed POST with `x-goog-resumable: start` | 201, and a session URI that takes the bytes with no signature |
+| A body that does not match a signed `x-goog-content-sha256` | stored: the header is signed, but the body is not hashed against it |
+
 ### What it covers
 
 | Call | What it does |
@@ -721,11 +799,12 @@ and compare checksums. An `if_generation_not_match` or
 | `.upload(data, options)`, `.uploadFrom(reader, options)` | Bytes in memory, or any reader |
 | `.download(writer, options)`, `.downloadAlloc(max_bytes, options)` | Into any writer, or into memory up to a cap |
 | `.copyTo(dest, options)` | A server-side copy, across buckets too |
+| `.signedUrl(signer, options)`, `bucket.signedUrl(signer, options)` | A V4 signed URL, which lets whoever holds it make one request without credentials until it expires |
 
 The default OAuth scope is `devstorage.read_write`; `Options.scope` picks
-`.read_only` or `.cloud_platform` instead. Not in this version: signed
-URLs, metadata updates after upload (`patch`), compose, resumable sessions
-that outlive the process, parallel downloads, requester pays,
+`.read_only` or `.cloud_platform` instead. Not in this version: metadata
+updates after upload (`patch`), compose, POST policy documents, resumable
+sessions that outlive the process, parallel downloads, requester pays,
 customer-supplied encryption keys, listing old versions or soft-deleted
 objects, and gRPC.
 
@@ -735,6 +814,10 @@ The integration suite runs against `fake-gcs-server`, and a second suite
 against a real bucket covers what the emulator cannot be trusted on. The
 differences it found:
 
+- It serves the XML API's paths, which signed URLs use, only when started
+  with `-public-host` naming the host those URLs carry, and it never checks
+  a signature. Its signed DELETE answers 200 where Cloud Storage answers
+  204, and its resumable start drops the object name from the path.
 - The emulator enforces preconditions on uploads, but not on deletes, and
   never answers 304.
 - It takes a resumable upload's status query for the final request, and
@@ -850,6 +933,19 @@ STORAGE_EMULATOR_HOST=http://127.0.0.1:4443 zig build test-integration
 # moves about 230 MiB over the wire, 100 MiB of it in one object each way.
 GCP_TEST_BUCKET=my-bucket GCP_TEST_TOKEN=$(gcloud auth application-default print-access-token) \
     zig build test-integration-gcp
+
+# Signed URLs against a real bucket, the only place a signature is ever
+# checked. Name a key file, an account the token may sign as through IAM,
+# or both: each test runs once per signer. That account needs Storage
+# Object Admin on the bucket, since a URL grants what its signer may do.
+GCP_TEST_BUCKET=my-bucket GCP_TEST_TOKEN=$(gcloud auth application-default print-access-token) \
+    GCP_TEST_SIGNER_KEY=key.json GCP_TEST_SIGNER_EMAIL=signer@my-project.iam.gserviceaccount.com \
+    zig build test-integration-gcp
+
+# The emulator serves the paths signed URLs use only for the host they
+# name, so those tests need -public-host, as CI passes it.
+docker run -d -p 4443:4443 fsouza/fake-gcs-server -scheme http -port 4443 \
+    -public-host 127.0.0.1:4443
 ```
 
 The emulator binds to IPv6 localhost unless given `--host-port`.

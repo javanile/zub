@@ -22,10 +22,10 @@ keywords:
   - sqlite
   - web-framework
   - websocket
-date: 2026-09-22
+date: 2026-09-23
 category: tooling
-updated_at: 2026-09-22T15:04:16+00:00
-last_sync: 2026-09-22T15:04:16Z
+updated_at: 2026-09-23T14:53:05+00:00
+last_sync: 2026-09-23T14:53:05Z
 package_kind: hybrid
 has_library: true
 has_binary: true

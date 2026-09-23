@@ -8,9 +8,9 @@ repository: https://github.com/deatil/zig-rsa
 keywords:
   - rsa
   - zig-rsa
-date: 2026-09-19
-updated_at: 2026-09-19T10:59:56+00:00
-last_sync: 2026-09-19T10:59:56Z
+date: 2026-09-23
+updated_at: 2026-09-23T15:07:22+00:00
+last_sync: 2026-09-23T15:07:22Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -83,7 +83,7 @@ pub fn main(init: std.process.Init) !void {
     var prng = std.Random.DefaultPrng.init(0xC0FFEE_1234_5678);
     const random = prng.random();
 
-    const kp = try rsa.generate_key(alloc, random, 1024);
+    const kp = try rsa.generateKey(alloc, random, 1024);
 
     var secret_key = kp.secret_key;
     defer secret_key.deinit(alloc);
@@ -111,7 +111,7 @@ pub fn main(init: std.process.Init) !void {
 
     // output: 
     // rsa verifyPkcs1v15: true
-    std.debug.print("rsa verifyPkcs1v15: {} \n", .{});
+    std.debug.print("rsa verifyPkcs1v15: {any} \n", .{status});
 }
 ~~~
 
@@ -119,7 +119,7 @@ pub fn main(init: std.process.Init) !void {
 
 Generate key: 
 ~~~v
-generate_key(alloc: Allocator, random: Random, bits: usize) !KeyPair
+generateKey(alloc: Allocator, random: Random, bits: usize) !KeyPair
 ~~~
 
 PKCS1v15 sign: 

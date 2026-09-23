@@ -13,10 +13,10 @@ keywords:
   - webui
   - windows
   - zig-webui
-date: 2026-07-29
+date: 2026-09-23
 category: systems
-updated_at: 2026-07-29T11:43:10+00:00
-last_sync: 2026-07-29T11:43:10Z
+updated_at: 2026-09-23T11:07:09+00:00
+last_sync: 2026-09-23T11:07:09Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -129,6 +129,124 @@ exe.root_module.addImport("webui", zig_webui.module("webui"));
 ### Windows without console
 
 For hide console window, you can set `exe.subsystem = .Windows;`!
+
+### Cross-compiling to macOS
+
+For macOS targets, `macos_sdk` accepts an **absolute path** to an existing Apple
+macOS SDK. It supplies the SDK's `usr/include`, `usr/lib`, and
+`System/Library/Frameworks` paths to both the native WebUI compilation and the
+final link through the exported `webui` module. No SDK is downloaded or bundled.
+Omit the option to retain the normal toolchain SDK discovery behavior.
+
+When consuming this package, expose and forward the option in your `build.zig`:
+
+```zig
+const zig_webui = b.dependency("zig_webui", .{
+    .target = target,
+    .optimize = optimize,
+    .enable_tls = false,
+    .is_static = true,
+    .macos_sdk = b.option([]const u8, "macos_sdk", "Absolute path to a macOS SDK"),
+});
+exe.root_module.addImport("webui", zig_webui.module("webui"));
+```
+
+Then build your application on Linux:
+
+```sh
+zig build -Dtarget=aarch64-macos -Dmacos_sdk=/opt/MacOSX26.5.sdk
+# For Intel Macs, use -Dtarget=x86_64-macos instead.
+```
+
+To cross-compile this repository's examples, use the same options with
+`zig build examples`. Do not use a `run_*` step on Linux for a macOS executable.
+
+Use this option without additionally passing `--sysroot` or `--search-prefix`
+for the SDK: it provides explicit paths, and combining them with a sysroot can
+cause SDK paths to be prefixed twice. `--search-prefix` alone does not provide
+Apple framework search paths. Relative SDK paths and non-macOS targets are
+rejected. TLS cross-compilation remains unsupported.
+
+Verified with Zig 0.16.0 and macOS SDK 26.5 from Linux ARM64, targeting both
+macOS ARM64 and x86_64. The ARM64 smoke executable also ran on macOS. This is
+not a guarantee of GUI behavior or compatibility with every SDK version:
+SDK 27.0 headers failed to compile with Zig 0.16.0 at
+`API_AVAILABLE(anyappleos(27.0))`.
+
+### Embed an entire directory
+
+The build-time `addEmbeddedDir` helper recursively embeds a directory from **your
+project**, including subdirectories. The runtime `webui.EmbeddedFS` API provides
+allocation-free lookups without filesystem access.
+
+Import the package's build API at the top of your `build.zig`:
+
+```zig
+const webui_build = @import("zig_webui");
+```
+
+After adding the normal `webui` module to your executable, add this inside your
+`build` function (which must return `!void`):
+
+```zig
+try webui_build.addEmbeddedDir(b, exe.root_module, .{
+    .path = "assets",
+    .import_name = "embedded_assets", // optional; this is the default
+});
+```
+
+For a directory containing `assets/index.html` and `assets/css/main.css`:
+
+```zig
+const std = @import("std");
+const webui = @import("webui");
+const Assets = webui.EmbeddedFS(@import("embedded_assets"));
+
+pub fn main() void {
+    for (Assets.list()) |path| {
+        std.debug.print("{s}: {d} bytes\n", .{ path, Assets.get(path).?.len });
+    }
+    const css = Assets.get("css/main.css").?;
+    std.debug.print("{s}\n", .{css});
+}
+```
+
+- `.path` is relative to the calling project's build root, not the shell's
+  working directory. The directory must exist when the build script runs;
+  directories produced by later build steps are not supported.
+- Every regular file is included, including hidden files. Choose a dedicated
+  resource directory without secrets. Symlinks and other non-regular entries
+  are skipped.
+- `get` accepts exact, case-sensitive relative paths with `/` separators. It
+  does not normalize URLs, leading slashes, or `..`. Missing files return `null`;
+  empty files return a non-null empty slice. Binary data is preserved.
+- `list` returns file paths sorted bytewise. Paths and contents have static
+  lifetime; do not free them. An empty directory is supported.
+- Additions, removals, renames, and content changes are picked up on the next
+  `zig build`. Use a different `.import_name` for each additional directory.
+- Filenames containing newlines are not supported by Zig 0.16's build cache:
+  a subsequent build can fail with `invalid manifest file format`.
+
+This API returns raw file bytes; it does not install a WebUI HTTP handler.
+If used with `setFileHandler`, your handler still needs to return a full HTTP
+response, including headers.
+
+Run `zig build run_embedded_folder` for a console example. Its installed binary,
+`zig-out/bin/embedded_folder`, can also run outside the project without the
+original resource directory.
+
+Regression checks:
+
+```sh
+zig build test --summary all
+python3 -B -m unittest discover -s tests -v
+```
+
+The integration test requires Python 3 and Zig on `PATH`, with no third-party
+Python packages. It creates and removes a temporary downstream project to check
+root-relative paths, resource-name collisions, empty and multiple directories,
+binary contents, incremental rebuilds, and standalone execution without source
+assets. Both commands are included in CI.
 
 ## UI & The Web Technologies
 

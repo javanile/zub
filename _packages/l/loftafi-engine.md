@@ -6,15 +6,15 @@ author: loftafi
 author_github: loftafi
 repository: https://github.com/loftafi/engine
 keywords:
-date: 2026-09-18
-updated_at: 2026-09-18T13:42:55+00:00
-last_sync: 2026-09-18T13:42:55Z
+date: 2026-09-23
+updated_at: 2026-09-23T14:27:14+00:00
+last_sync: 2026-09-23T14:27:14Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 3
-distributable_binary_count: 3
+binary_count: 4
+distributable_binary_count: 4
 multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
