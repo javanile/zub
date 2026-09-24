@@ -18,10 +18,10 @@ keywords:
   - zig-database
   - zig-dsl
   - zig-sqlite
-date: 2026-09-22
+date: 2026-09-24
 category: data-formats
-updated_at: 2026-09-22T14:43:10+00:00
-last_sync: 2026-09-22T14:43:10Z
+updated_at: 2026-09-24T13:30:02+00:00
+last_sync: 2026-09-24T13:30:02Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -106,6 +106,7 @@ permalink: /packages/muhammad-fiaz/sqlite.zig/
 - **Tree-sitter** — For Tree-sitter parsing and syntax-tree support, check out [tree-sitter.zig](https://github.com/muhammad-fiaz/tree-sitter.zig).
 
 </details>
+
 ---
 
 <details>

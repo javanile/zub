@@ -19,9 +19,9 @@ keywords:
   - secrets-management
   - service-account
   - workload-identity-federation
-date: 2026-09-23
-updated_at: 2026-09-23T14:34:35+00:00
-last_sync: 2026-09-23T14:34:35Z
+date: 2026-09-24
+updated_at: 2026-09-24T13:53:45+00:00
+last_sync: 2026-09-24T13:53:45Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -65,7 +65,7 @@ modules it imports.
 ## Install
 
 ```
-zig fetch --save git+https://github.com/kmoneil/zig-gcp#v0.15.0
+zig fetch --save git+https://github.com/kmoneil/zig-gcp#v0.18.0
 ```
 
 ```zig
@@ -788,6 +788,61 @@ What Cloud Storage answers, measured against a real bucket on 2026-09-22:
 | A signed POST with `x-goog-resumable: start` | 201, and a session URI that takes the bytes with no signature |
 | A body that does not match a signed `x-goog-content-sha256` | stored: the header is signed, but the body is not hashed against it |
 
+### POST policies: uploads from a plain HTML form
+
+A signed URL allows one request. A POST policy allows one kind of
+request, which is what a browser form needs: a form cannot send the
+headers a signed PUT pins, and the person at the browser picks the file,
+so its name is not known when the policy is signed.
+
+```zig
+var policy = try gcs.bucket("photos").postPolicy(signer, .{
+    .expires_in_s = 15 * 60,
+    // Any name under the prefix: the browser chooses the rest.
+    .key = .{ .starts_with = "avatars/" },
+    .fields = &.{.{ .name = "content-type", .value = "image/png" }},
+    .conditions = &.{.{ .content_length_range = .{ .min = 1, .max = 5 << 20 } }},
+});
+defer policy.deinit();
+```
+
+`policy.value.url` is where the form posts, and `policy.value.fields` are
+its hidden inputs. Write them into a `<form method="post"
+enctype="multipart/form-data">` and add `<input type="file" name="file">`
+last: Cloud Storage reads the fields before the bytes. With a prefix key
+the `key` field ends in Google's `${filename}`, which Cloud Storage
+replaces with the name of the file the browser sent.
+
+`Object.postPolicy` names one object exactly instead, and takes no `key`.
+
+A policy is a whitelist. Every field the form sends must be in it, with
+the value it states, or as a `.starts_with` condition for one the browser
+chooses. `content_length_range` bounds the body, which is the one
+condition a signed URL cannot express for a form. Signing is the same as
+for a URL, so the table above applies unchanged: a key file signs here,
+IAM signs for the rest, and the 12-hour limit is the same.
+
+The fields are a bearer credential together, so the library never logs
+the document or the signature. `examples/gcs_sign.zig` prints a ready
+form; end the target with `/` to allow a prefix:
+
+```
+zig build example-gcs_sign -- gs://my-bucket/uploads/ --post-policy --put image/png
+```
+
+What Cloud Storage answers, measured against a real bucket on 2026-09-23:
+
+| The form | The answer |
+| --- | --- |
+| Everything the policy allows | 204, or `success_action_status`'s 200 or 201, whose body names the bucket, key, location and etag |
+| With `success_action_redirect` | 303 to that URL, with what was stored in its query |
+| A field whose value contradicts its condition | 400 `InvalidPolicyDocument`, whose `Details` quotes the condition that failed |
+| A field the policy never mentions | 400 `InvalidPolicyDocument` |
+| A key outside a `starts_with` prefix | 400 `InvalidPolicyDocument` |
+| A body over or under `content_length_range` | 400 `EntityTooLarge` or `EntityTooSmall` |
+| A policy past its expiry | 400 `InvalidPolicyDocument`, where an expired URL is `ExpiredToken` |
+| A changed signature | 403 `SignatureDoesNotMatch`, carrying the policy document Google read |
+
 ### What it covers
 
 | Call | What it does |
@@ -799,14 +854,189 @@ What Cloud Storage answers, measured against a real bucket on 2026-09-22:
 | `.upload(data, options)`, `.uploadFrom(reader, options)` | Bytes in memory, or any reader |
 | `.download(writer, options)`, `.downloadAlloc(max_bytes, options)` | Into any writer, or into memory up to a cap |
 | `.copyTo(dest, options)` | A server-side copy, across buckets too |
+| `.updateMetadata(options)` | Changes what an object says about itself, leaving its bytes alone |
+| `.composeFrom(sources, options)` | Writes this object from up to 32 others in the bucket, server-side |
 | `.signedUrl(signer, options)`, `bucket.signedUrl(signer, options)` | A V4 signed URL, which lets whoever holds it make one request without credentials until it expires |
+| `.postPolicy(signer, options)`, `bucket.postPolicy(signer, options)` | A V4 POST policy, which lets a plain HTML form upload what the policy allows, without credentials, until it expires |
 
 The default OAuth scope is `devstorage.read_write`; `Options.scope` picks
-`.read_only` or `.cloud_platform` instead. Not in this version: metadata
-updates after upload (`patch`), compose, POST policy documents, resumable
-sessions that outlive the process, parallel downloads, requester pays,
-customer-supplied encryption keys, listing old versions or soft-deleted
-objects, and gRPC.
+`.read_only` or `.cloud_platform` instead. Not in this version: `update`
+(PUT, which replaces a whole resource where `patch` merges), parallel
+composite uploads, resumable sessions that outlive the process, parallel
+downloads, requester pays, customer-supplied encryption keys, listing old
+versions or soft-deleted objects, and gRPC.
+
+### Metadata, after the upload
+
+Nothing about an object's bytes has to move to change what it says about
+itself. `updateMetadata` patches: fields left null keep the values they
+had, and the bytes and the generation stand still.
+
+```zig
+var patched = try object.updateMetadata(.{
+    .content_type = "text/markdown",
+    .cache_control = "public, max-age=60",
+    .edit = .{ .change = &.{
+        .{ .key = "reviewer", .value = "sam" },
+        .{ .key = "draft", .value = null },   // null removes the key
+    } },
+});
+defer patched.deinit();
+```
+
+`edit` is the whole of what happens to custom metadata, and Cloud Storage
+reads three different requests there, which cannot be combined because a
+JSON object has one `metadata` value:
+
+| `edit` | What it does |
+| --- | --- |
+| `.keep` (the default) | Every entry keeps its value |
+| `.change` | Sets the entries with a value, removes the entries with none, and leaves every key it does not name |
+| `.clear` | Removes every entry |
+
+A patch moves the metageneration and not the generation, so
+`if_metageneration_match` is what makes one safe to repeat; a generation
+condition says nothing about it. `generation` patches one named
+generation, which needs a versioned bucket to reach a noncurrent one.
+
+Measured against a real bucket on 2026-09-23: a key the patch does not
+name survives it, `.clear` really does remove the lot, a stale
+`if_metageneration_match` is 412 and leaves the object alone, and the
+content stays byte for byte what it was.
+
+### Compose
+
+`composeFrom` writes an object from up to 32 others in the same bucket,
+server-side, with no bytes moving:
+
+```zig
+var joined = try bucket.object("whole.bin").composeFrom(&.{
+    .{ .name = "part-1" },
+    .{ .name = "part-2" },
+}, .{ .content_type = "application/octet-stream" });
+defer joined.deinit();
+```
+
+The destination may be one of its own sources, so an append is a compose
+whose first source is the destination, and a larger join is repeated
+composes. Sources share a bucket and a storage class, may each pin a
+`generation` or carry an `if_generation_match`, and `delete_sources`
+hard-deletes them once the composite exists, which is what Google advises
+for parallel composite uploads and wrong wherever soft delete, versioning,
+a retention policy or a hold is in play.
+
+Nothing is inherited: the composite's metadata is what the call sends. It
+has no MD5, which no composite has, and a CRC32C that Cloud Storage
+derives from its components', so `download` verifies one exactly as it
+verifies anything else. `component_count` says how many objects it is made
+of.
+
+Two rules here are this library's rather than Cloud Storage's: a source
+named twice at the same generation is refused, since concatenating one
+object twice is far more often a loop bug than a request, and a compose
+that deletes its sources is never retried without a precondition, because
+the second attempt would find them gone.
+
+### Copies that change what they carry
+
+`copyTo` copies server-side, and can change the copy's metadata on the way:
+the same fields `updateMetadata` takes, and a storage class.
+
+```zig
+// Onto itself with a new class: how an object's class changes on demand,
+// without its bytes going anywhere near this machine.
+var archived = try object.copyTo(object, .{ .storage_class = "COLDLINE" });
+defer archived.deinit();
+
+var renamed = try object.copyTo(bucket.object("public/report.csv"), .{
+    .content_type = "text/csv",
+    .cache_control = "public, max-age=300",
+});
+defer renamed.deinit();
+```
+
+With no change the copy carries the source's metadata as it is. With any
+change, a storage class included, the copy first reads the source's
+metadata and sends it back with the change applied. That is because Cloud
+Storage takes whatever metadata a copy sends as the whole of the copy's.
+Measured against a real bucket on 2026-09-24:
+
+- A rewrite naming only a content type came back with no cache control, no
+  language, no custom metadata and no custom time.
+- One naming only a storage class, which is exactly what Google's own
+  samples send to change a class, came back with an empty content type
+  and no custom metadata.
+
+The copy is pinned to what it read. `sourceGeneration` fixes the bytes and
+`ifSourceMetagenerationMatch` the metadata, so a source that changes in
+between fails the copy with a 412 rather than mixing two versions. A copy
+with no `storage_class` takes the destination bucket's default: measured,
+a NEARLINE object copied, changed or not, into a STANDARD bucket came out
+STANDARD. ACLs, holds and retention are never copied.
+
+### Parallel uploads
+
+`uploadParallel` sends one object in parts, several at once, each on a
+connection of its own, and has Cloud Storage join them: the XML API's
+multipart upload. It is for large objects on fast links, where one
+connection is the limit.
+
+```zig
+const file = try std.Io.Dir.cwd().openFile(io, "backup.tar", .{});
+defer file.close(io);
+var uploaded = try bucket.object("backups/backup.tar").uploadParallel(.{ .file = file }, .{
+    .content_type = "application/x-tar",
+    .part_size = 32 * 1024 * 1024, // the default
+    .concurrency = 8,              // the default
+});
+defer uploaded.deinit();
+```
+
+- **Sources.** Bytes in memory are sliced, never copied; a file is read at
+  each part's offset, so any number of workers read it at once.
+- **Workers.** Each is a task with a client of its own
+  (`Client.sibling`) and `part_timeout_ms` as its timeout, since one large
+  part takes far longer than a small request.
+- **Checksums.** Every part is checked against the CRC32C Cloud Storage
+  stored for it. The parts' checksums combine into the whole object's
+  with no second pass over the data. That is held to `options.crc32c`
+  before anything is joined, so a file that changed under the upload
+  writes nothing, and to the finished object afterwards.
+- **Failures.** Every failure aborts the upload, so no part is left to be
+  billed, and a cancel stops the workers and aborts too. No retry writes
+  twice: a part sent again replaces itself, and a finish repeated after a
+  lost answer names the same generation as the one that landed.
+- **Emulators.** Against an emulator, which has no multipart uploads, the
+  object goes up as one ordinary upload.
+
+It takes no preconditions: the multipart upload has none, so it replaces
+whatever has the name, as an unconditional upload does. A precondition
+header is not refused either, only ignored: measured,
+`x-goog-if-generation-match: 0` on a finish replaced an existing object. Custom metadata
+travels as `x-goog-meta-` headers, so keys must be lowercase, which is
+also what Cloud Storage makes of them: measured, `x-goog-meta-Reviewer`
+comes back as `reviewer`. The result is read back with one metadata
+request, which needs `storage.objects.get`, a permission Storage Object
+Creator does not grant.
+
+A process that dies mid-upload leaves its parts, and Cloud Storage bills
+them until the upload is aborted: unfinished uploads never expire. A
+lifecycle rule aborts them for you:
+
+```json
+{ "rule": [{ "action": { "type": "AbortIncompleteMultipartUpload" }, "condition": { "age": 7 } }] }
+```
+
+`gcloud storage buckets update gs://my-bucket --lifecycle-file=rules.json`
+applies it.
+
+Measured from this sandbox against a real bucket on 2026-09-24, 100 MiB in
+8 MiB parts, 8 at a time, went up in 10.0 s (10 MiB/s), where one stream
+took 34.9 s (2.9 MiB/s). A 1 GiB file in 103 parts took 67.6 s eight at a
+time and 327.2 s one at a time, 4.84 times as fast; its finish took 143
+ms, far from the "several minutes" Google warns of. Smaller objects gain
+less: gcloud starts using parallel uploads only at `150M`.
+`examples/gcs_cp.zig` takes `--parallel N`.
 
 ### The emulator is not production
 
@@ -828,6 +1058,13 @@ differences it found:
   ones.
 - It names the object's checksum on every range read; Cloud Storage names
   it only for a range that spans the whole object.
+- It fills in whatever a copy's metadata leaves out from the source, where
+  Cloud Storage leaves it out, and it ignores a copy's storage class.
+  `copyTo` sends everything it means the copy to carry, so both agree on
+  every field but the class.
+- It has no multipart uploads at all, so `uploadParallel` sends an ordinary
+  upload to an emulator. The library's own tests run the multipart upload
+  against an in-memory fake and a loopback server that speak it.
 
 ## Zig 0.16 standard library issues handled here
 
@@ -934,10 +1171,12 @@ STORAGE_EMULATOR_HOST=http://127.0.0.1:4443 zig build test-integration
 GCP_TEST_BUCKET=my-bucket GCP_TEST_TOKEN=$(gcloud auth application-default print-access-token) \
     zig build test-integration-gcp
 
-# Signed URLs against a real bucket, the only place a signature is ever
-# checked. Name a key file, an account the token may sign as through IAM,
-# or both: each test runs once per signer. That account needs Storage
-# Object Admin on the bucket, since a URL grants what its signer may do.
+# Signed URLs and POST policies against a real bucket, the only place a
+# signature is ever checked, and the only place Cloud Storage says what it
+# makes of a policy's conditions. Name a key file, an account the token may
+# sign as through IAM, or both: each test runs once per signer. That
+# account needs Storage Object Admin on the bucket, since a URL or a policy
+# grants what its signer may do.
 GCP_TEST_BUCKET=my-bucket GCP_TEST_TOKEN=$(gcloud auth application-default print-access-token) \
     GCP_TEST_SIGNER_KEY=key.json GCP_TEST_SIGNER_EMAIL=signer@my-project.iam.gserviceaccount.com \
     zig build test-integration-gcp

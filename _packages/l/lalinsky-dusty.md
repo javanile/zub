@@ -13,10 +13,10 @@ keywords:
   - websocket
   - websocket-client
   - websocket-server
-date: 2026-09-16
+date: 2026-09-24
 category: networking
-updated_at: 2026-09-16T13:50:07+00:00
-last_sync: 2026-09-16T13:50:07Z
+updated_at: 2026-09-24T15:16:24+00:00
+last_sync: 2026-09-24T15:16:24Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -36,8 +36,6 @@ The library was originally written for [zio](https://github.com/lalinsky/zio), a
 implementation of the `std.Io` interface, especially if you need to communicate with other services over the network in your HTTP request handlers,
 or if you are using WebSocket. However, it's usable with any implementation, like `std.Io.Threaded`, or even the simulated implementation from [Marionette](https://github.com/sb2bg/marionette).
 
-The server API is inspired by Karl Seguin's [http.zig](https://github.com/karlseguin/http.zig), and tries to be as compatible as possible.
-
 ## Features
 - Router with support for parameters and wildcards
 - Supports HTTP/1.0 and HTTP/1.1
@@ -52,7 +50,7 @@ The server API is inspired by Karl Seguin's [http.zig](https://github.com/karlse
 ## Installation
 
 ```sh
-zig fetch --save "git+https://github.com/lalinsky/dusty"
+zig fetch --save "git+https://github.com/lalinsky/dusty#v0.3.1"
 ```
 
 Then in your `build.zig`, add the module as a dependency:
@@ -80,15 +78,30 @@ fn handleUser(req: *http.Request, res: *http.Response) !void {
 }
 
 pub fn main(init: std.process.Init) !void {
-    var server = http.Server(void).init(init.gpa, init.io, .{}, {});
+    const addr: http.Address = .{ .ip = try std.Io.net.IpAddress.parse("127.0.0.1", 8080) };
+    var server = http.Server(void).init(init.gpa, init.io, .{
+        .listen = &.{.{ .address = addr }},
+    }, {});
     defer server.deinit();
 
     server.router.get("/user/:id", handleUser);
 
-    const addr: http.Address = .{ .ip = try std.Io.net.IpAddress.parse("127.0.0.1", 8080) };
-    try server.listen(addr);
+    try server.run();
 }
 ```
+
+`listen` takes any number of listeners, each with its own TLS, so one server
+can serve HTTPS on 443 and plain HTTP on 80 with the same router:
+
+```zig
+.listen = &.{
+    .{ .address = addr443, .tls = .{ .cert_path = "server.pem", .key_path = "server.key" } },
+    .{ .address = addr80 },
+},
+```
+
+A handler can tell them apart through `req.listener` and `req.secure`, and
+`server.addresses` has each listener's bound address once `server.ready` is set.
 
 ### Client Example
 
@@ -132,10 +145,12 @@ The key must be an unencrypted PKCS#8 (`BEGIN PRIVATE KEY`) or SEC1 (`BEGIN EC P
 These settings apply to every connection a client makes; connections are pooled and reused
 across requests, so they cannot be varied per request. Use a separate `Client` per identity.
 
-The server side is symmetric — `client_auth` makes it ask connecting clients for a certificate:
+The server side is symmetric. TLS is configured per listener, and `client_auth`
+makes it ask connecting clients for a certificate:
 
 ```zig
-var server = http.Server(void).init(gpa, io, .{
+.listen = &.{.{
+    .address = addr,
     .tls = .{
         .cert_path = "server.pem",
         .key_path = "server.key",
@@ -146,7 +161,7 @@ var server = http.Server(void).init(gpa, io, .{
             .mode = .require,
         },
     },
-}, {});
+}},
 ```
 
 ### Unix Socket Client Example
@@ -189,10 +204,37 @@ Long-lived handlers can use this as an inactivity timeout by re-arming it
 before each WebSocket message or event, without disabling the resilient server
 default for ordinary requests.
 
+The client bounds each request the same way. `ClientConfig.timeout` defaults
+to 30 seconds and covers the whole of `fetch`: connecting, the TLS handshake,
+sending the request, every redirect, and the response through the end of its
+body, which `fetch` reads before returning. A request that runs past it fails
+with `error.Timeout`. `FetchOptions.timeout` replaces the default for one
+request:
+
+```zig
+var client = http.Client.init(gpa, io, .{ .timeout = .fromSeconds(5) });
+
+// Inherits the five seconds.
+var a = try client.fetch(url, .{});
+// Its own limit, counted from this call.
+var b = try client.fetch(url, .{
+    .timeout = .{ .duration = .{ .raw = .fromSeconds(120), .clock = .awake } },
+});
+// An absolute deadline, such as one shared with other work.
+var c = try client.fetch(url, .{ .timeout = .{ .deadline = deadline } });
+// No limit at all.
+var d = try client.fetch(url, .{ .timeout = .none });
+```
+
+A request with `.stream = true` leaves the body on the wire for the caller to
+read through `ClientResponse.reader`. The deadline then covers `fetch` through
+the end of the head, and the body reads are not bounded at all.
+
 On zio, deadlines cancel the connection task directly, which needs a zio new
 enough to have `AutoCancel.setClock`. Other I/O backends use a watchdog task;
 with `std.Io.Threaded`, that means a second OS thread for each connection while
-either request or keepalive timeouts are enabled.
+either request or keepalive timeouts are enabled, and on the client side a
+second thread for each `fetch` while a timeout is set.
 
 ## Selecting the I/O Backend
 
@@ -230,9 +272,38 @@ pub fn main(init: std.process.Init) !void {
     var rt = try zio.Runtime.init(init.gpa, .{});
     defer rt.deinit();
 
-    var server = http.Server(void).init(init.gpa, rt.io(), .{}, {});
+    var server = http.Server(void).init(init.gpa, rt.io(), .{
+        .listen = &.{.{ .address = addr }},
+    }, {});
     defer server.deinit();
 
     // ... continue as before ...
 }
 ```
+
+## Recommended libraries
+
+Databases:
+
+- [pg.zig](https://github.com/lalinsky/pg.zig) - PostgreSQL client (fork that uses [tls.zig](https://github.com/ianic/tls.zig) instead of `OpenSSL` for `std.Io` compatibility)
+- [mysql](https://github.com/speed2exe/myzql) - MySQL client
+- [redis.zig](https://github.com/lalinsky/redis.zig) - Redis client
+- [memcached.zig](https://github.com/lalinsky/memcached.zig) - Memcached client
+
+Message brokers:
+
+- [nats.zig](https://github.com/lalinsky/nats.zig) - NATS client library
+
+Serialization:
+
+- [msgpack.zig](https://github.com/lalinsky/msgpack.zig) - Fast MsgPack serialization library for static types
+- [json.zig](https://github.com/lalinsky/json.zig) - Fast JSON serialization library for static types
+
+Templating:
+
+- [zmpl](https://github.com/jetzig-framework/zmpl) - Templating language inspired by Go Templ
+- [zt](https://github.com/lalinsky/zt) - Another templating language inspired by Go Templ
+
+Others:
+
+- [xsync.zig](https://github.com/lalinsky/xsync.zig) - Synchronization primitives that work across multiple `std.Io` implementations

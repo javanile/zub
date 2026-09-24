@@ -7,9 +7,9 @@ author_github: karlseguin
 repository: https://github.com/karlseguin/pg.zig
 keywords:
   - postgresql-client
-date: 2026-09-02
-updated_at: 2026-09-02T15:55:14+00:00
-last_sync: 2026-09-02T15:55:14Z
+date: 2026-09-24
+updated_at: 2026-09-24T13:59:19+00:00
+last_sync: 2026-09-24T13:59:19Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -578,6 +578,22 @@ For other types, either open an issue (ideally, with a sample query/data), or yo
 For reading, you can use `[]u8` to get the raw binary encoded data and parse it yourself.
 
 For writing, wrap your raw encoded data in `pg.Binary{.data = ....}`.
+
+### Binding Custom Types
+A struct, union or enum can control how it's bound by defining a `toPgzParam` method. This method returns a value that pg.zig already knows how to bind:
+
+```zig
+const Str = struct {
+  str: []const u8,
+  data: u32,
+
+  pub fn toPgzParam(self: *const Str) []const u8 {
+    return self.str;
+  }
+};
+
+_ = try conn.exec("insert into names (name) values ($1)", .{str});
+```
 
 ## Listen / Notify
 You can create a `pg.Listener` either from an existing `Pool` or directly.

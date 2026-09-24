@@ -7,10 +7,10 @@ author_github: vrypan
 repository: https://github.com/vrypan/zooi
 keywords:
   - tui
-date: 2026-09-10
+date: 2026-09-14
 category: tooling
-updated_at: 2026-09-10T13:28:39+00:00
-last_sync: 2026-09-10T13:28:39Z
+updated_at: 2026-09-14T05:35:29+00:00
+last_sync: 2026-09-14T05:35:29Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -70,7 +70,7 @@ zooi does not call `linkLibC()`. If the application links libc, zooi uses it.
 Add the dependency:
 
 ```sh
-zig fetch --save git+https://github.com/vrypan/zooi.git#v0.3.2
+zig fetch --save git+https://github.com/vrypan/zooi.git#v0.3.3
 ```
 
 Add the module in `build.zig`:
@@ -610,7 +610,7 @@ Known limits:
 
 ## Versioning
 
-0.1.0 was the first release. The API may change before 1.0.0. Pin the `v0.3.2`
+0.1.0 was the first release. The API may change before 1.0.0. Pin the `v0.3.3`
 tag for reproducible builds.
 
 ## License

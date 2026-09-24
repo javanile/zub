@@ -11,9 +11,9 @@ keywords:
   - vex-robotics
   - vex-robotics-competition
   - vex-v5
-date: 2026-09-13
-updated_at: 2026-09-13T12:21:57+00:00
-last_sync: 2026-09-13T12:21:57Z
+date: 2026-09-14
+updated_at: 2026-09-14T03:21:44+00:00
+last_sync: 2026-09-14T03:21:44Z
 package_kind: hybrid
 has_library: true
 has_binary: true

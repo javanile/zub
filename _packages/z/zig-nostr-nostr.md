@@ -8,14 +8,18 @@ repository: https://github.com/zig-nostr/nostr
 keywords:
   - cryptography
   - decentralized
+  - lmdb
+  - nip19
+  - nip44
+  - nip46
   - nostr
   - nostr-protocol
   - protocol
   - secp256k1
-date: 2026-09-23
-category: networking
-updated_at: 2026-09-23T14:20:22+00:00
-last_sync: 2026-09-23T14:20:22Z
+date: 2026-09-24
+category: data-formats
+updated_at: 2026-09-24T09:14:27+00:00
+last_sync: 2026-09-24T09:14:27Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -47,7 +51,7 @@ it like [Notary](https://github.com/zig-nostr/notary), a remote signer that keep
 your key off every client. Full docs, benchmarks, and the ecosystem overview
 live at [zignostr.com](https://zignostr.com).
 
-> **Status: early (`v0.14.6`).** The library core, transport, local-first store
+> **Status: early (`v0.14.7`).** The library core, transport, local-first store
 > and signer protocol have shipped and are covered by tests. Two native apps run
 > on it today. APIs may still change before 1.0.
 
@@ -103,12 +107,22 @@ BENCH_N=100000 zig build bench -Doptimize=ReleaseFast
 Methodology and the full write-up are on the
 [benchmarks page](https://zignostr.com/performance).
 
+## Using it from an agent
+
+An AI coding agent working on a Zig nostr project can learn this library from the skill in [`skills/zig-nostr`](skills/zig-nostr/SKILL.md): adding the dependency, keys and events, NIP-19 and NIP-44, relays read with a deadline, the local store, and the traps, with every snippet compiled against the current release. Add it to any agent that supports skills:
+
+```sh
+npx skills add zig-nostr/nostr
+```
+
+For work from a shell rather than in Zig, [deed](https://github.com/zig-nostr/deed) is a command line built on this library, with a skill of its own.
+
 ## Quickstart
 
 Add the library to your `build.zig.zon`:
 
 ```sh
-zig fetch --save https://github.com/zig-nostr/nostr/archive/refs/tags/v0.14.6.tar.gz
+zig fetch --save https://github.com/zig-nostr/nostr/archive/refs/tags/v0.14.7.tar.gz
 ```
 
 Wire the module in `build.zig`:
