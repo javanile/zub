@@ -9,10 +9,10 @@ keywords:
   - morus
   - morus-1280-128
   - webassembly
-date: 2026-04-11
+date: 2026-09-25
 category: systems
-updated_at: 2026-04-11T17:31:28+00:00
-last_sync: 2026-04-11T17:31:28Z
+updated_at: 2026-09-25T10:39:17+00:00
+last_sync: 2026-09-25T10:39:17Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -66,7 +66,7 @@ MORUS is the fastest cipher on Raspberry Pi 4, and possibly other ARM devices wi
             morus:        713 MiB/s
 ```
 
-On platforms with AES acceleration, [AEGIS](https://jedisct1.github.io/draft-aegis-aead/draft-irtf-cfrg-aegis-aead.html)(available in the standard library as `std.crypto.aead.aegis.Aegis128L`) and [ROCCA](https://github.com/jedisct1/zig-rocca) have higher performance.
+On platforms with AES acceleration, [AEGIS](https://www.rfc-editor.org/rfc/rfc10032.html) (available in the standard library as `std.crypto.aead.aegis.Aegis128L`) and [ROCCA](https://github.com/jedisct1/zig-rocca-s) have higher performance.
 
 Benchmark on Rocket Lake (Xeon E-2386G):
 

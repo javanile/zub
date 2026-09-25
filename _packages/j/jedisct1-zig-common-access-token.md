@@ -15,9 +15,9 @@ keywords:
   - please-use-better-authentication-mechanisms
   - token
   - tokens
-date: 2026-07-13
-updated_at: 2026-07-13T12:51:51+00:00
-last_sync: 2026-07-13T12:51:51Z
+date: 2026-09-25
+updated_at: 2026-09-25T10:39:12+00:00
+last_sync: 2026-09-25T10:39:12Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -91,7 +91,7 @@ Add this library to your `build.zig.zon` file:
 ```zig
 .dependencies = .{
     .zig_cat = .{
-        .url = "https://github.com/yourusername/zig-cat/archive/refs/tags/v0.1.0.tar.gz",
+        .url = "https://github.com/jedisct1/zig-common-access-token/archive/refs/heads/main.tar.gz",
         .hash = "...",
     },
 },

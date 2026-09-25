@@ -1,15 +1,16 @@
 ---
 title: nilo
-description: "Eleven modules for Zig 0.16: an HTTP server, Postgres and SQLite, S3, an HTTP client, a job queue in your database, JWT, cache, config, password hashing. A plain function is a route, a plain struct is a table or a job. The 404, the OpenAPI document and the SQL all come from that while compiling. One allocation per request."
+description: Fast Zig web framework with gRPC, WebSocket, OpenAPI, Postgres, SQLite, S3, jobs, JWT and an HTTP client built in, all checked at compile time
 license: MIT
 author: nevindra
 author_github: nevindra
 repository: https://github.com/nevindra/nilo
 keywords:
+  - backend
   - background-jobs
   - cache
   - comptime
-  - http
+  - grpc
   - http-client
   - http-server
   - job-queue
@@ -22,16 +23,16 @@ keywords:
   - sqlite
   - web-framework
   - websocket
-date: 2026-09-24
+date: 2026-09-25
 category: tooling
-updated_at: 2026-09-24T14:39:07+00:00
-last_sync: 2026-09-24T14:39:07Z
+updated_at: 2026-09-25T14:55:53+00:00
+last_sync: 2026-09-25T14:55:53Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 21
-distributable_binary_count: 21
+binary_count: 22
+distributable_binary_count: 22
 multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
@@ -52,7 +53,7 @@ permalink: /packages/nevindra/nilo/
 
 <p align="center">
   <a href="https://ziglang.org/"><img alt="Zig 0.16" src="https://img.shields.io/badge/zig-0.16-f7a41d?style=flat-square&logo=zig&logoColor=white"></a>
-  <a href="./CHANGELOG.md"><img alt="version 0.5.0" src="https://img.shields.io/badge/version-0.5.0-3b82f6?style=flat-square"></a>
+  <a href="./CHANGELOG.md"><img alt="version 0.6.0" src="https://img.shields.io/badge/version-0.6.0-3b82f6?style=flat-square"></a>
   <a href="./docs/reference/"><img alt="11 modules" src="https://img.shields.io/badge/modules-11-8957e5?style=flat-square"></a>
   <a href="./refusals/README.md"><img alt="411 refusals" src="https://img.shields.io/badge/mistakes%20refused%20while%20compiling-411-e05d44?style=flat-square"></a>
   <a href="./docs/adr/"><img alt="296 ADRs" src="https://img.shields.io/badge/decisions%20on%20file-296-6b7280?style=flat-square"></a>
@@ -101,10 +102,10 @@ You need Zig 0.16 and nothing else: no C library, no system package.
 
 ```console
 $ zig init                                                          # only if you have no build.zig.zon yet
-$ zig fetch --save 'git+https://github.com/nevindra/nilo?ref=v0.5.0#c7147f9b4af692c67701b3189afe39757a744cf0'
+$ zig fetch --save 'git+https://github.com/nevindra/nilo?ref=v0.6.0#221e1b3eaed531efe13de7ab39dedc4091a8775c'
 ```
 
-**Keep the `#commit` part.** The tag is annotated, and Zig 0.16's `zig fetch` doesn't peel it, so `?ref=v0.5.0` on its own gives you whatever `main` is that day.
+**Keep the `#commit` part.** The tag is annotated, and Zig 0.16's `zig fetch` doesn't peel it, so `?ref=v0.6.0` on its own gives you whatever `main` is that day.
 
 ```zig
 const std = @import("std");
@@ -164,7 +165,7 @@ Run `zig build run` and it's serving. [Getting started](./docs/guide/getting-sta
 
 The package is `nilo`, and each module is its own import: `nilo_http`, `nilo_sql`, `nilo_s3`, `nilo_fetch`, `nilo_job`, `nilo_cache`, `nilo_jwt`, `nilo_config`, `nilo_pw`, `nilo_id` and `nilo_core`. **There is no module called `nilo`**, so alias the one you use: `const nilo = @import("nilo_http");`.
 
-> **Upgrading from 0.4.0?** [Read this before you deploy](https://github.com/nevindra/nilo/releases/tag/v0.5.0#read-this-before-you-deploy): each change, and how to fix it.
+> **Upgrading from 0.5.0?** [Read this before you deploy](https://github.com/nevindra/nilo/releases/tag/v0.6.0#read-this-before-you-deploy): each change, and how to fix it. From 0.4.0, read [v0.5.0's](https://github.com/nevindra/nilo/releases/tag/v0.5.0#read-this-before-you-deploy) first.
 
 ## ✨ A route is just a function
 
@@ -319,7 +320,7 @@ Against eight other servers returning the same JSON, nilo is 1st on throughput, 
 
 | Module | What it does | Left out |
 |---|---|---|
-| **`nilo_http`** | Routing, typed handlers, middleware, cookies and sessions, static files, streaming, WebSocket, OpenAPI, metrics, rate limiting, gzip, optional TLS 1.3, and optional unary gRPC over HTTP/2 ([guide](./docs/guide/grpc.md)) | Templates, HTTP/2 for ordinary routes, streaming gRPC |
+| **`nilo_http`** | Routing, typed handlers, middleware, cookies and sessions, static files, streaming, WebSocket, rooms that broadcast to sockets and event streams and reach one user by key, OpenAPI, metrics, rate limiting, CSRF, gzip, optional TLS 1.3, and optional unary gRPC over HTTP/2 ([guide](./docs/guide/grpc.md)) | Templates, HTTP/2 for ordinary routes, streaming gRPC |
 | **`nilo_sql`** | Postgres and SQLite: reads, writes, transactions, streaming, schema and migrations | Window functions, CTEs and joins no foreign key names (use `db.raw`), `down` migrations |
 | **`nilo_s3`** | S3, MinIO and R2: get, put, range, stream, list, presigned URLs | `COPY`, multipart |
 | **`nilo_fetch`** | Calling another HTTP API from inside a request | Retries, circuit breaker |
