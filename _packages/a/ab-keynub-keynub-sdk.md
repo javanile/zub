@@ -1,6 +1,6 @@
 ---
 title: KeyNub-SDK
-description: "A USB-C hardware license dongle for professional software: authentication in a secure element, an SDK for 25 languages, and licensing that works offline."
+description: "A USB-C hardware license dongle for professional software: authentication in a secure element, an SDK for 37 languages, and licensing that works offline."
 license: Apache-2.0
 author: AB-KeyNub
 author_github: AB-KeyNub
@@ -10,9 +10,9 @@ keywords:
   - license-dongle
   - software-licensing
   - usb-dongle
-date: 2026-09-13
-updated_at: 2026-09-13T13:55:13+00:00
-last_sync: 2026-09-13T13:55:13Z
+date: 2026-09-26
+updated_at: 2026-09-26T12:48:44+00:00
+last_sync: 2026-09-26T12:48:44Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -42,15 +42,36 @@ dongle is a vendor-defined USB HID device.
 [![Packagist](https://img.shields.io/packagist/v/keynub/licdongle?label=Packagist)](https://packagist.org/packages/keynub/licdongle)
 [![Maven Central](https://img.shields.io/maven-central/v/com.keynub/keynub-licdongle?label=Maven%20Central)](https://central.sonatype.com/artifact/com.keynub/keynub-licdongle)
 [![Go module](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fproxy.golang.org%2Fgithub.com%2F!a!b-!key!nub%2F!key!nub-!s!d!k%2Fbindings%2Fgo%2F%40latest&query=%24.Version&label=Go%20module&logo=go)](https://pkg.go.dev/github.com/AB-KeyNub/KeyNub-SDK/bindings/go)
-[![CMake package](https://img.shields.io/github/v/tag/AB-KeyNub/KeyNub-SDK?label=CMake%20package)](NATIVES.md)
+[![Julia General](https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Fraw.githubusercontent.com%2FJuliaRegistries%2FGeneral%2Fmaster%2FK%2FKeyNubLicenseDongle%2FVersions.toml&search=%5C%5B%22%28%5B0-9.%5D%2B%29%22%5C%5D%5Cs*git-tree-sha1%20%3D%20%22%5B0-9a-f%5D%2B%22%5Cs*%24&replace=v%241&label=Julia%20General&logo=julia)](https://juliahub.com/ui/Packages/General/KeyNubLicenseDongle)
+[![pub.dev](https://img.shields.io/pub/v/keynub_licdongle?label=pub.dev)](https://pub.dev/packages/keynub_licdongle)
+[![Swift Package Index](https://img.shields.io/github/v/tag/AB-KeyNub/KeyNub-SDK?filter=v*&sort=semver&label=Swift%20Package%20Index)](https://swiftpackageindex.com/AB-KeyNub/KeyNub-SDK)
+[![Hex](https://img.shields.io/hexpm/v/keynub_licdongle?label=Hex)](https://hex.pm/packages/keynub_licdongle)
+[![opam](https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Fopam.ocaml.org%2Fpackages%2Fkeynub-licdongle%2F&search=keynub-licdongle%5C.%28%5B0-9%5D%5B0-9.%5D*%29&replace=v%241&label=opam)](https://opam.ocaml.org/packages/keynub-licdongle/)
+[![DUB](https://img.shields.io/dub/v/keynub-licdongle?label=DUB)](https://code.dlang.org/packages/keynub-licdongle)
+[![Hackage](https://img.shields.io/hackage/v/keynub-licdongle?label=Hackage)](https://hackage.haskell.org/package/keynub-licdongle)
+[![Stackage](https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Fwww.stackage.org%2Fpackage%2Fkeynub-licdongle%2Fbadge%2Fnightly&search=%3E%28%5B0-9%5D%5B0-9.%5D%2A%29%3C%2Ftext%3E&replace=v%241&label=Stackage)](https://www.stackage.org/package/keynub-licdongle)
+[![Alire](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Falire.ada.dev%2Fbadges%2Fkeynub_licdongle.json&query=%24.message&prefix=v&label=Alire)](https://alire.ada.dev/crates/keynub_licdongle)
+[![Wolfram Paclet Repository](https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Fresources.wolframcloud.com%2FPacletRepository%2Fresources%2FKeyNub%2FKeyNubLicDongle%2F&search=shingleVersionHistory%5B%5Cs%5CS%5D%2A%3Fclass%3D%22name%22%3E%28%5B0-9.%5D%2B%29%3C&replace=v%241&label=Wolfram%20Paclet%20Repository)](https://resources.wolframcloud.com/PacletRepository/resources/KeyNub/KeyNubLicDongle/)
+[![Nimble](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fregistry.nimpkgs.org%2Fpackages%2Fke%2Fkeynub_licdongle%2Fpkg.json&query=%24.meta.nimble.version&label=Nimble&logo=nim&prefix=v)](https://nimpkgs.org/#/pkg/keynub_licdongle)
+[![CPAN](https://img.shields.io/cpan/v/KeyNub-LicDongle?label=CPAN)](https://metacpan.org/dist/KeyNub-LicDongle)
+[![Lazarus OPM](https://img.shields.io/github/v/tag/AB-KeyNub/KeyNub-SDK?filter=v*&sort=semver&label=Lazarus%20OPM)](https://packages.lazarus-ide.org/)
+[![CMake package](https://img.shields.io/github/v/tag/AB-KeyNub/KeyNub-SDK?filter=v*&sort=semver&label=CMake%20package)](NATIVES.md)
+[![xmake](https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Fraw.githubusercontent.com%2Fxmake-io%2Fxmake-repo%2Fmaster%2Fpackages%2Fk%2Fkeynub_licdongle%2Fxmake.lua&search=add_versions%5C%28%22%28%5B0-9.%5D%2B%29%22&replace=v%241&label=xmake)](https://packages.xmake.io/packages/keynub_licdongle)
+[![Bazel Central Registry](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fbazelbuild%2Fbazel-central-registry%2Fmain%2Fmodules%2Fkeynub_licdongle%2Fmetadata.json&query=%24.versions%5B-1%3A%5D&prefix=v&label=Bazel%20Central%20Registry)](https://registry.bazel.build/modules/keynub_licdongle)
 [![NuGet](https://img.shields.io/nuget/v/KeyNub.LicenseDongle.Native?label=NuGet%20native)](https://www.nuget.org/packages/KeyNub.LicenseDongle.Native)
-[![File Exchange](https://img.shields.io/github/v/tag/AB-KeyNub/KeyNub-SDK?label=File%20Exchange)](https://www.mathworks.com/matlabcentral/fileexchange/184704-keynub-license-dongle-for-matlab-and-simulink)
+[![File Exchange](https://img.shields.io/github/v/tag/AB-KeyNub/KeyNub-SDK?filter=v*&sort=semver&label=File%20Exchange)](https://www.mathworks.com/matlabcentral/fileexchange/184704-keynub-license-dongle-for-matlab-and-simulink)
+[![Zigistry](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.zigistry.dev%2Fpackages%2F%3Fq%3Dgh%2Fab-keynub%2Fkeynub-sdk&query=%24.latest_version&label=Zigistry)](https://zigistry.dev/packages/github/ab-keynub/keynub-sdk)
+[![Shardbox](https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Fshardbox.org%2Fshards%2Fkeynub_licdongle&search=%3Ctitle%3Ekeynub_licdongle%40%28%5B0-9%5D%5B%5E%20%5D%2A%29%20on%20Shardbox&replace=v%241&label=Shardbox)](https://shardbox.org/shards/keynub_licdongle)
+[![shards.info](https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Fshards.info%2Fgithub%2FAB-KeyNub%2FKeyNub-SDK%2F&search=page__subheading%22%3E%5Cs%2Av%28%5B0-9%5D%5B%5E%3C%5Cs%5D%2A%29&replace=v%241&label=shards.info)](https://shards.info/github/AB-KeyNub/KeyNub-SDK/)
+[![Public Tcl Package Repository](https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Ftclrepo.daidze.org%2Fapi%2Fv2%2Fpackages%2Flist_packages&search=repo%2Fkeynub_licdongle%2Ftcl%2F%28%5B0-9.%5D%2B%29%2F&replace=v%241&label=Public%20Tcl%20Package%20Repository)](https://tclrepo.daidze.org/)
+[![Tcl/Tk Package Registry](https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Ftcltk-registry.pages.dev%2Fmetadata%2Fpackages-meta.json&search=%22name%22%3A%22keynub_licdongle%22%5B%5E%5C%5D%5D%2A%3F%22latest_release%22%3A%22v%28%5B0-9.%5D%2B%29%22&replace=v%241&label=Tcl%2FTk%20Package%20Registry)](https://tcltk-pkgs.pages.dev/#/pkg/keynub_licdongle)
+[![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.22860068-blue)](https://doi.org/10.5281/zenodo.22860068)
 
 > **Before you write your licensing check, read
 > [`docs/integration-security.md`](docs/integration-security.md).** The dongle
 > proves a genuine device is attached; it cannot stop an attacker patching the
 > application that asks. An integration that branches on a boolean is bypassed
-> trivially — feed something your application actually needs through
+> trivially — feed something your application needs through
 > `app_encrypt`/`app_decrypt` instead. That document is short, and it is the
 > difference between real protection and a speed bump.
 
@@ -70,40 +91,50 @@ once.
 
 | Language | Binding | Sample | Package |
 | --- | --- | --- | --- |
-| C | [`include/licdongle.h`](include/licdongle.h) — CMake target `keynub::licdongle` | [`samples/c`](samples/c) | [![CMake package](https://img.shields.io/github/v/tag/AB-KeyNub/KeyNub-SDK?label=CMake%20package)](NATIVES.md) [![NuGet](https://img.shields.io/nuget/v/KeyNub.LicenseDongle.Native?label=NuGet%20native)](https://www.nuget.org/packages/KeyNub.LicenseDongle.Native) |
-| C++ | [`bindings/cpp`](bindings/cpp) — header-only RAII, C++11, CMake target `keynub::licdongle_cpp` | [`samples/cpp`](samples/cpp) | [![CMake package](https://img.shields.io/github/v/tag/AB-KeyNub/KeyNub-SDK?label=CMake%20package)](NATIVES.md) [![NuGet](https://img.shields.io/nuget/v/KeyNub.LicenseDongle.Native?label=NuGet%20native)](https://www.nuget.org/packages/KeyNub.LicenseDongle.Native) |
+| C | [`include/licdongle.h`](include/licdongle.h) — CMake target `keynub::licdongle` | [`samples/c`](samples/c) | [![CMake package](https://img.shields.io/github/v/tag/AB-KeyNub/KeyNub-SDK?filter=v*&sort=semver&label=CMake%20package)](NATIVES.md) [![NuGet](https://img.shields.io/nuget/v/KeyNub.LicenseDongle.Native?label=NuGet%20native)](https://www.nuget.org/packages/KeyNub.LicenseDongle.Native) [![xmake](https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Fraw.githubusercontent.com%2Fxmake-io%2Fxmake-repo%2Fmaster%2Fpackages%2Fk%2Fkeynub_licdongle%2Fxmake.lua&search=add_versions%5C%28%22%28%5B0-9.%5D%2B%29%22&replace=v%241&label=xmake)](https://packages.xmake.io/packages/keynub_licdongle) [![Bazel Central Registry](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fbazelbuild%2Fbazel-central-registry%2Fmain%2Fmodules%2Fkeynub_licdongle%2Fmetadata.json&query=%24.versions%5B-1%3A%5D&prefix=v&label=Bazel%20Central%20Registry)](https://registry.bazel.build/modules/keynub_licdongle) |
+| C++ | [`bindings/cpp`](bindings/cpp) — header-only RAII, C++11, CMake target `keynub::licdongle_cpp` | [`samples/cpp`](samples/cpp) | [![CMake package](https://img.shields.io/github/v/tag/AB-KeyNub/KeyNub-SDK?filter=v*&sort=semver&label=CMake%20package)](NATIVES.md) [![NuGet](https://img.shields.io/nuget/v/KeyNub.LicenseDongle.Native?label=NuGet%20native)](https://www.nuget.org/packages/KeyNub.LicenseDongle.Native) [![xmake](https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Fraw.githubusercontent.com%2Fxmake-io%2Fxmake-repo%2Fmaster%2Fpackages%2Fk%2Fkeynub_licdongle%2Fxmake.lua&search=add_versions%5C%28%22%28%5B0-9.%5D%2B%29%22&replace=v%241&label=xmake)](https://packages.xmake.io/packages/keynub_licdongle) [![Bazel Central Registry](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Fbazelbuild%2Fbazel-central-registry%2Fmain%2Fmodules%2Fkeynub_licdongle%2Fmetadata.json&query=%24.versions%5B-1%3A%5D&prefix=v&label=Bazel%20Central%20Registry)](https://registry.bazel.build/modules/keynub_licdongle) |
 | flat API | [`bindings/flat`](bindings/flat) — integer handles, no callbacks | [`samples/flat`](samples/flat) | — |
 | C# / VB.NET / F# | [`bindings/dotnet`](bindings/dotnet) — `KeyNub.LicenseDongle` | [`samples/csharp`](samples/csharp), [`samples/vbnet`](samples/vbnet), [`samples/fsharp`](samples/fsharp) | [![NuGet](https://img.shields.io/nuget/v/KeyNub.LicenseDongle?label=NuGet)](https://www.nuget.org/packages/KeyNub.LicenseDongle) |
 | Python | [`bindings/python`](bindings/python) — `keynub-licdongle`, ctypes, plus the `licd-tool` CLI | [`samples/python`](samples/python) | [![PyPI](https://img.shields.io/pypi/v/keynub-licdongle?label=PyPI)](https://pypi.org/project/keynub-licdongle/) |
 | Java | [`bindings/java`](bindings/java) — JNA, Java 17+ | [`samples/java`](samples/java) | [![Maven Central](https://img.shields.io/maven-central/v/com.keynub/keynub-licdongle?label=Maven%20Central)](https://central.sonatype.com/artifact/com.keynub/keynub-licdongle) |
-| Delphi / Free Pascal | [`bindings/delphi`](bindings/delphi) | [`samples/delphi`](samples/delphi) | — |
+| Delphi / Free Pascal | [`bindings/delphi`](bindings/delphi) | [`samples/delphi`](samples/delphi) | [![Lazarus OPM](https://img.shields.io/github/v/tag/AB-KeyNub/KeyNub-SDK?filter=v*&sort=semver&label=Lazarus%20OPM)](https://packages.lazarus-ide.org/) |
 | Visual Basic 6 / VBScript | [`bindings/com`](bindings/com) — COM object `KeyNub.Dongle` | [`samples/vb6`](samples/vb6) | — |
 | twinBASIC | [`bindings/com`](bindings/com) | [`samples/twinbasic`](samples/twinbasic) | — |
 | Excel / VBA | [`bindings/vba`](bindings/vba) | [`samples/vba`](samples/vba) | — |
-| MATLAB / Simulink | [`bindings/matlab`](bindings/matlab) — MEX gateway, incl. MATLAB Coder output | [`samples/matlab`](samples/matlab), [`samples/simulink`](samples/simulink) | [![File Exchange](https://img.shields.io/github/v/tag/AB-KeyNub/KeyNub-SDK?label=File%20Exchange)](https://www.mathworks.com/matlabcentral/fileexchange/184704-keynub-license-dongle-for-matlab-and-simulink) |
+| MATLAB / Simulink | [`bindings/matlab`](bindings/matlab) — MEX gateway, incl. MATLAB Coder output; runs in GNU Octave | [`samples/matlab`](samples/matlab), [`samples/simulink`](samples/simulink) | [![File Exchange](https://img.shields.io/github/v/tag/AB-KeyNub/KeyNub-SDK?filter=v*&sort=semver&label=File%20Exchange)](https://www.mathworks.com/matlabcentral/fileexchange/184704-keynub-license-dongle-for-matlab-and-simulink) |
+| Wolfram Language | [`bindings/wolfram`](bindings/wolfram) — paclet over `ForeignFunctionLoad`, flat API | [`samples/wolfram`](samples/wolfram) | [![Wolfram Paclet Repository](https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Fresources.wolframcloud.com%2FPacletRepository%2Fresources%2FKeyNub%2FKeyNubLicDongle%2F&search=shingleVersionHistory%5B%5Cs%5CS%5D%2A%3Fclass%3D%22name%22%3E%28%5B0-9.%5D%2B%29%3C&replace=v%241&label=Wolfram%20Paclet%20Repository)](https://resources.wolframcloud.com/PacletRepository/resources/KeyNub/KeyNubLicDongle/) |
 | LabVIEW | [`bindings/labview`](bindings/labview) — VI library (LabVIEW 2026, 64-bit) and the import header | [`samples/labview`](samples/labview) | — |
 | Node.js / Electron | [`bindings/nodejs`](bindings/nodejs) — `@keynub/licdongle` | [`samples/nodejs`](samples/nodejs) | [![npm](https://img.shields.io/npm/v/%40keynub%2Flicdongle?label=npm)](https://www.npmjs.com/package/@keynub/licdongle) |
 | Go | [`bindings/go`](bindings/go) — cgo, `errors.Is` sentinels | [`samples/go`](samples/go) | [![Go module](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fproxy.golang.org%2Fgithub.com%2F!a!b-!key!nub%2F!key!nub-!s!d!k%2Fbindings%2Fgo%2F%40latest&query=%24.Version&label=Go%20module&logo=go)](https://pkg.go.dev/github.com/AB-KeyNub/KeyNub-SDK/bindings/go) |
 | Rust | [`bindings/rust`](bindings/rust) — `keynub-licdongle`, no dependencies | [`samples/rust`](samples/rust) | [![crates.io](https://img.shields.io/crates/v/keynub-licdongle?label=crates.io)](https://crates.io/crates/keynub-licdongle) |
 | Ruby | [`bindings/ruby`](bindings/ruby) — stdlib Fiddle, no gems | [`samples/ruby`](samples/ruby) | [![RubyGems](https://img.shields.io/gem/v/keynub_licdongle?label=RubyGems)](https://rubygems.org/gems/keynub_licdongle) |
 | PHP | [`bindings/php`](bindings/php) — bundled FFI, no PECL module | [`samples/php`](samples/php) | [![Packagist](https://img.shields.io/packagist/v/keynub/licdongle?label=Packagist)](https://packagist.org/packages/keynub/licdongle) |
-| Perl | [`bindings/perl`](bindings/perl) — `FFI::Platypus` | [`samples/perl`](samples/perl) | — |
+| Perl | [`bindings/perl`](bindings/perl) — `FFI::Platypus` | [`samples/perl`](samples/perl) | [![CPAN](https://img.shields.io/cpan/v/KeyNub-LicDongle?label=CPAN)](https://metacpan.org/dist/KeyNub-LicDongle) |
 | Lua | [`bindings/lua`](bindings/lua) — LuaJIT FFI | [`samples/lua`](samples/lua) | [![LuaRocks](https://img.shields.io/luarocks/v/ab-tools/keynub-licdongle?label=LuaRocks)](https://luarocks.org/modules/ab-tools/keynub-licdongle) |
 | Fortran | [`bindings/fortran`](bindings/fortran) — F2003 `iso_c_binding` | [`samples/fortran`](samples/fortran) | — |
 | COBOL | [`bindings/cobol`](bindings/cobol) — copybook, GnuCOBOL | [`samples/cobol`](samples/cobol) | — |
-| Zig | [`bindings/zig`](bindings/zig) — `@cImport` compiles the real header | [`samples/zig`](samples/zig) | — |
-| Julia | [`bindings/julia`](bindings/julia) — `ccall`, no packages | [`samples/julia`](samples/julia) | — |
-| Nim | [`bindings/nim`](bindings/nim) — `importc` over `dynlib` | [`samples/nim`](samples/nim) | — |
+| Ada | [`bindings/ada`](bindings/ada) — Alire crate `keynub_licdongle`, library loaded at run time | [`samples/ada`](samples/ada) | [![Alire](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Falire.ada.dev%2Fbadges%2Fkeynub_licdongle.json&query=%24.message&prefix=v&label=Alire)](https://alire.ada.dev/crates/keynub_licdongle) |
+| Zig | [`bindings/zig`](bindings/zig) — `@cImport` compiles the real header | [`samples/zig`](samples/zig) | [![Zigistry](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.zigistry.dev%2Fpackages%2F%3Fq%3Dgh%2Fab-keynub%2Fkeynub-sdk&query=%24.latest_version&label=Zigistry)](https://zigistry.dev/packages/github/ab-keynub/keynub-sdk) |
+| Swift | [`bindings/swift`](bindings/swift) — `KeyNubLicDongle`, SwiftPM package at the repository root | [`samples/swift`](samples/swift) | [![Swift Package Index](https://img.shields.io/github/v/tag/AB-KeyNub/KeyNub-SDK?filter=v*&sort=semver&label=Swift%20Package%20Index)](https://swiftpackageindex.com/AB-KeyNub/KeyNub-SDK) |
+| Dart / Flutter | [`bindings/dart`](bindings/dart) — `keynub_licdongle`, `dart:ffi` | [`samples/dart`](samples/dart) | [![pub.dev](https://img.shields.io/pub/v/keynub_licdongle?label=pub.dev)](https://pub.dev/packages/keynub_licdongle) |
+| Julia | [`bindings/julia`](bindings/julia) — `ccall`, no packages | [`samples/julia`](samples/julia) | [![Julia General](https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Fraw.githubusercontent.com%2FJuliaRegistries%2FGeneral%2Fmaster%2FK%2FKeyNubLicenseDongle%2FVersions.toml&search=%5C%5B%22%28%5B0-9.%5D%2B%29%22%5C%5D%5Cs*git-tree-sha1%20%3D%20%22%5B0-9a-f%5D%2B%22%5Cs*%24&replace=v%241&label=Julia%20General&logo=julia)](https://juliahub.com/ui/Packages/General/KeyNubLicenseDongle) |
+| R | [`bindings/r`](bindings/r) — `KeyNubLicDongle`, a C layer compiled at install | [`samples/r`](samples/r) | — |
+| Haskell | [`bindings/haskell`](bindings/haskell) — `keynub-licdongle`, pure Haskell over the flat API | [`samples/haskell`](samples/haskell) | [![Hackage](https://img.shields.io/hackage/v/keynub-licdongle?label=Hackage)](https://hackage.haskell.org/package/keynub-licdongle) [![Stackage](https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Fwww.stackage.org%2Fpackage%2Fkeynub-licdongle%2Fbadge%2Fnightly&search=%3E%28%5B0-9%5D%5B0-9.%5D%2A%29%3C%2Ftext%3E&replace=v%241&label=Stackage)](https://www.stackage.org/package/keynub-licdongle) |
+| OCaml | [`bindings/ocaml`](bindings/ocaml) — `keynub-licdongle`, `ctypes-foreign` over the flat API | [`samples/ocaml`](samples/ocaml) | [![opam](https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Fopam.ocaml.org%2Fpackages%2Fkeynub-licdongle%2F&search=keynub-licdongle%5C.%28%5B0-9%5D%5B0-9.%5D*%29&replace=v%241&label=opam)](https://opam.ocaml.org/packages/keynub-licdongle/) |
+| Elixir | [`bindings/elixir`](bindings/elixir) — `keynub_licdongle`, a small NIF over the flat API | [`samples/elixir`](samples/elixir) | [![Hex](https://img.shields.io/hexpm/v/keynub_licdongle?label=Hex)](https://hex.pm/packages/keynub_licdongle) |
+| D | [`bindings/d`](bindings/d) — `keynub-licdongle`, `extern(C)` over the flat API, dub package at the repository root | [`samples/d`](samples/d) | [![DUB](https://img.shields.io/dub/v/keynub-licdongle?label=DUB)](https://code.dlang.org/packages/keynub-licdongle) |
+| Crystal | [`bindings/crystal`](bindings/crystal) — `keynub_licdongle`, function pointers over the flat API, shard at the repository root | [`samples/crystal`](samples/crystal) | [![Shardbox](https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Fshardbox.org%2Fshards%2Fkeynub_licdongle&search=%3Ctitle%3Ekeynub_licdongle%40%28%5B0-9%5D%5B%5E%20%5D%2A%29%20on%20Shardbox&replace=v%241&label=Shardbox)](https://shardbox.org/shards/keynub_licdongle) [![shards.info](https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Fshards.info%2Fgithub%2FAB-KeyNub%2FKeyNub-SDK%2F&search=page__subheading%22%3E%5Cs%2Av%28%5B0-9%5D%5B%5E%3C%5Cs%5D%2A%29&replace=v%241&label=shards.info)](https://shards.info/github/AB-KeyNub/KeyNub-SDK/) |
+| Tcl | [`bindings/tcl`](bindings/tcl) — `keynub_licdongle`, pure Tcl over cffi and the flat API | [`samples/tcl`](samples/tcl) | [![Public Tcl Package Repository](https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Ftclrepo.daidze.org%2Fapi%2Fv2%2Fpackages%2Flist_packages&search=repo%2Fkeynub_licdongle%2Ftcl%2F%28%5B0-9.%5D%2B%29%2F&replace=v%241&label=Public%20Tcl%20Package%20Repository)](https://tclrepo.daidze.org/) [![Tcl/Tk Package Registry](https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Ftcltk-registry.pages.dev%2Fmetadata%2Fpackages-meta.json&search=%22name%22%3A%22keynub_licdongle%22%5B%5E%5C%5D%5D%2A%3F%22latest_release%22%3A%22v%28%5B0-9.%5D%2B%29%22&replace=v%241&label=Tcl%2FTk%20Package%20Registry)](https://tcltk-pkgs.pages.dev/#/pkg/keynub_licdongle) |
+| Nim | [`bindings/nim`](bindings/nim) — `importc` over `dynlib` | [`samples/nim`](samples/nim) | [![Nimble](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fregistry.nimpkgs.org%2Fpackages%2Fke%2Fkeynub_licdongle%2Fpkg.json&query=%24.meta.nimble.version&label=Nimble&logo=nim&prefix=v)](https://nimpkgs.org/#/pkg/keynub_licdongle) |
 
 Every sample carries the exact command that builds and runs it in its header
-comment, including which native library it wants. All of them except **Excel/VBA**
-and **LabVIEW** were compiled and run against a software dongle before release;
-those two need Excel and a licensed LabVIEW respectively, so they are written
-against the API and reviewed rather than executed. LabVIEW also has a
-ready-made VI library ([`bindings/labview/keynub_licdongle`](bindings/labview/keynub_licdongle),
-saved in LabVIEW 2026, 64-bit), whose VIs were run in LabVIEW against the
-shipped library; Excel ships a `.bas` rather than an `.xlsm` so that the code can
-be reviewed in a diff.
+comment, including which native library it wants. Every binding comes with a
+stand-in test that exercises every call of the binding against a stand-in for the
+C library, so it runs without a dongle; the binding's README gives the command.
+LabVIEW also has a ready-made VI library
+([`bindings/labview/keynub_licdongle`](bindings/labview/keynub_licdongle), saved in
+LabVIEW 2026, 64-bit); Excel ships a `.bas` rather than an `.xlsm` so that the code
+can be reviewed in a diff.
 
 Environments that cannot express the core ABI — LabVIEW, VBA, COBOL — go through
 a **flat companion API** ([`bindings/flat`](bindings/flat)): one self-contained
@@ -127,8 +158,7 @@ if (dongle.IsGenuine) enableFeature();
 coefficients = dongle.AppDecrypt(blobShippedWithYourInstaller);
 ```
 
-Encrypt the constants, tables, thresholds or key material your application
-genuinely cannot compute. Ship them encrypted. Decrypt them through the dongle at
+Encrypt the constants, tables, thresholds or key material your application cannot compute. Ship them encrypted. Decrypt them through the dongle at
 run time. Then removing the check does not unlock the feature — it removes the
 feature's input.
 
@@ -139,6 +169,20 @@ production root CA, whose public certificate is compiled into the released libra
 so a substituted device fails verification and your application supplies nothing and
 manages no root. `licd_set_trust_root` (or the equivalent on your binding) overrides
 the built-in root, which only vendor tooling needs.
+
+## Security Architecture
+
+The whitepaper behind this SDK covers scope and product boundary, assets,
+threat model, environment assumptions, security objectives, the mechanisms
+that meet them, a cryptographic inventory, key management, per-mechanism
+verification status and the limitations.
+
+- [Security architecture](https://www.keynub.com/security/architecture/) — the whitepaper as a page
+- [KeyNub Security Architecture (PDF)](https://www.keynub.com/wp-content/uploads/KeyNub-Security-Architecture.pdf) — the dated document
+- [![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.22860068-blue)](https://doi.org/10.5281/zenodo.22860068) — the archived record on Zenodo, CC BY-ND 4.0
+
+Cite it as: AB-Tools GmbH (2026). *KeyNub USB-C License Dongle: Security
+Architecture*. Rev. 1.1. Zenodo. <https://doi.org/10.5281/zenodo.22860069>
 
 ## Licence
 

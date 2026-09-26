@@ -8,10 +8,10 @@ repository: https://github.com/impeller-interop/impeller-zig
 keywords:
   - bindings
   - graphics
-date: 2026-09-04
+date: 2026-09-26
 category: systems
-updated_at: 2026-09-04T08:57:36+00:00
-last_sync: 2026-09-04T08:57:36Z
+updated_at: 2026-09-26T13:59:33+00:00
+last_sync: 2026-09-26T13:59:33Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -61,7 +61,7 @@ Standalone SDK artifacts are packaged in [`impeller-sdk`](https://github.com/imp
 Install the latest release:
 
 ```bash
-zig fetch --save git+https://github.com/impeller-interop/impeller-zig#v0.1.0
+zig fetch --save git+https://github.com/impeller-interop/impeller-zig#v0.1.1
 ```
 
 To follow the development branch instead:

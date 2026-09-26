@@ -9,10 +9,10 @@ keywords:
   - binding
   - vulkan
   - vulkan-api
-date: 2026-09-18
+date: 2026-09-26
 category: game-development
-updated_at: 2026-09-18T12:22:12+00:00
-last_sync: 2026-09-18T12:22:12Z
+updated_at: 2026-09-26T11:07:09+00:00
+last_sync: 2026-09-26T11:07:09Z
 package_kind: library
 has_library: true
 has_binary: false
