@@ -9,10 +9,10 @@ keywords:
   - cli
   - lines-of-code
   - tree
-date: 2026-08-12
+date: 2026-09-27
 category: tooling
-updated_at: 2026-08-12T14:22:19+00:00
-last_sync: 2026-08-12T14:22:19Z
+updated_at: 2026-09-27T14:35:04+00:00
+last_sync: 2026-09-27T14:35:04Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -90,7 +90,7 @@ Some highlights:
 
 - =loc= counts lines of code across languages
 - =tree= prints directory trees with optional filtering
-- =procscope= samples CPU, RSS, and energy usage for a macOS process
+- =pstat= samples CPU, RSS, and energy usage for a macOS process
 
 The programs and packages are developed in the same repository, so the binaries can also serve as
 examples of how the reusable modules fit together.

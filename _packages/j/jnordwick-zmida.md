@@ -6,9 +6,9 @@ author: jnordwick
 author_github: jnordwick
 repository: https://github.com/jnordwick/zmida
 keywords:
-date: 2026-09-17
-updated_at: 2026-09-17T14:43:22+00:00
-last_sync: 2026-09-17T14:43:22Z
+date: 2026-09-27
+updated_at: 2026-09-27T13:32:26+00:00
+last_sync: 2026-09-27T13:32:26Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -70,12 +70,15 @@ A lot of the top level functions have some comptime
 This are the next few thigs I want to work on:
 
 - make some simple functions for most basic "bench this"
-- write basic radom and iterator generators
 - add adaptive mode that run by-count trials by estimating workload
 - better documentation
 - gnuplot: less ugly output and chart options
 - gnuplot: add basic bar (relative mode, perf events)
-- perf counters for cache (also perf multiplexed adj)
+
+
+* BELOw HERE IS OUTDATED
+I'll update it soon. The API is just getting cleaned up a little.
+Look at main.zig for an example.
 
 * Example
 

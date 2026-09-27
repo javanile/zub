@@ -9,10 +9,10 @@ keywords:
   - binding
   - cimgui
   - imgui
-date: 2026-09-11
+date: 2026-09-27
 category: game-development
-updated_at: 2026-09-11T13:34:36+00:00
-last_sync: 2026-09-11T13:34:36Z
+updated_at: 2026-09-27T13:13:46+00:00
+last_sync: 2026-09-27T13:13:46Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -25,9 +25,6 @@ sync_priority: normal
 sync_source: zigistry
 permalink: /packages/tiawl/cimgui.zig/
 ---
-
-> [!WARNING]
-> If you are using the `docking` branch it won't be updated anymore and there won't be more `*-docking` tags. Please use the `-Ddocking` option [instead](https://github.com/tiawl/cimgui.zig/tree/stable?tab=readme-ov-file#cimguizig-as-a-library).
 
 # cimgui.zig
 
@@ -85,6 +82,7 @@ const std = @import("std");
 +const cimgui = @import("cimgui_zig");
 +const Renderer = cimgui.Renderer;
 +const Platform = cimgui.Platform;
++const Feature = cimgui.Feature;
 
 pub fn build(b: *std.Build) void {
     // -- snip --
@@ -92,9 +90,9 @@ pub fn build(b: *std.Build) void {
 +    const cimgui_dep = b.dependency("cimgui_zig", .{
 +        .target = target,
 +        .optimize = optimize,
-+        .platforms = &[_]Platform{.GLFW},
-+        .renderers = &[_]Renderer{.Vulkan},
-+        // .docking = true, // Default value: false
++        .platforms = &[_]Platform{.glfw},
++        .renderers = &[_]Renderer{.vulkan},
++        // .features = &[_]Feature{ .internal, .docking }, // Default value: &[_]Feature{.internal}
 +        // .no_renderer = true, // Default value: false. Comment `.renderers` field if you use this one
 +        // .no_platform = true, // Default value: false. Comment `.platforms` field if you use this one
 +    });
@@ -139,15 +137,18 @@ These additional options have been implemented to cover main usecases:
 ```
   -Drenderers=[enum_list]      Specify the renderer backends
                                  Supported Values:
-                                   Metal
-                                   OpenGL3
-                                   SDLGPU3
-                                   Vulkan
+                                   metal
+                                   opengl3
+                                   sdlgpu3
+                                   vulkan
   -Dplatforms=[enum_list]      Specify the platform backends
                                  Supported Values:
-                                   GLFW
-                                   SDL3
-  -Ddocking=[bool]             master or docking ocornut/imgui branch ?
+                                   glfw
+                                   sdl3
+  -Dfeatures=[enum_list]       Specify the needed features
+                                 Supported Values:
+                                   docking
+                                   internal
   -Dno_renderer=[bool]         Specify there no need for renderer backend. It returns an error if you use it with `renderers` option.
   -Dno_platform=[bool]         Specify there no need for platform backend. It returns an error if you use it with `platforms` option.
   -Dlink_libc=[bool]           link libC ?

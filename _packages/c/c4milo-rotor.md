@@ -1,0 +1,278 @@
+---
+title: rotor
+description: "Event loop and I/O layer for Zig 0.16: io_uring on Linux with an epoll fallback, kqueue on macOS. Allocates nothing, keeps assertions on in production, and is benchmarked against libuv and libxev in a harness anyone can re-run. Apache-2.0."
+license: Apache-2.0
+author: c4milo
+author_github: c4milo
+repository: https://github.com/c4milo/rotor
+keywords:
+  - async-io
+  - epoll
+  - event-loop
+  - io-uring
+  - kqueue
+  - linux
+  - macos
+  - networking
+  - no-malloc
+  - shared-nothing
+date: 2026-09-27
+category: systems
+updated_at: 2026-09-27T14:02:33+00:00
+last_sync: 2026-09-27T14:02:33Z
+package_kind: binary
+has_library: false
+has_binary: true
+has_distributable_binary: true
+binary_count: 4
+distributable_binary_count: 4
+multiple_binaries: true
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
+permalink: /packages/c4milo/rotor/
+---
+
+# rotor
+
+[![CI](https://github.com/c4milo/rotor/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/c4milo/rotor/actions/workflows/ci.yml?query=branch%3Amain)
+[![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+[![Zig 0.16.0](https://img.shields.io/badge/zig-0.16.0-f7a41d.svg)](https://ziglang.org/download/)
+[![Version](https://img.shields.io/github/v/tag/c4milo/rotor?label=version)](https://github.com/c4milo/rotor/tags)
+
+rotor is an event loop and I/O layer for Zig. It is for servers and network libraries that must
+know, before they run, how much memory they use and how their I/O behaves. It runs on io_uring on
+Linux, kqueue on macOS, and epoll on Linux where io_uring is not available.
+
+## At a glance
+
+| | |
+|---|---|
+| Backends | io_uring on Linux 6.1 or later; epoll on Linux where io_uring is refused; kqueue on macOS |
+| Model | Completion-based. A program submits operations in batches, and each operation ends with exactly one final event. |
+| Operations | TCP, UDP with ECN, files, timers and repeating timers, deadlines, cancellation, and messages between loops |
+| Memory | rotor allocates nothing. A program gives each loop its memory once, at startup, and every table has a fixed limit. |
+| Threads | One loop per thread, with no locks. Loops post messages to each other, across threads or processes. |
+| Safety | Assertions stay on in release builds. Misuse stops the program at a named check. |
+| Dependencies | None. Zig 0.16.0 and its standard library. |
+| Version | 0.5.0 |
+| License | Apache-2.0 |
+
+## Why rotor
+
+- **Fast.** rotor is completion-based: a program submits operations in batches, and one system
+  call per tick returns the results of many. On Linux it uses the parts of io_uring that save the
+  most work: one accept and one receive that each serve many completions, buffers the kernel picks
+  for each receive, and descriptors and buffers registered once. A benchmark harness in this
+  repository measures every speed claim, and [its results](#performance) include the rows where
+  rotor is slower.
+- **Deterministic.** What a loop does depends only on what the program submits and what the
+  kernel answers. rotor's core reads no clock, random number or pointer value, and its statistics
+  sample every Nth operation, never by time. Every operation ends with exactly one final event, so
+  a program's control flow can be followed and replayed.
+- **Pluggable I/O.** One API covers io_uring, kqueue and epoll. The process picks its backend once
+  and reports which it chose. The API names no kernel type, so a program can put its own
+  implementation behind it, such as a simulator for tests that must replay exactly. File
+  operations that would block the loop can go to threads the program supplies.
+- **Predictable memory.** rotor allocates nothing. A program gives each loop its memory once, at
+  startup. Every table and queue in the loop has a fixed limit, and rotor never grows one.
+- **Safe to run in production.** Assertions stay on in release builds. Misuse, such as calling a
+  loop from a thread that does not own it, stops the program at a named check instead of
+  corrupting memory.
+- **Scales by sharing nothing.** Each loop belongs to one thread and takes no locks. Loops pass
+  each other messages, and a thread that owns no loop can post to one.
+
+## Status
+
+rotor is at version 0.5.0. Everything planned for version one is built: TCP, UDP with ECN on
+both kernels and segmentation offload on Linux, files, timers, deadlines and cancellation, and
+messages between loops, in one process or several. One conformance suite, written against the
+public API, passes on all three backends, and CI runs it on every push.
+
+| system | backend | requires | tested on |
+|---|---|---|---|
+| Linux | io_uring | Linux 6.1 or later, with the io_uring features [listed in the guide](docs/using.md#what-the-kernel-must-have) | Linux 6.17 on x86-64 (GitHub runners), Linux 7.0 on aarch64 (a virtual machine on Apple silicon) |
+| Linux, where io_uring is refused or lacks a feature rotor needs | epoll | Linux 6.1 or later | both of the above, under Docker's default seccomp profile |
+| macOS | kqueue | no minimum version is set | macOS 26.6 on Apple silicon |
+
+> [!IMPORTANT]
+> **In a container, Linux runs epoll unless io_uring is allowed.** Docker's default seccomp
+> profile refuses io_uring. Run with `--security-opt seccomp=unconfined`, or a profile that allows
+> the io_uring system calls, to get io_uring. `rotor.backend()` says which backend a process runs;
+> a program that needs io_uring checks it at startup.
+
+> [!IMPORTANT]
+> **On macOS and on epoll, file operations need a policy.** Those kernels cannot complete a file
+> operation, so by default a loop refuses one with `unsupported`. Set `file_policy` at init:
+> `.blocking` runs the call on the loop's thread, and `.offload` hands it to threads the program
+> supplies. [The guide](docs/using.md#files) explains both.
+
+## Quick start
+
+Add rotor to a project:
+
+```bash
+zig fetch --save git+https://github.com/c4milo/rotor#v0.5.0
+```
+
+In `build.zig`:
+
+```zig
+const rotor = b.dependency("rotor", .{ .target = target, .release = optimize != .Debug });
+exe.root_module.addImport("rotor", rotor.module("rotor"));
+```
+
+rotor's build takes `release` instead of `optimize`. It builds Debug or ReleaseSafe only, because
+it has no mode that removes its assertions.
+
+The `main` of a TCP echo server. The loop's memory is declared once, one multishot accept delivers
+every connection, and each tick hands over the events that finished:
+
+```zig
+const options: rotor.Loop.Options = .{ .operations = connections_max + 1 };
+var memory: [rotor.Loop.memory_bytes(options)]u8 align(rotor.memory_alignment) = undefined;
+
+pub fn main(init: std.process.Init) !void {
+    const port = try port_of(init);
+    var loop: rotor.Loop = undefined;
+    try loop.init(&memory, options);
+
+    const address = rotor.Address.ipv4(.{ 127, 0, 0, 1 }, port);
+    const listener = try rotor.sync.listen(&address, .{ .backlog = 128, .reuse_port = false });
+    try submit(&loop, rotor.Operation.accept(tag(.accept, listener), listener, true));
+
+    var events: [64]rotor.Event = undefined;
+    while (true) {
+        const count = try loop.tick(&events, rotor.constants.ns_per_s);
+        for (events[0..count]) |event| try handle(&loop, event);
+    }
+}
+```
+
+The whole server, with its receive, send and close, is [`examples/echo.zig`](examples/echo.zig).
+Run it, then connect with `nc 127.0.0.1 9000`: each line typed comes back. It takes another port as
+its one argument.
+
+```bash
+zig build examples && ./zig-out/bin/echo
+```
+
+`zig build test` runs the example against a client that checks it, and the Linux gate does the same
+on io_uring and on epoll: a line, 32 clients at once, 4 MiB messages, clients that read late or hang
+up, and a client that closes its side. A test also checks that every line of the code above is a
+line of the example, in the same order, so this page cannot drift from a program that works.
+
+[The guide](docs/using.md) covers the rest of the API: every operation and what it promises,
+deadlines and cancellation, the three ways to hand the loop buffers, datagrams, files, and loops on
+several threads and in several processes.
+
+## Performance
+
+These are summaries of runs of the harness in this repository, with each server running one event
+loop on one thread. Each cell is rotor's throughput divided by the other library's: above 1.00,
+rotor is faster. A cell is `undecided` when either side's runs disagreed by 10 percent or more, or
+when another step of the same run measured the two differently. The Linux columns are GitHub-hosted
+runners that were given different processors, and the ratios move with the processor.
+
+TCP echo:
+
+| connections | payload | against | macOS, kqueue, Apple M1 Pro | Linux, io_uring, AMD EPYC 9V74 | Linux, io_uring, Intel Xeon 6973P-C | Linux, io_uring, AMD EPYC 7763 |
+|---:|---:|---|---:|---:|---:|---:|
+| 16 | 4 KiB | libuv | 1.01 | 1.04 | 1.20 | 1.15 |
+| 16 | 4 KiB | libxev | 1.24 | 1.12 | 1.33 | undecided |
+| 16 | 64 KiB | libuv | 0.97 | 1.01 | 1.05 | undecided |
+| 16 | 64 KiB | libxev | 0.98 | 0.92 | 1.12 | undecided |
+| 64 | 4 KiB | libuv | 1.02 | 1.05 | 1.20 | 1.17 |
+| 64 | 4 KiB | libxev | undecided | 1.04 | 1.27 | 1.08 |
+| 64 | 64 KiB | libuv | 0.99 | 1.02 | 0.95 | 1.04 |
+| 64 | 64 KiB | libxev | 1.05 | 0.91 | 0.99 | undecided |
+
+Other workloads:
+
+| workload | against | macOS, kqueue, Apple M1 Pro | Linux, io_uring, AMD EPYC 7763 |
+|---|---|---:|---:|
+| timer churn, 256 timers, fires per second | libuv | 1.22 | 1.12 |
+| timer churn, 256 timers, fires per second | libxev | 1.16 | 1.04 |
+| timer churn, 4,096 timers, fires per second | libuv | 2.02 | 1.96 |
+| timer churn, 4,096 timers, fires per second | libxev | 1.26 | 3.58 |
+| one message between loops on two cores, messages per second | libuv | 0.84, undecided | 1.12 |
+| one message between loops on two cores, messages per second | libxev | 1.02, undecided | 1.11 |
+| random 4 KiB file reads on a thread pool, 32 in flight | libuv | 1.00 | not measured |
+| accept storm | libuv | undecided | undecided |
+| accept storm | libxev | undecided | undecided |
+
+rotor's timers keep their full rate on both machines. At 4,096 timers, libxev's fires are closer to
+their deadlines than rotor's on macOS, and further from them on the EPYC 7763. On the cross-core
+message on macOS, rotor was slower than libuv in every round of the latest run, by about 10 percent,
+and faster than libxev in every round. On the EPYC 7763 the three have about the same median latency.
+[`docs/benchmarks.md`](docs/benchmarks.md) has the full tables, with latency, memory, the machines,
+and the commands to take every number again.
+
+## Limits
+
+- **Not in version one:** TLS, DNS, Unix sockets, process spawning, Windows, and a `std.Io`
+  adapter. [Design record 2](docs/decisions/0002-scope.md) says why, and what would bring each in.
+- **No C ABI.** rotor is a Zig library. [Design record 16](docs/decisions/0016-c-abi-for-c-consumers.md)
+  says why it has no C interface.
+- **One message between loops is slower on macOS than libuv's.** The gap is in the table above,
+  and it is being worked on.
+- **The Linux machine rotor is meant to run on in production has not been chosen**, so no number
+  is taken on it yet. The Linux columns above come from GitHub-hosted runners.
+- **Every limit is fixed at compile time or at init.** [The guide](docs/using.md#limits) lists
+  them. A loop that is full refuses an operation with an error; it never grows.
+
+## Documentation
+
+| document | what it covers |
+|---|---|
+| [`docs/using.md`](docs/using.md) | the guide: every operation and its promises, buffers, datagrams, files, threads and limits |
+| [`examples/`](examples) | complete programs that `zig build test` compiles |
+| [`docs/benchmarks.md`](docs/benchmarks.md) | the full measurements, and how to take them again |
+| [`docs/decisions/`](docs/decisions) | one record per design decision, with the alternatives it was chosen over |
+| [`docs/costs.md`](docs/costs.md) | the measured cost of each kernel call and loop operation the decisions argue from |
+| [`bench/alternatives/README.md`](bench/alternatives/README.md) | the record of every comparison experiment, including each row rotor loses and why |
+| [`proofs/README.md`](proofs/README.md) | the Lean proofs of the timer heap and the timer lifecycle |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md) | how to build, test and change rotor |
+| [`SECURITY.md`](SECURITY.md) | how to report a vulnerability |
+
+<details>
+<summary>The design records</summary>
+
+| record | subject | status |
+|---:|---|---|
+| [1](docs/decisions/0001-interface.md) | a completion-based core | accepted |
+| [2](docs/decisions/0002-scope.md) | the scope of version one | accepted |
+| [3](docs/decisions/0003-speed-sources.md) | where the speed is meant to come from | accepted |
+| [4](docs/decisions/0004-threading.md) | one loop per core, sharing nothing | accepted |
+| [5](docs/decisions/0005-cancellation.md) | cancellation and timeouts | accepted |
+| [6](docs/decisions/0006-stompy-lineage.md) | what rotor keeps from the I/O layer it grew from | accepted |
+| [7](docs/decisions/0007-hot-path-ugliness.md) | where the hot path may trade clarity for speed | accepted |
+| [8](docs/decisions/0008-hot-path-assertions.md) | which assertions live on the hot path | accepted |
+| [9](docs/decisions/0009-sampling-and-replay.md) | sampled statistics that do not break replay | accepted |
+| [10](docs/decisions/0010-no-simulator.md) | no simulator: the real kernel is the test | accepted |
+| [11](docs/decisions/0011-uring-internals.md) | inside the io_uring backend | accepted |
+| [12](docs/decisions/0012-kqueue-internals.md) | inside the kqueue backend | accepted |
+| [13](docs/decisions/0013-when-a-loop-sleeps.md) | when a loop sleeps | accepted |
+| [14](docs/decisions/0014-repeating-timers.md) | repeating timers | accepted |
+| [15](docs/decisions/0015-datagrams.md) | datagrams | accepted |
+| [16](docs/decisions/0016-c-abi-for-c-consumers.md) | a C ABI | declined |
+| [17](docs/decisions/0017-the-layer-that-owns-the-loop.md) | the layer that owns the loop | proposed |
+| [18](docs/decisions/0018-a-caller-supplied-thread-pool.md) | a caller-supplied thread pool for file operations | accepted |
+| [19](docs/decisions/0019-the-comparison-measures-one-core.md) | the comparison measures one core | accepted |
+| [20](docs/decisions/0020-an-epoll-backend.md) | an epoll backend | accepted |
+| [21](docs/decisions/0021-loops-in-several-processes.md) | loops in several processes | accepted |
+| [22](docs/decisions/0022-a-std-io-adapter.md) | a `std.Io` adapter | proposed |
+
+A proposed record describes something not yet built. A declined record describes something rotor
+will not build, and why.
+
+</details>
+
+## Contributing and security
+
+[`CONTRIBUTING.md`](CONTRIBUTING.md) says what a change needs and how to check it. Report a
+vulnerability as [`SECURITY.md`](SECURITY.md) describes, not in the public issue tracker.
+
+## License
+
+rotor is licensed under the [Apache License 2.0](LICENSE).
