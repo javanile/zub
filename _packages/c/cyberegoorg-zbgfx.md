@@ -9,10 +9,10 @@ keywords:
   - bgfx
   - bgfx-graphics-library
   - gamedev
-date: 2026-09-13
+date: 2026-09-28
 category: game-development
-updated_at: 2026-09-13T12:02:01+00:00
-last_sync: 2026-09-13T12:02:01Z
+updated_at: 2026-09-28T15:53:53+00:00
+last_sync: 2026-09-28T15:53:53Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -42,7 +42,7 @@ When [zig](https://codeberg.org/ziglang/zig) meets [bgfx](https://github.com/bka
 - [x] Binding for [DebugDraw API](https://github.com/bkaradzic/bgfx/tree/master/examples/common/debugdraw)
 - [x] `imgui` render backend. Use build option `imgui_include` to enable. ex. for
   zgui: `.imgui_include = zgui.path("libs").getPath(b),`
-- [ ] Zig based allocator.
+- [x] Zig based allocator. (Thx @jn-jairo)
 
 > [!IMPORTANT]
 >
@@ -68,18 +68,15 @@ Minimal is `0.16.0`. But you know try your version and believe.
 
 See `build.zig.zon` for pinned commits.
 
-- [BX](https://github.com/bkaradzic/bx/compare/f86bece7967be1b8a7fd39262cdc8ce99d123c3b...master)
-- [BImg](https://github.com/bkaradzic/bimg/compare/ddbeeae05779f84f97694553eb41605a60f86f0a...master)
-- [BGFX](https://github.com/bkaradzic/bgfx/compare/9499caafb06706715da78a7436a85de00ffc2497...master)
+- [BX](https://github.com/bkaradzic/bx/compare/279a4f84cdf843028be099fdeddbe531ee76a06c...master)
+- [BImg](https://github.com/bkaradzic/bimg/compare/87aaad3ac882e741889fdd4263224e5d12c26f99...master)
+- [BGFX](https://github.com/bkaradzic/bgfx/compare/7e3060ccb97959dcda3f091b96d82515197028e0...master)
 
 ### Upgrade BGFX by your self.
 - Uncomment deps in `build.zig.zon`.
 - Change commit ref and hash for deps you need.
 - `zig build -Dwith_sync sync`.
 - `zig build`.
-
-## Useful tools
-- [bgfx_shader_analyzer](https://github.com/r0ckHopper/bgfx_shader_analyzer) - LSP for bgfx shaders.
 
 ## Getting started
 
@@ -118,6 +115,10 @@ See examples for binding usage and [bgfx](https://github.com/bkaradzic/bgfx) for
 | `imgui_include` | `null`  | Path to ImGui includes (need for imgui bgfx backend) |
 | `multithread`   | `true`  | Compile with `BGFX_CONFIG_MULTITHREADED`             |
 | `with_shaderc`  | `true`  | Compile with `shaderc`                               |
+
+
+## Useful tools
+- [bgfx_shader_analyzer](https://github.com/r0ckHopper/bgfx_shader_analyzer) - LSP for bgfx shaders.
 
 ## Examples
 

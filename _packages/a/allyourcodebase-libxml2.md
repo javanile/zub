@@ -6,9 +6,9 @@ author: allyourcodebase
 author_github: allyourcodebase
 repository: https://github.com/allyourcodebase/libxml2
 keywords:
-date: 2026-05-30
-updated_at: 2026-05-30T16:33:27+00:00
-last_sync: 2026-05-30T16:33:27Z
+date: 2026-09-28
+updated_at: 2026-09-28T11:04:24+00:00
+last_sync: 2026-09-28T11:04:24Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -35,7 +35,7 @@ First, update your `build.zig.zon`:
 ```
 # Initialize a `zig build` project if you haven't already
 zig init
-zig fetch --save git+https://github.com/allyourcodebase/libxml2.git#2.15.1-2
+zig fetch --save git+https://github.com/allyourcodebase/libxml2.git#2.15.3
 ```
 
 You can then import `libxml2` in your `build.zig` with:
@@ -61,5 +61,5 @@ const libxml2_dependency = b.dependency("libxml2", .{
     // Use GNU libiconv on macOS which is licensed under LGPL.
     // .@"iconv-impl" = @as(?enum{libc, libiconv, win_iconv}, if (target.result.os.tag.isDarwin()) .libiconv else null),
 });
-your_exe.linkLibrary(libxml2_dependency.artifact("xml"));
+your_exe.root_module.linkLibrary(libxml2_dependency.artifact("xml"));
 ```

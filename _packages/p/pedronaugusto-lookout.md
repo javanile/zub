@@ -6,9 +6,9 @@ author: pedronaugusto
 author_github: pedronaugusto
 repository: https://github.com/pedronaugusto/lookout
 keywords:
-date: 2026-09-27
-updated_at: 2026-09-27T12:29:01+00:00
-last_sync: 2026-09-27T12:29:01Z
+date: 2026-09-28
+updated_at: 2026-09-28T16:09:35+00:00
+last_sync: 2026-09-28T16:09:35Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -240,9 +240,19 @@ match something inside it, or `only = &.{"src/**/*.zig"}` would exclude
 
 Where lookout does the recursion — `inotify`, `kqueue`, `poll` — an
 excluded directory is never opened and never registered, and its tree
-costs nothing. Where the kernel recurses it cannot be told about a
+costs nothing, whichever of the three excluded it: a predicate backed by
+a repository's ignore rules prunes as a pattern does. Where the kernel recurses it cannot be told about a
 filter, so the work happens anyway and only the events are dropped.
 `prunesIgnored(backend)` says which of the two you have.
+
+An excluded path is treated exactly as a path outside the watch, and
+that includes either name of a rename. Where renames are paired, both
+names kept is `renamed`; only the new one kept is `created` there, as a
+rename in from outside is; only the old one kept is `removed` there, as
+a rename out is; neither is nothing. A file saved by writing
+`settings.new` and renaming it over `settings.toml` is `created` at
+`settings.toml` for a watch filtered to that one name, and no event names
+an excluded path, as `path` or as `from`.
 
 **FSEvents, `inotify` and `ReadDirectoryChangesW` each say which removal
 goes with which creation** — both halves in one delivery, a cookie, an
@@ -250,7 +260,10 @@ old-name/new-name pair. `kqueue` and polling learn what changed by
 comparing directory listings, in which a rename and a delete-plus-create
 are the same thing. `pairsRenames(backend)` says which shape to expect,
 `Event.from` carries the answer where there is one, and neither backend
-guesses.
+guesses. `ReadDirectoryChangesW` writes a move onto an existing name as
+that entry's removal and then the move, which lookout reports as the
+move; a delete and a create of one name back to back are written the
+same way, so on Windows they are `created` too.
 
 Both halves of a rename arrive together, but "together" is about the
 kernel's queue and not about the buffer lookout reads it into: a burst
@@ -315,7 +328,11 @@ the path asked for, and steps down as the path appears; when the path
 appears the watch is promoted to the real one — recursion, filter and
 all — and reported as `Kind.created`. The id comes back from `add` at
 once and does not change. Nothing that happens to the ancestor meanwhile
-is reported.
+is reported, and the ancestor is not taken: a watch of that folder, added
+before or after, is a watch of its own, and several pending watches may
+wait in one folder. The path itself is taken from the `add` on: a second
+`add` of it is `error.PathAlreadyWatched` before it appears and after,
+whether or not a `poll` has promoted the first yet.
 
 **Two spellings can name one file.** A volume that folds case answers to
 `Notes.txt` and `notes.txt` alike, and one that stores a letter
@@ -375,7 +392,9 @@ caller named is an error.
 
 `Options.max_dir_entries` is one directory's budget on all five: a
 recursive watch over twenty directories of three hundred entries is
-twenty directories inside a budget of a thousand.
+twenty directories inside a budget of a thousand. A directory several
+watches reach is counted once, and each of them is told when it goes past.
+A watch on a file has no budget and is never told about its folder's.
 
 I made FSEvents the default on Apple platforms rather than `kqueue`,
 because it recurses without a descriptor per directory and pairs renames.
@@ -396,8 +415,11 @@ answer to "one kernel watch per directory does not scale", and it needs
 `CAP_SYS_ADMIN` — a privilege a library cannot assume a process has.
 
 **A backend is one file and one struct with nine methods**: `init`,
-`deinit`, `fd`, `registrationCount`, `add`, `remove`, `wait`, `wake` and
-`position`. `Watcher.Impl` finds it structurally, so adding one is:
+`deinit`, `fd`, `registrationCount`, `add`, `remove`, `wait`, `waker` and
+`position`. `waker` hands `init` what another thread needs to end a
+blocked `wait` -- a descriptor, a handle, a pointer to state that never
+moves -- so `wake` never reads the backend the polling thread is
+writing. `Watcher.Impl` finds it structurally, so adding one is:
 write the file, add a tag to `Impl` for the right `os.tag`, add the tag
 to `Backend`, and add an arm to each of `pairsRenames`,
 `reportsRootMove`, `reportsCloses`, `prunesIgnored` and
@@ -421,7 +443,8 @@ for the bookkeeping a backend that recurses itself needs.
   `wake` is the one call another thread may make.
 - **No path is watched twice by one watcher.** A second `add` is
   `error.PathAlreadyWatched`, and on Linux two overlapping watches share
-  one kernel watch where they meet.
+  one kernel watch where they meet. A pending watch is a watch of the
+  path it waits for, not of the folder it is parked on.
 - **Nothing is persisted.** `Options.since` takes a token that is the
   caller's to store.
 - **Portable path folding covers ASCII and Latin-1 only.** On Apple
@@ -474,9 +497,9 @@ that compile on every target, so they are fuzzed on whatever host is in
 front of the change rather than only on the one whose kernel writes
 those bytes.
 
-Setting `LOOKOUT_TRACE` in the environment makes the Apple backend and
-the suite write what they did to standard error. It is read once per
-process.
+Setting `LOOKOUT_TRACE` in the environment makes the Apple and Windows
+backends and the suite write what they did to standard error. It is read
+once per process.
 
 The suite runs whole against each backend the host can execute, so the
 polling backend is held to the same assertions as the kernel ones on the

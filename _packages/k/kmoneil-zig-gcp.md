@@ -19,9 +19,9 @@ keywords:
   - secrets-management
   - service-account
   - workload-identity-federation
-date: 2026-09-27
-updated_at: 2026-09-27T14:41:37+00:00
-last_sync: 2026-09-27T14:41:37Z
+date: 2026-09-28
+updated_at: 2026-09-28T16:26:29+00:00
+last_sync: 2026-09-28T16:26:29Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -66,7 +66,7 @@ modules it imports.
 ## Install
 
 ```
-zig fetch --save git+https://github.com/kmoneil/zig-gcp#v0.23.0
+zig fetch --save git+https://github.com/kmoneil/zig-gcp#v0.24.0
 ```
 
 ```zig
@@ -119,7 +119,7 @@ such as `orders`. Creating one sends nothing. The operations:
 
 | `Client` | `Topic` | `Subscription` |
 | --- | --- | --- |
-| `listTopics`, `listSubscriptions` | `create`, `get`, `delete`, `publish` | `create`, `get`, `delete`, `pull`, `ack`, `modifyAckDeadline`, `nack` |
+| `listTopics`, `listSubscriptions` | `create`, `get`, `update`, `delete`, `publish` | `create`, `get`, `update`, `delete`, `pull`, `ack`, `modifyAckDeadline`, `nack`, and `ackWithResults`, `modifyAckDeadlineWithResults`, `nackWithResults` |
 
 See `examples/publish.zig`, `examples/publisher.zig` and `examples/worker.zig`
 for complete programs, and `examples/whoami.zig` for one that finds its own
@@ -163,10 +163,140 @@ unresolved messages are held at once, and pulling pauses at the cap.
 Transient failures anywhere are retried forever, further and further
 apart; an error retrying cannot fix, such as the subscription being
 deleted, stops the loop and comes back from `run` with the diagnostics
-filled. `stop` is safe to call from a handler or another task: pulling
-stops, running handlers finish and their messages resolve, buffered ones
-are released unhandled, and the last acknowledgements are flushed.
-`stats()` is a consistent snapshot of the counters at any time.
+filled. A refusal that concerns single messages never stops it: an
+acknowledgement the server refuses is counted, and its message may come
+again, which at-least-once delivery allows. `stop` is safe to call from a
+handler or another task: pulling stops, running handlers finish and their
+messages resolve, buffered ones are released unhandled, and the last
+acknowledgements are flushed. Acknowledgements go out within 100 ms of a
+handler returning, batched.
+
+`stats()` is a consistent snapshot of the counters at any time. `acked`
+counts acknowledgements the server took, and `ack_failed` the ones it
+refused or that were given up; once `run` has returned after `stop`, every
+message received is counted exactly once among `acked`, `ack_failed`,
+`nacked` and `receipt_refused`.
+
+`run` reads the subscription first, for its ack deadline, which needs
+`pubsub.subscriptions.get`. `roles/pubsub.subscriber` does not grant it:
+with only that role, the read is refused, and `run` logs a warning and
+extends leases by 60 s instead. Setting `extension_period_s` skips the read.
+
+### Exactly-once delivery
+
+A subscription created with `.enable_exactly_once_delivery = true` never
+delivers again a message acknowledged within its lease, and refuses, rather
+than takes, an acknowledgement or lease extension that comes after the
+lease lapsed. Leave `ack_deadline_seconds` at 0 for such a subscription:
+Pub/Sub then gives it 60 s.
+
+`Subscriber` handles it as Google's own clients do. It extends leases by at
+least 60 s. It extends each pulled message's lease once before a handler
+sees it, and drops, unhandled, any message whose lease the server refuses
+there (`stats().receipt_refused`): its ack could never be taken, and the
+server delivers it again. An ack refused for good is counted in
+`ack_failed`; one refused only for now is sent again, backing off from 1 s
+to 64 s, for up to 10 minutes. It learns that a subscription has
+exactly-once delivery from reading it, or, when it may not, from the first
+refusal that says so.
+
+With `pull`, `ackWithResults` says what became of each id:
+
+```zig
+var results: [2]pubsub.AckResult = undefined;
+try worker.ackWithResults(&.{ late.ack_id, fresh.ack_id }, &results);
+// results: .{ .invalid_ack_id, .ok }: the late one was refused, the other taken.
+```
+
+An `AckResult` is `.ok`, `.invalid_ack_id` (refused for good: the lease had
+lapsed, or the message was already acknowledged), `.transient` (still
+refused for now after the client's retries) or `.other`. Measured in
+production: when a request carries a lapsed id and a live one, the server
+refuses the request, names only the lapsed id, and takes the live one.
+`ack` fails with `error.InvalidArgument` when any id was refused, after
+sending every id, and `Diagnostics` counts them.
+
+Google's guarantee holds only when subscribers connect to the service in
+the same region, and it asks for streaming pull, which this client does
+not have, where throughput must be high.
+
+### Subscription settings
+
+```zig
+var created = try client.subscription("orders-worker").create(.{
+    .topic_id = "orders",
+    .dead_letter_policy = .{ .topic = "orders-dead", .max_delivery_attempts = 10 },
+    .retry_policy = .{ .minimum = .fromSeconds(5), .maximum = .fromSeconds(300) },
+    .filter = "attributes.region = \"eu\"",
+    .message_retention = .fromSeconds(3 * 24 * 60 * 60),
+    .labels = &.{.{ .key = "team", .value = "payments" }},
+});
+defer created.deinit();
+```
+
+- **`dead_letter_policy`**: after `max_delivery_attempts` deliveries (5 to
+  100), a message goes to the dead-letter topic, a topic id here or
+  `projects/{project}/topics/{id}` elsewhere, marked with
+  `CloudPubSubDeadLetterSource...` attributes that say where it came from.
+  Pub/Sub's service agent,
+  `service-{project number}@gcp-sa-pubsub.iam.gserviceaccount.com`, needs
+  `roles/pubsub.publisher` on the dead-letter topic and
+  `roles/pubsub.subscriber` on this subscription, or nothing is forwarded:
+  without them, production went on delivering a message past its last
+  attempt, and the dead-letter topic got nothing; with them, it forwarded
+  the message about 3 s after its fifth delivery was released.
+  `ReceivedMessage.delivery_attempt` counts deliveries only on a
+  subscription with a dead-letter policy.
+- **`retry_policy`**: how long Pub/Sub waits before delivering a message
+  again after a release or a lapsed deadline, each bound 0 to 600 s (the
+  type is `pubsub.Backoff`: `pubsub.RetryPolicy` is this client's own
+  retries). Null delivers again at once.
+- **`filter`**: only messages whose attributes match are delivered; the
+  rest are acknowledged unseen. At most 256 bytes, and fixed once created.
+- **`message_retention`**: how long unacknowledged messages are kept, 10
+  minutes to 31 days, 7 by default. `retain_acked_messages` keeps
+  acknowledged ones as long.
+- **`expiration`**: `.default` deletes a subscription nobody uses after 31
+  days, `.never` never does, and `.after` sets the time, at least a day.
+- **`labels`**: up to 64.
+
+Every rule is checked before anything is sent. The emulator takes several
+settings production refuses, such as ack deadlines of 1 to 9 s, labels
+with capitals and expirations under a day, so code tested against it would
+otherwise fail later.
+
+`update` changes the settings it names and leaves the rest alone:
+
+```zig
+var updated = try client.subscription("orders-worker").update(.{
+    .ack_deadline_seconds = 60,
+    .dead_letter_policy = .clear,
+    .labels = &.{},
+});
+defer updated.deinit();
+```
+
+A setting that can be taken away is a `pubsub.Change(T)`: `.keep`, the
+default, leaves it; `.{ .set = ... }` replaces it whole; `.clear` removes
+it, or restores Pub/Sub's default where it has one (retention goes back to
+7 days). `labels` replaces every label, and `&.{}` removes them all. The
+topic, the ordering and the filter cannot be changed.
+
+Topics take `labels`, `message_retention` (the topic keeps every message,
+acknowledged or not, so subscriptions can replay them), `kms_key_name`
+and `message_storage_policy` (the regions messages may be stored in), and
+`Topic.update` changes them the same way.
+
+The emulator cannot update a subscription's labels, filter or expiration,
+or a topic's labels, KMS key or storage policy. It answers a cleared topic
+retention with 31 days, and forwards a message to its dead-letter topic
+only when the source subscription is pulled again.
+
+Production, measured on 2026-09-28, refuses every rule above with a
+message that names it, refuses to change the filter, the ordering or the
+topic ("not mutable"), and answers each update as described here: a
+cleared expiration goes back to 31 days, `.never` to none, a cleared
+retention to 7 days, and a cleared topic retention to none.
 
 ### Publishing at volume
 
@@ -232,6 +362,67 @@ failed. Google requires every message of a key to be published in one
 region. A publisher outside Google Cloud, or spread across regions, should
 use a locational endpoint, such as
 `.endpoint = .{ .url = "https://us-east1-pubsub.googleapis.com" }`.
+
+### Compressed publishing
+
+`compression` gzips a publish request's body and sends it with
+`Content-Encoding: gzip`, as Google's Java, Go, C++, .NET, Ruby and PHP
+libraries can. It is off by default, there as here. Set it on a publisher
+for every batch, or on a single call:
+
+```zig
+var publisher = try pubsub.Publisher.init(gpa, io, .{
+    .topic_id = "orders",
+    .client = .{ .project_id = "my-project", .token_provider = creds.provider() },
+    .compression = .{}, // level 6, for request bodies of 240 bytes or more
+});
+
+var sent = try topic.publish(&messages, .{ .compression = .{ .level = 1 } });
+```
+
+- **What it saves** is bandwidth between the publisher and Google, and
+  egress charges where the publisher pays them, such as outside Google
+  Cloud. Pub/Sub bills messages uncompressed, so its own charges do not
+  change.
+- **What it costs** is CPU and memory. At level 6, compressing and
+  checking takes about 10 ms per MB of JSON body in ReleaseFast, and about
+  twice that for data that does not compress. Compressing a body holds
+  about 350 KiB of compressor state and windows until it is done, for each
+  batch being compressed at once, and none of it while the request is
+  out.
+- **What is compressed** is a body of at least `min_bytes` (240) at
+  `level` 1 (fastest) to 9 (smallest). Google's libraries compress from
+  240 bytes of messages; this counts the request body, which base64 makes
+  a third bigger.
+- **Sizes stay uncompressed.** `max_batch_bytes`, the caps and the
+  10,485,760-byte check count the request before compression, as every
+  Google library counts them, so compressing never lets a bigger batch
+  through.
+- **It is checked.** A body is compressed once, so every retry sends the
+  same bytes, and decompressed again, to give back exactly the request.
+  One that does not, which would be a bug in the compressor, goes
+  uncompressed, with a warning in the log.
+
+Measured on an Apple M5 Max in ReleaseFast, at level 6, the check
+included:
+
+| Batch | Body | Compressed | Time |
+| --- | ---: | ---: | ---: |
+| 100 JSON events of about 220 bytes, with two attributes each | 38,234 B | 5,357 B (14%) | 0.34 ms |
+| 1,000 of them | 382,486 B | 46,093 B (12%) | 3.8 ms |
+| 100 messages of 250 random bytes, with the same attributes | 42,014 B | 26,113 B (62%) | 0.79 ms |
+| 1,000 of them | 420,014 B | 260,627 B (62%) | 8.9 ms |
+
+Level 1 made the JSON a fifth bigger than level 6 in four fifths of the
+time, and level 9 made it 3% smaller in a quarter more. Even random bytes
+shrink by more than a third, to within 5% of the data itself: base64
+writes 6 bits of data in each 8-bit character, and gzip takes that back,
+along with the repeated attributes.
+
+Production takes compressed publishes, and holds the 10,485,760-byte limit
+to the body decompressed: 10.8 MB of JSON, sent as 10,566 bytes of gzip,
+was refused. The emulator takes them too. Pull answers already come back
+compressed: the transport accepts gzip, and production gzips them.
 
 ### Production credentials
 
@@ -419,7 +610,7 @@ precise than the documentation.
 
 | Limit | Value |
 | --- | --- |
-| Publish request | **10,485,760 bytes of encoded JSON body.** Base64 grows data by a third, so one message holds at most 7,864,299 bytes of raw data over REST. `pubsub.limits.publishRequestBytes` computes the exact size. |
+| Publish request | **10,485,760 bytes of encoded JSON body**, counted before any compression. Base64 grows data by a third, so one message holds at most 7,864,299 bytes of raw data over REST. `pubsub.limits.publishRequestBytes` computes the exact size. |
 | Messages per publish | 1,000 |
 | Attributes per message | 100; keys 1 to 256 bytes and not starting with `goog` in any case; values up to 1,024 bytes |
 | Ordering key | 1,024 bytes |
@@ -451,19 +642,24 @@ answers from a script and records every request, and
 
 ### The emulator is not production
 
-These differences were measured with emulator 0.8.35. The client's own checks
-catch the ones marked *checked*, so code tested against the emulator does not
-fail later in production.
+These differences were measured with emulator 0.8.35, and the exactly-once
+ones and the deleted topic with 0.8.36. The client's own checks catch the
+ones marked *checked*, so code tested against the emulator does not fail
+later in production.
 
 | Behavior | Emulator | Production |
 | --- | --- | --- |
-| Publish size limit | none | 10,485,760-byte request body (*checked*) |
+| Publish size limit | none | 10,485,760-byte request body, counted decompressed (*checked*) |
 | Empty or `goog...` attribute keys | accepted | rejected (*checked*) |
 | Ids starting with `GOOG` | accepted | rejected (*checked*) |
 | Ordering key over 1,024 bytes | accepted | rejected (*checked*) |
 | Mixed ordering keys in one publish | accepted | FAILED_PRECONDITION (the API takes one key per call) |
 | Empty pull hold | about 90 s | about 20 s |
 | A literal `%25` in an id | decoded twice | decoded once |
+| Exactly-once: a late ack's refusal | names no id | names each refused id |
+| Exactly-once: a late lease extension | taken | refused |
+| Exactly-once: a second ack of an acknowledged message | refused | taken |
+| Publishing to a deleted topic | refused at once | taken for 0.7 to 14 s in nine runs, and once for over 90 s |
 
 ## Secret Manager
 
@@ -1555,7 +1751,11 @@ gcloud beta emulators pubsub start --project=test --host-port=127.0.0.1:8085
 PUBSUB_EMULATOR_HOST=127.0.0.1:8085 zig build test-integration
 
 # Or a real project. Every test creates zigps-* resources and deletes them.
+# With the project's number, the dead-letter test grants Pub/Sub's service
+# agent the roles it needs on its own topic and subscription; without it,
+# that test skips. The grants go with the resources.
 PUBSUB_TEST_PROJECT=my-project PUBSUB_TEST_TOKEN=$(gcloud auth print-access-token) \
+    PUBSUB_TEST_PROJECT_NUMBER=$(gcloud projects describe my-project --format='value(projectNumber)') \
     zig build test-integration
 
 # auth against Google's token endpoint, with the file gcloud's login wrote,

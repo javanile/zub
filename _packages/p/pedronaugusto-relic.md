@@ -7,9 +7,9 @@ author_github: pedronaugusto
 repository: https://github.com/pedronaugusto/relic
 keywords:
   - git
-date: 2026-09-27
-updated_at: 2026-09-27T13:37:38+00:00
-last_sync: 2026-09-27T13:37:38Z
+date: 2026-09-28
+updated_at: 2026-09-28T17:23:52+00:00
+last_sync: 2026-09-28T17:23:52Z
 package_kind: hybrid
 has_library: true
 has_binary: true
