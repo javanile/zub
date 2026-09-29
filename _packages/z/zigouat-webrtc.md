@@ -10,10 +10,10 @@ keywords:
   - media
   - video
   - webrtc
-date: 2026-09-04
+date: 2026-09-29
 category: game-development
-updated_at: 2026-09-04T08:19:43+00:00
-last_sync: 2026-09-04T08:19:43Z
+updated_at: 2026-09-29T12:44:03+00:00
+last_sync: 2026-09-29T12:44:03Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -46,6 +46,9 @@ Tested platforms:
 
 ## Architecture
 The architecture follows the WebRTC specification (at least for the API surface). It uses `std.Io` for IO. This decouples the library from the I/O implementation and allows for more flexibility in how the library is used (it can be used with thread pool or async I/O, for example).
+
+## New Archecture
+The new architecture will be sans-io, the library will not do any I/O, it will only provide the WebRTC API and the user will have to implement the I/O themselves. Currently the Ice agent and dtls are moved to sans-io, the next step is to move the SCTP and the whole PeerConnection API to sans-io.
 
 ## Features
 The end goal is to implement the whole WebRTC API in pure Zig, the current implementation has the following features:

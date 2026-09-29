@@ -10,9 +10,9 @@ keywords:
   - gemini-api
   - openai-api
   - tavily-api
-date: 2026-09-22
-updated_at: 2026-09-22T14:19:08+00:00
-last_sync: 2026-09-22T14:19:08Z
+date: 2026-09-29
+updated_at: 2026-09-29T15:39:13+00:00
+last_sync: 2026-09-29T15:39:13Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -28,7 +28,7 @@ permalink: /packages/lightpanda-io/zenai/
 
 # zenai
 
-Zig client for AI APIs, supporting [Google Gemini](https://ai.google.dev/gemini-api/docs) (Developer API and [Vertex AI](https://cloud.google.com/vertex-ai/generative-ai/docs)), [OpenAI](https://platform.openai.com/docs/api-reference), and [Anthropic](https://docs.anthropic.com/en/docs/about-claude/models). OpenAI-compatible endpoints — [Ollama](https://github.com/ollama/ollama/blob/main/docs/openai.md), [Hugging Face Inference](https://huggingface.co/docs/inference-providers/index), [llama.cpp](https://github.com/ggml-org/llama.cpp/tree/master/tools/server) (`llama-server`), [Vercel AI Gateway](https://vercel.com/docs/ai-gateway), [Mistral](https://docs.mistral.ai/), [OpenRouter](https://openrouter.ai/docs), and [OrcaRouter](https://docs.orcarouter.ai) — are supported through the OpenAI client. Ported from the official [Go Gen AI SDK](https://github.com/googleapis/go-genai), [openai-go](https://github.com/openai/openai-go), and [anthropic-sdk-go](https://github.com/anthropics/anthropic-sdk-go). Also ships an `agent infrastructure` namespace under `zenai.search` — currently [Tavily](https://docs.tavily.com/), [Brave Search](https://brave.com/search/api/), [Exa](https://exa.ai/docs/reference/search) and [Keenable](https://docs.keenable.ai/), with room for sibling providers.
+Zig client for AI APIs, supporting [Google Gemini](https://ai.google.dev/gemini-api/docs) (Developer API and [Vertex AI](https://cloud.google.com/vertex-ai/generative-ai/docs)), [OpenAI](https://platform.openai.com/docs/api-reference), and [Anthropic](https://docs.anthropic.com/en/docs/about-claude/models). OpenAI-compatible endpoints — [Ollama](https://github.com/ollama/ollama/blob/main/docs/openai.md), [Hugging Face Inference](https://huggingface.co/docs/inference-providers/index), [llama.cpp](https://github.com/ggml-org/llama.cpp/tree/master/tools/server) (`llama-server`), [Vercel AI Gateway](https://vercel.com/docs/ai-gateway), [Mistral](https://docs.mistral.ai/), and [OpenRouter](https://openrouter.ai/docs) — are supported through the OpenAI client. Ported from the official [Go Gen AI SDK](https://github.com/googleapis/go-genai), [openai-go](https://github.com/openai/openai-go), and [anthropic-sdk-go](https://github.com/anthropics/anthropic-sdk-go). Also ships an `agent infrastructure` namespace under `zenai.search` — currently [Tavily](https://docs.tavily.com/), [Brave Search](https://brave.com/search/api/), [Exa](https://exa.ai/docs/reference/search) and [Keenable](https://docs.keenable.ai/), with room for sibling providers. Also ships `zenai.typesafe` for [TypeSafe System One](https://docs.typesafe.ai) — the Jev judgement model, which answers typed questions about a piece of state (a probability, a labelled choice, or a score) instead of generating text.
 
 <img width="1024" height="1024" alt="Meditating panda with incense smoke" src="https://github.com/user-attachments/assets/b9c82960-05ec-4aa1-b171-092ee2126551" />
 
@@ -417,6 +417,92 @@ for (response.value.results) |r| {
 }
 ```
 
+## TypeSafe (System One)
+
+TypeSafe's System One serves [Jev](https://docs.typesafe.ai), a judgement model rather than a chat model: you post the `state` under judgement plus a map of typed questions about it, and get one typed answer per question back — a probability (`noul`), a labelled `choice` with per-option probabilities, or a `score` on an ordered scale. No free text, no tool calls. Set your API key ([get one here](https://typesafe.ai/)):
+
+```bash
+export TYPESAFE_API_KEY='your-api-key'
+```
+
+```zig
+const zenai = @import("zenai");
+const typesafe = zenai.typesafe.types;
+
+const api_key = zenai.typesafe.envApiKey(environ) orelse return error.MissingApiKey;
+var client: zenai.typesafe.Client = .init(io, allocator, api_key, .{});
+defer client.deinit();
+
+// The question ids are yours; the answers come back under the same ids.
+const questions: typesafe.Questions = .init(&.{
+    .{ .key = "is_complaint", .value = .noulText("Is the customer complaining?") },
+    .{ .key = "topic", .value = .choiceText(
+        "What is this message about?",
+        typesafe.choices(&.{ "billing", "delivery", "other" }),
+    ) },
+    .{ .key = "anger", .value = .scoreText(
+        "How angry is the customer?",
+        typesafe.levels(&.{ "Calm", "Annoyed", "Furious" }),
+    ) },
+});
+var response = try client.ask(.{ .text = "The pizza arrived cold and an hour late." }, questions, .{});
+defer response.deinit(); // the answers borrow it
+
+// Accessors by question id: null for a question the model left out or one
+// asked for the wrong thing, rather than an unwrap that panics.
+std.debug.print("complaint: {d:.2}\n", .{response.value.noul("is_complaint").?});
+std.debug.print("topic: {s} ({d:.2} confident)\n", .{
+    try response.value.choice("topic", questions), // validated against the criteria
+    response.value.confidence("topic").?,
+});
+```
+
+Jev ingests the state once and evaluates every question against it in parallel, so packing several questions — including speculative ones you may discard — into one request costs far less than one call each.
+
+Options that need their own description are written out in full; `null` means the id speaks for itself:
+
+```zig
+.{ .key = "topic", .value = .{ .choice = .{
+    .instructions = .{ .text = "What is this message about?" },
+    .criteria = .init(&.{
+        .{ .key = "billing", .value = null },
+        .{ .key = "delivery", .value = .{ .text = "Anything about shipping or timing" } },
+    }),
+} } },
+```
+
+`instructions` and every criteria description also take structured input — `.{ .json = value }` instead of `.{ .text = "…" }` — and so does `state`, which is how you judge a whole conversation or record in one call.
+
+When the options are an enum you already have, `enumChoices` builds the criteria from its tags and `choiceEnum` maps the answer back, so the option set and the type that acts on it cannot drift apart:
+
+```zig
+const Verdict = enum { approve, review, reject };
+
+fn describe(v: Verdict) []const u8 {
+    return switch (v) {
+        .approve => "Nothing here needs a human.",
+        .review => "A human should look before this goes out.",
+        .reject => "Refuse it outright.",
+    };
+}
+
+const questions: typesafe.Questions = .init(&.{
+    .{ .key = "verdict", .value = .choiceText(
+        "What should happen to this message?",
+        // A subset is normal: offer only what the caller will act on.
+        try typesafe.enumChoices(arena, Verdict, &.{ .approve, .review }, describe),
+    ) },
+});
+// …
+const verdict = try response.value.choiceEnum("verdict", questions, Verdict);
+```
+
+Before acting on a `choice`, pass it through `typesafe.validateChoice(answer, offered)`: it rejects an answer whose choice was never offered, whose probabilities do not cover exactly the offered set, or whose choice is not the argmax. `response.choice(id, questions)` and `choiceEnum` both run it for you.
+
+`response.model` is the concrete version that answered, which is not the alias you asked for — aliases move without notice. It borrows the response, so `response.dupeModel(allocator)` is how you keep it.
+
+One request carries up to 64k tokens, of which the state plus the longest single question must fit in 32k; an overrun comes back as `error.ApiError` with a 422 in `client.last_error`. `client.listModels()` enumerates the concrete versions behind the `jev-latest` and `jev-preview` aliases.
+
 ## Provider Abstraction
 
 Use `zenai.provider.Client` to write provider-agnostic code. Swap providers by changing one line:
@@ -457,7 +543,7 @@ const ai: zenai.provider.Client = .{ .gemini = &gemini_client };
 // });
 // const ai: zenai.provider.Client = .{ .llama_cpp = &llama_client };
 
-// Or a multi-lab gateway (OpenRouter, OrcaRouter, Vercel AI Gateway); model ids
+// Or a multi-lab gateway (OpenRouter, Vercel AI Gateway); model ids
 // are provider-prefixed, e.g. "anthropic/claude-sonnet-5":
 // var router_client = zenai.openrouter.Client.init(io, allocator, openrouter_key, .{
 //     .base_url = "https://openrouter.ai/api/v1",
@@ -525,9 +611,15 @@ switch (ai) {
 - Exa (`zenai.search.exa`) — embeddings-based search with search-type selection, category focus, domain include/exclude, published-date windows, and opt-in contents (highlights/text/summary)
 - Keenable (`zenai.search.keenable`) — web search that also works keyless through a public endpoint, with site restriction, published-date windows and a snippet-length hint
 
+**TypeSafe (`zenai.typesafe`):**
+- System One judgements over a text or JSON state: `noul` probabilities, `choice` with per-option probabilities and confidence, `score` on an ordered 2–10 level scale with a legend
+- Many questions per request under caller-chosen ids, evaluated against one ingestion of the state
+- `validateChoice` guard for answers that stray outside the offered option set
+- Model listing
+
 **Provider abstraction:**
 - Unified text generation, streaming, and embeddings
-- OpenAI-compatible backends: Ollama, Hugging Face, llama.cpp (`llama-server`), Vercel AI Gateway, Mistral, OpenRouter, OrcaRouter, and any custom server via `OPENAI_BASE_URL`
+- OpenAI-compatible backends: Ollama, Hugging Face, llama.cpp (`llama-server`), Vercel AI Gateway, Mistral, OpenRouter, and any custom server via `OPENAI_BASE_URL`
 - `lastError()` to surface the status and message behind a failed request
 - Escape hatches to provider-specific APIs
 

@@ -8,10 +8,10 @@ repository: https://github.com/pedronaugusto/visor
 keywords:
   - terminal
   - tui
-date: 2026-09-20
+date: 2026-09-29
 category: tooling
-updated_at: 2026-09-20T13:48:20+00:00
-last_sync: 2026-09-20T13:48:20Z
+updated_at: 2026-09-29T14:38:53+00:00
+last_sync: 2026-09-29T14:38:53Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -32,7 +32,7 @@ permalink: /packages/pedronaugusto/visor/
 visor is a cell grid and a diff renderer for programs that draw their own
 screen. You draw into a grid; it writes the shortest run of bytes that moves
 the terminal from the frame it is showing to the one it should be showing. A
-second module, `visor.widgets`, holds a layout solver and thirteen widgets
+second module, `visor.widgets`, holds a layout solver and eighteen widgets
 drawn on that grid, and the base never imports it.
 
 ## Usage
@@ -102,7 +102,7 @@ panel.setCursorShape(.bar);
 // caller decides when the bytes leave.
 var buffer: std.Io.Writer.Allocating = .init(gpa);
 defer buffer.deinit();
-const stats = try renderer.draw(&buffer.writer, &screen, caps);
+const stats = try renderer.draw(&buffer.writer, &screen, null, caps);
 
 // `Stats` is what makes a budget a test rather than a comment, and
 // what tells a caller how big a write buffer a frame wants.
@@ -115,7 +115,7 @@ std.debug.print("frame: {d} bytes, {d} cells in {d} runs, {d} moves\n", .{
 // design is checked against.
 var second: std.Io.Writer.Allocating = .init(gpa);
 defer second.deinit();
-std.debug.assert((try renderer.draw(&second.writer, &screen, caps)).bytes == 0);
+std.debug.assert((try renderer.draw(&second.writer, &screen, null, caps)).bytes == 0);
 
 // And this is how a program built on visor tests its own screens: the
 // emulator reads the bytes back into a grid, and the two are compared
@@ -135,9 +135,9 @@ std.debug.print("{s}", .{out.written()});
 
 // Every sequence visor writes comes from morse, which it re-exports
 // whole: one fetch, and everything under the grid is reachable.
-var control: [64]u8 = undefined;
+var control: [128]u8 = undefined;
 var w: std.Io.Writer = .fixed(&control);
-try visor.morse.mouse(&w, .{ .press = true, .sgr = true });
+try visor.morse.mouse(&w, .{ .motion = .press });
 ```
 <!-- END GENERATED -->
 
@@ -167,9 +167,12 @@ only the base leaves the second line out. `morse` comes with it, re-exported
 as `visor.morse`, and is also available as `visor_dep.module("morse")` for a
 program that wants the writers on their own.
 
-Two dependencies: [`morse`](https://github.com/pedronaugusto/morse) for every
-escape sequence written and every reply parsed, and `uucode` for grapheme
-segmentation and width. Both are pinned by commit. `uucode` builds its tables
+Three dependencies: [`morse`](https://github.com/pedronaugusto/morse) for
+every escape sequence written and every reply parsed,
+[`conduit`](https://github.com/pedronaugusto/conduit) for the terminal's own
+calls — raw mode and the way back, the size, the device's name — of which only
+its `conduit.tty` module is imported, which on Linux links no C library, and
+`uucode` for grapheme segmentation and width. All are pinned by commit. `uucode` builds its tables
 at build time, and visor asks for six fields and no more — `grapheme_break`
 and `grapheme_break_no_control` for where one cluster ends and the next begins,
 `wcwidth_standalone` and `wcwidth_zero_in_grapheme` for what a codepoint is
@@ -190,22 +193,24 @@ with a `try`. Resizing allocates.
 | | |
 |---|---|
 | The grid's contents | `Cell`, `Cell.Text`, `Cell.Kind`, `Cell.Shape`, `Style`, `Color`, `Underline`, `Link`, `Target`. |
-| The grid | `Screen` — `init`, `deinit`, `resize`, `copyCell`, `readCell`, `write`, `writeScaled`, `fill`, `clear`, `scroll`, `intern`, `link`, `compactPool`, `damageAll`, `window`, `textAt`, `textOf`, `target`, `headOf`, and the fields `cursor`, `pointer`, `layers`, `damage`, `method`. `Cursor`, `Damage`, `Span`. |
-| The views | `Window` — `child`, `print`, `printSegment`, `copyCell`, `readCell`, `write`, `writeScaled`, `fill`, `clear`, `scroll`, `width`, `hit`, `showCursor`, `hideCursor`, `setCursorShape`, `cols`, `rows`, `size`. `Window.Segment`, `Window.Print`, `Window.PrintOptions`, `Window.ChildOptions`, `Window.Border`. `Rect`, `Point`, `Size`. |
-| Measuring text | `Method`, `Wrap`, `Graphemes`, `width`, `graphemeWidth`, `disagrees`, `wrap`, `Row`, `fit`. |
-| The render pass | `Renderer` — `init`, `deinit`, `resize`, `draw`, `repaint`, `repaintRow`, `enter`, `leave`. `Renderer.Stats`, `Mode`. |
-| What the terminal can do | `Caps`, `Caps.Probe`. |
-| Pictures | `Image`, `Layer`, `Layer.Order`, `Layers`. |
-| This program's terminal | `Tty` — `open`, `close`, `raw`, `restore`, `size`, `writer`, `read`, `onResize`. `restoreGlobal`, `Panic`. |
-| Testing your own screens | `Term` — `init`, `deinit`, `setMethod`, `feed`, `screen`, `resize`, `dump`, `dumpStyles`. `expectScreensEqual`, `dumpScreen`, `dumpScreenStyles`, `firstDifference`. |
+| Colours as the terminal shows them | `Palette` — `ask`, `update`, `resolve`, `known` — `Rgb`, `mix`. |
+| The grid | `Screen` — `init`, `deinit`, `resize`, `copyCell`, `readCell`, `write`, `writeScaled`, `fill`, `clear`, `scroll`, `intern`, `link`, `compactPool`, `damageAll`, `window`, `textAt`, `textOf`, `target`, `headOf`, and the fields `cursor`, `pointer`, `damage`, `method`. `Cursor`, `Damage`, `Span`. |
+| The views | `Window` — `child`, `sub`, `inked`, `print`, `printSegment`, `copyCell`, `readCell`, `write`, `writeScaled`, `fill`, `clear`, `scroll`, `width`, `hit`, `linkAt`, `copyText`, `showCursor`, `hideCursor`, `setCursorShape`, `cols`, `rows`, `size`. `Window.Segment`, `Window.Print`, `Window.PrintOptions`, `Window.ChildOptions`, `Window.Border`, `Window.Ink` and its `Stroke`. `Rect`, `Point`, `Size`. |
+| Measuring text | `Method`, `Wrap`, `Graphemes`, `width`, `graphemeWidth`, `Parts`, `combinesOnly`, `disagrees`, `wrap`, `Row`, `fit`. |
+| The render pass | `Renderer` — `init`, `deinit`, `resize`, `draw`, `repaint`, `repaintRow`, `enter`, `setModes`, `leave`. `Renderer.Stats`, `Mode`, `Modes`. |
+| What the terminal can do | `Caps`, `Caps.Probe` — `write`, `feed`, `complete`, `settled`. |
+| Pictures | `Image`, `Image.State`, `Layer`, `Layer.Order`, `Layers` — `transmit`, `ready`, `ack`, `free`, `freeAll`, `declare`, `undeclare`, `image`, `clear`, `repaint`, `count` — `Transmit`, `SharedMemory`. |
+| This program's terminal | `Tty` — `open`, `adopt`, `close`, `raw`, `restore`, `enter`, `leave`, `size`, `writer`, `read`, `inputFile`, `watchResize`, `unwatchResize`, `resized`, `resizeFile`, `drainResize`. `restoreGlobal`, `Panic`. `Input` — `init`, `next`, `nextWithin`, `Input.Options`. `Winsize` — `cellSize`, `update`, `resized` — `Pixels`, `CellSize`. |
+| Testing your own screens | `Term` — `init`, `deinit`, `setMethod`, `feed`, `screen`, `resize`, `dump`, `dumpStyles`. `expectScreensEqual`, `dumpScreen`, `dumpScreenWith` and `DumpOptions`, `dumpScreenStyles`, `firstDifference`. |
 | Everything under it | `visor.morse`, whole. |
 
 ### `visor.widgets`
 
 | | |
 |---|---|
-| Layout | `Layout` — `horizontal`, `vertical`, `split`, `splitFixed`, and the fields `direction`, `constraints`, `spacing`, `margin`. `Constraint` — `fixed`, `percent`, `min`, `max`, `fill`. `Direction`, `Padding`, `Align`, `place`, `offset`. |
-| The widgets | `Block` (borders, titles, padding, and the window inside), `Paragraph` (wrap, alignment, scroll), `List` and `List.State`, `Table` and `Table.State`, `Tabs`, `Gauge`, `LineGauge`, `Sparkline`, `BarChart`, `Chart`, `Scrollbar` and `Scrollbar.State`, `Canvas`, `Calendar`. Beside them: `Item`, `Line`, `Row`, `Bar`, `Dataset`, `Axis`, `Marker`, `Date`. |
+| Layout | `Layout` — `horizontal`, `vertical`, `split`, `splitFixed`, `repeat`, `fitCount`, and the fields `direction`, `constraints`, `spacing`, `margin`. `Constraint` — `fixed`, `percent`, `min`, `max`, `fill`. `Direction`, `Padding`, `Align`, `place`, `offset`. |
+| The widgets | `Block` (borders, corners, titles, padding, and the window inside), `Paragraph` (wrap, alignment, scroll, `Rows` iterator), `Row` (styled items at both edges), `List` — `draw`, `visible` — with `List.State`, `List.Segment` and `List.Visible`, `Table` — `draw`, `visible` — with `Table.State`, `Table.Row` and `Table.Visible`, `Tabs`, `Gauge`, `LineGauge`, `Sparkline`, `BarChart`, `Chart`, `Scrollbar` and `Scrollbar.State`, `Canvas`, `Calendar`, `TextInput` and `TextInput.State`, `Keys`, `Rule`, `Sextants`. Beside them: `Item`, `Line`, `Bar`, `Dataset`, `Axis`, `Marker`, `Date`, `sextant`. |
+| Scrolling | `Scroll` and `Scroll.State`: which rows of something longer a view shows, held still while it grows. |
 | The base, re-exported | `widgets.visor`, so a file that draws does not need both imports. |
 
 ## Design
@@ -251,6 +256,22 @@ return, and backspaces — and the shortest wins, with the absolute move as the
 tie-break, because it is the one that is right whatever the terminal did with
 the last one.
 
+**Measured by codepoint, the grid holds what such a terminal shows.** A
+terminal that measures by codepoint gives every codepoint that takes columns
+cells of its own and joins the ones that take none to the cell before them,
+so the astronaut that is a woman, a joiner and a rocket is a woman in two
+columns and a rocket in the next two. `graphemeWidth` counts it that way and
+`Screen.write` puts such a cluster in those cells, so the grid never claims a
+cluster in two columns that the terminal spreads over four.
+
+**Measured by cluster, cells drawn apart stay apart.** A terminal in mode
+2027 joins a codepoint to the cell on the left of the cursor wherever the
+break rules find no break, whatever was drawn when: a regional indicator
+beside another is a flag, a skin tone beside a thumb is that thumb's tone,
+and a spacing mark joins anything. A cell that would join its neighbour goes
+out with the mode off around it, so the terminal measures it by codepoint and
+gives it a cell of its own, and such a codepoint is never repeated with `REP`.
+
 **A row the terminal might measure differently is never diffed.** Whether the
 two width models disagree about a cluster is worked out once, when the cell is
 written, and a row holding one is repainted whole from an absolute position
@@ -285,6 +306,19 @@ takes more rows the same way, shrinking gives them back blank, and `leave`
 puts the cursor on the row below with the last frame still showing. A
 scrolling region is an absolute thing, so scroll detection is off.
 
+**The way out undoes the way in, and nothing else.** `enter` takes the
+screen and the input modes the program asked for; `leave` turns off exactly
+those, in reverse. The kitty keyboard flags are a stack per screen, so they
+are pushed after the switch to the alternate screen and popped before the
+switch back. The mouse is one motion and one encoding, as the terminal keeps
+it: `enter` puts it in exactly the state asked for, whatever was on before,
+`setModes` changes only the setting that differs, the old mode off before the
+new one on, and `leave` turns off that motion and that encoding. Focus
+reports are a mode of their own. A screen entered through `Tty.enter` is
+undone the same way by `restoreGlobal` and the panic handler, from a buffer
+on the stack, so a program that dies leaves the shell with its keyboard, its
+mouse and its cursor.
+
 **Synchronised output brackets a frame, not a session.** Mode 2026 left on for
 a program's lifetime makes the terminal repaint at whatever timeout it
 invented, which is ten frames a second on the tightest of them. `draw` writes
@@ -292,17 +326,86 @@ the bracket, into its own buffer, and keeps it only when the frame turns out
 too large for the terminal to take in one read; `leave` writes the closing
 half whether or not it wrote the opening one.
 
+**The grid is text; the pictures are beside it.** A `Screen` holds cells
+and nothing else, and a program that shows pictures keeps its `Layers` next
+to it and hands both to `Renderer.draw`, which is the one that orders them.
+
 **The text pass never writes a graphics command and never deletes a
 placement.** A picture that moves is re-placed under the same image and
 placement id, which the protocol replaces without flicker; one that leaves is
-deleted by name, and its bytes are kept. Nothing waits for an acknowledgement:
-a placement names the number the program chose, and the acknowledgement, when
-it comes, upgrades that to the id the terminal assigned.
+deleted by name after the frame's placements, with its pixels kept, so a
+picture swapped for another is covered before it goes. `Layers` sends the
+pixels too — chunked, deflated when that helps, quiet unless asked — and frees
+them, so a program writes no graphics command of its own. Nothing waits on the
+terminal's word unless asked to: an image sent quietly is shown at once, and
+one sent asking for an answer is shown on the answer or when the caller's grace
+period runs out, and a terminal that never answers is not waited for twice.
+
+**A picture on the same machine goes through shared memory.** With
+`Layers.shared_memory` set, the pixels are put in a shared memory object and
+only its name goes through the terminal's input: no deflate and no base64 on
+the program's thread. The first one asks for an answer; an error, or no answer
+within the grace period, turns the medium off for good, and that picture is
+refused so the program sends it again in the escape code, which is what a
+terminal on another machine, over ssh, gets from then on. An object the
+terminal did not read is unlinked, never left behind.
+
+**A picture on the same machine goes through shared memory.** With
+`Layers.shared_memory` set, the pixels are put in a shared memory object and
+only its name goes through the terminal's input: no deflate, no base64, and a
+picture that cost a frame costs a copy (a full-screen picture on a 4K display,
+from about 15 ms to under 3). The first one asks for an answer; an error, or no
+answer within the grace period, turns the medium off for good, and that picture
+is refused so the program sends it again in the escape code, which is what a
+terminal on another machine, over ssh, gets from then on. An object the
+terminal did not read is unlinked, never left behind.
+
+**After a resize, nothing on the terminal is taken as known.** A terminal
+that changes size keeps what fitted, cuts it, moves its rows up with the
+cursor, or takes in a frame drawn at the old size after it changed, and says
+nothing about which. So `Renderer.resize`, like `repaint`, forgets the
+previous frame: the next `draw` writes every row whole, a row with nothing on
+it erased to the end of the line rather than taken to be blank already, and
+places every picture again, a placement with the same ids replacing the one
+the terminal kept wherever it went. There is no erase of the whole display
+first, because that takes every picture down with it. A program that hears of
+its size in band (mode 2048) hears of it after the terminal's grid changed,
+so its next frame lands on the new grid. The signal can come before the grid
+changes, and a frame drawn in that gap stays wrong until the next repaint, so
+`enter` turns 2048 on wherever `Caps.in_band_resize` says the terminal has
+it.
+
+**A cell's pixel size is the terminal's word, not a division.** The
+operating system and a resize report give the text area, which a terminal may
+pad, so the area divided by the grid is a little too large and the error grows
+toward the right edge. `Winsize` keeps the area and the cell apart, takes the
+cell only from the terminal's answer to `CSI 16 t`, and when it has to divide
+it says so.
+
+**Input is morse's events, read.** `Input.next` reads the terminal, frames
+the bytes with `morse.KeyParser` and hands back the parser's events as they
+are: a key, the mouse, and an answer to a question read as a typed `reply` —
+a colour, a size, a mode, a graphics acknowledgement — which `Palette`,
+`Winsize`, `Caps.Probe` and `Layers.ack` take as they come, so nothing is
+parsed twice, nothing is dropped on the way and there is no second event
+type. The lone `ESC` is settled on the caller's timeout, on Windows too; a
+resize wakes the wait through a pipe the signal handler writes to and comes
+back as the same `resize` event an in-band report is, with pixels. It starts
+no thread and keeps no clock: it blocks on the caller's `std.Io`, and
+cancelling the task it runs in is what stops it. `Input.nextWithin` is the
+same read with the caller's deadline beside it, null when the deadline passes
+in silence, which is how a probe's quiet period is waited out without a
+second task or a cancelled read.
 
 **Nothing is guessed.** No terminfo, no capability database, and no
 environment variable read — not `TERM`, not `COLORTERM`, not `NO_COLOR`.
-`Caps.Probe` writes the questions and folds the answers in; a caller who would
-rather trust the environment sets the fields itself.
+`Caps.Probe` writes morse's probe and folds the answers in, and is settled
+when every question is answered or, after the device attributes, when the
+terminal has been quiet for the caller's quiet period; a caller who would
+rather trust the environment sets the fields itself. A mode the terminal
+answers set or reset is one it has: nothing has turned synchronised output or
+in-band resize reports on when the probe asks, so a terminal that has them
+answers reset.
 
 **A frame is one write.** `draw` writes to a `*std.Io.Writer` and never
 flushes it, so batching is yours. `Stats.bytes` says how large the buffer
@@ -317,6 +420,19 @@ otherwise be off screen, and forgets it. There is no retained tree, no
 callback and no focus model, so there is nothing to keep in step with the
 program's own state.
 
+**A program's look is an ink, not a pass over the screen.** A look that
+depends on where a cell lands -- every other row faded, a region brought up
+from the background -- or that watches what is drawn cannot be said in a
+widget's style options, and drawing a widget on a scratch screen to restyle
+its cells afterwards costs an allocation and a comparison of every cell. A
+window may carry a `Window.Ink`, a function the program owns that turns the
+style a cell was written in into the style it is drawn in, given where on
+the screen it lands and what it holds. Children inherit it, every write goes
+through it, and widgets know nothing of it. It is held by pointer so a
+window stays three words, and with none a write pays one branch: on a page
+of widgets that is below what moving the same code elsewhere in the binary
+costs, which is as far as a measurement can see.
+
 **Layout is splitting, not solving.** A rectangle is divided by fixed sizes,
 percentages, floors, ceilings and shares of what is left, in one pass over
 the constraints, with no allocation and no cache; splits nest because a part
@@ -326,8 +442,8 @@ its own.
 ## Scope
 
 - **No widgets in the base.** They are a second module, which `visor` never imports.
-- **No event loop and no threads.** A base layer that owns the loop cannot be used by a program that already has one.
-- **No widget whose substance is keys, focus or a clock.** Those are three quarters event handling, and the program has the loop.
+- **No event loop and no threads.** A base layer that owns the loop cannot be used by a program that already has one. `Input` is a read, not a loop: the program decides where it runs and what an event means.
+- **No widget whose substance is handling keys, focus or a clock.** Those are three quarters event handling, and the program has the loop. `Keys` shows which keys work and handles none; `TextInput` says where the cursor lands and moves it for no key.
 - **No constraint solver.** Fixed, percent, floor, ceiling and share cover what a screen layer owes.
 - **No colour degraded to a profile.** A program that asks for sixteen colours gets sixteen colours.
 - **One graphics protocol.** The kitty protocol, as ordered layers; there is no second picture path.
@@ -349,10 +465,13 @@ the examples without running them, and CI does that for `x86_64-linux-gnu`,
 [`ci/linux.sh`](ci/linux.sh) runs the suite in Docker from any machine; it is
 a local script and no CI job calls it.
 
-`Tty` is the one file that calls an operating system. It is compiled on all
-three platforms in CI and opened by nothing in the suite, so no half of it has
-been run against a real terminal yet; the alternate screen, raw mode and
-inline mode against a real terminal are the work still open there.
+`Tty` is the one file that reaches the operating system, through
+`conduit.tty`, which owns the terminal's calls for this package and for
+programs that run a child on a pseudo-terminal alike. It is compiled on all
+three platforms in CI, and on Linux and macOS the suite runs it against a
+pseudo-terminal conduit opens: the size with its pixels, entering and leaving,
+the panic path's way back, and a resize waking `Input`. The Windows half is
+compiled and not run.
 
 ## Testing
 
@@ -375,7 +494,11 @@ because the rule that repaints a drifting row exists for the case where the
 two disagree, and the protocol is the other way to settle it. The first three
 run again for an inline screen, taken at a cursor the prompt left somewhere
 down a taller terminal and growing and shrinking between frames, with the
-rows above it and the cursor below it at the end checked too.
+rows above it and the cursor below it at the end checked too. And once more
+across resizes: the terminal takes a new size first and keeps what fitted,
+frames drawn at the old size land after it, a drag passes through sizes the
+program never hears of, and the next frame at the size the program was told
+must leave the terminal showing exactly the screen.
 
 `zig build conformance` runs the same four properties again, over the same
 inputs, against a terminal emulator that is not this one's. `Term` ships with
@@ -386,7 +509,10 @@ through its own grid — every column's grapheme, its width, its style and its
 link, with two links that differ only by their `id` being two links. It is a
 build of its own under `conformance/`, with its own manifest pinning that
 emulator by commit, so nothing that builds a program on this package fetches
-one. CI runs it on Linux and macOS.
+one. The resize property runs there too, against the emulator's own resize,
+with pictures placed and moved across it and checked where the emulator has
+them; and the probe's questions go to the emulator and its answers back. CI
+runs it on Linux and macOS.
 
 Every widget is tested the same way round: drawn into a grid, rendered to
 bytes, fed to the emulator, and the picture the terminal shows compared with
@@ -400,6 +526,13 @@ them, checking that a frame with nothing new writes nothing, that the text
 pass is whole before the first graphics command, and that a deletion happens
 only for a picture that left and names it alone.
 
+Input and typed text are fuzzed as well: random streams, pushed through a
+pipe and read in pieces of every size, must come out of `Input` as the events
+the parser makes of the whole stream; and random text — wide and combined
+clusters, both kinds of line end, bytes that are not UTF-8 — must lay out in
+`TextInput` with every byte in exactly one row and every cluster boundary a
+place that leads back to itself.
+
 Beside it: byte-exact tests on what each mechanism writes, a grid fuzz that
 checks the invariants and the damage map after every operation, a
 `checkAllAllocationFailures` pass on `init`, `resize`, `intern` and
@@ -407,7 +540,14 @@ checks the invariants and the damage map after every operation, a
 bytes, a frame in which one cell changed fewer than 64, and a frame in which
 nothing changed writes nothing. The generated corpus in `src/corpus.zig` runs
 on every push, and both builds replay the same bytes; `zig build test --fuzz`
-keeps searching beyond it.
+keeps searching beyond it. Every property reads its input through
+`corpus.Dice`: under the fuzzer each answer is the fuzzer's, and on a replayed
+entry the answers come from a generator the entry seeds. The standard
+library's `Smith` answers a ranged question from eight bytes and gives the
+lowest value whenever they are out of range, so random bytes asked for a size
+answer one column and one row. Each property has a test beside it that
+replays the corpus with its draws counted and fails unless they cover every
+size, every operation and every grapheme it can ask for.
 
 What a frame costs, measured here on a 200 by 50 grid of 10,000 cells, ReleaseFast
 on an Apple M3 Max, best of five passes of a thousand frames each:
