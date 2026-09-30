@@ -16,10 +16,10 @@ keywords:
   - networking
   - no-malloc
   - shared-nothing
-date: 2026-09-27
+date: 2026-09-30
 category: systems
-updated_at: 2026-09-27T14:02:33+00:00
-last_sync: 2026-09-27T14:02:33Z
+updated_at: 2026-09-30T15:18:49+00:00
+last_sync: 2026-09-30T15:18:49Z
 package_kind: binary
 has_library: false
 has_binary: true
@@ -48,14 +48,14 @@ Linux, kqueue on macOS, and epoll on Linux where io_uring is not available.
 
 | | |
 |---|---|
-| Backends | io_uring on Linux 6.1 or later; epoll on Linux where io_uring is refused; kqueue on macOS |
+| Backends | io_uring on Linux 6.17 or later; epoll on Linux where io_uring is refused; kqueue on macOS |
 | Model | Completion-based. A program submits operations in batches, and each operation ends with exactly one final event. |
 | Operations | TCP, UDP with ECN, files, timers and repeating timers, deadlines, cancellation, and messages between loops |
 | Memory | rotor allocates nothing. A program gives each loop its memory once, at startup, and every table has a fixed limit. |
 | Threads | One loop per thread, with no locks. Loops post messages to each other, across threads or processes. |
 | Safety | Assertions stay on in release builds. Misuse stops the program at a named check. |
 | Dependencies | None. Zig 0.16.0 and its standard library. |
-| Version | 0.5.0 |
+| Version | 0.6.0 |
 | License | Apache-2.0 |
 
 ## Why rotor
@@ -84,15 +84,15 @@ Linux, kqueue on macOS, and epoll on Linux where io_uring is not available.
 
 ## Status
 
-rotor is at version 0.5.0. Everything planned for version one is built: TCP, UDP with ECN on
+rotor is at version 0.6.0. Everything planned for version one is built: TCP, UDP with ECN on
 both kernels and segmentation offload on Linux, files, timers, deadlines and cancellation, and
 messages between loops, in one process or several. One conformance suite, written against the
 public API, passes on all three backends, and CI runs it on every push.
 
 | system | backend | requires | tested on |
 |---|---|---|---|
-| Linux | io_uring | Linux 6.1 or later, with the io_uring features [listed in the guide](docs/using.md#what-the-kernel-must-have) | Linux 6.17 on x86-64 (GitHub runners), Linux 7.0 on aarch64 (a virtual machine on Apple silicon) |
-| Linux, where io_uring is refused or lacks a feature rotor needs | epoll | Linux 6.1 or later | both of the above, under Docker's default seccomp profile |
+| Linux | io_uring | Linux 6.17 or later, with the io_uring features [listed in the guide](docs/using.md#what-the-kernel-must-have) | Linux 6.17 on x86-64 and aarch64 (GitHub runners), Linux 7.0 on aarch64 (a virtual machine on Apple silicon) |
+| Linux, where io_uring is refused or lacks a feature rotor needs | epoll | Linux 6.17 or later | both of the above, under Docker's default seccomp profile |
 | macOS | kqueue | no minimum version is set | macOS 26.6 on Apple silicon |
 
 > [!IMPORTANT]
@@ -112,7 +112,7 @@ public API, passes on all three backends, and CI runs it on every push.
 Add rotor to a project:
 
 ```bash
-zig fetch --save git+https://github.com/c4milo/rotor#v0.5.0
+zig fetch --save git+https://github.com/c4milo/rotor#v0.6.0
 ```
 
 In `build.zig`:
@@ -261,7 +261,7 @@ and the commands to take every number again.
 | [19](docs/decisions/0019-the-comparison-measures-one-core.md) | the comparison measures one core | accepted |
 | [20](docs/decisions/0020-an-epoll-backend.md) | an epoll backend | accepted |
 | [21](docs/decisions/0021-loops-in-several-processes.md) | loops in several processes | accepted |
-| [22](docs/decisions/0022-a-std-io-adapter.md) | a `std.Io` adapter | proposed |
+| [22](docs/decisions/0022-a-std-io-adapter.md) | a `std.Io` adapter | accepted, deferred |
 
 A proposed record describes something not yet built. A declined record describes something rotor
 will not build, and why.

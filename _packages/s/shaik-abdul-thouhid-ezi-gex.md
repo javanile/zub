@@ -18,16 +18,16 @@ keywords:
   - unicode
   - unicode-characters
   - zero-allocation
-date: 2026-08-23
+date: 2026-09-30
 category: systems
-updated_at: 2026-08-23T07:40:38+00:00
-last_sync: 2026-08-23T07:40:38Z
+updated_at: 2026-09-30T16:18:56+00:00
+last_sync: 2026-09-30T16:18:56Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 2
-distributable_binary_count: 2
+binary_count: 4
+distributable_binary_count: 4
 multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
@@ -46,7 +46,9 @@ backend architecture.
   Unicode-correct. Classes resolve once to sorted code-point ranges and match by a range check,
   with no per-character table lookup; `\b` and `\X` read `ezi_code`'s property tables directly.
   All Unicode comes from [`ezi_code`](https://github.com/shaik-abdul-thouhid/ezi-code); ezi_gex
-  never touches `std.unicode`.
+  never touches `std.unicode`. `main` pins `ezi_code` `v0.5.0`, which tracks **Unicode 18.0.0**
+  (see [Unicode version](#unicode-version)). Every supported escape, property and script is listed
+  in the [Unicode syntax reference](docs/usage-guide.md#11-unicode-syntax-reference).
 - **Comptime-capable.** You can compile a pattern and run the match at compile time: the program
   lands in `ro_data` and the matcher runs in `comptime`. (It's the C++ `ctre` trick in Zig, with
   full Unicode.)
@@ -61,10 +63,11 @@ backend architecture.
 
 ## Status
 
-The latest release is `v0.6.2`; `main` is the development branch (`0.7.0-dev`). See
+The latest release is `v0.7.0`; `main` is the development branch (`0.8.0-dev`). See
 [Installing](#installing) for pinning the tag versus tracking `main`. It is pre-1.0, so the API
 can still change, though everything public is annotated `@stable-since: vX.Y.Z` and follows
-SemVer. It needs a recent Zig dev build (`0.17.0-dev`) and will not compile on stable 0.16.
+SemVer. It needs a recent Zig dev build (`0.17.0-dev.2320+1e770dbef` or newer, the same minimum as
+its `ezi_code` dependency) and will not compile on stable 0.16.
 
 The default `auto` engine is byte-DFA-first: a Hopcroft-minimized eager DFA as the primary span
 engine, a lazy DFA as the fallback. It runs in O(input) on every pattern, is leftmost-first,
@@ -72,29 +75,26 @@ agrees byte-for-byte with the reference Pike VM, and works at both comptime and 
 [Backends](#backends) and [Performance](#performance) cover how it works;
 [CHANGELOG.md](CHANGELOG.md) has what each release added.
 
-It is benchmarked against Rust's `regex` and Go's `regexp` on real
-[rebar](https://github.com/BurntSushi/rebar) haystacks. The harness is a separate, reproducible
-repo: [regex-bench](https://github.com/shaik-abdul-thouhid/regex-bench). Around 490 tests cover
-per-module behaviour, cross-backend conformance (every backend has to agree with the Pike VM, at
-runtime and comptime), and ReDoS immunity (`engine/redos.zig`), plus a hardened, parallel
-**fuzz** suite (`fuzz/` — every backend differenced against the Pike VM; `zig build fuzz --fuzz=N`).
+Around 500 tests cover per-module behaviour, cross-backend conformance (every backend has to agree
+with the Pike VM, at runtime and comptime), and ReDoS immunity (`engine/redos.zig`), plus a
+hardened, parallel **fuzz** suite (`fuzz/` — every backend differenced against the Pike VM; `zig build fuzz --fuzz=N`).
 
 ## Installing
 
-The latest **tagged** release is **`v0.6.2`** — the recommended choice for reproducible
+The latest **tagged** release is **`v0.7.0`** — the recommended choice for reproducible
 builds. Via git ref (resolves the tag and pins its content hash in `build.zig.zon`):
 
 ```sh
-zig fetch --save git+https://github.com/shaik-abdul-thouhid/ezi-gex.git#v0.6.2
+zig fetch --save git+https://github.com/shaik-abdul-thouhid/ezi-gex.git#v0.7.0
 ```
 
 Or via plain HTTP tarball (also pins the content hash):
 
 ```sh
-zig fetch --save https://github.com/shaik-abdul-thouhid/ezi-gex/archive/refs/tags/v0.6.2.tar.gz
+zig fetch --save https://github.com/shaik-abdul-thouhid/ezi-gex/archive/refs/tags/v0.7.0.tar.gz
 ```
 
-**Tracking `main` (unreleased `0.7.0-dev`)** — if you want the latest in-development surface
+**Tracking `main` (unreleased `0.8.0-dev`)** — if you want the latest in-development surface
 before it's tagged, fetch the branch instead of a tag. This resolves `main`'s current commit
 and pins its hash in `build.zig.zon`; re-run it to move up:
 
@@ -103,7 +103,7 @@ zig fetch --save git+https://github.com/shaik-abdul-thouhid/ezi-gex.git#main
 ```
 
 `main` is the development branch: it builds and is tested, but APIs there are not yet covered
-by a tag, so they can still change before `0.7.0`. For reproducible builds prefer the `v0.6.2`
+by a tag, so they can still change before `0.8.0`. For reproducible builds prefer the `v0.7.0`
 tag; reach for `main` only when you specifically need unreleased work.
 
 Then in `build.zig` (the `ezi_code` dependency is resolved transitively — you only
@@ -113,6 +113,21 @@ add `ezi_gex`):
 const ezi_gex = b.dependency("ezi_gex", .{ .target = target, .optimize = optimize });
 exe.root_module.addImport("ezi_gex", ezi_gex.module("ezi_gex"));
 ```
+
+### Unicode version
+
+ezi_gex takes its Unicode data from its pinned `ezi_code`. That data covers property classes,
+scripts, case folding, `\w` and `\b`, so the Unicode version depends on the ezi_gex version:
+
+| ezi_gex | Pinned `ezi_code` | Unicode |
+| ------- | ----------------- | ------- |
+| `v0.1.0` – `v0.6.2` | `main` commits, then `v0.4.1` (from `v0.3.0`) | 17.0.0 |
+| `v0.7.0`, `main` (`0.8.0-dev`) | `v0.5.0` | 18.0.0 |
+
+With Unicode 18, `\p{Script=…}` accepts the new scripts (`Jurchen`/`Jurc`, `Proto_Cuneiform`/`Pcun`,
+`Seal`), and the classes and case folding cover the newly assigned characters. To stay on Unicode 17,
+pin `v0.6.2`. The complete list of script names and codes is in the
+[Unicode syntax reference](docs/usage-guide.md#11-unicode-syntax-reference).
 
 ## Quick look
 
@@ -131,10 +146,8 @@ var re = gex.compileRuntime(gpa, "(?<user>\\w+)@(?<host>\\w+)", &diag, .{}) catc
 defer re.deinit();
 
 // The Scratch is the per-search working state — you own it; one per thread.
-// Build it directly off the backend's `Scratch` type (heap-backed here); the front
-// door never constructs it for you. Reuse one across many searches; never share a
-// Scratch across threads.
-var sc = try @TypeOf(re).Scratch.init(gpa, &re.program);
+// Reuse one across many searches; never share a Scratch across threads.
+var sc = try re.initScratch(gpa);
 defer sc.deinit(gpa);
 
 if (re.find(&sc, "ping bob@example")) |m| {
@@ -190,58 +203,57 @@ single piece of mutable per-search state.
 
 ### 1. The `Scratch` — the engine only needs *a* scratch
 
-The engine is **`Scratch`-type agnostic.** Every search op takes a
-`*@TypeOf(re).Scratch`, and that is the *entire* requirement. The front door never
-constructs it, never stores an allocator for it, and assumes **nothing** about what it
-holds — whether a `Scratch` is heap-allocated, carved from a caller buffer, stateless
-(`struct{}`), or something exotic is **purely the backend's design**. Buffer
-semantics, allocator semantics, comptime-ability: all optional, all the backend's
-call. `Compiled` holds only the `Scratch` *type* and forwards your `&sc` straight
-through to the backend — so you build the `Scratch` yourself, directly off
-`@TypeOf(re).Scratch`, threading in `&re.program`:
+Every search op takes a `*Scratch` — the caller-owned, per-search working state — and
+that is the *entire* requirement. You make one **from the regex**: `re.initScratch(gpa)`
+for a heap-backed scratch, or `re.initScratchBuffer(buf)` over storage you own. The
+types are nameable, too: `gex.Regex` is what `compileRuntime`/`compileComptime` return
+and `gex.Scratch` is its scratch, so a struct field or a function parameter can carry
+either without `@TypeOf`.
 
 ```zig
 var re = try gex.compileRuntime(gpa, "[a-z]+\\d+", &diag, .{});
 defer re.deinit();
 
-// Heap-backed — every built-in backend's Scratch defines `init` / `deinit`.
-var sc = try @TypeOf(re).Scratch.init(gpa, &re.program);
+// Heap-backed — one per thread, reused across searches.
+var sc = try re.initScratch(gpa);
 defer sc.deinit(gpa);
 ```
 
-If the backend implements the **buffer convention** (its `Scratch` exposes
+If the backend implements the **buffer convention** (its scratch exposes
 `Buf` / `bufferLen` / `initBuffer` — every built-in except the runtime-only lazy `dfa`
 does), you can hand it caller-owned storage instead, with no allocator and no allocation
 *during* a search:
 
 ```zig
-// Fixed buffer — `bufferLen` reports how many `Buf` words this program needs.
-const buf = try gpa.alloc(@TypeOf(re).Scratch.Buf, @TypeOf(re).Scratch.bufferLen(&re.program));
+// Fixed buffer — `scratchBufferLen` reports how many `Buf` words this regex needs.
+const buf = try gpa.alloc(gex.Scratch.Buf, re.scratchBufferLen());
 defer gpa.free(buf);
-var sc_buf = try @TypeOf(re).Scratch.initBuffer(buf, &re.program);
+var sc_buf = try re.initScratchBuffer(buf);
 
 // For a comptime regex the length is comptime-known → a stack array, no allocator:
 const Re = comptime gex.compileComptime("[a-z]+\\d+", .{});
-var stack_buf: [@TypeOf(Re).Scratch.bufferLen(&Re.program)]@TypeOf(Re).Scratch.Buf = undefined;
-var sc_ct = try @TypeOf(Re).Scratch.initBuffer(&stack_buf, &Re.program);
+var stack_buf: [Re.scratchBufferLen()]gex.Scratch.Buf = undefined;
+var sc_ct = try Re.initScratchBuffer(&stack_buf);
 ```
 
-A backend with a different construction protocol is built however *it* specifies — for
-a stateless one that is simply `var sc: @TypeOf(re).Scratch = .{};`. Whatever the
-backend's choice, you end up with a value the engine accepts.
+Under the hood `Scratch` is a thin wrapper: `Compiled(B).Scratch` holds the backend's
+own `B.Scratch` in its `.inner` field and forwards the lifecycle the backend provides
+(`init`/`initBuffer`/`bufferLen`/`reset`/`deinit`), substituting a no-op where the backend has none
+(a stateless `struct{}` scratch needs nothing). The backends never see the wrapper;
+`gex.Engine(B)` still takes the raw `B.Scratch`, so pass `&sc.inner` there, and
+`Scratch.fromBackend(raw)` wraps a scratch you built yourself (e.g. the lazy `dfa`'s
+`Scratch.initOptions` with a custom cache budget). The pre-0.7 spelling
+`@TypeOf(re).Scratch.init(gpa, &re.program)` still compiles and yields the same type.
 
-> The front door dictates no representation and reaches for no scratch method on the
-> runtime path: it cares that a `Scratch` *value* exists, not how it was made. (The
-> comptime helpers — `isMatchComptime`/`findComptime`/… — are the one exception: with
-> no allocator in const-eval they carve a buffer `Scratch` inline, so there they do
-> require the backend's buffer convention.)
+> The comptime helpers — `isMatchComptime`/`findComptime`/… — carve a buffer scratch
+> inline (no allocator in const-eval), so they require the backend's buffer convention.
 
 ### 2. Searching — `isMatch`, `find`, `findAll`, `count`, `split`
 
 ```zig
 var re = try gex.compileRuntime(gpa, "\\w+", &diag, .{});
 defer re.deinit();
-var sc = try @TypeOf(re).Scratch.init(gpa, &re.program);
+var sc = try re.initScratch(gpa);
 defer sc.deinit(gpa);
 
 const text = "the quick brown fox";
@@ -275,7 +287,7 @@ whole match at index 0). At **runtime** the group count is dynamic, so allocate;
 ```zig
 var re = try gex.compileRuntime(gpa, "(?<user>\\w+)@(?<host>\\w+)", &diag, .{});
 defer re.deinit();
-var sc = try @TypeOf(re).Scratch.init(gpa, &re.program);
+var sc = try re.initScratch(gpa);
 defer sc.deinit(gpa);
 
 const slots = try gpa.alloc(?usize, re.slotCount()); // 2 * (2 groups + 1) = 6
@@ -312,7 +324,7 @@ There's a `Writer`-based form, a count-bounded form, an **allocating** form, and
 ```zig
 var re = try gex.compileRuntime(gpa, "(\\w+)@(\\w+)", &diag, .{});
 defer re.deinit();
-var sc = try @TypeOf(re).Scratch.init(gpa, &re.program);
+var sc = try re.initScratch(gpa);
 defer sc.deinit(gpa);
 const slots = try gpa.alloc(?usize, re.slotCount());
 defer gpa.free(slots);
@@ -381,7 +393,7 @@ const year = comptime Re.capturesComptime("y2026-06").?.namedSlice("year").?; //
 | Literals, `.`, `\|`, `*` `+` `?` `{m,n}`, lazy `*?`… | ✅ |
 | Groups `(…)`, `(?:…)`, named `(?<n>…)`/`(?P<n>…)` | ✅ |
 | Classes `[...]`, `[^...]`, ranges, `\d \w \s` (+ negations) | ✅ |
-| Unicode `\p{L}` `\P{…}` `\p{Script=…}`, `\pL` | ✅ |
+| Unicode `\p{L}` `\P{…}` `\p{Script=…}`, `\pL` ([full list](docs/usage-guide.md#11-unicode-syntax-reference)) | ✅ |
 | Anchors `^ $ \A \z`, word boundary `\b \B`, multiline `(?m)` | ✅ |
 | Inline flags `(?i)` `(?m)` `(?s)` `(?x)`, scoped `(?i:…)` | ✅ |
 | Escapes `\n \t \xHH \x{…} \u{…} \cX`, comments `(?#…)`, verbose `(?x)` | ✅ |
@@ -390,6 +402,11 @@ const year = comptime Re.capturesComptime("y2026-06").?.namedSlice("year").?; //
 
 Anchors are JS/RE2-style: `$` without `(?m)` is end-of-input (`\z`), and `\Z` is
 treated as `\z`. See [`docs/architecture.md`](docs/architecture.md) §Caveats.
+
+Every Unicode escape, general category, derived property and script that `\p{…}` accepts is listed,
+with all its alternative spellings (`\p{L}` / `\pL` / `\p{Letter}`, `Script=` / `sc=` / `scx=`, …),
+in the [Unicode syntax reference](docs/usage-guide.md#11-unicode-syntax-reference) of the usage
+guide.
 
 ## Backends
 
@@ -419,7 +436,7 @@ A **single** literal (`Sherlock`) routed to `literal` is scanned with a portable
 16/32-byte chunk, verify only where they coincide — no arch asm (lowers to SSE2/NEON everywhere). The
 scan processes four chunks per iteration (after a short single-chunk warm-up so dense matches return
 at once), and adds a third probe byte for short all-common needles so most candidates are rejected
-without a comparison — which brings plain literal scans to `rust/regex` parity on ARM64. A literal **alternation** (`cat|dog|fish`) instead uses the **Teddy** SIMD prefilter on
+without a comparison. A literal **alternation** (`cat|dog|fish`) instead uses the **Teddy** SIMD prefilter on
 a target with a native dynamic shuffle (x86-64 SSSE3/AVX2, aarch64 NEON) — fingerprint all branches
 across a 16-byte chunk at once, then verify. Slim (≤8 buckets) by default; **fat** (16 buckets) on
 AVX2 for larger sets; portable scalar fallback at comptime and on other targets. Both are governed by
@@ -503,7 +520,7 @@ Two facts about the built-ins, both stemming from the *caller-supplied* allocato
 rather than any hidden internal one — the front door allocates nothing during a search:
 
 - The `backtrack` heap `Scratch` (which `auto` uses for small inputs) grows its visited
-  set on demand **through the allocator you passed to `Scratch.init`**. So if several
+  set on demand **through the allocator you passed to `initScratch`**. So if several
   threads' scratches share one *non-thread-safe* allocator, two growing at once race
   inside that allocator — give each thread its own allocator, or a thread-safe one.
 - A **buffer-backed `Scratch`** (`initBuffer`) and the **`pikevm`** backend allocate
@@ -514,18 +531,7 @@ Full details in [`docs/architecture.md`](docs/architecture.md) §11 and the usag
 
 ## Performance
 
-> **Benchmark:** the numbers below come from a like-for-like, three-way throughput +
-> compile-time comparison against **Rust `regex`** and **Go `regexp`** on byte-identical
-> [rebar](https://github.com/BurntSushi/rebar) haystacks. The harness is a separate,
-> reproducible repo — clone it and run `./run.sh`:
-> **[github.com/shaik-abdul-thouhid/regex-bench](https://github.com/shaik-abdul-thouhid/regex-bench)**
-> (it fetches this engine from GitHub, so anyone can reproduce the comparison).
-
-ezi_gex is competitive with Rust's `regex`, and it never goes quadratic. On the rebar Sherlock
-suite its throughput is within a small factor of Rust overall (geometric mean about 1.45×, against
-Rust's 1.15×). As of 0.6.2, plain single-literal scans run at or near Rust parity on ARM64 (and a
-few run faster); it matches Rust on most character-class scans, and beats Rust on a number of
-literal and case-insensitive patterns. Against its own simple reference engine it is several times
+ezi_gex never goes quadratic, and against its own simple reference engine it is several times
 faster across the board.
 
 The default `auto` engine compiles each pattern into a minimized byte-level DFA and matches with a
@@ -536,7 +542,7 @@ O(input) on every pattern and every input: there is no catastrophic backtracking
 ReDoS suite proves it. Every fast path is checked byte-for-byte against the reference engine, so
 none of it changes a result.
 
-Where it still trails Rust is dense Unicode-class throughput: `\p{L}+`, `[A-Za-z]+` and similar,
+Its slowest shape is dense Unicode-class throughput: `\p{L}+`, `[A-Za-z]+` and similar,
 where the match is the whole input, so there is nothing to skip and the table walk itself is the
 cost. That is the current focus. See [`docs/architecture.md`](docs/architecture.md) §10, and
 [CHANGELOG.md](CHANGELOG.md) for the performance work in each release.
@@ -562,14 +568,18 @@ a one-time build cost; match time stays O(input). For the details see
 
 As a reference point, here is the bundled `main.zig` demo — which exercises runtime and comptime
 compilation, classes, captures, replace, split, `\p{L}`, scripts, and all three byte backends —
-built with Zig `0.17.0-dev` on macOS arm64:
+built with Zig `0.17.0-dev.2320+1e770dbef` against `ezi_code` `v0.5.0` (Unicode 18.0.0) on
+macOS arm64:
 
 | Optimize mode | Demo binary |
 |---|---|
-| `Debug` | 3.64 MB (3,819,672 B) |
-| `ReleaseSafe` | 1.35 MB (1,415,288 B) |
-| `ReleaseFast` | 1.20 MB (1,262,472 B) |
-| `ReleaseSmall` | 0.79 MB (830,712 B) |
+| `debug` | 3.69 MB (3,870,904 B) |
+| `safe` | 1.38 MB (1,448,184 B) |
+| `fast` | 1.23 MB (1,293,176 B) |
+| `small` | 0.81 MB (847,592 B) |
+
+On the same toolchain, moving from Unicode 17 to 18 adds about 1 KB to the `safe` and `fast`
+builds and about 16 KB to `small`.
 
 Most of the `Debug` figure is Zig's debug runtime, not regex data. Your own binary will come in
 under the demo: it won't link the demo's full spread of backends and Unicode features, and
@@ -580,7 +590,9 @@ under the demo: it won't link the demo's full spread of backends and Unicode fea
 - [`docs/usage-guide.md`](docs/usage-guide.md) — **the hands-on guide**: copy-paste
   recipes for every front-door op, the full pipeline used **from lexing** (scan → AST
   → HIR → backend), comptime/no-allocator paths, and a complete, runnable, step-by-step
-  **"write your own backend"** walkthrough. Start here if you want to *do* something.
+  **"write your own backend"** walkthrough. Start here if you want to *do* something. Its
+  [§11 Unicode syntax reference](docs/usage-guide.md#11-unicode-syntax-reference) lists every
+  Unicode escape, property and script with all accepted spellings.
 - [`docs/architecture.md`](docs/architecture.md) — architecture, data flow,
   **how to write your own backend** (with a complete tiny example), caveats, and
   the implicit assumptions backends rely on.
@@ -595,8 +607,8 @@ under the demo: it won't link the demo's full spread of backends and Unicode fea
 ```sh
 zig build                                   # build the demo exe (zig-out/bin/ezi_gex)
 zig build run                               # build + run it
-zig build bench                             # benchmarks (ReleaseFast by default)
-zig build test -Doptimize=ReleaseSafe       # full suite (ReleaseSafe is faster than Debug)
+zig build bench                             # benchmarks (`fast` by default)
+zig build test -Doptimize=safe              # full suite (safe mode is faster than Debug)
 ```
 
 The test suite is split into **16 independently-cacheable units** — one named module per area, so a
@@ -608,10 +620,10 @@ file recompiles and re-runs only the unit(s) whose inputs changed; the rest stay
 
 ```sh
 zig build test-core                         # run ONE unit (cached; also test-auto, test-edfa, …)
-zig build test-conformance -Doptimize=ReleaseSafe
+zig build test-conformance -Doptimize=safe
 zig build --help                            # lists every test-<unit> step
 # Gate the aggregate `test` step to a subset (REPEAT the flag — there is no comma form):
-zig build test -Dinclude-test=auto -Dinclude-test=conformance -Doptimize=ReleaseSafe
+zig build test -Dinclude-test=auto -Dinclude-test=conformance -Doptimize=safe
 ```
 
 Use `test-<unit>` while iterating on one file; run the full `zig build test` before committing.
@@ -640,19 +652,18 @@ repetition counts are capped (default 100,000, set via `Options.max_repetition`)
 `a{999999999}` fails to compile instead of blowing up. Both are written up in
 [`docs/limitations.md`](docs/limitations.md).
 
-Empty-width loops follow RE2/Rust leftmost-first semantics on every backend, at runtime and
-comptime — a deliberate semantic choice, pinned by the cross-backend conformance suite and the
-parallel fuzz differential (`fuzz/`, the full backend matrix against the Pike VM oracle) so it
-can't silently drift.
+Empty-width loops and inline flags follow RE2/Rust leftmost-first semantics on every backend, at
+runtime and comptime — spans *and* captures, checked against Rust `regex` — pinned by the
+cross-backend conformance suite and the fuzz suite (`fuzz/`: an independent reference matcher,
+metamorphic and oracle-free checks over the full backend matrix) so they can't silently drift.
 
-There are also a few **performance** shapes where ezi_gex is slower than Rust and that won't be
-optimized — each fix would cost the linear-time guarantee, portability, or simplicity. From the
-rebar Sherlock suite: a common single byte as the only distinctive feature (`\b\w+n\b`, ~8×), a
-bounded negated-class run (`["'][^"']{0,30}…`, ~6.5×), an unbounded case-insensitive alternation
-(`(?i:Sher[a-z]+|…)`, ~6.4×), a line anchor inside an alternation (`(?m)^…|…`, ~4×), pure-literal
-alternation throughput (`Sherlock|Street`, ~3.3×), and an unbounded gap between two *interior*
-literals where neither is a sound leading prefix (the leading-alternation form,
-`Holmes…Watson|Watson…Holmes`, is now ~1.7× after the 0.6.2 jump-and-confirm). These are spelled
+There are also a few **performance** shapes that are comparatively slow and won't be optimized —
+each fix would cost the linear-time guarantee, portability, or simplicity: a common single byte as
+the only distinctive feature (`\b\w+n\b`), a bounded negated-class run (`["'][^"']{0,30}…`), an
+unbounded case-insensitive alternation (`(?i:Sher[a-z]+|…)`), a line anchor inside an alternation
+(`(?m)^…|…`), pure-literal alternation throughput (`Sherlock|Street`), and an unbounded gap between
+two *interior* literals where neither is a sound leading prefix (the leading-alternation form,
+`Holmes…Watson|Watson…Holmes`, is handled by the 0.6.2 jump-and-confirm). These are spelled
 out in [`docs/limitations.md`](docs/limitations.md).
 
 ## License

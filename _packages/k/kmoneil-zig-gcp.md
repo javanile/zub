@@ -19,9 +19,9 @@ keywords:
   - secrets-management
   - service-account
   - workload-identity-federation
-date: 2026-09-29
-updated_at: 2026-09-29T15:43:55+00:00
-last_sync: 2026-09-29T15:43:55Z
+date: 2026-09-30
+updated_at: 2026-09-30T16:17:25+00:00
+last_sync: 2026-09-30T16:17:25Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -50,13 +50,13 @@ modules it imports.
 | `core` | What the service modules share: the HTTP transport, retries, `Diagnostics`, CRC-32C at the CPU's speed, the `TokenProvider` and `Signer` seams, and test fakes. Services re-export what their callers need. | beta |
 
 - Zig **0.16.0** (`minimum_zig_version` enforces it). No dependencies.
-- Tested with 1062 unit, property and fuzz tests, Google's 29 V4 signing
+- Tested with 1226 unit, property and fuzz tests, Google's 29 V4 signing
   vectors among them; 28 Pub/Sub integration tests that pass against both
   the emulator and production, and 20 more through a proxy that drops,
-  cuts and stalls the connection; 23 Cloud Storage tests against
-  fake-gcs-server, and 49 against a real bucket, where uploads and
+  cuts and stalls the connection; 26 Cloud Storage tests against
+  fake-gcs-server, and 58 against real buckets, where uploads and
   downloads cut off mid-body, or ended with their process, resume against
-  Google itself, plus 17 that sign URLs and POST policies for one; 12 Secret
+  Google itself, plus 19 that sign URLs and POST policies for one; 12 Secret
   Manager tests against a real project, since it has no emulator; 10 auth
   tests against Google's token, STS and IAM Credentials endpoints; and a
   run on a Compute Engine VM, where the metadata server is the one that
@@ -66,7 +66,7 @@ modules it imports.
 ## Install
 
 ```
-zig fetch --save git+https://github.com/kmoneil/zig-gcp#v0.24.0
+zig fetch --save git+https://github.com/kmoneil/zig-gcp#v0.25.0
 ```
 
 ```zig
@@ -1213,7 +1213,7 @@ What Cloud Storage answers, measured against a real bucket on 2026-09-23:
 | --- | --- |
 | `client.bucket(name).create(config)`, `.get()`, `.update(changes)`, `.delete()` | A bucket and its settings, in the project `Options.project_id` names |
 | `client.listBuckets(page)` | One page of the project's buckets |
-| `bucket.listObjects(options)` | One page of objects, with `prefix`, a `delimiter` for folders, and paging |
+| `bucket.listObjects(options)` | One page of objects, with `prefix`, a `delimiter` for folders, a `match_glob`, and paging: live ones, every version, or the soft-deleted ones |
 | `bucket.object(name).get(options)`, `.exists()`, `.delete(options)` | An object's metadata, whether it exists, and deleting it or one generation of it |
 | `.upload(data, options)`, `.uploadFrom(reader, options)` | Bytes in memory, or any reader |
 | `.uploadFile(file, options)` | A file, read at offsets, resumable in a later process with `options.checkpoint` |
@@ -1222,16 +1222,21 @@ What Cloud Storage answers, measured against a real bucket on 2026-09-23:
 | `.download(writer, options)`, `.downloadAlloc(max_bytes, options)` | Into any writer, or into memory up to a cap |
 | `.copyTo(dest, options)` | A server-side copy, across buckets too |
 | `.updateMetadata(options)` | Changes what an object says about itself, leaving its bytes alone |
+| `.restore(options)` | Brings back a soft-deleted generation as the live one |
+| `bucket.bulkRestore(options)`, `.operation(id)`, `.cancelOperation(id)`, `.listOperations(page)` | Restores many soft-deleted objects at once, and follows the operation doing it |
+| `client.listSoftDeletedBuckets(page)`, `bucket.restore(generation)` | Deleted buckets, and one brought back |
 | `.composeFrom(sources, options)` | Writes this object from up to 32 others in the bucket, server-side |
 | `.signedUrl(signer, options)`, `bucket.signedUrl(signer, options)` | A V4 signed URL, which lets whoever holds it make one request without credentials until it expires |
 | `.postPolicy(signer, options)`, `bucket.postPolicy(signer, options)` | A V4 POST policy, which lets a plain HTML form upload what the policy allows, without credentials, until it expires |
+| `.withBillingProject(project)`, `bucket.withBillingProject(project)` | A handle whose every request bills `project`, as a requester pays bucket needs |
+| `.withEncryptionKey(&key)` | A handle for an object under a customer-supplied key |
+| `client.serviceAgent()` | The account a Cloud KMS key must be granted to |
 
 The default OAuth scope is `devstorage.read_write`; `Options.scope` picks
 `.read_only` or `.cloud_platform` instead. Not in this version: the JSON
 API's PUT, which replaces a whole resource (`updateMetadata` and
-`Bucket.update` patch, which merges), parallel composite uploads,
-requester pays, customer-supplied encryption keys, listing old versions
-or soft-deleted objects, and gRPC.
+`Bucket.update` patch, which merges), parallel composite uploads, and
+gRPC.
 
 ### Bucket settings
 
@@ -1315,6 +1320,220 @@ comes back with `unrecognized` set, and an update that sends it back is
 refused: without the part this library could not read, the rule would act
 on objects it now leaves alone. Leave it out of the list, which removes
 it, or change the rules with gcloud.
+
+### Versions and soft delete
+
+A bucket with `versioning` keeps every generation an overwrite or a
+delete replaces, as a noncurrent version. One with soft delete keeps what
+is deleted restorable, and billed, for its retention, and so do the
+buckets themselves.
+
+```zig
+// Every version; the noncurrent ones carry the time they stopped being live.
+var versions = try bucket.listObjects(.{ .versions = true, .prefix = "reports/" });
+defer versions.deinit();
+
+// An older version back as the live one: a copy onto its own name.
+const q3 = bucket.object("reports/q3.csv");
+var back = try q3.copyTo(q3, .{ .source_generation = older_generation });
+defer back.deinit();
+
+// What soft delete keeps, and one of them restored.
+var deleted = try bucket.listObjects(.{ .soft_deleted = true, .match_glob = "reports/**" });
+defer deleted.deinit();
+var restored = try q3.restore(.{
+    .generation = deleted.value.objects[0].generation,
+    .preconditions = .does_not_exist, // where nothing live has the name; safe to retry
+});
+defer restored.deinit();
+```
+
+`bulkRestore` restores the newest soft-deleted generation of every name
+that matches, as a long-running operation that `operation`,
+`cancelOperation` and `listOperations` follow. `listSoftDeletedBuckets`
+lists deleted buckets with the generation `Bucket.restore` takes.
+Measured against Cloud Storage on 2026-09-29:
+
+- A restore makes a new generation, with the soft-deleted one's metadata,
+  custom time and storage class, and leaves the soft-deleted one where it
+  is. Each restore of it makes another copy, and the copy it replaces goes
+  into soft delete. The idempotency token Google recommends does not stop
+  a repeat, so `restore` is retried only under `if_generation_match`, as
+  `.does_not_exist` is.
+- Under `.does_not_exist`, a restore over a live object is
+  `error.FailedPrecondition`. A live generation, or one never
+  soft-deleted, is `error.NotFound`. A bucket without soft delete refuses
+  restores and soft-deleted listings with `error.InvalidArgument`.
+- A soft-deleted object's metadata reads only by its generation, and its
+  bytes not at all.
+- A bulk restore took three minutes to restore three objects, and
+  reported counts but never a percentage. A bucket runs one at a time:
+  another start meanwhile is `error.ResourceExhausted`, and the bucket
+  cannot be deleted until it ends. A start repeated with the same token
+  gets the same operation, so `bulkRestore` retries with one token per
+  call. A cancel ends one with `failure.code` 1, and a finished one
+  cannot be cancelled.
+- A restored bucket comes back with its settings and none of its objects,
+  which stay soft-deleted and restorable. While another bucket has the
+  name, the restore is `error.AlreadyExists`, and a repeat of one that
+  landed is `error.NotFound`.
+- `versions` and `soft_deleted` cannot be listed together. A listing of
+  versions with a delimiter still groups a folder whose every object is
+  noncurrent.
+
+### Requester pays
+
+A bucket with `requester_pays` on bills each request to the project the
+request names. Its owners may name none, and their requests bill the
+bucket's project as before; anyone else who names none is refused.
+`withBillingProject` gives a handle whose every request names one:
+
+```zig
+const dataset = gcs.bucket("their-dataset").withBillingProject("my-project");
+var page = try dataset.listObjects(.{ .prefix = "2026/" });
+defer page.deinit();
+var got = try dataset.object("2026/01.csv").downloadAlloc(64 << 20, .{});
+defer got.deinit();
+```
+
+`examples/gcs_cp.zig --billing-project my-project` does the same for a
+copy either way.
+
+The principal needs `serviceusage.services.use` on the project it bills,
+which Service Usage Consumer grants. The project goes into every request
+a call makes:
+
+- on the JSON API, the `userProject` parameter and the
+  `x-goog-user-project` header, one value in both;
+- the header on every request of a parallel upload through the XML API;
+- each call of a copy;
+- the start of a resumable upload, whose session URL carries it on;
+- a signed URL's signed query.
+
+An object handle from a billed bucket handle is billed too. `copyTo`
+bills the source handle's project, or the destination's when the source
+names none. A checkpoint of a parallel upload records the project, so
+`abandonTransfer` bills it as well. `create` bills nothing, since there
+is no bucket yet. A POST policy on a billed handle is refused with
+`error.InvalidPostPolicyOptions`, since no form can name a project.
+
+Measured against Cloud Storage on 2026-09-29, with a throwaway account on
+a throwaway bucket:
+
+- Anyone but the owners who names no project gets
+  `error.InvalidArgument`, and `Diagnostics` says to name one with
+  `withBillingProject`. A project the principal may not bill is
+  `error.PermissionDenied`. A project that does not exist is
+  `error.InvalidArgument`, even for an owner.
+- Where the parameter and the header name different projects, the
+  parameter counts. This library always sends one project in both.
+- A signed URL is used as its signer, so the signer's account must be
+  allowed to bill the project. A URL that names none is refused when
+  used, 400 `UserProjectMissing`, and so is one naming a project that
+  does not exist, 400 `UserProjectInvalid`.
+- A form cannot name a project. A policy with an `x-goog-user-project`
+  field is refused, and a query on the form's URL makes the POST a bucket
+  create, which is refused too.
+
+### Encryption keys
+
+Cloud Storage encrypts every object, with Google's own key unless a write
+names another: a customer-supplied key, which the caller holds and Cloud
+Storage never keeps, or a Cloud KMS key, which Cloud KMS holds.
+
+A customer-supplied key is 32 random bytes, usually kept as 44 characters
+of base64:
+
+```zig
+var key = try storage.EncryptionKey.fromBase64(key_text);
+defer key.wipe();
+const ledger = gcs.bucket("my-bucket").object("ledger.csv").withEncryptionKey(&key);
+var stored = try ledger.upload(data, .{ .preconditions = .does_not_exist });
+defer stored.deinit();
+var back = try ledger.downloadAlloc(64 << 20, .{});
+defer back.deinit();
+```
+
+Cloud Storage keeps only the key's SHA-256, which
+`ObjectInfo.encryption_key_sha256` reports and `EncryptionKey.sha256`
+computes, so an object whose key is lost cannot be read by anyone. The
+handle borrows the key, and carries it on each request that reads or
+writes the object's data:
+
+- a download, each range and resume of it, and `downloadParallel`;
+- `upload`, and the start of a resumable upload, the one request whose
+  key counts: its chunks carry none, since Cloud Storage ignores a key
+  there, even a wrong one;
+- the start, every part and the finish of `uploadParallel`;
+- `get` and `updateMetadata`, whose answers otherwise leave out `crc32c`
+  and `md5`;
+- `copyTo`: the source handle's key for the source, the destination
+  handle's for the copy. A key is rotated by copying an object onto
+  itself under the new one;
+- `composeFrom`, where the destination's key must decrypt every source;
+- a signed URL, which signs the key's three headers in, so whoever holds
+  the URL must send them.
+
+`exists`, `delete`, `restore` and listings carry none, since none needs
+it. A listing reports no checksum for an object under a key of either
+kind. A POST policy on a keyed handle is refused with
+`error.InvalidPostPolicyOptions`, since a form cannot send the headers.
+
+A read without the key, or with another, is `error.InvalidArgument`, and
+so is a key sent for an object stored without one. Without a key,
+`Diagnostics` says to give one with `withEncryptionKey`. The key never
+reaches a log, `Diagnostics` or a checkpoint, which records only its
+SHA-256, and the headers built from it live on the call's stack and are
+wiped when it returns. One copy stays where this library cannot reach it:
+as with the bearer token, std's HTTP client writes the request head into
+the connection's buffer, where it stays until the next request overwrites
+it. A checkpointed upload resumed under another key, or none, starts
+over, since Cloud Storage encrypts with the key the upload began under.
+
+A Cloud KMS key is named per write, with `kms_key_name` on
+`UploadOptions`, `ParallelUploadOptions`, `CopyOptions` and
+`ComposeOptions`, or for a whole bucket, with
+`BucketConfig.default_kms_key_name` or `Bucket.update`:
+
+```zig
+var agent = try gcs.serviceAgent();
+defer agent.deinit();
+// Grant agent.value roles/cloudkms.cryptoKeyEncrypterDecrypter on the key, once.
+var info = try gcs.bucket("my-bucket").object("report.pdf").upload(pdf, .{
+    .kms_key_name = "projects/my-project/locations/us-central1/keyRings/my-ring/cryptoKeys/my-key",
+});
+defer info.deinit();
+```
+
+The key must be in the bucket's location, and the project's Cloud
+Storage service agent, which `Client.serviceAgent` names, must hold
+`roles/cloudkms.cryptoKeyEncrypterDecrypter` on it. `ObjectInfo.kms_key_name`
+names the key's version, and a write may be given that back as it is:
+the version goes before sending, since Cloud Storage refuses one. A name
+that is not a key's, and a customer key and a KMS key on one write, are
+refused before sending with `error.InvalidArgument`.
+
+`examples/gcs_cp.zig --encryption-key-file ledger.key` copies either way
+under a customer-supplied key, read from a file of its 44 characters of
+base64 and never from the command line, where shell history and the
+process list would keep it; `--kms-key NAME` uploads under a Cloud KMS
+key.
+
+Measured against Cloud Storage on 2026-09-30, with throwaway buckets and
+a software key:
+
+- Without the grant, or with a key that does not exist, a write is
+  `error.PermissionDenied`, and `Diagnostics` says what to grant to whom.
+- A copy that names no key gets the destination bucket's default key,
+  else Google's own: never the source's.
+- A bucket's new default key reached new uploads within seconds, after
+  4.4 s in one run and 0.3 s in another; clearing it acted at once.
+- A signed URL for an object under a customer-supplied key, used without
+  the key's headers, is refused with 400 `MalformedSecurityHeader`.
+- A parallel upload's finish names no checksum under a key of either
+  kind, and a create-only one's move names none under a customer key, so
+  both are held to what was sent by reading the object back.
+- `restore` and `objects.move` need no key, and ignore one.
 
 ### Metadata, after the upload
 
@@ -1752,6 +1971,18 @@ differences it found:
   leaves versioning out turns it off. So bucket settings are tested
   against an in-memory fake that holds Cloud Storage's rules as measured,
   and against Cloud Storage itself.
+- Its memory backend keeps versions, which CI runs, pinned to 1.56.1, but
+  a listing of versions in pages smaller than one name's versions repeats
+  a page forever. It has no soft delete at all: `softDeleted=true` lists
+  live objects, a restore is taken for an update of an object named
+  `{name}/restore`, and bulk and bucket restores do not exist.
+- It checks neither requester pays nor keys. It takes `userProject` and
+  the `x-goog-user-project` header from anyone and bills no one. It takes
+  a customer-supplied key, even a malformed one, stores the object
+  without it, serves it back with no key or another, reports its
+  checksums to every read, and never says it was keyed; it drops a Cloud
+  KMS key's name. So both are tested against an in-memory fake that holds
+  Cloud Storage's rules as measured, and against Cloud Storage itself.
 
 ## Zig 0.16 standard library issues handled here
 
@@ -1862,9 +2093,9 @@ AUTH_TEST_CREDENTIALS=$HOME/.config/gcloud/application_default_credentials.json 
 GCP_TEST_PROJECT=my-project GCP_TEST_TOKEN=$(gcloud auth application-default print-access-token) \
     zig build test-integration-gcp
 
-# Cloud Storage against fake-gcs-server. Every test creates a zigps-*
-# bucket and deletes it.
-docker run -d -p 4443:4443 fsouza/fake-gcs-server -scheme http -port 4443
+# Cloud Storage against fake-gcs-server, on its memory backend, the one
+# that keeps versions. Every test creates a zigps-* bucket and deletes it.
+docker run -d -p 4443:4443 fsouza/fake-gcs-server:1.56.1 -backend memory -scheme http -port 4443
 # Or without Docker: go install github.com/fsouza/fake-gcs-server@latest
 fake-gcs-server -backend memory -scheme http -port 4443
 STORAGE_EMULATOR_HOST=http://127.0.0.1:4443 zig build test-integration
@@ -1889,9 +2120,26 @@ GCP_TEST_BUCKET=my-bucket GCP_TEST_TOKEN=$(gcloud auth application-default print
     GCP_TEST_SIGNER_KEY=key.json GCP_TEST_SIGNER_EMAIL=signer@my-project.iam.gserviceaccount.com \
     zig build test-integration-gcp
 
+# Requester pays, as someone other than the bucket's owners: a requester
+# pays bucket, and an account with Storage Object Admin on it that may bill
+# GCP_TEST_PROJECT (Service Usage Consumer there) and that the token may
+# sign as through IAM. Without them those tests skip; the owners' test
+# needs GCP_TEST_PROJECT alone.
+GCP_TEST_PROJECT=my-project GCP_TEST_TOKEN=$(gcloud auth application-default print-access-token) \
+    GCP_TEST_REQUESTER_BUCKET=their-bucket GCP_TEST_REQUESTER_EMAIL=requester@my-project.iam.gserviceaccount.com \
+    GCP_TEST_REQUESTER_TOKEN=$(gcloud auth print-access-token --impersonate-service-account=requester@my-project.iam.gserviceaccount.com) \
+    zig build test-integration-gcp -Dtest-filter="requester pays"
+
+# Encryption keys: the customer-supplied key tests draw keys of their own and
+# need GCP_TEST_PROJECT alone; the Cloud KMS test also needs a key in
+# us-central1 that the project's Cloud Storage service agent may use.
+GCP_TEST_PROJECT=my-project GCP_TEST_TOKEN=$(gcloud auth application-default print-access-token) \
+    GCP_TEST_KMS_KEY=projects/my-project/locations/us-central1/keyRings/my-ring/cryptoKeys/my-key \
+    zig build test-integration-gcp -Dtest-filter="keys:"
+
 # The emulator serves the paths signed URLs use only for the host they
 # name, so those tests need -public-host, as CI passes it.
-docker run -d -p 4443:4443 fsouza/fake-gcs-server -scheme http -port 4443 \
+docker run -d -p 4443:4443 fsouza/fake-gcs-server:1.56.1 -backend memory -scheme http -port 4443 \
     -public-host 127.0.0.1:4443
 ```
 

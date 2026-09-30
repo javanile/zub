@@ -12,9 +12,9 @@ keywords:
   - uuid-v7
   - uuid-zig
   - uuidv4
-date: 2026-08-17
-updated_at: 2026-08-17T17:48:58+00:00
-last_sync: 2026-08-17T17:48:58Z
+date: 2026-09-29
+updated_at: 2026-09-29T19:46:19+00:00
+last_sync: 2026-09-29T19:46:19Z
 package_kind: hybrid
 has_library: true
 has_binary: true
