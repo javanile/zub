@@ -6,9 +6,9 @@ author: jnordwick
 author_github: jnordwick
 repository: https://github.com/jnordwick/zmida
 keywords:
-date: 2026-09-28
-updated_at: 2026-09-28T17:21:41+00:00
-last_sync: 2026-09-28T17:21:41Z
+date: 2026-10-01
+updated_at: 2026-10-01T15:12:34+00:00
+last_sync: 2026-10-01T15:12:34Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -33,6 +33,8 @@ This is for benchmarking high performance, cpu bound code.
 - TSC based timing if available
 - perf_event counts (instr, cycles, branches)
 - multiple output formats: text, csv, gnuplot
+- ability to pin cpu and set priority
+- command line arguments 
 
 You supply a list of functions, a configuration, and
 a list of argument tuples for each function to be called on.
@@ -69,8 +71,6 @@ A lot of the top level functions have some comptime
 
 This are the next few thigs I want to work on:
 
-- cpu pinning
-- rdtsc default (implement fallback)
 - make some simple functions for most basic "bench this"
 - better documentation
 

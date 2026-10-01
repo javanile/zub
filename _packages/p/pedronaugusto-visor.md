@@ -8,10 +8,10 @@ repository: https://github.com/pedronaugusto/visor
 keywords:
   - terminal
   - tui
-date: 2026-09-30
+date: 2026-10-01
 category: tooling
-updated_at: 2026-09-30T13:10:20+00:00
-last_sync: 2026-09-30T13:10:20Z
+updated_at: 2026-10-01T15:44:32+00:00
+last_sync: 2026-10-01T15:44:32Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -60,11 +60,11 @@ const caps: visor.Caps = .{
 // last shown. One allocator each, taken here and never again.
 const size: visor.Size = .{ .cols = 40, .rows = 7 };
 var screen: visor.Screen = try .init(gpa, size);
-defer screen.deinit(gpa);
+defer screen.deinit();
 screen.method = caps.width_method;
 
 var renderer: visor.Renderer = try .init(gpa, size);
-defer renderer.deinit(gpa);
+defer renderer.deinit();
 
 // Drawing code holds a window and nothing else. A child is clipped to
 // its parent, and a border is drawn as the child is made, so what
@@ -78,9 +78,9 @@ const panel = root.child(.{
     .border = .{ .where = .all, .glyphs = .rounded, .style = .{ .dim = true } },
 });
 
-// Runs of styled text, wrapped. `print` never allocates and says
-// where it stopped.
-const link = try screen.link(gpa, "https://ziglang.org", "id=1");
+// Runs of styled text, wrapped. `print` says where it stopped and can
+// allocate for an unseen grapheme longer than six bytes.
+const link = try screen.link("https://ziglang.org", "id=1");
 _ = try panel.print(&.{
     .{ .text = "visor ", .style = .{ .bold = true } },
     .{ .text = "draws a grid", .style = .{ .fg = .ansi(.cyan) } },
@@ -183,10 +183,19 @@ itself should keep these six and add its own, or the two configurations build
 two sets of tables.
 
 **Allocation.** One allocator, taken at `Screen.init` and `Renderer.init`.
-After that the frame path takes none: `print` does not allocate and `draw`
-does not allocate. `Screen.write` allocates only for
-a grapheme longer than six bytes the screen has not seen before, and says so
-with a `try`. Resizing allocates.
+`draw` allocates nothing. With `commit = false`, `print` only measures and
+allocates nothing. Committed printing and `Screen.write` can allocate for a
+grapheme longer than six bytes the screen has not seen before, and say so
+with a `try`. Interning new links, pool compaction and resizing can allocate.
+The owned-copy helpers allocate through the copy's allocator.
+
+Text and link targets returned by the screen are borrowed. Inline text
+lives in its cell; pooled text and targets live in growable pools, so
+interning unrelated text or links can invalidate their slices even when the
+cell is unchanged. Compaction, resize and deinitialization can invalidate
+pool slices too. `dupeTextAt` and `dupeTextOf` make copies the caller frees
+with the copy's allocator; `dupeTarget` returns an `OwnedTarget` whose
+`target()` lends const URI and params and `deinit` frees them. These copies survive later drawing.
 
 ## The API
 
@@ -194,14 +203,14 @@ with a `try`. Resizing allocates.
 |---|---|
 | The grid's contents | `Cell`, `Cell.Text`, `Cell.Kind`, `Cell.Shape`, `Style`, `Color`, `Underline`, `Link`, `Target`. |
 | Colours as the terminal shows them | `Palette` — `ask`, `update`, `resolve`, `known` — `Rgb`, `mix`. |
-| The grid | `Screen` — `init`, `deinit`, `resize`, `copyCell`, `readCell`, `write`, `writeScaled`, `fill`, `clear`, `scroll`, `intern`, `link`, `compactPool`, `damageAll`, `window`, `textAt`, `textOf`, `target`, `headOf`, and the fields `cursor`, `pointer`, `damage`, `method`. `Cursor`, `Damage`, `Span`. |
-| The views | `Window` — `child`, `sub`, `inked`, `print`, `printSegment`, `copyCell`, `readCell`, `write`, `writeScaled`, `fill`, `clear`, `scroll`, `width`, `hit`, `linkAt`, `copyText`, `showCursor`, `hideCursor`, `setCursorShape`, `cols`, `rows`, `size`. `Window.Segment`, `Window.Print`, `Window.PrintOptions`, `Window.ChildOptions`, `Window.Border`, `Window.Ink` and its `Stroke`. `Rect`, `Point`, `Size`. |
+| The grid | `Screen` — `init`, `deinit`, `dimensions`, `resize`, `copyCell`, `readCell`, `rowAt`, `cell`, `writeOwnedCell`, `writeOwnedCellUnchecked`, `write`, `writeScaled`, `fill`, `clear`, `scroll`, `intern`, `link`, `compactPool`, `damageAll`, `window`, `textAt`, `textOf`, `target`, `dupeTextAt`, `dupeTextOf`, `dupeTarget`, `headOf`, and the fields `cursor`, `pointer`, `method`. `Cursor`, `Damage`, `Span`. |
+| The views | `Window` — `screen`, `rect`, `ink`, `child`, `sub`, `inked`, `print`, `printSegment`, `copyCell`, `readCell`, `writeOwnedCell`, `writeOwnedCellUnchecked`, `write`, `writeScaled`, `fill`, `clear`, `scroll`, `width`, `hit`, `linkAt`, `copyText`, `showCursor`, `hideCursor`, `setCursorShape`, `cols`, `rows`, `size`. `Window.Segment`, `Window.Print`, `Window.PrintOptions`, `Window.ChildOptions`, `Window.Border`, `Window.Ink` and its `Stroke`. `Rect`, `Point`, `Size`. |
 | Measuring text | `Method`, `Wrap`, `Graphemes`, `width`, `graphemeWidth`, `Parts`, `combinesOnly`, `disagrees`, `wrap`, `Row`, `fit`, `fitEnd`. |
-| The render pass | `Renderer` — `init`, `deinit`, `resize`, `draw`, `repaint`, `repaintRow`, `enter`, `setCaps`, `setModes`, `untrustCursor`, `leave`. `Renderer.Stats`, `Mode`, `Modes`. |
-| What the terminal can do | `Caps`, `Caps.Probe` — `write`, `feed`, `complete`, `settled`. |
-| Pictures | `Image`, `Image.State`, `Layer`, `Layer.Order`, `Layers` — `transmit`, `ready`, `ack`, `free`, `freeAll`, `retire`, `declare`, `undeclare`, `image`, `clear`, `repaint`, `count`, `emit`, `commitFrame` — `Transmit`, `SharedMemory`, `Replacement`, `ImageIds`. |
-| This program's terminal | `Tty` — `open`, `adopt`, `close`, `raw`, `restore`, `enter`, `leave`, `size`, `writer`, `read`, `inputFile`, `watchResize`, `unwatchResize`, `resized`, `resizeFile`, `drainResize`. `restoreGlobal`, `Panic`. `Input` — `init`, `next`, `nextWithin`, `Input.Options`. `Winsize` — `cellSize`, `locate`, `update`, `resized` — `Pixels`, `CellSize`, `MouseLocation`. `Session`, `ProbeWait`. |
-| Testing your own screens | `Term` — `init`, `deinit`, `setMethod`, `feed`, `screen`, `resize`, `dump`, `dumpStyles`. `expectScreensEqual`, `dumpScreen`, `dumpScreenWith` and `DumpOptions`, `dumpScreenStyles`, `firstDifference`. |
+| The render pass | `Renderer` — `init`, `deinit`, `dimensions`, `entered`, `resize`, `draw`, `repaint`, `repaintRow`, `enter`, `setCaps`, `setModes`, `untrustCursor`, `leave`. `Renderer.Stats`, `Mode`, `Modes`. |
+| What the terminal can do | `Caps`, `Caps.Probe` — `init`, `questions`, `capabilities`, `hasAnswered`, `lastAnswerMs`, `write`, `feed`, `complete`, `settled`. |
+| Pictures | `Image`, `Image.State`, `Layer`, `Layer.Order`, `Layers` — `init`, `deinit`, `images`, `declarations`, `placements`, `hasFrameWork`, `answerPolicy`, `fallbackCount`, `configureSharedMemory`, `transmit`, `ready`, `ack`, `free`, `freeAll`, `retire`, `declare`, `undeclare`, `image`, `clear`, `repaint`, `count`, `emit`, `commitFrame` — `Transmit`, `Replacement` — `send`, `settle`, `declare`, `canSend`, `current`, `pending`, `takeDirty`, `retire` — `ImageIds`. |
+| This program's terminal | `Tty` — `open`, `adopt`, `close`, `raw`, `restore`, `enter`, `leave`, `size`, `writer`, `read`, `inputFile`, `ioContext`, `watchResize`, `unwatchResize`, `resized`, `resizeFile`, `drainResize`. `restoreGlobal`, `Panic`. `Input` — `init`, `next`, `nextWithin`, `mousePixels`, `setMousePixels`, `Input.Options`. `Winsize` — `cellSize`, `locate`, `update`, `resized` — `Pixels`, `CellSize`, `MouseLocation`. `Session`, `ProbeWait`. |
+| Testing your own screens | `Term` — `init`, `deinit`, `setMethod`, `feed`, `screen`, `position`, `savedCursor`, `graphics`, `resize`, `dump`, `dumpStyles`. `expectScreensEqual`, `dumpScreen`, `dumpScreenWith` and `DumpOptions`, `dumpScreenStyles`, `firstDifference`. |
 | Everything under it | `visor.morse`, whole. |
 
 ### `visor.widgets`
@@ -209,13 +218,148 @@ with a `try`. Resizing allocates.
 | | |
 |---|---|
 | Layout | `Layout` — `horizontal`, `vertical`, `split`, `splitFixed`, `repeat`, `fitCount`, and the fields `direction`, `constraints`, `spacing`, `margin`. `Constraint` — `fixed`, `percent`, `min`, `max`, `fill`. `Direction`, `Padding`, `Align`, `place`, `offset`. |
-| The widgets | `Block` (borders, corners, titles, padding, and the window inside), `Paragraph` (wrap, alignment, scroll, `Rows` iterator), `Edges` (styled items at both edges of a row), `List` — `draw`, `visible` — with `List.State`, `List.Segment` and `List.Visible`, `Table` — `draw`, `visible` — with `Table.State`, `Table.Row` and `Table.Visible`, `Tabs`, `Gauge`, `LineGauge`, `Sparkline`, `BarChart`, `Chart`, `Scrollbar` and `Scrollbar.State`, `Canvas`, `Calendar`, `TextInput` and `TextInput.State`, `Keys`, `Rule`, `Sextants`. Beside them: `Item`, `Line`, `Bar`, `Dataset`, `Axis`, `Marker`, `Date`, `sextant`. |
+| The widgets | `Block` (borders, corners, titles, padding, and the window inside), `Paragraph` (wrap, alignment, scroll, `Rows` iterator), `Markdown` (owned `Document`, caller `Theme`, `Rows` iterator, wrap, scroll, code scrolling), `Edges` (styled items at both edges of a row), `List` — `draw`, `visible` — with `List.State`, `List.Segment` and `List.Visible`, `Table` — `draw`, `visible` — with `Table.State`, `Table.Row` and `Table.Visible`, `Tabs`, `Gauge`, `LineGauge`, `Sparkline`, `BarChart`, `Chart`, `Scrollbar` and `Scrollbar.State`, `Canvas`, `Calendar`, `TextInput` and `TextInput.State`, `Keys`, `Rule`, `Sextants`. Beside them: `Item`, `Line`, `Bar`, `Dataset`, `Axis`, `Marker`, `Date`, `sextant`. |
 | Scrolling | `Scroll` and `Scroll.State`: which rows of something longer a view shows, held still while it grows. |
 | The base, re-exported | `widgets.visor`, so a file that draws does not need both imports. |
 
+### Canvas
+
+`Canvas` draws points, lines, rectangle outlines, circles, discs, polylines
+and maps in plot coordinates. A map is a slice of separate contours supplied
+by the caller; there is no bundled geographic dataset. The existing
+`painter(window)` writes cells immediately, with braille, sextants, blocks,
+half blocks, dots or bars. Its y bounds name the bottom and top.
+
+```zig
+const widgets = @import("visor.widgets");
+const canvas: widgets.Canvas = .{
+    .x_bounds = .{ 0, 100 }, .y_bounds = .{ 0, 100 }, .marker = .sextant,
+};
+const shapes: []const widgets.Canvas.Shape = &.{
+    .{ .geometry = .{ .circle = .{ 50, 50, 30 } },
+       .paint = .{ .rgba = .{ 255, 200, 0, 255 } } },
+    .{ .geometry = .{ .line = .{ 0, 0, 100, 100 } },
+       .paint = .{ .blend = .additive } },
+};
+try canvas.draw(window, shapes, .{}); // cells
+
+var surface = try widgets.Canvas.Surface.init(gpa, 640, 320);
+defer surface.deinit();
+try canvas.draw(window, shapes, .{
+    .caps = caps,
+    .picture = .{ .surface = &surface, .layers = &layers,
+                 .writer = writer, .image = image_id },
+});
+```
+
+With kitty graphics and picture resources, `draw` clears the surface,
+rasterizes antialiased shapes and transmits and declares a picture beneath
+text through `Layers`. Without them it draws the same shapes as cells.
+Paint width is in output pixels; cell marks remain binary and use paint's
+RGB foreground. Pixel blending is straight-alpha source-over (`normal`)
+or saturated RGB light and alpha sums (`additive`). No glow or colour
+policy is built in. Invalid coordinates draw nothing; strokes are clipped
+before pixel iteration, including coverage just outside the plot.
+
+The caller owns the surface, image ids and retirement. For repeated frames,
+`canvas.raster(&surface)` paints without clearing or sending: pass its RGBA
+`pixels()` and `dimensions().width` / `dimensions().height` through
+`Replacement.send` and declare the replacement as usual. This keeps picture acknowledgements and swaps with
+the same owner as every other picture. Surface owns its allocator, dimensions
+and storage; `pixels()` lends const bytes
+and `pixelsMut()` lends bytes for editing. `resize(width, height)` prepares a
+cleared allocation before changing dimensions. Surface pixels stay borrowed
+until `resize` or `deinit`; no painter reallocates them. `Sextants` weights picture brightness
+and foreground RGB by alpha when showing an RGBA picture in cells. `examples/gallery.zig` draws cells
+and rasterizes pixels with these primitives.
+
+### Markdown
+
+`Markdown.Rows.init(&document, cols, method)` iterates the exact rows used
+by drawing and `rowCount`. Each row carries `start`/`end` ranges into
+`document.text()`, borrowed `text` and overlapping `spans`, `block_index`,
+`first`, and a `block` value describing its kind, quote `depth`, list
+`marker`, `indent`, heading level and optional opening `fence` (character,
+count and info string). Borrows live until the Document is deinitialized;
+iteration allocates nothing. Code rows remain verbatim and unwrapped.
+
+`Markdown.Document` reads text once and owns its source and runs. Its
+`source()`, `text()`, `spans()` and `blocks()` return const slices borrowed
+until `deinit`; span and block ranges index `text()`. A widget
+borrows it, takes a `Theme`, and draws to the window's width. `rowCount(cols,
+method)` uses the same rows as `draw`, without allocation. Keep the document
+until its widgets are finished, then call `deinit`. Drawing can allocate for
+screen links and long graphemes, but never for parsing or layout.
+
+```zig
+var document = try widgets.Markdown.Document.init(gpa,
+    "# Notes\n> A **strong** point and [a link](https://ziglang.org).\n"
+    ++ "\n- first item\n- second item\n\n```zig\nconst x = 1;\n```",
+);
+defer document.deinit();
+const markdown: widgets.Markdown = .{
+    .document = &document,
+    .theme = .{
+        .heading = @splat(.{ .bold = true }),
+        .strong = .{ .bold = true }, .emphasis = .{ .italic = true },
+        .code = .{ .dim = true }, .inline_code = .{ .reverse = true },
+        .link = .{ .underline = .single }, .quote = .{ .dim = true },
+    },
+    .scroll = 0,
+};
+try markdown.draw(window);
+const rows = markdown.rowCount(window.cols(), screen.method);
+```
+
+The reader accepts the following subset; it is not CommonMark:
+
+- Paragraphs join adjacent source lines with a space and wrap at words,
+  splitting long words only between grapheme clusters. Blank lines keep a
+  blank row. Inline markup is read within each source line.
+- One to six leading `#` characters followed by a space or end of line make
+  a heading.
+- Repeated `>` prefixes, after at most three spaces, make nested quotes.
+  Each level draws a bar and a space, including on wrapped rows. At narrow
+  widths bars clip and leave no room for text.
+- `-`, `+`, `*`, or up to nine digits followed by `.` or `)`, then a space,
+  make list items. Space indentation nests them; wrapped and indented
+  continuation lines use the marker's hanging indent. Markers keep their
+  spelling. Four spaces or a leading tab otherwise start indented code.
+- Three or more backticks or tildes open fenced code. A closing fence uses
+  the same character, at least the opening length, and only spaces after
+  it. Fence lines and language labels are hidden; unfinished fences keep
+  reading code. In a quoted fence only its container prefixes are removed.
+- Code is verbatim and clipped, never wrapped or parsed as prose. Tabs draw
+  to four-column stops. `scroll_columns` scrolls code between whole clusters.
+- Paired `*` or `_` give emphasis; doubled markers give strong emphasis.
+  These may nest, up to 32 levels. Underscores inside words stay literal.
+  Backtick spans use matching run lengths and keep their content literal.
+  Backslash escapes ASCII punctuation. Unmatched markers remain text.
+- `[label](target)` links accept balanced target parentheses and no whitespace
+  or title; labels can carry inline styles. `<http://…>` and `<https://…>`
+  are autolinks. They become OSC 8 links through `Screen.link`. Targets with
+  terminal control bytes remain unlinked text.
+- Three or more matching `-`, `*` or `_` characters, with optional spaces
+  between them, draw a horizontal rule.
+
+There are no tables, images, HTML, reference links, setext headings, task
+checkboxes, footnotes, syntax highlighting or filesystem link resolution.
+Unsupported syntax stays text. The caller supplies every style; the default
+roles are neutral. Inline roles add enabled attributes to their block's
+style and replace colours they set. Quote, marker and rule roles style their
+own structural marks. `examples/gallery.zig` includes a themed document.
+
 ## Design
 
-**A cell is thirty-two bytes and is compared as memory.** The grapheme lives
+`Date.init(year, month, day)` checks Gregorian month and day invariants and
+returns `InvalidDate` for a date that does not exist. `year()`, `month()` and
+`day()` read its components; today and selected days use these checked values.
+
+`dumpScreenStyles` writes padded base-62 IDs, most significant digit first.
+Every ID in the legend and grid uses the fewest digits needed for the whole
+legend: one through 62 styles, two through 3,844, and more for larger legends.
+
+**A stored cell is thirty-two bytes and is compared as memory.** The grapheme lives
 in the cell when it is six bytes or fewer, which covers every
 single-codepoint cluster and a base with a combining mark, and in a pool the
 screen owns when it is longer. The style is `morse.Style`, which has a
@@ -224,8 +368,82 @@ field comparison per cell. Nothing in a cell is undefined, and a colour's
 unused channels are zeroed on the way in, so comparing the memory and
 comparing the meaning are the same answer.
 
+Cells read from the screen carry checked text and link handles. The grid and
+renderer store compact cells; Screen owns their pool identity. Screen and
+Renderer geometry is read through `dimensions()` and changed through `resize`.
+Term owns its grid, allocator and stream state. `screen()` and `graphics()`
+lend read-only views; `position()` and `savedCursor()` return copied positions.
+Feed bytes and resize through the terminal so its cursor, links and grid stay
+together.
+
+Session owns coordinated size, capabilities and probe progress. Read them
+through `windowSize()`, `capabilities()` and `probe()`; change them through
+`handle`, `resize` and `setCaps`. `screen()`, `renderer()` and `layers()` lend
+the component owners for painting, terminal entry and pictures. Session owns
+their lifetime and coordinated resize.
+
+Renderer pen, cursor, width method, frame flags and cleanup intent are internal.
+`entered()` returns a copy of the requested configuration, including partial
+entry. A second live `enter` returns `AlreadyEntered` before writing or changing
+state; leave before entering again. `Session.enter` also preserves the parser
+on refusal. Use `enter`, `setModes`, `setCaps`, `repaint` and `untrustCursor` to
+change terminal state.
+
+Allocation, pool identity, damage and renderer work buffers are internal
+`_` storage, owned by their initialized value. Row access returns
+a borrowed row with `len()` and checked `get(col)` values; writes go through
+Screen rather than mutable row slices. Pooled handles carry their issuing generation. Compaction
+and resize invalidate retained handles; another screen cannot use them.
+`textOf`, cell writes, fills and copies return `InvalidHandle` before using a
+stale or foreign handle; `target` returns null. Inline text and `Link.none`
+are portable. Use `copyCell` with the source screen to transfer a live cell,
+or the owned-copy helpers to keep content through compaction. Raw pools and
+renderer baselines are internal storage, with `_` field names. Raw pool
+constructors and raw text resolution are not public APIs.
+
+Raw `Cell` and `Cell.Text` values are untrusted input. `Screen.cell(value)`
+checks one printable UTF-8 cluster, its shape and pool handles and returns a
+canonical cell or `InvalidCell` / `InvalidHandle`. Checked placement, fills
+and copies apply the same precondition before changing the grid. `write`
+and `writeScaled` ignore empty input and initial controls, and reject
+nonprinting or multi-cluster glyphs; invalid UTF-8 is still replaced with the replacement character. `intern` stores
+bytes; validation happens when those bytes become a cell.
+
+`Screen.writeOwnedCellUnchecked` and its Window counterpart are the bridge
+for another terminal's measured cells: handles stay checked, while the
+caller guarantees the glyph, shape and canonical text bytes. The source
+terminal's width is kept even when the parent would measure it differently.
+
+`Window` checks the whole glyph or scaled cell extent before direct writes
+and copies. Multi-cell fills use the fill rectangle as their boundary.
+A placement that cannot fit leaves the grid alone.
+
 `Screen.link` refuses C0 controls and DEL in a URI or params with
 `error.ControlInText` before interning. Ordinary UTF-8 is kept unchanged.
+
+`Layers.init(allocator)` captures the allocator for its images, placements and
+compression storage. `transmit`, `declare`, `retire` and `deinit`, and the
+`Replacement` operations using those layers, take no allocator. Metadata
+accessors return borrowed, read-only slices; fields prefixed `_` are internal.
+
+`Layers.configureSharedMemory(io)` allows pictures through shared memory;
+pass null to disable it. The same Io preserves the terminal's learned answer.
+Each outstanding object owns its cleanup Io, so changing configuration cannot
+lose cleanup, and an older object's reply cannot settle a new configuration.
+The Io must outlive those objects. Names come from one atomic process-wide
+namespace and are never reused.
+
+Window keeps its screen and clipped rectangle together behind `screen()` and
+`rect()`. `ink()` borrows the drawing policy. Construct views through `Screen.window()`, `child` and `sub`, and
+apply ink through `inked`. Recreate windows after their screen is resized.
+
+Damage owns its row storage behind marking and clearing methods; `rowCount()`
+returns its extent. Its allocation API is unmanaged: pass the init allocator
+to `resize` and `deinit`.
+
+Text and visual-row iterators keep their source, cursor and refill state
+internal. Construct them through `init` or `TextInput.rows`, and advance
+through `next` / `nextAt`. Reconstruct an iterator to start another traversal.
 
 **Damage is conservative.** A write marks a cell only when it changes it. If
 another write restores the displayed value before drawing, the mark remains:
@@ -322,8 +540,13 @@ it: `enter` puts it in exactly the state asked for, whatever was on before,
 `setModes` changes only the setting that differs, the old mode off before the
 new one on, and `leave` turns off that motion and that encoding. Focus
 reports are a mode of their own. A screen entered through `Tty.enter` is
-undone the same way by `restoreGlobal` and the panic handler, from a buffer
-on the stack, so a program that dies leaves the shell with its keyboard, its
+undone by `Tty.leave()` or `restore`; `restoreGlobal` and the panic handler
+restore every registered terminal from a buffer on the stack. Keep each raw
+`Tty` owns its descriptors, saved mode, renderer borrow and resize watcher.
+`ioContext()` returns the captured Io by value; use its methods for lifecycle
+changes. Keep `Tty` at a stable address, and its entered renderer alive and at a stable
+address until restoration. Call terminal registration and restoration from
+one thread. A program that dies leaves the shell with its keyboard, its
 mouse and its cursor.
 
 **Synchronised output brackets a frame, not a session.** Mode 2026 left on for
@@ -344,26 +567,31 @@ deleted by name after the frame's placements, with its pixels kept, so a
 picture swapped for another is covered before it goes. `Layers` sends the
 pixels too — chunked, deflated when that helps, quiet unless asked — and frees
 them, so a program writes no graphics command of its own. Nothing waits on the
-terminal's word unless asked to: an image sent quietly is shown at once, and
-one sent asking for an answer is shown on the answer or when the caller's grace
-period runs out, and a terminal that never answers is not waited for twice.
+terminal's word unless asked to: an image sent quietly is shown at once.
+A direct transmission asking for an answer is shown on the answer or when the
+caller's grace period runs out, and a terminal that never answers is not waited
+for twice. A shared-memory trial needs its own answer; silence refuses that
+picture and releases its object.
 
 `Replacement` keeps a current picture while a new one is in flight. Share an
 `ImageIds` range between replacements, with the probe's graphics id excluded.
+Construct it through `init` and issue ids through `acquire`; bounds and the
+allocation cursor are internal.
 `send` takes pixels and transmit options; `declare` takes the placement and
 caller-supplied time and grace. Pass graphics replies to `Layers.ack` and call
 `declare` again. Its result says another frame is needed while waiting;
-`takeDirty` asks for new pixels after a refusal. A swap places the new picture,
+`current()` and `pending()` return copied ids; ownership changes through the
+replacement methods. `takeDirty` asks for new pixels after a refusal. A swap places the new picture,
 drops the old placement, then frees its pixels inside `commitFrame(w, caps)`.
 The renderer calls that itself; callers of `emit` call it after their frame
 reaches the writer. Failed writes retain retirement for the next attempt.
 
 **A picture on the same machine goes through shared memory.** With
-`Layers.shared_memory` set, the pixels are put in a shared memory object and
+`Layers.configureSharedMemory(io)` called, the pixels are put in a shared memory object and
 only its name goes through the terminal's input: no deflate, no base64, and a
 picture that cost a frame costs a copy (a full-screen picture on a 4K display,
 from about 15 ms to under 3). The first one asks for an answer; an error, or no
-answer within the grace period, turns the medium off for good, and that picture
+answer within the grace period, turns the medium off for this configuration, and that picture
 is refused so the program sends it again in the escape code, which is what a
 terminal on another machine, over ssh, gets from then on. An object the
 terminal did not read is unlinked, never left behind.
@@ -418,20 +646,26 @@ environment variable read — not `TERM`, not `COLORTERM`, not `NO_COLOR`.
 `Caps.Probe` writes morse's probe and folds the answers in, and is settled
 when every question is answered or, after the device attributes, when the
 terminal has been quiet for the caller's quiet period; a caller who would
-rather trust the environment sets the fields itself. A mode the terminal
+rather trust the environment configures a separate `Caps` value. Probe
+questions and learned progress are internal; construct it with `init`, feed
+answers, and read copied capabilities and `hasAnswered` / `lastAnswerMs`. A mode the terminal
 answers set or reset is one it has: nothing has turned synchronised output or
 in-band resize reports on when the probe asks, so a terminal that has them
 answers reset.
 
 `Session.init(gpa, winsize, questions)` holds the screen, renderer, `Winsize`,
-`Caps.Probe` and `Layers` together. Its fields remain yours to use directly.
+`Caps.Probe` and `Layers` together. Its component methods lend the owners; size, capabilities and probe progress
+are read through const queries.
 Pass terminal events to `handle(w, event, now_ms)`, which says a frame is due;
 keys and application policy are still yours. Drain the batch, call `resize(w)`
-once, paint `screen`, then `draw(w)` and flush your writer. Both grids follow
+once, paint `screen()`, then `draw(w)` and flush your writer. Both grids follow
 the last resize; an unchanged in-band report repaints too, and each resize
 asks for the cell's pixel size again. `setModes(w, parser, modes)` keeps pixel
 mouse parsing in step with the requested encoding. `setCaps` lets the caller
-apply its own overrides after a probe answer.
+apply its own overrides after a probe answer. With `Input`, use
+`renderer().setModes` and `Input.setMousePixels` together; `Session.setModes`
+is the convenience for a caller-owned morse parser. Input keeps its parser,
+buffers and unread bytes internal.
 
 `ProbeWait.init(now_ms, timeout_ms, quiet_ms).remaining(probe, now_ms)` gives
 the next read's budget, or null when done. It owns no clock or read: an early

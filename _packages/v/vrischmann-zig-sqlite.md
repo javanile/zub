@@ -7,10 +7,10 @@ author_github: vrischmann
 repository: https://github.com/vrischmann/zig-sqlite
 keywords:
   - sqlite
-date: 2026-09-18
+date: 2026-09-29
 category: data-formats
-updated_at: 2026-09-18T09:13:17+00:00
-last_sync: 2026-09-18T09:13:17Z
+updated_at: 2026-09-29T20:48:29+00:00
+last_sync: 2026-09-29T20:48:29Z
 package_kind: hybrid
 has_library: true
 has_binary: true

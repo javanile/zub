@@ -6,16 +6,16 @@ author: pedronaugusto
 author_github: pedronaugusto
 repository: https://github.com/pedronaugusto/conduit
 keywords:
-date: 2026-09-20
-updated_at: 2026-09-20T13:48:09+00:00
-last_sync: 2026-09-20T13:48:09Z
+date: 2026-10-01
+updated_at: 2026-10-01T15:11:36+00:00
+last_sync: 2026-10-01T15:11:36Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 1
-distributable_binary_count: 1
-multiple_binaries: false
+binary_count: 3
+distributable_binary_count: 3
+multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
 sync_source: zigistry
@@ -53,7 +53,7 @@ defer shell.deinit(io);
 // Everything it writes to its terminal, and how it ends, with a bound on
 // the whole thing. A terminal is one stream, so a child on a pair has no
 // separate standard error to collect.
-var result = try shell.child.output(io, gpa, .{ .timeout_ms = 5000, .drain_ms = 250 });
+var result = try shell.child().output(io, gpa, .{ .timeout_ms = 5000, .drain_ms = 250 });
 defer result.deinit(gpa);
 ```
 <!-- END GENERATED ci/readme_usage.sh -->
@@ -83,47 +83,97 @@ stable ABI to reach past it. Every Windows call is a `kernel32` import.
 
 | | |
 |---|---|
-| `Pty.open(options)` | A new pair. `options`: `rows`, `cols`, `x_pixel`, `y_pixel`, and on Windows `console`. |
-| `pty.read`, `pty.write` | The master, as two handles: the same descriptor twice on POSIX, the two pipes of a pseudoconsole on Windows. `null` once closed. |
+| `Pty.open(allocator, options)` | A new pair. `options`: `rows`, `cols`, `x_pixel`, `y_pixel`, and on Windows `console`. |
+| `pty.readHandle()`, `pty.writeHandle()` | The master, as two handles: the same descriptor twice on POSIX, the two pipes of a pseudoconsole on Windows. `null` once closed. |
 | `pty.readFile()`, `pty.writeFile()`, `pty.master()` | Either end, or both, as `std.Io.File`s sharing the handle rather than duplicating it. |
-| `pty.slave` | The terminal end: a descriptor on POSIX, an `HPCON` on Windows. `pty.slaveFile()` is POSIX only. |
-| `pty.resize(size)`, `pty.size()` | The window size. `resize` is safe to call while another task reads or writes. |
-| `pty.console` | Windows only: which of `OpenOptions.console` the system granted. `win32_input` for keys a terminal encoding cannot spell, `passthrough` for the child's own bytes rather than the console host's redraw of them, `resize_quirk` for a resize that does not reflow. A Windows too old for one of them refuses the whole call, so `open` asks again without it. |
+| `pty.slaveHandle()` | The terminal end: a descriptor on POSIX, an `HPCON` on Windows. `pty.slaveFile()` is POSIX only. |
+| `pty.resize(size)`, `pty.size()` | The window size. `size` borrows the pair; it and `resize` share the Windows geometry owner and are safe while another task reads or writes. |
+| `pty.consoleOptions()` | Windows only: which of `OpenOptions.console` the system granted. `win32_input` for keys a terminal encoding cannot spell, `passthrough` for the child's own bytes rather than the console host's redraw of them, `resize_quirk` for a resize that does not reflow. A Windows too old for one of them refuses the whole call, so `open` asks again without it. |
 | `pty.close(io)` | Everything. Idempotent, and correct after either of the next two. |
 | `pty.closeSlave(io)`, `pty.closeMaster(io)` | One end. The two systems want `closeSlave` at different moments — see Design. |
 
 ### `Child` — a child process
 
+Lifecycle state is opaque. Move a child before sharing it, and do not copy it
+or call `deinit` while another task uses it. `processId` and `result` are safe
+to read while a wait or Reaper runs.
+
 | | |
 |---|---|
-| `Child.spawn(io, allocator, options)` | Start it. The allocator is used for the call only; nothing is retained. |
-| `child.id`, `child.pgid` | The process id (POSIX) or handle (Windows), and the process group when `detach` asked for one. |
-| `child.stdin`, `child.stdout`, `child.stderr` | `std.Io.File`s for the pipes `spawn` created, owned by the `Child`. |
+| `Child.spawn(io, allocator, options)` | Start it. The allocator owns the lifecycle until `deinit` and must outlive the child. |
+| `child.processId()` | A numeric process id on either platform, or `null` after retirement. A snapshot; `kill` holds the identity through signalling. |
+| `child.stdinFile()`, `child.stdoutFile()`, `child.stderrFile()` | Borrowed `std.Io.File`s; the created pipes remain owned by the `Child`. |
+| `child.takeStdin()`, `child.takeStdout()`, `child.takeStderr()` | Transfer a created pipe to the caller, who closes it. A pair has no pipe to transfer. |
 | `child.closeStdin(io)` | Half-close: the child reading to end of file stops waiting on you. |
-| `child.pty` | The master, for a child spawned on a pair. Borrowed from the `Pty`. |
+| `child.inputWriter(io, allocator, options)` | Transfer stdin to an `InputWriter` on its own task. `options.max_backlog` bounds queued and in-flight bytes together. |
+| `child.terminalMaster()` | The master, for a child spawned on a pair. Borrowed from the `Pty`. |
 | `child.stdinFile()`, `child.stdoutFile()` | The child's input and output wherever they are: the pipes, or the master. |
 | `child.stdinWriter(io, buf)`, `child.stdoutReader(io, buf)` | The same, as `std.Io` reader and writer interfaces. |
 | `child.expect(buf)` | An `Expect` over both directions, or `null` if this process holds only one. |
 | `child.output(io, allocator, options)` | Run to the end and collect it: a cap, a timeout, a bounded drain, both streams read on their own tasks. |
-| `child.wait(io)` | Blocks; delegates to `std.process.Child.wait`. |
-| `child.term` | How it ended, once something reaped it. Written by whichever call did and published through an atomic, so `tryWait` is how to read it while a `Reaper` runs. |
+| `child.wait(io)` | Blocks on the child's exit handle, then reaps when signalling has let go of its identity. |
+| `child.result()` | The synchronized result without reaping: `null` before publication, the term afterwards, or `ReapedElsewhere` if the status was taken outside conduit. |
 | `child.tryWait()` | Never blocks. `null` while the child runs. |
+| `child.containment(buffer)` | Copies the detached group and optional Linux cgroup path, inode and boot id. The path borrows your buffer; the record owns no handles and survives retirement and deinit. |
+| `child.holdReap()` | The right to reap the child, taken and held — `null` if another task has it — for a caller that waits for the end its own way and reaps afterwards, as `Reaper` does. `HeldReap.wait(io)` reaps; `release()` gives it back. |
 | `child.waitTimeout(io, ms)` | Reaps it if it ends in time; `null` if it does not, and it is still running. Waits on a handle the system makes ready the moment the child ends — a `pidfd`, a kqueue registration — and asks again on a growing interval where there is neither. |
 | `child.kill(signal)` | `.interrupt`, `.terminate` or `.kill`, aimed at what the child started and not only at the child: on POSIX the process group of a detached child and a walk of its descendants; on Windows a console control event to a detached child's group, and for `.kill` — or `.terminate` with no group — the job object. On Windows, `.interrupt` without a group is `error.Unsupported`, there being nothing to fall back to that would mean the same thing. |
 | `child.killWait(io, grace_ms)` | `.terminate`, the grace, `.kill`, a reap. |
 | `child.waitTree(io, ms)` | Windows only: waits for the job the child was put in to hold no process at all, which is the question `wait` does not answer — a child that exits having started something is a tree that is still running. A compile error on POSIX, which has nothing to ask. |
 | `child.deinit(io)` | Closes what the `Child` owns, and nothing the caller supplied. |
 
+`Child.Output` owns the collected bytes until `deinit(allocator)`. `stdout()`
+and `stderr()` borrow them; `takeStdout()` and `takeStderr()` transfer them
+for the caller to free with the collecting allocator. `term()`, `timedOut()`,
+`stdoutTruncated()` and `stderrTruncated()` copy the result facts.
+
+`conduit.Cgroup` is the cgroup a Linux child holds. Both cgroup handle types
+keep ownership opaque in fixed storage. `cgroup.id()` gives its
+directory identity. `Cgroup.openRecorded(path, id)` returns a separate
+`Cgroup.Recorded` handle only when the saved inode matches. It holds both the
+cgroup and its parent by descriptor, and copies only the final name into a
+fixed buffer; it allocates nothing. `recorded.remove()` checks the name's
+inode through that parent and removes an empty cgroup with `unlinkat`;
+`recorded.release()` tries removal and closes both descriptors. A replacement
+between the inode check and `unlinkat` can still change the final entry.
+The caller must also compare the boot id saved with the inode. On systems
+without cgroups, `openRecorded` returns `null`.
+
 `conduit.succeeded(term)`, `exitCode(term)` and `signalName(term)` say what a
-`Term` holds without matching on it. `Term` is `std.process.Child.Term`, not a
-parallel type of this package's own. `signalName` is `null` on Windows, where a
-process reports an exit code however it ended: 1 when `killWait` had to
-terminate it, and otherwise whatever the child itself exited with — the low
-byte of it, since `Term.exited` is a byte and a Windows exit code is a `DWORD`.
+`Term` holds without matching on it. `Term` belongs to conduit: `exited` is
+`u32`, preserving the full Windows exit code and the POSIX exit byte.
+`signalName` is `null` on Windows, where a process reports an exit code however
+it ended: 1 when `killWait` had to terminate it, and otherwise whatever the
+child itself exited with, including the system's control-exit status.
 
 `SpawnOptions`: `argv`, `cwd`, `environ` (a `*const std.process.Environ.Map`),
 `stdio`, `detach`, `stderr_to`, `path_search`, `credentials`,
-`resource_limits`, `fd_policy`, `job_limits`.
+`resource_limits`, `fd_policy`, `job_limits`, `parent_death_signal`, `descendants`.
+
+`descendants = .survive` is the default on every platform. Once the child
+exits normally and is reaped, `deinit` leaves what it started alone. This
+includes a nonzero exit status: it is still a normal exit. A git helper can
+start a credential-cache daemon, return, and release its `Child` while the
+daemon keeps serving later invocations. Windows clears only the job's
+kill-on-close flag at the reap, retaining its resource limits; if that call
+fails, the wait reports the error and can be retried. Reap before deinit.
+
+Set `descendants = .contain` when the descendants belong to the child's
+lifetime. Windows keeps job kill-on-close, ending survivors at deinit. POSIX
+makes a private process group even with `detach = false`, and ends that group
+or the Linux cgroup before the final reap releases the child's identity.
+Every wait path, including `output` and `Reaper`, follows the same policy.
+A private group isolates the child from the parent's terminal signals, as
+`detach` does. A descendant that leaves its group and becomes orphaned is
+outside group containment; a Linux cgroup still holds it where one is
+available. Use this policy for cooperative subprocess trees, within the
+platform's reach described below.
+
+Timeouts in `output`, output errors, `kill` and `killWait` still end the tree
+in either mode, within that same reach. `waitTimeout` remains an observation:
+a null answer does not end the child. Explicit `Reaper.end_tree` still ends
+survivors. A signal request followed by a normal exit does not release the
+survivors as though the child had completed on its own.
 
 `stdio` is `.{ .pty = &pty }`, `.{ .pipes = .{ .stdin, .stdout, .stderr } }`,
 `.inherit`, `.ignore`, or `.{ .streams = .{ .stdin, .stdout, .stderr } }` —
@@ -132,8 +182,10 @@ each of those three being `.inherit`, `.{ .file = f }`, `.ignore`, `.pipe` or
 pair for one stream and something else for the others, on POSIX.
 
 `detach` puts the child out of reach of signals aimed at the parent's process
-group. On POSIX with `.pty` it is `setsid` plus `TIOCSCTTY`, so the pair
-becomes the child's controlling terminal; otherwise `setpgid(0, 0)`. On Windows
+group. On POSIX with `.pty` it is a session of its own with the pair as its
+controlling terminal — `setsid` plus `TIOCSCTTY` in a fork child, or on Linux
+`POSIX_SPAWN_SETSID` plus the terminal opened by name — otherwise
+`setpgid(0, 0)`. On Windows
 it is `CREATE_NEW_PROCESS_GROUP`, which is what a console control event can be
 addressed to and nothing more — reaching the tree there is the job object's
 doing, not `detach`'s.
@@ -162,11 +214,62 @@ starts* rather than the one process. Windows only; anywhere else it is
 machine's processor time, from 1 through 10,000; an out-of-range value is
 `error.InvalidJobLimit`.
 
-### `Expect` — a conversation with a child
+### `InputWriter` — bounded input for a child
+
+`writer.isOpen(io)` takes an uncancelable snapshot of whether input is still
+accepted, even when the backlog is full. A later `queue` checks again.
+
+```zig
+var input = try child.inputWriter(io, gpa, .{ .max_backlog = 1024 * 1024 });
+defer input.deinit(io);
+try input.queue(io, "first\n");
+try input.queue(io, "second\n");
+try input.end(io);
+// Read output while the input task writes, so neither pipe waits on the other.
+var result = try child.output(io, gpa, .{ .timeout_ms = 5000 });
+defer result.deinit(gpa);
+try input.wait(io);
+```
 
 | | |
 |---|---|
-| `Expect.init(master, buffer)` | Over `Child.pty` or `Pty.master()`, with a buffer the caller owns. |
+| `input.queue(io, bytes)` | Copy all bytes in order, or accept none. `BacklogFull` refuses the write without waiting for the child to read. |
+| `input.end(io)` | Refuse further input with `InputClosed`, then close the pipe after everything already queued. Idempotent. |
+| `input.wait(io)` | Wait for pipe closure and return its delivery result. Canceling a waiter leaves delivery running. |
+| `input.cancel(io)` | Abandon pending bytes, interrupt a blocked write and join the task. Later calls return `Canceled`; an earlier failure or completed delivery stays final. |
+| `input.deinit(io)` | Cancel, join and free. Stop the other callers first. Idempotent. |
+
+The writer owns the stdin pipe after successful construction; `child.stdinFile()`
+is then null. Startup failure leaves it with the child. Only a separate pipe
+can be transferred: a child on a terminal is `NoStdinPipe`. The writer does
+not borrow the child. Its allocator and Io must outlive it, and an earlier
+copy of stdin must no longer be used. Move it before sharing and never copy
+it. Queue, end and wait may run on several tasks; cancel has one caller at a
+time. The writing task alone writes and closes the pipe, with no mutex held
+across a write. The first write failure is returned to later callers too.
+
+The bound counts accepted bytes until their whole batch is written to the
+pipe, including the batch the task has taken. It does not count bytes already
+in the operating system's pipe or say when the child consumed them. Allocation
+metadata is additional. A zero bound accepts only empty writes. Calls using
+the writer's allocator are serialized.
+
+[Tokio's `ChildStdin`](https://docs.rs/tokio/latest/tokio/process/struct.ChildStdin.html)
+is an asynchronous pipe writer; [Go's `StdinPipe`](https://pkg.go.dev/os/exec#Cmd.StdinPipe)
+returns an `io.WriteCloser`. Both leave queueing to the caller. `InputWriter`
+adds a byte bound, a task that delivers the queue, and an end ordered after
+the accepted bytes, so a caller can answer a CLI while holding its own lock
+without waiting for that CLI to read.
+
+### `Expect` — a conversation with a child
+
+Conversation state is opaque; create it with `init` and observe bytes through
+`pending`, `until`, `untilAny` and `bytes`. A lifetime permits one successful
+start; a start after `deinit` is `AlreadyStarted`, even if no reader ran.
+
+| | |
+|---|---|
+| `Expect.init(master, buffer)` | Over `Child.terminalMaster()` or `Pty.master()`, with a buffer the caller owns. |
 | `expect.start(io)`, `expect.deinit(io)` | The one reading task, which runs between calls. A second `start` is `error.AlreadyStarted`. |
 | `expect.until(io, pattern, timeout_ms)` | Waits for a literal byte pattern and consumes through it: `Match.before` and `Match.found`. |
 | `expect.untilAny(io, patterns, timeout_ms)` | Waits for any of several. The earliest match wins, whatever order they were listed in; `Match.index` says which, and the ones that lost stay pending. |
@@ -184,14 +287,55 @@ A wait ends in `error.Timeout`, `error.EndOfStream`, `error.BufferFull` or
 is this process's environment with those changes, as a map the caller owns; a
 `null` value removes the variable rather than emptying it.
 `environ.only(allocator, …)` takes the same list and inherits nothing, for a
-child that should not see an agent socket or a token. A child with no `PATH` is
-also one a bare `argv[0]` cannot be found for, so `path_search` says which
-`PATH` resolves the program: `.child_environ` (the default, what a shell does),
-`.parent_environ` (what `std.process.spawn` does, and what a scrubbed
-environment wants) or `.none`. On Windows conduit resolves a bare program
+child that should not see an agent socket or a token. `path_search` says
+which `PATH` resolves the program: `.child_environ` (the default, what a shell
+does), `.parent_environ` (what `std.process.spawn` does) or `.none` (the path
+as supplied, relative to the child's working directory when relative).
+On POSIX a missing `PATH` uses the default directories; an empty `PATH`
+searches the child's current directory. Windows still checks its fixed
+program directories without a `PATH`. On Windows conduit resolves a bare program
 against the child environment before `CreateProcessW`, whose own search would
 otherwise use the parent's `PATH`; the other two modes are `error.Unsupported`
 there.
+
+`parent_death_signal` (`.interrupt`, `.terminate` or `.kill`) is sent to the
+child when the thread that spawned it ends, however it ends: Linux's
+`PR_SET_PDEATHSIG`, and `error.Unsupported` anywhere else. Where there is no
+such thing, a program that must not leave children running behind a crash
+writes down each child's pid and `conduit.startTime(pid)`, and the next time
+it runs uses `conduit.endRecorded` to end what it can still prove belongs to
+that process. A recorded cgroup reaches the complete Linux tree.
+`conduit.captureStarted(pid, start)` holds such a process by a pidfd on Linux
+and a stable unique process id on Darwin, taken before the start time is checked (Linux)
+or with it in one lookup (Darwin), so the signal it sends reaches that
+process or nothing; it is `null` for a start time that does not match.
+`CapturedPid` exposes no token or handle. `captured.processId()` reads its
+number for reports. Release it exactly once with `deinit`; do not copy an
+owning capture. Darwin checks the stable unique id on every lookup, so exec
+keeps the identity while a reused PID cannot provide a new audit token.
+`captured.signalDescendants(sig, in_group)` walks its descendants only while
+the captured root is still the same process, including after the walk.
+`captured.signalGroupSince(group, start, sig)` reaches a recorded Linux
+leader's group while that leader is still held. On Darwin it reaches a
+captured session leader's group through audit tokens: no process outside a
+new session can join it. For an ordinary group in an existing session it
+returns `error.Unsupported`, since another process there can join the group.
+`captured.wait(io, timeout_ms)` waits for its process to end without reaping
+it. `recorded.waitEmpty(io, timeout_ms)` waits for a recorded Linux cgroup to
+empty. Both return `true` when done and `false` at the deadline.
+`conduit.endRecorded(io, .{ .pid, .start, .group, .cgroup, .grace_ms })`
+asks a recorded process and its provable descendants to end, waits the grace,
+then forces survivors. Pass `&recorded`, from `Cgroup.openRecorded`, for a
+complete Linux tree, including orphans. Without one, an unproven group member is left
+alone and reported as `error.Unproven` on Linux; Darwin reports
+`error.Unsupported` for a requested group after ending provable processes,
+since a member cannot be held after the leader's exit by this call.
+
+`conduit.findProgram(io, allocator, environ, name)` is where `spawn` would
+find `name` for a child given `environ`, by the same rules, or `null`: for a
+program that asks whether something is installed, to say so. `spawn` does not
+need it and searches for itself — resolving a name and then starting what it
+resolved to is two steps, with room between them for the answer to change.
 
 ### `spawnShell`, `Reaper`, `Proxy`
 
@@ -200,9 +344,59 @@ with a terminal emulator's defaults — `$SHELL` or `%COMSPEC%`, 24×80, `TERM`
 set, a controlling terminal on POSIX — absorbing the `closeSlave` timing
 difference below.
 
-`Reaper.init(&child)`, `start(io)`, `exit()` for a `Child.WaitError!?Term`
-without blocking, `deinit(io)`. The `Child` must outlive it, it must not move
-once started, and a wait error is final and returned by every later `exit()`.
+A survivor ledger saves `child.processId().?` as its key and
+`try child.containment(&path_buffer)` as its containment record before starting
+Reaper. Keep that key, record and path buffer independently of the Child,
+through retirement; remove the ledger entry with the saved key. A numeric key
+never authorizes a signal.
+
+`Reaper.init(&child, options)` and `start(io)` put the wait for a child on a
+task of its own; `exit()` answers a `Child.WaitError!?Term` without blocking,
+and `wait(io)` and `waitTimeout(io, ms)` wait for the answer on an event the
+task sets, so nothing asks the system again and again. `stop(io, grace_ms)`
+asks the child and what it started to end and makes them once the grace has
+passed, and returns at once: the grace is spent on the `Reaper`'s task, so a
+caller holding a lock can stop a child. On POSIX its held reap ends the
+remaining owned group or cgroup before releasing the root identity, spending
+the remainder of that same grace. `deinit(io)` ends the task; on POSIX
+the wait is on the child's `pidfd` or kqueue registration beside a pipe
+`deinit` writes to, so it goes at once whether or not the `std.Io` can cancel
+a system call. The `Child` must outlive it, it must not move once started, and
+a wait error is final and returned by every later `exit()`. The state and wake handles are opaque.
+Only one successful start is allowed per lifetime; another start, including
+after `deinit`, returns `AlreadyStarted`. A concurrency failure releases
+its resources and may be retried before `deinit`. Release every HeldReap
+exactly once, and join Reaper before destroying its Child.
+
+`Options.end_tree` ends what the child leaves running when it ends by itself,
+before it is reaped. On Linux, for a child in a cgroup of its own (below),
+detached or not: what is still running in the cgroup is sent `SIGTERM`, given
+`tree_grace_ms`, then ended with `cgroup.kill`, wherever its group and session
+went. On POSIX otherwise, for a detached child: what is left in its
+process group is sent `SIGTERM`, given `tree_grace_ms`, then `SIGKILL` — while
+the ended child, not yet reaped, still holds the group's id, so the signal
+cannot reach a group that has been given the same number since. On Windows the
+job is ended as soon as the child is reaped. The term published is the
+child's own.
+
+`Orphans` keeps its state opaque; `init`, `count`, `list`, `adoptionEvent` and
+`adoptionCount` provide construction and observations.
+
+`Orphans.init(allocator)` and `start()` make this process, on Linux, the
+parent of every orphan below it (`PR_SET_CHILD_SUBREAPER`): a daemon a
+child left, a grandchild that forked twice and called `setsid`. Nothing
+runs for it — no task, no timer: whenever conduit reaps a child or spawns
+one, it also takes in the new orphans and reaps the ended ones. `count()`
+does the same on demand and says how many are left. `list(out)` copies
+`Orphans.Record` values with `pid`, `start`, `group` and `session`, copied from
+one process snapshot under pidfd and reap ownership during adoption. It
+reports `IdentityUnavailable` if that snapshot could not be read. Retain
+these facts and the boot identity for a later `captureStarted` or
+`endRecorded`; records own no handles. `end(io, grace_ms)` ends them all through a pidfd
+each — `SIGTERM`, the grace, then
+`SIGKILL` — for the end of a program. `deinit()` puts the attribute back.
+Opt-in, and only for a program that starts every child through conduit
+(below). `error.Unsupported` elsewhere.
 
 `Proxy.run(io, .{ .master, .input, .output, .input_buffer, .output_buffer, .resize })`
 moves bytes both ways until the child's end of the terminal closes, and keeps
@@ -210,6 +404,10 @@ the pair the size of a terminal of yours. Both buffers must be non-empty;
 otherwise it returns `error.BufferTooSmall`.
 
 ### Terminal helpers
+
+`conduit.console` exposes Windows `InputRecord` and `KeyEvent`, with
+`keyDown()`, `waitInput(handle, timeout_ms)`, `peekInput(handle, buffer)` and
+`readInput(handle, buffer)` for programs reading console input records.
 
 `rawMode(handle)`, `restore(handle, saved)`, `winSize(handle)`, `isTty(handle)`,
 and — POSIX only — `setWinSize(handle, size)`, `ttyName(handle, buffer)` and
@@ -219,6 +417,20 @@ whether anything is running *on* it. They take a handle rather than a
 console is two handles with two unrelated sets of mode flags, so `rawMode` is
 called once for each and works out which it was given, and `winSize` wants the
 output one.
+
+`rawMode` and `restore` take effect at once and throw away input nobody read;
+neither waits for the output to drain, so a terminal that has stopped reading
+cannot hold a program there, on its way out or in a panic.
+
+These are also a module of their own, `conduit.tty`, for a program that draws
+its own screen and runs no child:
+
+```zig
+exe.root_module.addImport("conduit.tty", conduit.module("conduit.tty"));
+```
+
+On Linux it makes no call through libc, so importing it alone links no C
+library; `conduit` itself imports it.
 
 ## Design
 
@@ -265,28 +477,93 @@ terminal end goes first either way; only a `std.Io` with no task to give drops
 the master ends first instead, so that the host's last write fails rather than
 waits.
 
+**Stop a reader before closing what it reads.** A task reading the master or a
+child's pipe is cancelled, or reads to the end, and is joined before
+`Pty.close`, `closeMaster` or `Child.deinit` closes that file. A descriptor
+closed under a read is free for the next open in the process, and a read that
+starts after the close reads that file instead.
+
 **`kill` and `killWait` reach what the child started.** On Windows every child
 goes in a job object of its own before it runs — started suspended, assigned,
-resumed, so nothing is ever outside it — and `.kill` ends the job. The job ends
-what is left in it when its last handle closes, so `deinit` there also ends
-what the child started and left behind. A child that cannot be put in its job
-is `error.JobAssignmentFailed`, not a child whose tree `kill` would miss.
+resumed, so nothing is ever outside it — and `.kill` ends the job. A child
+that cannot be put in its job is `error.JobAssignmentFailed`, not a child
+whose tree `kill` would miss.
 
 A container the system keeps can also be asked about, which is `waitTree`: the
 job reports to a completion port from before the child is assigned to it, and
 the wait ends when the job says it holds nothing. So a program can watch the
 whole tree go rather than only the child — and it has to ask before `deinit`,
-which is what closes the job and the port. POSIX has nothing to ask. A process
-group is an address to send signals to and the system accounts nothing to it,
-and the walk `kill` uses goes down from the child, where a grandchild whose
-parent has exited belongs to `init` and is related to the child by nothing that
-can be looked up; a walk that named nothing would mean "ended" and "orphaned"
-in the same breath. `waitTree` is a compile error there, with a message that
-says so.
+which is what closes the job and the port. POSIX, for a child with no cgroup
+of its own (below), has nothing to ask. A process group is an address to send
+signals to and the system accounts nothing to it, and the walk `kill` uses goes
+down from the child, where a grandchild whose parent has exited belongs to
+`init` and is related to the child by nothing that can be looked up; a walk
+that named nothing would mean "ended" and "orphaned" in the same breath. `waitTree` is a compile error there, with a message that
+says so, and on Linux too: a child's cgroup could answer it, and is not yet
+asked.
 
-POSIX has no container for a tree, so `kill` reaches three things: the child,
-the child's process group when `detach` made one, and every descendant the
-system will name — one `/proc` process-table pass on Linux,
+**On Linux a child gets a cgroup of its own, where the system allows one.**
+A cgroup v2 is a set the kernel keeps: a process is born into its parent's
+and stays there whatever it does with its group, its session or its parent.
+So where this process may make a cgroup below its own — a subtree delegated to
+it, as systemd does for a user's session manager and for `Delegate=yes` units,
+or a container with a writable cgroup mount — `spawn` makes one per child and
+the fork child joins it before it does anything else, so nothing the child
+ever starts is outside it. `kill(.kill)` is then one write to `cgroup.kill`
+(Linux 5.14), which ends everything in it and is safe against a fork while it
+is being delivered; `.terminate` and `.interrupt` go to each member through a
+pidfd, the member confirmed still in the cgroup after the pidfd was opened. A
+grandchild that forked twice and called `setsid` is reached like any other.
+Whether this process may is found out at the first spawn, from
+`/proc/self/cgroup`, `/proc/self/mountinfo` and the first `mkdir`, never
+assumed; a refusal (a read-only cgroup mount, as in a default container; a
+cgroup owned by root, as in an SSH session; a cgroup v1 system; a kernel
+before 5.14) is remembered, and every child is started as before and reached
+as below. The cgroup is owned by the child's opaque lifecycle; a
+contained spawn always takes the fork, never `posix_spawn`, since joining a
+cgroup is a write and there is no file action for one; this process holds
+one more descriptor per child, and makes and removes one directory per child
+under its own cgroup, named `conduit-<pid>-<n>`; `deinit` removes it, and
+one whose processes outlive the child is left to them and removed by a later
+spawn or `deinit` once they have ended. Up to sixteen such cgroups retain
+their directory handles so later cleanup verifies the identity before removal.
+A descendant that moves itself to another cgroup it may write to — asks
+systemd for a scope of its own — has left the reach.
+
+**On Linux, orphans can be made this process's own, beneath the cgroup and
+the walk.** A process whose parent ends goes to `init`, or to the nearest
+ancestor that asked for orphans, and is then related to nothing a walk can
+name. `Orphans.start` makes this process that ancestor, so every orphan
+below it becomes its child, and conduit reaps each one that has ended at
+its next event and ends them all with `Orphans.end`. The kernel does not say which children
+were adopted — an orphan and a child this process started are both its
+children, and nothing records the parent one had before — so conduit
+takes the children it started, and the ones this process had at `start`,
+as its own and everything else as adopted. **The contract is that every
+child is started through conduit while it runs:** a child started some
+other way, or a `SIGCHLD` handler that reaps with `waitpid(-1)`, would be
+taken for an orphan and reaped, and its owner's wait would find nothing. A
+`Child`'s own status is never taken: every spawn holds the shared side of a
+lock from before its fork until the child is on conduit's list, and a look
+holds it alone. What a caller may observe: the subreaper attribute is set
+from `start` to `deinit`; a process below this one reports this one as its
+parent once its own has gone, and this process gets a `SIGCHLD` when it
+ends. Nothing wakes an idle program for it: a look — a read of
+`/proc/self/task/<tid>/children` per thread and a `waitid` per child, a
+bounded process scan — runs when a child of conduit's is reaped (the moment
+what it left has become this process's), when a spawn returns, and in
+`count` and `end`, so an orphan that ends while none of those happens
+stays a zombie until the next one; each adopted process holds a pidfd
+until it is reaped; each child conduit starts while it runs holds one more
+descriptor until it has been reaped, and every Linux spawn takes that lock,
+running or not. `Child.kill` does not reach an adopted process on the
+child's account unless the child's cgroup holds it: nothing else says which
+child it came from, and it does not guess. `deinit` signals nothing, and an
+adopted process that ends after it is a zombie until this process ends.
+
+Otherwise POSIX has no container for a tree, so `kill` reaches three things:
+the child, the child's process group when `detach` made one, and every
+descendant the system will name — one `/proc` process-table pass on Linux,
 `proc_listchildpids` on Darwin, and on the BSDs and illumos neither, where the
 process group is the whole of the reach. Descendants are signalled deepest
 first and before the child, because a process signalled before the ones below
@@ -298,19 +575,36 @@ both left the group and been orphaned before anything looked is reached by no
 system, and a grandchild of a child that was already reaped keeps running. The
 walk signals stable process identities — pidfds on Linux and audit tokens on
 Darwin — so a descendant that exits cannot turn a recycled PID into a signal
-for an unrelated process. The walk grows to hold the whole tree; if it cannot,
-`kill` reports `error.OutOfMemory` before sending a partial descendant pass.
+for an unrelated process. Each candidate's ancestry is proved through held
+identities before delivery. The walk grows to hold the whole tree; if it cannot,
+`kill` reports `error.OutOfMemory` before sending a partial descendant pass. On
+Darwin, where the walk is a pass over the whole process table each time it
+is asked, a child that has never forked is not walked at all: `spawn` watches
+its forks with a kqueue registered before the child runs anything — a
+`posix_spawn` child starts suspended until then, a fork child waits before its
+`execve` — so its stop is the signal alone, and one fork, however early, puts
+it back on the walk. The watch is one descriptor per child, closed by `deinit`.
+On Linux the pass reads every process's `/proc` record, and before it `kill`
+reads the child's own `/proc/<pid>/task/<tid>/children`, one small file per
+thread: a child with no child of its own is signalled alone. Either way a
+`.kill` looks again after the signal, and a child made while it was being
+sent puts the stop back on the walk.
 
 **Two ways to start a child on POSIX, and the same child either way.** A spawn
 that needs nothing done between the fork and the exec is handed to
-`posix_spawn`, which does not copy the parent's page tables: measured here over
-1000 spawns of `/usr/bin/true` on the null device, 946 µs a spawn against 1336.
+`posix_spawn`, which does not copy the parent's page tables.
 Everything that can only be done in a fork child sends the spawn back to the
-fork — a pseudo-terminal, which needs `setsid` and an ioctl; `credentials` and
-`resource_limits`, which a process sets on itself; `cwd`, `Stream.close`, a
-caller's file at descriptor 0, 1 or 2, and `fd_policy = .close_all`. The fast
-path runs on Linux and macOS, which are the systems the suite runs on; the BSDs
-number the attribute flags differently and keep the fork. `zig build test
+fork — `credentials` and `resource_limits`, which a process sets on itself;
+`cwd`, `Stream.close`, a caller's file at descriptor 0, 1 or 2, and `fd_policy =
+.close_all`. A detached child on a pseudo-terminal takes `posix_spawn` on
+Linux: `POSIX_SPAWN_SETSID` makes the session, and the terminal's name opened
+without `O_NOCTTY` in that session makes it the controlling one, as a session
+leader's first terminal open does there. On macOS and the BSDs it keeps the
+fork: a terminal becomes controlling there only through `TIOCSCTTY`, an ioctl
+no file action can make. The fast path runs on Linux and macOS, which are the
+systems the suite runs on; the BSDs number the attribute flags differently and
+keep the fork. A child put in a
+cgroup of its own on Linux is forked too (above). `zig build test
 -Dfork-spawn` runs the whole suite with it turned off.
 
 **A spawn that cannot run the program is an error**, not a child that exits
@@ -325,32 +619,46 @@ it**, where the system has a call that says so — `pipe2`, `O_CLOEXEC`,
 two a child started on another thread would inherit a descriptor that has
 nothing to do with it; on Darwin, which has no `pipe2`, this package's own
 spawns and its own pipe-making are held apart so that they cannot overlap. A
-`fork` elsewhere in the program still can, and `Pty.open` marks the master in a
-second call for want of a flag to pass `posix_openpt`. A descriptor the
+`fork` elsewhere in the program still can. `Pty.open` passes `O_CLOEXEC` to
+`posix_openpt`, which glibc, musl, Darwin and FreeBSD take, and marks the
+master in a second call only where the system refuses it. A descriptor the
 *caller* opened without the flag is the caller's, and `fd_policy` is how to
 say the child should not have it.
 
-**Allocation.** `Child.spawn` and `spawnShell` take an allocator, use it for the
-call only — the argument, environment and search-path arrays that must exist
-before the child does — and retain nothing. `Child.output` allocates the bytes
-it collects and `environ` the map it returns; both say whose they are. POSIX
-`Child.kill` uses the page allocator for its exhaustive descendant snapshot
-and reports `error.OutOfMemory` if that snapshot cannot be made. Everything
-else works in buffers the caller passes, `Expect` included.
+**Allocation.** `Child.spawn` and `spawnShell` take an allocator and retain the
+child's lifecycle until `deinit`; that allocator must outlive the child. The
+argument, environment and search-path arrays exist only for the spawn call.
+`InputWriter` keeps its state and queue until `deinit`. `Child.output` allocates
+the bytes
+it collects and `environ` the map it returns; both say whose they are.
+Process snapshots for POSIX signalling and `endRecorded` use bounded stack
+buffers and report `error.OutOfMemory` if a snapshot exceeds them. Recorded
+cgroup handles use fixed storage and allocate nothing. `Orphans` keeps its
+lists with the allocator it is given until `deinit`, from spawns on any
+thread, so that one must be thread-safe. Every heap allocation made by the
+package uses an allocator the caller passed. `Pty.open` retains its allocator
+for Windows geometry until every end of the pair closes; POSIX uses no
+allocation. `spawnShell` forwards its allocator, which must outlive the
+Shell on Windows. Other operations use
+fixed or caller supplied buffers, `Expect` included.
 
 **Thread safety.** One task at a time per `Child` or `Pty`, except `Pty.resize`,
 which is one call; `Reaper`, which exists so a wait can be in flight while
-another task works; and `Child.output`, which reads two streams at once. A
-child is reaped once however many tasks ask: the right to be inside the
+another task works; and `Child.output`, which reads two streams at once. An
+`InputWriter` serializes its queue and writes on one task of its own. A child
+is reaped once however many tasks ask: the right to be inside the
 system's wait is taken with an atomic, and whoever has it publishes the term to
 the rest — so `killWait` is legal while a `Reaper` runs, which is the sequence
-the `Reaper` exists for.
+the `Reaper` exists for. A separate identity claim covers the whole descendant
+walk and signal delivery, and the final reap and Windows handle closure. A
+wait observes the exit without holding that claim, so it can still be stopped;
+once reaped, its process or group id is never used for signalling again.
 
 ## Scope
 
 - **No terminal emulation.** `Proxy` moves bytes; nothing here parses an escape sequence or keeps a screen.
 - **No command splitting.** `argv` is a list, and turning one string into several is a shell's grammar.
-- **No job control.** `foregroundGroup` answers the question; `tcsetpgrp` is the caller's call to make with `child.pgid`.
+- **No job control.** `foregroundGroup` answers the question; `tcsetpgrp` is the caller's call to make with the group id saved from `child.processId()` for a detached child.
 - **No pattern language.** `Expect` matches byte strings.
 - **No pre-exec callback.** Only async-signal-safe calls are legal there, so the uses people reach for one for are named options instead.
 - **No `.bat` or `.cmd`.** `spawn` returns `error.UnsupportedBatchFile`, because the command interpreter re-parses their command line with rules no serialisation survives.
@@ -359,7 +667,7 @@ the `Reaper` exists for.
 
 | | Mechanism | Suite |
 |---|---|---|
-| Linux (glibc) | `posix_openpt`, `posix_spawn` or `fork` and `execve` | `ubuntu-latest`, and in Docker with `ci/linux.sh` |
+| Linux (glibc) | `posix_openpt`, `posix_spawn` or `fork` and `execve`; a cgroup v2 per child where one may be made; opt-in child subreaper (`Orphans`, 5.4) | `ubuntu-latest`, and in Docker with `ci/linux.sh` |
 | Linux (musl) | the same | Alpine, in CI and with `ci/linux.sh --musl` |
 | macOS | the same | `macos-latest` |
 | Windows | `CreatePseudoConsole` and `CreateProcessW` | `windows-latest` |
@@ -369,6 +677,13 @@ Windows 10 version 1809 is the floor: `CreatePseudoConsole` is imported
 statically rather than looked up. FreeBSD and NetBSD are compiled and never
 run, so what holds there is what the sources say and not what a suite has
 shown.
+
+Windows runs nowhere but the `windows-latest` runner: there is no local
+Windows or emulator run. What only Windows can answer — which directory on
+the search holds a program, a job ended when `Reaper.end_tree` reaps — is
+shown there alone. The order that search goes in, which `findProgram` and a
+spawn share, is worked out without the file system and tested on every
+system.
 
 Cross-compiled in CI for `x86_64-windows-gnu`, `x86_64-windows-msvc`,
 `aarch64-windows-gnu`, glibc on two architectures and musl on one, both macOS
@@ -381,9 +696,10 @@ A test that is about POSIX alone — a controlling terminal, `getpgid`, Ctrl-C
 becoming `SIGINT`, `stty size` — says so and skips elsewhere, and so does a
 Windows-only one: a job object holding a tree, a handle's inheritance flag, a
 console option the system may decline. On Windows the
-program is resolved by `CreateProcessW`, which searches the application
-directory, the current directory, the system directories and `PATH` and appends
-`.exe`; `PATHEXT` is not searched.
+program search checks the application directory, the current directory, the
+system directories and `PATH`, appending `.exe`; `PATHEXT` is not searched.
+With a supplied environment, conduit resolves the name against its `PATH`
+before `CreateProcessW`; otherwise Windows resolves it.
 
 ## Testing
 
@@ -394,7 +710,8 @@ zig build test --fuzz            # the three properties, under the fuzzer
 zig build unit -Dthread-sanitizer   # the suite under ThreadSanitizer
 zig build examples               # the examples alone
 zig fmt --check src examples build.zig
-ci/linux.sh --both               # the suite on glibc and musl Linux, in Docker
+ci/linux.sh --both               # the suite on glibc and musl Linux, in Docker,
+                                 # then once more with a writable cgroup
 ```
 
 Most of the suite starts a real child process and reaps it, and CI runs it on

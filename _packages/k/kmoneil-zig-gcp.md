@@ -19,9 +19,9 @@ keywords:
   - secrets-management
   - service-account
   - workload-identity-federation
-date: 2026-09-30
-updated_at: 2026-09-30T16:17:25+00:00
-last_sync: 2026-09-30T16:17:25Z
+date: 2026-10-01
+updated_at: 2026-10-01T16:21:06+00:00
+last_sync: 2026-10-01T16:21:06Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -66,7 +66,7 @@ modules it imports.
 ## Install
 
 ```
-zig fetch --save git+https://github.com/kmoneil/zig-gcp#v0.25.0
+zig fetch --save git+https://github.com/kmoneil/zig-gcp#v0.26.0
 ```
 
 ```zig
@@ -1065,15 +1065,37 @@ update, on gets, downloads, deletes, uploads and copies.
 
 Retries follow what is safe to repeat. Reads always retry, and resumable
 chunks always resume from what the server confirmed. A write is retried
-only when repeating it cannot do harm: an upload or copy carrying
-`if_generation_match`, or a delete naming a `generation`, whose repeat
-fails cleanly if the first attempt landed, instead of overwriting or
-deleting whatever is there by then. `Options.retry_unconditional_writes`
-opts every write in. A 412 on a write that may have been retried says so
-in `Diagnostics`: the first attempt may have succeeded, so `get` the object
-and compare checksums. An `if_generation_not_match` or
-`if_metageneration_not_match` met by the current object is
-`error.NotModified`, an answer rather than a failure.
+when repeating it cannot do harm: an upload or copy carrying
+`if_generation_match`, a metadata update carrying
+`if_metageneration_match`, or a delete naming a `generation`, whose
+repeat fails cleanly if the first attempt landed, instead of overwriting
+or deleting whatever is there by then.
+
+Every JSON API write also carries `X-Goog-Gcs-Idempotency-Token`, one
+value per call and the same on each of its retries. Cloud Storage answers
+a repeated upload of one request, metadata update, move or delete with its
+first result and does not act again, so these retry without a condition
+too, for 60 seconds after their first attempt: Google's "within a minute".
+A conditional one whose first answer was lost gets its own result back,
+not a failed condition. Compose, copy, restore and bucket calls act again
+on a repeat, token or not, and retry as before.
+`Options.idempotency_tokens = false` sends none and keeps only the
+conditions' retries. `Options.retry_unconditional_writes` retries every
+write, past the window too.
+
+A 412 on a write that may have been retried says so in `Diagnostics`: the
+first attempt may have succeeded, so `get` the object and compare
+checksums. An `if_generation_not_match` or `if_metageneration_not_match`
+met by the current object is `error.NotModified`, an answer rather than a
+failure.
+
+Measured against Cloud Storage on 2026-09-30, a repeat with the token was
+recognised 115 seconds after the first attempt and not after 130: an
+upload repeated after another writer replaced the object left that
+writer's object, a delete repeated after the name was created again left
+the new object, and a patch repeated after another writer's kept that
+writer's value. A failed attempt is not replayed: a repeat after its cause
+is gone succeeds.
 
 ### Signed URLs
 
@@ -1230,7 +1252,9 @@ What Cloud Storage answers, measured against a real bucket on 2026-09-23:
 | `.postPolicy(signer, options)`, `bucket.postPolicy(signer, options)` | A V4 POST policy, which lets a plain HTML form upload what the policy allows, without credentials, until it expires |
 | `.withBillingProject(project)`, `bucket.withBillingProject(project)` | A handle whose every request bills `project`, as a requester pays bucket needs |
 | `.withEncryptionKey(&key)` | A handle for an object under a customer-supplied key |
-| `client.serviceAgent()` | The account a Cloud KMS key must be granted to |
+| `bucket.createNotification(config)`, `.getNotification(id)`, `.listNotifications()`, `.deleteNotification(id)` | Pub/Sub messages for every change to the bucket's objects |
+| `storage.decodeEvent(gpa, message, options)` | One of those messages, as a `pubsub.Subscriber` receives it, read into an `ObjectEvent` |
+| `client.serviceAgent()` | The account a Cloud KMS key, or a notification's topic, must be granted to |
 
 The default OAuth scope is `devstorage.read_write`; `Options.scope` picks
 `.read_only` or `.cloud_platform` instead. Not in this version: the JSON
@@ -1380,6 +1404,81 @@ Measured against Cloud Storage on 2026-09-29:
 - `versions` and `soft_deleted` cannot be listed together. A listing of
   versions with a delimiter still groups a folder whose every object is
   noncurrent.
+
+### Retention and holds
+
+Cloud Storage can refuse to let an object go. A bucket's retention policy
+keeps every object for a period after its creation; a hold keeps one
+object until it is released; and an object's own retention, in a bucket
+created to allow it, keeps it until a time. A write that would delete,
+replace or move a kept object is `error.ObjectRetained`, with Cloud
+Storage's words, and the time where there is one, in `Diagnostics`. Its
+metadata stays editable.
+
+```zig
+// A bucket that keeps every object a day, and holds new ones until released.
+var ledger = try gcs.bucket("my-ledger").create(.{
+    .retention_period_s = 86_400,
+    .default_event_based_hold = true,
+});
+defer ledger.deinit();
+
+// Held as it is written; released when the event happens, and the day starts then.
+const entry = gcs.bucket("my-ledger").object("2026/09/30.csv");
+var stored = try entry.upload(data, .{ .temporary_hold = true });
+defer stored.deinit();
+var released = try entry.updateMetadata(.{ .temporary_hold = false, .event_based_hold = false });
+defer released.deinit();
+
+// Permanent: the policy may grow, never shrink or go.
+var locked = try gcs.bucket("my-ledger").lockRetentionPolicy(ledger.value.metageneration);
+defer locked.deinit();
+```
+
+- **Locking is permanent**, and so is a bucket created with
+  `object_retention`. Cloud Storage places a lien on the project, which
+  keeps it from being deleted until an owner removes the lien; deleting
+  the bucket did not remove it when measured. A locked policy may be
+  lengthened; shortening or removing it is `error.PermissionDenied`.
+- **An object's own retention** (`UploadOptions.retention`, and on
+  compose, copy and `updateMetadata`) extends freely. Shortening,
+  removing or locking an unlocked one takes
+  `MetadataUpdate.override_unlocked_retention`; a locked one only
+  extends. Otherwise the change is `error.PermissionDenied`. It cannot go
+  beside an event-based hold.
+- **Copies** never carry their source's holds or retention: a copy names
+  its own, which makes it a changed copy.
+- **A resumable upload over a kept object** sends every byte before its
+  last request is refused. Nothing is checked first, which would cost a
+  read per upload.
+- **Parallel uploads with conditions** into a bucket that keeps every new
+  object, by a policy or a default hold, go up as one ordinary upload, and
+  the log says so: there, the temporary object they finish under could
+  never be moved or deleted. Telling takes `storage.buckets.get`; without
+  it the upload goes up in parts, and its temporary object can be
+  stranded, and billed, for the whole period, as `Diagnostics` then says.
+- **The cleanup of a failed upload**, a checksum mismatch or a truncated
+  object, cannot delete a kept object, and `Diagnostics` says it stays.
+
+Measured against Cloud Storage on 2026-09-30:
+
+- A retained object's refusals are 403 `retentionPolicyNotMet`. A held
+  one's are 403 `forbidden`, the reason a missing permission has, told
+  apart only by the message: never the documented
+  `objectUnderActiveHold`. The XML API names both, at the finish of a
+  multipart upload whose parts it took.
+- A condition is checked before retention: 412 comes first.
+- A policy's period runs from 1 to 3,155,760,000 seconds, and covers the
+  objects already there. Its removal took over three seconds to stop
+  refusing once. With versioning on, a retained live object can still be
+  made noncurrent, and a noncurrent one cannot be deleted.
+- Releasing an event-based hold starts the policy's period over; its
+  `retention_expiration_time` is absent while held.
+- A lock repeated after a lost answer is refused 400, as if there were no
+  policy, so `lockRetentionPolicy` reads the bucket back and answers a
+  locked one as locked. A 60-second locked policy is enforced.
+- Object retention can only be turned on at create: a later patch is
+  taken and ignored.
 
 ### Requester pays
 
@@ -1534,6 +1633,90 @@ a software key:
   kind, and a create-only one's move names none under a customer key, so
   both are held to what was sent by reading the object back.
 - `restore` and `objects.move` need no key, and ignore one.
+
+### Notifications
+
+Cloud Storage can publish a Pub/Sub message for every change to a
+bucket's objects: the way a program learns that a file arrived.
+`createNotification` sets it up, and `storage.decodeEvent` reads each
+message a `pubsub.Subscriber` receives into an `ObjectEvent`.
+
+```zig
+// The project's Cloud Storage service agent publishes, so it needs the
+// publisher role on the topic.
+var agent = try gcs.serviceAgent();
+defer agent.deinit();
+const member = try std.fmt.allocPrint(arena, "serviceAccount:{s}", .{agent.value});
+var policy = try ps.topic("uploads").addIamBinding("roles/pubsub.publisher", member);
+policy.deinit();
+
+var config = try gcs.bucket("my-bucket").createNotification(.{
+    .topic = .{ .project = "my-project", .topic = "uploads" },
+    .events = &.{ .finalize, .delete },
+    .object_name_prefix = "incoming/",
+});
+defer config.deinit();
+
+// In a Subscriber's handler, with `message` as it receives it:
+var event = try storage.decodeEvent(gpa, message, .{});
+defer event.deinit();
+switch (event.value.kind) {
+    .finalize => process(event.value.bucket, event.value.object, event.value.generation),
+    else => {},
+}
+```
+
+- **The grant.** Without the publisher role, or without the topic,
+  `createNotification` is `error.TopicNotPublishable`. A fresh grant took
+  a few seconds to apply when measured.
+- **A create is safe to retry.** A repeated create makes a second
+  configuration, idempotency token or not, so the bucket's configurations
+  are listed first, and a create whose answer was lost is found among them
+  afterwards rather than sent again.
+- **Checked before sending**, with `error.InvalidNotificationConfig`: a
+  topic Pub/Sub would not name; an empty, repeated or unknown event type,
+  since Cloud Storage drops one it does not know and then publishes every
+  type; more than 5 custom attributes (its documentation says 10); keys
+  over 256 bytes and values over 1,024 (its refusals say characters, and
+  count bytes); a custom attribute named like one Cloud Storage sets,
+  which it takes and then overrides on every message; and one beginning
+  with `goog` in any case, which it takes, and then delivers none of the
+  configuration's messages.
+- **At least once, twice over.** Cloud Storage publishes at least once,
+  and Pub/Sub delivers at least once, each repeat under a new message ID:
+  `ObjectEvent.key` names the change, so a handler can tell a repeat.
+  Repeats are not rare: while one configuration's messages could not be
+  published, another on the same bucket received each event 8 times over
+  two and a half minutes. Order is not kept: act on an object with its
+  generation as a precondition.
+- **Limits.** A bucket takes 100 configurations, and 10 that publish any
+  one event type, Eventarc and Cloud Run triggers on the bucket included:
+  the eleventh is `error.InvalidArgument`.
+- `examples/gcs_notify.zig` sets a bucket up and watches its changes.
+
+Measured against Cloud Storage on 2026-10-01:
+
+| What happened | Events |
+| --- | --- |
+| An upload of any kind, a compose, a copy, a restore | `finalize` |
+| An overwrite | `finalize` of the new generation with `overwrote_generation`, and `delete` of the old one (`archive` with versioning) with `overwritten_by_generation` |
+| A delete, soft delete on or off | `delete`, at once |
+| A delete of the live version, with versioning | `archive` |
+| A move | `delete` of the source, `finalize` of the destination |
+| Any metadata patch, holds included, even one that changes nothing | `metadata_update` |
+| An upload refused by a condition, an aborted multipart upload | nothing |
+
+- A JSON payload is the object's metadata without its ACLs, after the
+  change, or as it was before a delete. A plain delete's carries no
+  `timeDeleted`, whatever the documentation says: only an archived or
+  noncurrent version's does. `NONE` sends no payload at all.
+- A prefix is a case-sensitive byte prefix.
+- A configuration delivered within 8 seconds of its creation, and stopped
+  at once when deleted.
+- A parallel upload with conditions finishes under a temporary name,
+  `zig-gcp-tmp/...`, and moves into place: its events include that
+  object's `finalize` and `delete`. A configuration with a prefix leaves
+  them out.
 
 ### Metadata, after the upload
 
@@ -1983,6 +2166,14 @@ differences it found:
   checksums to every read, and never says it was keyed; it drops a Cloud
   KMS key's name. So both are tested against an in-memory fake that holds
   Cloud Storage's rules as measured, and against Cloud Storage itself.
+- It keeps notification configurations and publishes their messages, but
+  only to the Pub/Sub emulator named by `PUBSUB_EMULATOR_HOST` in its own
+  environment. It checks no topic, grant or limit, answers a create with
+  201, and keeps no etag. Its messages carry no `notificationConfig`, a
+  time to the second in its own zone, and a payload without a
+  metageneration, and a compose over an existing object sends no event for
+  the generation it replaced. `decodeEvent` reads them; production's own
+  messages are what its unit tests hold it to.
 
 ## Zig 0.16 standard library issues handled here
 
