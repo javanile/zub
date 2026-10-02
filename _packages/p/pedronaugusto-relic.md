@@ -7,9 +7,9 @@ author_github: pedronaugusto
 repository: https://github.com/pedronaugusto/relic
 keywords:
   - git
-date: 2026-10-01
-updated_at: 2026-10-01T15:44:33+00:00
-last_sync: 2026-10-01T15:44:33Z
+date: 2026-10-02
+updated_at: 2026-10-02T16:15:56+00:00
+last_sync: 2026-10-02T16:15:56Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -461,6 +461,19 @@ TLS client, and another checks that what crosses a proxy's tunnel is TLS.
   pack entry into one buffer of known size and is fuzzed against std's
   decoder and compressor.
 
+The HTTP client's `connect`, `send` and `stream` take an optional caller-owned
+`transport.httpclient.Diagnostic` as their last argument. Initialize it with
+`Diagnostic.init(allocator)` and release it with `deinit`. Each exchange clears
+its diagnostic before starting. Keep it alive through connection release,
+response cleanup, streaming abort or a failed finish; separate simultaneous
+exchanges use separate diagnostics. Its TLS error, proxy status and owned
+offered schemes remain available after a failed exchange, even after the
+client is closed.
+
+A streaming request ends with `finish` or `abort`. `finish` consumes the stream
+on every outcome: the response owns the connection on success, and failure
+closes it. Abort only when giving up before finish.
+
 **A merge is git's merge-ort.** Renames, directory renames, directory/file and
 type conflicts, submodules and criss-cross histories resolve as git resolves
 them, with git's conflict messages, and a stopped merge, cherry-pick or rebase
@@ -627,9 +640,9 @@ Planned, in the order they are likely to come; none is promised for a date.
 
 | Platform | What it uses there | Tested |
 |---|---|---|
-| Linux | The executable bit, symlinks, and one `statx` per entry for the index's `dev`, `uid` and `gid` alongside everything `std.Io` reports | `ubuntu-latest` in CI, four optimize modes |
-| macOS | The same through `fstatat`, and `getattrlistbulk(2)` for a whole directory at once where the volume has it, which the walk falls back from on `ENOTSUP`; `fsync` is writeout-only, which is git's own default here | `macos-latest` in CI, four optimize modes |
-| Windows | No executable bit and no `dev`, `uid` or `gid`, so the index's mode is preserved rather than invented and those three are zero; symlinks may be refused, in which case the link target is written as file content and the outcome says so; renames retry on a sharing violation | `windows-latest` in CI, four optimize modes |
+| Linux | The executable bit, symlinks, and one `statx` per entry for the index's `dev`, `uid` and `gid` alongside everything `std.Io` reports | `ubuntu-latest` in CI, Debug, ReleaseSafe and ReleaseFast |
+| macOS | The same through `fstatat`, and `getattrlistbulk(2)` for a whole directory at once where the volume has it, which the walk falls back from on `ENOTSUP`; `fsync` is writeout-only, which is git's own default here | `macos-latest` in CI, Debug and ReleaseSafe |
+| Windows | No executable bit and no `dev`, `uid` or `gid`, so the index's mode is preserved rather than invented and those three are zero; symlinks may be refused, in which case the link target is written as file content and the outcome says so; renames retry on a sharing violation | `windows-latest` in CI, Debug and ReleaseSafe |
 
 Paths in trees and in the index are always `/`-separated byte strings; the
 working-tree layer converts. `core.ignoreCase` is honoured in matching, and a
@@ -645,9 +658,11 @@ calls it.
 
 ## Testing
 
+Local build scripts clear `.zig-cache/{o,h,z,tmp}` above the measured cap in `ci/cache.sh`; run `sh ci/cache.sh` before direct Zig builds (only a rebuild is lost).
+
 ```sh
-zig build test          # the suite, and the examples, which are run
-zig build test -Dtest-filter=hooks   # run matching tests while developing
+zig build test --test-timeout 60s   # the suite, and the examples, which are run
+zig build test -Dtest-filter=hooks --test-timeout 60s   # run matching tests while developing
 zig build examples      # the examples on their own
 zig build check         # compile everything, including the tests, run nothing
 zig build test --fuzz   # the fuzz tests, until stopped
@@ -656,9 +671,11 @@ ci/tls-fork.sh --check       # the TLS client's recorded diff against std's
 ```
 
 Every test runs under `std.testing.allocator` and `std.testing.io`, against
-real directories, and CI runs the suite in Debug, ReleaseSafe, ReleaseFast and
-ReleaseSmall on each of the three platforms. Speed measurements run only
-from the `bench` branch harness on a quiet machine.
+real directories. CI runs Debug and ReleaseSafe on all three platforms,
+ReleaseFast once on Linux, ReleaseSmall as a compile check, and ThreadSanitizer
+once on Linux. Each parity corpus seed has its own named test. The test timeout
+reports a stalled test by name; CI and the Linux script also bound each test. Speed
+measurements run only from the `bench` branch harness on a quiet machine.
 
 **The fixtures are generated by the git on the machine at test time**, in a
 temporary directory, and compared byte for byte where the format is exact.
@@ -690,7 +707,11 @@ everything written.
 runs with the system's git configuration off (`GIT_CONFIG_NOSYSTEM`), a
 scratch `HOME` holding the only global configuration it reads, a scratch
 `GNUPGHOME` where gpg is involved, no ssh or gpg agent of the person's, and no
-prompt. gpg's daemons for a scratch home are stopped with it. The tests that
+prompt. gpg's daemons for a scratch home are stopped with it. GnuPG homes
+are under `.zig-cache/gpg` by default. From a long checkout, pass
+`-Dgnupg-fixture-root=/short/path` to give the agent's Unix sockets a short
+root; only the random private homes beneath that root are removed.
+The tests that
 exercise the person's credential helpers point git at stand-ins, and check
 each one answers as a stand-in before anything is asked of it, so no test
 reaches a real keychain.

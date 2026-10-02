@@ -6,9 +6,9 @@ author: pedronaugusto
 author_github: pedronaugusto
 repository: https://github.com/pedronaugusto/conduit
 keywords:
-date: 2026-10-01
-updated_at: 2026-10-01T15:11:36+00:00
-last_sync: 2026-10-01T15:11:36Z
+date: 2026-10-02
+updated_at: 2026-10-02T16:15:50+00:00
+last_sync: 2026-10-02T16:15:50Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -159,15 +159,57 @@ kill-on-close flag at the reap, retaining its resource limits; if that call
 fails, the wait reports the error and can be retried. Reap before deinit.
 
 Set `descendants = .contain` when the descendants belong to the child's
-lifetime. Windows keeps job kill-on-close, ending survivors at deinit. POSIX
-makes a private process group even with `detach = false`, and ends that group
-or the Linux cgroup before the final reap releases the child's identity.
-Every wait path, including `output` and `Reaper`, follows the same policy.
-A private group isolates the child from the parent's terminal signals, as
-`detach` does. A descendant that leaves its group and becomes orphaned is
-outside group containment; a Linux cgroup still holds it where one is
-available. Use this policy for cooperative subprocess trees, within the
-platform's reach described below.
+lifetime. POSIX makes a private process group even with `detach = false`,
+isolating the child from the parent's terminal signals. Every wait path,
+including `output` and `Reaper`, follows the same policy.
+
+| Platform | Containment after normal exit |
+| --- | --- |
+| Linux with a writable cgroup | Ends all members before reaping, including detached orphans. A process permitted to leave the cgroup can escape. |
+| Linux without a writable cgroup, with a Reaper subreaper scope | Reaper completion ends and reaps the process-wide adopted set, including detached orphans. Direct children keep their own waits. |
+| Linux without either | Ends the private group before reaping. An orphan that left the group can escape. |
+| macOS | Ends the private group and every descendant whose lineage was observed before reaping. A fork followed by parent exit before enumeration or registration can escape. |
+| Windows | The Job Object retains descendants across separate consoles and intermediate exits; deinit ends its members. |
+| Other POSIX systems | Ends the private group before reaping; descendants that leave it can escape. |
+
+On macOS, a contained spawn holds the root before exec until its lineage
+observer is running. One task owns a kqueue with `NOTE_FORK`, `NOTE_EXEC`
+and `NOTE_EXIT` on every known descendant. Fork notes give no child id:
+the task promptly asks `proc_listchildpids`, captures and proves each edge
+through process unique ids, registers the child before expanding it, and
+retains that identity across exec and reparenting. Final cleanup uses audit
+tokens, so a recycled pid never authorizes a signal. The observer allocates
+from its own page allocator; it does not use the caller's allocator from
+another thread. Startup failure refuses the spawn; an observation failure
+ends the held root and makes the wait fail with `Unexpected`.
+
+This is observed lineage, not a kernel container. A parent can fork and
+exit before the observer discovers or registers its child, including while
+cleanup runs. That child and an unobserved branch below it may escape.
+No names or scans of init's children are used to guess the lost edge.
+The native test measures immediate double-forks and repeats them with a
+controlled observer delay; successful runs do not prove the race absent.
+
+Linux subreaping is explicit: call `reaper.enableSubreaper()` before spawning
+into the Child address passed to `Reaper.init`, then call `start`. It needs
+Linux 5.4 or later and readable procfs. One Reaper owns the process setting;
+a second owner, including `Orphans.start`, is refused with `AlreadyStarted`.
+Cgroups remain the first reach where writable. With containment, Reaper ends
+and reaps all adopted orphans before publishing its completion. While waiting,
+it also collects and reaps exited adoptees in 5 ms wait slices; scheduling
+and procfs access can extend that interval. Adoption lookup failure makes
+Reaper fail with `Unexpected` rather than report complete containment.
+
+The scope is process-wide, not per child: Linux records no former parent
+for an adopted orphan. Every orphan below this process belongs to this one
+owner, including orphans from other direct children. Existing direct children
+and new conduit children retain their independent waits. Every new direct
+child must use conduit while the scope runs; an outside spawn or a
+`SIGCHLD` handler using `waitpid(-1)` breaks that ownership. End and reap
+all direct children before the owner's `deinit`, which ends remaining
+adoptees and restores the previous subreaper setting. A still-running direct
+child can create another orphan during teardown; this is not a scope for
+independent child lifetimes or independent orphan cleanup.
 
 Timeouts in `output`, output errors, `kill` and `killWait` still end the tree
 in either mode, within that same reach. `waitTimeout` remains an observation:
@@ -702,6 +744,8 @@ With a supplied environment, conduit resolves the name against its `PATH`
 before `CreateProcessW`; otherwise Windows resolves it.
 
 ## Testing
+
+Local build scripts clear `.zig-cache/{o,h,z,tmp}` above the measured cap in `ci/cache.sh`; run `sh ci/cache.sh` before direct Zig builds (only a rebuild is lost).
 
 ```sh
 zig build test                   # the suite, and the examples, which are run

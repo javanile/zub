@@ -8,10 +8,10 @@ repository: https://github.com/pedronaugusto/visor
 keywords:
   - terminal
   - tui
-date: 2026-10-01
+date: 2026-10-02
 category: tooling
-updated_at: 2026-10-01T15:44:32+00:00
-last_sync: 2026-10-01T15:44:32Z
+updated_at: 2026-10-02T16:15:52+00:00
+last_sync: 2026-10-02T16:15:52Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -541,7 +541,7 @@ it: `enter` puts it in exactly the state asked for, whatever was on before,
 new one on, and `leave` turns off that motion and that encoding. Focus
 reports are a mode of their own. A screen entered through `Tty.enter` is
 undone by `Tty.leave()` or `restore`; `restoreGlobal` and the panic handler
-restore every registered terminal from a buffer on the stack. Keep each raw
+restore every registered terminal from a buffer on the stack.
 `Tty` owns its descriptors, saved mode, renderer borrow and resize watcher.
 `ioContext()` returns the captured Io by value; use its methods for lifecycle
 changes. Keep `Tty` at a stable address, and its entered renderer alive and at a stable
@@ -641,6 +641,11 @@ same read with the caller's deadline beside it, null when the deadline passes
 in silence, which is how a probe's quiet period is waited out without a
 second task or a cancelled read.
 
+`Input.init` borrows both buffers and refuses an empty read buffer with
+`error.EmptyReadBuffer`; use `try` when constructing it. The parser buffer
+must hold at least `morse.KeyParser.min_buffer` bytes, and the read buffer
+at least one. Both buffers and the `Tty` must outlive the reader.
+
 **Nothing is guessed.** No terminfo, no capability database, and no
 environment variable read — not `TERM`, not `COLORTERM`, not `NO_COLOR`.
 `Caps.Probe` writes morse's probe and folds the answers in, and is settled
@@ -657,8 +662,10 @@ answers reset.
 `Caps.Probe` and `Layers` together. Its component methods lend the owners; size, capabilities and probe progress
 are read through const queries.
 Pass terminal events to `handle(w, event, now_ms)`, which says a frame is due;
-keys and application policy are still yours. Drain the batch, call `resize(w)`
-once, paint `screen()`, then `draw(w)` and flush your writer. Both grids follow
+keys and application policy are still yours. Housekeeping is retained if
+capability output fails; a later event retries that output without replaying
+the input. Drain the batch, call `resize(w)` once, paint `screen()`, then
+`draw(w)` and flush your writer. Both grids follow
 the last resize; an unchanged in-band report repaints too, and each resize
 asks for the cell's pixel size again. `setModes(w, parser, modes)` keeps pixel
 mouse parsing in step with the requested encoding. `setCaps` lets the caller
@@ -747,6 +754,8 @@ the panic path's way back, and a resize waking `Input`. The Windows half is
 compiled and not run.
 
 ## Testing
+
+Local build scripts clear `.zig-cache/{o,h,z,tmp}` above the measured cap in `ci/cache.sh`; run `sh ci/cache.sh` before direct Zig builds (only a rebuild is lost).
 
 `zig build test` runs both suites and the examples under
 `std.testing.allocator`, so a leak or an invalid free fails the test rather
