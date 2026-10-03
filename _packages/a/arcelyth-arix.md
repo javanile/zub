@@ -13,15 +13,15 @@ keywords:
   - web
   - webbrowser
   - webengine
-date: 2026-10-02
-updated_at: 2026-10-02T15:51:36+00:00
-last_sync: 2026-10-02T15:51:36Z
+date: 2026-10-03
+updated_at: 2026-10-03T14:19:56+00:00
+last_sync: 2026-10-03T14:19:56Z
 package_kind: binary
 has_library: false
 has_binary: true
 has_distributable_binary: true
-binary_count: 2
-distributable_binary_count: 2
+binary_count: 3
+distributable_binary_count: 3
 multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
@@ -36,13 +36,22 @@ Arix is a web browser engine written in Zig for the purpose of high performance 
 The project currently includes:
 
 - HTML parser
-- CSS parser
-- A small DOM implementation
+- CSS engine which include CSS parser, CSS matching, cascade, and computed styles
+- Text decoding and a basic DOM
+- Simple layout and painting
 
-**Arix is still under active development. Networking, style engine, layout engine, painting and the browser user interface are not complete yet.**
+**Arix is still under active development. Styling, layout, and painting are currently partial and incomplete. Networking and the JavaScript engine are not yet implemented.**
+
+## Examples
+
+```sh
+zig build example:<name>
+```
+
+See [examples](./examples).
 
 ## Testing
-
+Tests cover HTML and CSS parsing, text decoding, DOM, styles, and block layout.
 HTML parser's behavior is tested against the [html5lib test suite](https://github.com/html5lib/html5lib-tests).
 
 Build and run the test: 
@@ -71,4 +80,4 @@ make bench_html/bench_css
 
 ## Contributing
 
-See [CONTRIBUTING](CONTRIBUTING.md)
+See [CONTRIBUTING.md](CONTRIBUTING.md)

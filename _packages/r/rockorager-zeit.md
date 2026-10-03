@@ -10,9 +10,9 @@ keywords:
   - datetime
   - time
   - timezone
-date: 2026-10-01
-updated_at: 2026-10-01T03:42:16+00:00
-last_sync: 2026-10-01T03:42:16Z
+date: 2026-10-03
+updated_at: 2026-10-03T11:29:37+00:00
+last_sync: 2026-10-03T11:29:37Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -32,7 +32,7 @@ A time library written in zig.
 
 ## Install
 
-zeit's `main` branch currently tracks Zig 0.17-dev.
+zeit's `main` branch currently tracks Zig 0.17.
 
 ```
 zig fetch --save git+https://github.com/rockorager/zeit#main

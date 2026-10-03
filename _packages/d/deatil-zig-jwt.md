@@ -8,9 +8,9 @@ repository: https://github.com/deatil/zig-jwt
 keywords:
   - jwt
   - zig-jwt
-date: 2026-09-18
-updated_at: 2026-09-18T17:20:07+00:00
-last_sync: 2026-09-18T17:20:07Z
+date: 2026-10-03
+updated_at: 2026-10-03T11:25:20+00:00
+last_sync: 2026-10-03T11:25:20Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -31,7 +31,7 @@ A JWT (JSON Web Token) library for zig.
 
 ### Env
 
- - Zig >= 0.16.0
+ - Zig >= 0.17.0
 
 
 ### What the heck is a JWT?
@@ -97,26 +97,30 @@ pub fn main(init: std.process.Init) !void {
 
     const kp = jwt.eddsa.Ed25519.KeyPair.generate(io);
 
-    var prng = std.Random.DefaultPrng.init(1234);
-    const random = prng.random();
-
     const claims = .{
         .aud = "example.com",
         .sub = "foo",
     };
 
-    const s = jwt.SigningMethodEdDSA.init(alloc);
-    const token_string = try s.sign(random, claims, kp.secret_key);
+    var s = jwt.SigningMethodEdDSA.init(alloc);
 
+    // need rand: PS256, PS384, PS512
+    // const random = (std.Random.IoSource{
+    //    .io = init.io,
+    // }).interface();
+
+    // s.withRandom(random);
+
+    const token_string = try s.sign(claims, kp.secret_key);
     defer alloc.free(token_string);
     
     // output: 
     // make jwt: eyJ0eXAiOiJKV1QiLCJhbGciOiJFZERTQSJ9.eyJhdWQiOiJleGFtcGxlLmNvbSIsInN1YiI6ImZvbyJ9.8aYTV-9_Z1RQUPepUlut9gvniX_Cx_z8P60Z5FbnMMgNLPNP29ZtNG3k6pcU2TY_O3DkSsdxbN2HkmgvjDUPBg
     std.debug.print("make jwt: {s} \n", .{token_string});
 
-    const p = jwt.SigningMethodEdDSA.init(alloc);
-    var token = try p.parse(token_string, kp.public_key);
+    var p = jwt.SigningMethodEdDSA.init(alloc);
 
+    var token = try p.parse(token_string, kp.public_key);
     defer token.deinit();
     
     // output: 
@@ -179,11 +183,14 @@ The JWT library have signing methods:
 
  - `ES256`: jwt.SigningMethodES256
  - `ES384`: jwt.SigningMethodES384
-
  - `ES256K`: jwt.SigningMethodES256K
  
  - `EdDSA`: jwt.SigningMethodEdDSA
  - `ED25519`: jwt.SigningMethodED25519
+
+ - `ML-DSA-44`: jwt.SigningMethodMLDSA44
+ - `ML-DSA-65`: jwt.SigningMethodMLDSA65
+ - `ML-DSA-87`: jwt.SigningMethodMLDSA87
 
  - `HSHA1`: jwt.SigningMethodHSHA1
  - `HS224`: jwt.SigningMethodHS224
@@ -276,6 +283,47 @@ const public_key = try Ed25519.PublicKey.fromBytes(pub_key_bytes);
 // from der bytes
 const secret_key = try jwt.eddsa.parseSecretKeyDer(pri_key_bytes);
 const public_key = try jwt.eddsa.parsePublicKeyDer(pub_key_bytes);
+~~~
+
+MLDSA PublicKey:
+~~~zig
+const mldsa = std.crypto.sign.mldsa;
+
+var mldsa44_secret_key: mldsa.MLDSA44.SecretKey = undefined;
+var mldsa44_public_key: mldsa.MLDSA44.PublicKey = undefined;
+
+var mldsa65_secret_key: mldsa.MLDSA65.SecretKey = undefined;
+var mldsa65_public_key: mldsa.MLDSA65.PublicKey = undefined;
+
+var mldsa87_secret_key: mldsa.MLDSA87.SecretKey = undefined;
+var mldsa87_public_key: mldsa.MLDSA87.PublicKey = undefined;
+
+// generate MLDSA44 public key
+const mldsa44_kp = mldsa.MLDSA44.KeyPair.generate(io);
+// from plain bytes
+const mldsa44_secret_key = try mldsa.MLDSA44.SecretKey.fromBytes(pri_key_bytes);
+const mldsa44_public_key = try mldsa.MLDSA44.PublicKey.fromBytes(pub_key_bytes);
+// from der bytes
+const mldsa44_secret_key = try jwt.mldsa.ParseMLDSA44Der.parseSecretKeyDer(pri_key_bytes);
+const mldsa44_public_key = try jwt.mldsa.ParseMLDSA44Der.parsePublicKeyDer(pub_key_bytes);
+
+// generate MLDSA65 public key
+const mldsa65_kp = mldsa.MLDSA65.KeyPair.generate(io);
+// from plain bytes
+const mldsa65_secret_key = try mldsa.MLDSA65.SecretKey.fromBytes(pri_key_bytes);
+const mldsa65_public_key = try mldsa.MLDSA65.PublicKey.fromBytes(pub_key_bytes);
+// from der bytes
+const mldsa65_secret_key = try jwt.mldsa.ParseMLDSA65Der.parseSecretKeyDer(pri_key_bytes);
+const mldsa65_public_key = try jwt.mldsa.ParseMLDSA65Der.parsePublicKeyDer(pub_key_bytes);
+
+// generate MLDSA87 public key
+const mldsa87_kp = mldsa.MLDSA87.KeyPair.generate(io);
+// from plain bytes
+const mldsa87_secret_key = try mldsa.MLDSA87.SecretKey.fromBytes(pri_key_bytes);
+const mldsa87_public_key = try mldsa.MLDSA87.PublicKey.fromBytes(pub_key_bytes);
+// from der bytes
+const mldsa87_secret_key = try jwt.mldsa.ParseMLDSA87Der.parseSecretKeyDer(pri_key_bytes);
+const mldsa87_public_key = try jwt.mldsa.ParseMLDSA87Der.parsePublicKeyDer(pub_key_bytes);
 ~~~
 
 

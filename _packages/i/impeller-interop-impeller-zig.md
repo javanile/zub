@@ -1,6 +1,6 @@
 ---
 title: impeller-zig
-description: Zig bindings for Impeller.
+description: "Zig wrapper for Impeller's standalone C API."
 license: MIT
 author: impeller-interop
 author_github: impeller-interop
@@ -8,10 +8,10 @@ repository: https://github.com/impeller-interop/impeller-zig
 keywords:
   - bindings
   - graphics
-date: 2026-10-02
+date: 2026-10-03
 category: systems
-updated_at: 2026-10-02T16:01:03+00:00
-last_sync: 2026-10-02T16:01:03Z
+updated_at: 2026-10-03T10:57:08+00:00
+last_sync: 2026-10-03T10:57:08Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -57,20 +57,20 @@ Standalone SDK artifacts are packaged in [`impeller-sdk`](https://github.com/imp
 
 ## Zig support
 
-[![Zig version support](https://zig-support.dkx215417.workers.dev/master/0.16.0/0.15.2/0.15.1/badge.svg)](https://ziglang.org/download/)
+[![Zig version support](https://zig-support.dkx215417.workers.dev/0.17.0/0.16.0/0.15.2/0.15.1/badge.svg)](https://ziglang.org/download/)
 
 ## Install
 
-`main` tracks Zig master (`0.17.0-dev`):
+Tracks this project's latest branch:
 
 ```bash
 zig fetch --save git+https://github.com/impeller-interop/impeller-zig#main
 ```
 
-To pin the master-tracking release instead of `main`:
+To pin the Zig `0.17.0` release instead of `main`:
 
 ```bash
-zig fetch --save git+https://github.com/impeller-interop/impeller-zig#v0.2.1
+zig fetch --save git+https://github.com/impeller-interop/impeller-zig#v0.2.2
 ```
 
 To use the stable Zig `0.16.0` toolchain, install the `v0.1.2` release instead:
