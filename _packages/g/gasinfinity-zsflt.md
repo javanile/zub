@@ -6,9 +6,9 @@ author: GasInfinity
 author_github: GasInfinity
 repository: https://github.com/GasInfinity/zsflt
 keywords:
-date: 2026-08-17
-updated_at: 2026-08-17T22:54:23+00:00
-last_sync: 2026-08-17T22:54:23Z
+date: 2026-10-04
+updated_at: 2026-10-04T12:17:04+00:00
+last_sync: 2026-10-04T12:17:04Z
 package_kind: library
 has_library: true
 has_binary: false

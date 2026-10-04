@@ -10,10 +10,10 @@ keywords:
   - dependency-injection
   - http
   - rest
-date: 2026-08-31
+date: 2026-10-04
 category: networking
-updated_at: 2026-08-31T05:28:40+00:00
-last_sync: 2026-08-31T05:28:40Z
+updated_at: 2026-10-04T11:13:30+00:00
+last_sync: 2026-10-04T11:13:30Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -35,14 +35,13 @@ Tokamak is a web application framework for Zig, built around
 [http.zig](https://github.com/karlseguin/http.zig) and a simple dependency
 injection container.
 
-> **Note:** The main branch currently targets **Zig 0.17.x**. The 0.17 release line may still be unstable; expect occasional breaking changes from upstream.
+> **Note:** The main branch requires **Zig 0.17.0** or newer.
 
 Note that it is **not designed to be used alone**, but with a reverse proxy in
 front of it, like Nginx or Cloudfront, which will handle SSL, caching,
 sanitization, etc.
 
 > ### Recent changes
-> - WIP **TUI module** for interactive apps in `tk.tui.*`
 > - renamed few `bundle.addXxx()` methods to `bundle.provide()`,
 >   `bundle.override()`, ...
 > - renamed `inj.call0(fun)` → `inj.call(fun)`, `inj.call(fun, ...args)` →
@@ -382,12 +381,9 @@ All examples are located in the [`examples/`](examples/) directory. Each example
 |---------|-------------|
 | [`hello`](examples/hello/) | Minimal server with a single route — the simplest way to get started |
 | [`hello_app`](examples/hello_app/) | Multi-module app pattern using `tk.app.run()` |
-| [`hello_cli`](examples/hello_cli/) | CLI application with commands for Hacker News, GitHub, web scraping, regex, PDF generation, and more |
-| [`hello_tui`](examples/hello_tui/) | Terminal UI demo with panels, grids, modals, tree navigation, inputs, and themes |
-| [`hello_ssr`](examples/hello_ssr/) | Server-side rendering with custom components (Badge, Card, UserRow, Counter) and template engine |
+| [`hello_cli`](examples/hello_cli/) | CLI application with commands for web scraping, regex, and more |
 | [`blog`](examples/blog/) | RESTful blog API with an in-memory service layer, Swagger/OpenAPI docs, and static file serving |
 | [`todos_orm_sqlite`](examples/todos_orm_sqlite/) | CRUD todo app with SQLite ORM ([fridge](https://github.com/urholaukkarinen/fridge)), connection pooling, and route-scoped DB sessions |
-| [`clown-commander`](examples/clown-commander/) | Terminal file manager with dual-panel browsing, file copy/delete, and mkdir support |
 | [`webview_app`](examples/webview_app/) | Desktop app that embeds a web server in a webview window (requires macOS) |
 
 ## Advanced Dependency Injection

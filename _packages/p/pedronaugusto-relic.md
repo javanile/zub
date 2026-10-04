@@ -7,15 +7,15 @@ author_github: pedronaugusto
 repository: https://github.com/pedronaugusto/relic
 keywords:
   - git
-date: 2026-10-02
-updated_at: 2026-10-02T16:15:56+00:00
-last_sync: 2026-10-02T16:15:56Z
+date: 2026-10-04
+updated_at: 2026-10-04T13:48:07+00:00
+last_sync: 2026-10-04T13:48:07Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 9
-distributable_binary_count: 9
+binary_count: 10
+distributable_binary_count: 10
 multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
@@ -230,9 +230,11 @@ running programs. Conduit carries its libc linkage on POSIX; Windows needs
 no C runtime. SHA-256 and the TLS primitives come from `std.crypto`; SHA-1,
 inflate and the TLS client are in the package. There is no build option to
 forward. Every function that allocates takes the allocator as its first argument and every function that
-touches the disk or the network takes a `std.Io`. Concurrent work — the delta
-search when `PackOptions.threads` asks, resolving a received pack's deltas —
-goes to the caller's executor, never to threads of the package's own. A
+touches the disk or the network takes a `std.Io`. Concurrent work — reading
+objects and deflating entries while a pack is written
+(`PackOptions.threads`, one task per processor unless asked otherwise),
+resolving a received pack's deltas — goes to the caller's executor, never to
+threads of the package's own. A
 process starts only through a `repo.program.Programs` the caller hands in; without
 one, a hook is not run and a setting that would run a program is a named
 refusal. Relic prepares git commands, scrubs the supplied environment and
@@ -262,11 +264,12 @@ that belong to it: `relic.refs` is refs and their transactions, and
 | `hash.sha1dc` | SHA-1 that checks each block for the signature of a collision attack. Off unless asked for. |
 | `object` | `Type`, `Mode`, `Tree` and `Tree.Builder`, `Commit`, `Tag`, `Signature`, `ExtraHeader`. Parsing and writing, with git's tree sort rule and header order. |
 | `object.fsck` | What git's `fsck` finds wrong with one object's bytes. |
-| `odb` | `Odb.open`, `read`, `readHeader`, `exists`, `existsOwn`, `own`, `findPrefix`, `write`, `writeStream`, `listObjects`, `listAlternates`, `addAlternate`, `removeAlternate`, `verify`, `refresh`, `syncBatch`, and the `stats` counters. Loose objects, the packs, `objects/info/alternates` and the multi-pack index. Writing packs: `collectReachable`, `collectLoose`, `collectAll`, `writePack`, `packLoose`, `repack`, and `beginPack` / `writeInto` / `finishPack` for a caller filling one as it goes. |
+| `odb` | `Odb.open`, `read`, `readInto`, `readHeader`, `exists`, `existsOwn`, `own`, `findPrefix`, `write`, `writeStream`, `listObjects`, `listAlternates`, `addAlternate`, `removeAlternate`, `verify`, `refresh`, `syncBatch`, and the `stats` counters. Loose objects, the packs, `objects/info/alternates` and the multi-pack index. Writing packs: `collectReachable`, `collectLoose`, `collectAll`, `writePack`, `packLoose`, `repack`, and `beginPack` / `writeInto` / `finishPack` for a caller filling one as it goes. |
 | `odb.Alternates.deinit` | Release a `listAlternates` result after reading its paths. |
 | `odb.pack`, `odb.delta` | `Index` (`.idx` v2), `Pack`, `Cache`, `Writer`; `apply` and `encode`. Both delta kinds, the 64-bit offset table, a bounded chain, `verify`, and writing a pack and its index. |
 | `odb.indexpack`, `odb.inflate`, `odb.revindex` | Receiving a pack: indexed as it arrives, deltas resolved on the caller's executor, `.rev` files. |
-| `odb.commitgraph`, `odb.midx` | The two accelerators, read. A `revwalk.Walk` takes parents and times from a commit-graph when it is given one and reads the object when it is not; a lookup asks a multi-pack index which pack to open before it asks the packs one by one. Neither changes an answer. |
+| `odb.commitgraph`, `odb.midx`, `odb.bitmap` | Read, verify and encode git's accelerators: full and split commit-graphs, generation v2 and overflow, changed-path Bloom filters v1/v2; MIDX preferred-pack selection, RIDX and BTMP; pack and MIDX bitmaps, EWAH, XORs, hash caches and lookup tables. |
+| `odb.accelerators` | `writeCommitGraph`, `writeMidx`, `repackMidx`, `expireMidx`, `writePackBitmap`, `writeMidxBitmap`, `writeConfiguredCommitGraph`, `repackRepository`. The format modules own the bytes; these operations gather through the object database, diff and revision walk. Fetch applies `fetch.writeCommitGraph`; configured maintenance applies `gc.writeCommitGraph` and the bitmap settings. |
 | `odb.abbrev` | Short object names as git prints them. |
 | `refs` | `Store`, `Ref`, `Resolved`, `Transaction`, `Expected`, `packed-refs` read and write. |
 | `refs.reflog` | `append`, `read`, `Log.at` for `HEAD@{n}`, `Policy` for `core.logAllRefUpdates`. |
@@ -290,9 +293,14 @@ that belong to it: `relic.refs` is refs and their transactions, and
 | `diff.textdiff` | `diffLines`, `hunks`, `stat`, `sameLine`, `Algorithm` (`myers`, `histogram`, `patience`), and git's `--minimal`. |
 | `diff.rename`, `diff.similarity` | Rename and copy detection with git's score and diffcore's order: `-M`, `-C`, `--find-copies-harder`. |
 | `diff.patchid` | Patch ids: a name for what a commit changes. |
-| `revwalk` | `Walk`, `mergeBase`, `mergeBases`, `mergeBasesWith`, `isAncestor`, `isAncestorWith`, `parentsOf` — git's date queue and topological order, commit-graph generation numbers, the shallow boundary. |
+| `diff.blame` | `file` — which commit each line of a file comes from, as `git blame` says, following renames. |
+| `revwalk` | `count`, `countObjects` (bitmap-backed counts, ordinary walks on a miss), `Walk`, `mergeBase`, `mergeBases`, `mergeBasesWith`, `mergeBasesMany`, `isAncestor`, `isAncestorWith`, `parentsOf` — git's date queue and topological order, commit-graph generation numbers, the shallow boundary. |
 | `revwalk.revparse` | git's revision grammar. |
 | `revwalk.shallow` | A shallow repository's boundary: `.git/shallow`. |
+| `revwalk.describe` | `describe`, `head`, `Describer`: `git describe` with `--tags`, `--all`, `--long`, `--abbrev`, `--candidates`, `--match`, `--exclude`, `--first-parent`, `--always`, `--dirty`, `--broken`, a blob as `<commit>:<path>`, and `--contains` as `git name-rev` names it. |
+| `revwalk.bisect` | `start`, `mark`, `nextStep`, `reset`, `log`, `replay`, `run`, `terms`: `git bisect` as git 2.56 does it, with its state files, its choice of commit, skips, `--first-parent`, `--no-checkout`, `--reset-when-found` and terms; pathspecs refused by name. |
+| `revwalk.shortlog` | `Shortlog.init`, `add`, `addCommit`, `write`, `configured`: `git shortlog` by author, committer or trailer, with `-s`, `-n`, `-e` and `-w`. |
+| `revwalk.mailmap` | `Mailmap.load`, `lookup`, `map`: `.mailmap`, `mailmap.blob` and `mailmap.file` read and matched as git reads and matches them. |
 | `merge`, `merge.blobmerge` | Content merging as xdiff does it, and the stage-only tree merge. |
 | `merge.ort` | `mergeTrees`, `mergeCommits` — git's merge-ort: renames, directory renames, directory/file and type conflicts, submodules, virtual merge bases, git's messages. |
 | `merge.strategy`, `merge.subtreeshift` | Every `-X` word git's merge takes, and git's match-trees for `subtree`. |
@@ -302,19 +310,29 @@ that belong to it: `relic.refs` is refs and their transactions, and
 | `commit.merging`, `commit.sequencer`, `commit.rebase`, `commit.todo` | Merge, cherry-pick, revert and rebase, with their state files in git's format. |
 | `commit.message`, `commit.head`, `commit.reset`, `commit.commithooks` | What those commands share: messages as git shapes them, `HEAD` as git moves it, `git reset`, the hooks around the commits they make. |
 | `commit.stash` | `push`, `apply`, `pop`, `list`, `show`, `drop`, `clear`. |
+| `commit.notes` | `Notes`, `add`, `append`, `copy`, `remove`, `prune`, `show`, `merge`, `mergeCommit`, `mergeAbort`, `formatNote`: `refs/notes/*` read and written as `git notes` does, git's fanout and every merge strategy included. |
 | `commit.signing` | Sign and verify commits and tags: OpenPGP, SSH, X.509. |
 | `transport` | `Session`: a remote, open — the one thing a fetch, a clone or a push talks to. |
 | `transport.fetch`, `transport.clone`, `transport.push` | The commands. Protocol v2 and v0, refspecs, `FETCH_HEAD`, atomic updates, `insteadOf`. |
 | `transport.remote`, `transport.url`, `transport.refspec` | Remotes as the configuration describes them, what a URL names, and which refs a fetch takes. |
-| `transport.smarthttp`, `transport.ssh`, `transport.local`, `transport.httpclient`, `transport.tls`, `transport.clientcert` | The transports: HTTP(S) through relic's own HTTP/1.1 and TLS clients, the person's `ssh`, and `file://` and paths. |
+| `transport.smarthttp`, `transport.ssh`, `transport.local`, `transport.httpclient`, `transport.tls`, `transport.clientcert` | The transports: HTTP(S) through relic's own HTTP/1.1 and TLS clients, HTTP(S) and SOCKS4/4a/5/5h proxies, the person's `ssh`, and `file://` and paths. |
 | `transport.credential`, `transport.auth`, `transport.httpsettings`, `transport.httpauth` | The person's own setup: credential helpers, why a remote refused, git's `http.*`, proxy authentication. |
 | `transport.protocol`, `transport.connection`, `transport.pktline`, `transport.sideband`, `transport.fetchpack`, `transport.sendpack`, `transport.progress` | The wire underneath the commands. |
 | `transport.uploadpack` | `Server` — serving fetches, with shallow and every filter. |
+| `transport.bundle` | `create`, `write`, `File.open`, `Header.read`, `listHeads`, `writeSummary`, `verify`, `unbundle`, `isBundle`: `git bundle` v2 and v3, its header byte for byte; a path to a bundle is fetched and cloned from. |
 | `transport.objectwalk`, `transport.objectfilter`, `transport.partial`, `transport.filterspec` | Which objects one side lacks; partial clone, its filters and the lazy fetch. |
 | `submodule`, `submodule.gitmodules`, `submodule.gitlink`, `submodule.submoduletransport` | `.gitmodules`, status, init, update, sync, absorbed git directories, and fetching them. |
 | `lfs` | LFS without git-lfs: pointers and the store. |
 | `lfs.lfsapi`, `lfs.lfstransfer`, `lfs.lfsssh`, `lfs.lfslocks`, `lfs.lfspush`, `lfs.lfshooks` | The batch API over https or ssh, locks, pre-push, git-lfs's hooks. |
 | `lfs.netrc` | What the LFS client reads beside: `~/.netrc`. |
+| `patch` | `parse`, `Patch`, `FilePatch`, `Fragment`: git patches and plain unified diffs read as `git apply` reads them, from whatever surrounds them. |
+| `patch.apply` | `apply` — `git apply` to the working tree, the index or both: renames, copies, modes, binary hunks, `-R`, `--3way`, `--reject`, `--check`, whitespace checked or fixed, nothing written unless every file applies. |
+| `patch.format` | `format` — `git format-patch` byte for byte: numbering, the diffstat, binary hunks, a cover letter, base information, threading and attachments. |
+| `patch.mail` | `split`, `info` — `git mailsplit` and `git mailinfo`. |
+| `patch.am` | `start`, `proceed`, `skip`, `abort`, `quit` — `git am` with `--3way`, its state in `rebase-apply` as git keeps it. |
+| `grep` | `grep` — `git grep` over the working tree, the index or a tree: fixed, basic and extended patterns, `-i -w -v -n -l -c`, context, pathspecs, binary files, written as git writes it. |
+| `archive` | `archive` — `git archive` as tar or zip, git's bytes: the pax comment, `--prefix`, `export-ignore`, `export-subst`. |
+| `clean` | `clean` — `git clean`: `-n`, `-f`, `-ff`, `-d`, `-x`, `-X`, `-e`, pathspecs, repositories inside the tree left alone, git's lines. |
 
 Every public declaration carries a doc comment stating its contract, and every
 operation has one named error set. A refusal is a named error. For a refused
@@ -461,6 +479,13 @@ TLS client, and another checks that what crosses a proxy's tunnel is TLS.
   pack entry into one buffer of known size and is fuzzed against std's
   decoder and compressor.
 
+HTTP(S) remotes and LFS accept `socks4://`, `socks4a://`, `socks5://` and
+`socks5h://` proxies, with port 1080 when none is given. SOCKS4 and SOCKS5
+resolve the origin locally; SOCKS4a and SOCKS5h send its name to the proxy.
+A URL's `user:password@` supplies SOCKS5 authentication, or the userid for
+SOCKS4. HTTPS starts TLS to the origin inside the SOCKS tunnel. A named
+remote's `remote.<name>.proxy` overrides `http.proxy`; `no_proxy` still applies.
+
 The HTTP client's `connect`, `send` and `stream` take an optional caller-owned
 `transport.httpclient.Diagnostic` as their last argument. Initialize it with
 `Diagnostic.init(allocator)` and release it with `deinit`. Each exchange clears
@@ -524,6 +549,42 @@ deeper than fifty, and a delta kept only if it is at most half the object it
 stands in for. `PackOptions.window_bytes` bounds that window by weight as well
 as by count, so a few large objects cannot become the high-water mark, and an
 object past `big_file_bytes` is written whole and never enters it.
+Small delta bases use a 16 KiB hash table and matches compare whole words;
+loose pack inputs are read through a 16 KiB buffer.
+Starting an entry compressor copies its defined state, leaving token and chain
+bytes to be filled before use instead of copying their unused storage.
+
+The writing is spread over tasks of the caller's `std.Io` (`Io.Group.async`),
+one per processor by default. They read the loose objects, inflate the whole
+objects of packs and deflate the entries, batch by batch, into buffers the
+calling task sized and allocated beforehand, so those allocate nothing. They
+search for deltas too: the objects in pack order are cut into groups of at
+least 512, each ending where the path hint changes, and an object is tried
+only against the window of its own group. The groups depend on the objects
+alone, so every task count, and every Io, writes the serial writer's bytes.
+git cuts one segment per thread and moves the cuts as threads steal work, so
+its deltas change with `pack.threads`; the groups here cost 0.04% of the pack
+on a repack of ghostty against one window over everything. A searching task
+allocates its delta indexes through the database's allocator one call at a
+time, under a lock, so that allocator need not be thread-safe. The deltas
+packs hold and the writing stay on the calling task, in pack order. While the
+tasks search one batch, they read the next and deflate the one before.
+Objects that come from packs are written as their packs store them, as git's
+pack-objects reuses them (`PackOptions.reuse_packed`): a delta whose base is
+written before it, with its chain of such deltas within `depth`, is copied
+without being read, searched or deflated, and an object written whole is
+copied rather than deflated again. Each copy is checked against the CRC its
+pack's index gives, and an object a reused chain rests on is searched only for
+deltas shallow enough to keep that chain within `depth`. Which deltas are
+reused depends on the objects and their packs alone, so every task count
+still writes the same pack.
+`PackOptions.batch_bytes` bounds what the three batches hold ahead of the
+writer. At most six tasks read loose files at once: beyond a few, opening
+files contends in the kernel. An Io that cannot run a task in parallel runs it
+inline, and `threads = 1` is the serial writer with no tasks at all.
+`collectLoose` and `collectAll` read the headers and the loose trees on tasks
+too, and hand the headers to `writePack`, which then reads every loose object
+once and an object `collectAll` found in a pack from the pack.
 
 The order the two files become visible in is not free to choose. A reader
 finds a pack by its `.idx`, so the pack is renamed into place first and the
@@ -544,6 +605,17 @@ name — the new pack *is* the old one, and that is the one name the removal
 pass skips.
 
 **Packs are read with positional reads by default.**
+A read is one 8 KiB block, aligned in the file, and each pack keeps up to
+32 MiB of them, never more than its own size, each allocated when first read
+(`Odb.Options.pack_read_cache_bytes`), block `b` only ever in slot `b`
+modulo their count. A pack that fits is read at most once, whatever order its
+objects are read in, as a map would read it. An entry of 64 KiB or more streams through a 64 KiB buffer
+of its own instead. Where a read lands therefore depends only on what is
+wanted, never on the reads before it, and a pass whose delta-base cache holds
+at least what an earlier pass's held reads no more calls and no more bytes
+than it did. I/O failures are still returned to the caller.
+An inflate uses at most 266 bytes of temporary slack for its fast loop, then
+returns an owned result of the exact checked size.
 `Odb.Options.map_packs` asks for a memory map instead, which is faster on a
 cold cache and costs two things: on macOS a pack replaced underneath a mapping
 is a signal rather than an error value, and on Windows a live mapping stops
@@ -577,7 +649,9 @@ the peak is bounded by the operation and the free is one call. What outlives
 an operation is held by the object database: the pack indexes, read whole at
 open so a lookup costs no syscall; the multi-pack index, when there is one,
 for the same reason; the delta base cache, keyed by pack offset and kept in
-least-recently-used order under a byte budget named in `Odb.Options`; one
+least-recently-used order under a byte budget named in `Odb.Options`; the
+blocks positional pack reads keep, up to 32 MiB or the pack's size for each
+pack read, as they are read, under `Odb.Options.pack_read_cache_bytes`; one
 deflate window, which is sixty-four kilobytes and is taken at `open` whether or
 not anything is written; and, once a database has written anything, one
 deflate state and one
@@ -585,8 +659,10 @@ output buffer, the state being two hundred and twenty-four kilobytes, because
 a cold `addAll` writes one object per file. A database that is only read takes
 neither of those two. Writing a pack adds
 the delta window on top, which `PackOptions.window_bytes` bounds by weight as
-well as by count, and one index entry per object — a name, an offset and a
-CRC — which has to be sorted before it is written. There is no object cache; a returned slice's
+well as by count, its per-base delta indexes, and one index entry per object — a name, an offset and a
+CRC — which has to be sorted before it is written; written on several tasks,
+three batches within `PackOptions.batch_bytes` and a deflate state for each
+task, and a decoder and a read buffer for each when objects come from packs. There is no object cache; a returned slice's
 doc comment says who owns it.
 
 **The index is read and written at three versions.** Versions 2, 3 and
@@ -617,9 +693,19 @@ nanoseconds need opposite answers here, and guessing either way is a bug.
 zeros there is what makes the next `git status` treat every entry as needing a
 refresh and re-hash the whole working tree.
 
+Reachability bitmaps are opened on first use and kept until `Odb.refresh`.
+`objectwalk.missing` uses their wanted-minus-hidden object set for unfiltered,
+non-shallow requests, including upload-pack's enumeration; their name hashes
+remain delta hints. `revwalk.count` intersects that set with the commit type
+map. `Odb.stats.bitmap_hits` records the requests answered this way.
+`Odb.Options.use_bitmaps = false` makes the same requests walk objects instead.
+A commit outside the selected bitmap entries, a filter or a shallow boundary
+uses the ordinary walk. Pack bitmap writing requires a closed DAG and refuses
+`BitmapNotClosed`; commit-graph writing refuses shallow input and cycles.
+
 ## Scope
 
-- **No pack bitmaps and no multi-pack index written.** The multi-pack index is read, a bitmap is not, and a pack without either is a pack git reads.
+- **No pseudo-merge bitmap extension or incremental MIDX chains.** `UnsupportedBitmapOptions` and `ChainUnsupported` name these; ordinary pack and MIDX bitmaps are read and written. An unusable optional accelerator falls back to the object walk.
 - **No `working-tree-encoding`.** A character-set conversion; refused by name.
 - **No Negotiate or NTLM** authentication, to a server or a proxy; refused by name.
 - **LFS without git-lfs's extras.** tus and custom transfer adapters are refused by name.
@@ -627,6 +713,13 @@ refresh and re-hash the whole working tree.
 - **No receive-pack server.** relic serves fetches; a push goes to git's server.
 - **No `git://`, dumb HTTP or remote helpers.** Refused by name.
 - **No `hasconfig:` includes.**
+- **No pathspec in a bisection, no `--group=format:` in a shortlog, no editor for a note, no `sparse:oid=` filter in a bundle.** Each refused by name; a shortlog by trailer is refused too where `trailer.*` is configured.
+- **`apply` with the index compares content where a stat differs.** git says "does not match index" until the index is refreshed; this reads the file and agrees when its content does.
+- **A binary hunk in a written patch is this package's deflate.** It decodes to the same file; the compressed bytes are not zlib's. A cover letter's shortlog under a mailmap is refused by name.
+- **`am` reads mailboxes only.** StGit and Mercurial patches are refused by name, as is a mail in a character set other than UTF-8, US-ASCII or ISO-8859-1.
+- **`grep` without Perl expressions, back-references, function context or `--and`/`--or`/`--not`.** Each is refused by name.
+- **A deflated zip entry is this package's deflate,** decoding to the same file; a stored zip and every tar are git's bytes. `export-subst` refuses placeholders that need decorations, notes, signatures or the mailmap, and `tar.umask=user` is refused by name.
+- **No interactive `clean`.**
 
 ## Ahead
 
@@ -665,6 +758,7 @@ zig build test --test-timeout 60s   # the suite, and the examples, which are run
 zig build test -Dtest-filter=hooks --test-timeout 60s   # run matching tests while developing
 zig build examples      # the examples on their own
 zig build check         # compile everything, including the tests, run nothing
+zig build check-imports # named source layers and dependency owners
 zig build test --fuzz   # the fuzz tests, until stopped
 ci/readme_usage.sh --check   # the Usage block against the example
 ci/tls-fork.sh --check       # the TLS client's recorded diff against std's
@@ -673,7 +767,12 @@ ci/tls-fork.sh --check       # the TLS client's recorded diff against std's
 Every test runs under `std.testing.allocator` and `std.testing.io`, against
 real directories. CI runs Debug and ReleaseSafe on all three platforms,
 ReleaseFast once on Linux, ReleaseSmall as a compile check, and ThreadSanitizer
-once on Linux. Each parity corpus seed has its own named test. The test timeout
+once on Linux. Each parity corpus seed has its own named test. Windows runs the same cases in
+parallel groups: core, merge-file, diff-algorithms, revwalk, and numbered history,
+recursive and rename groups. `zig build test -Dtest-case=history-0` runs one group;
+omitting `test-case` runs the whole suite. The remaining tests run in five source families:
+formats, worktree, history, transport and integrations. These start immediately; comparison
+and cross-compilation jobs wait for source checks so they do not queue ahead of core runs. The test timeout
 reports a stalled test by name; CI and the Linux script also bound each test. Speed
 measurements run only from the `bench` branch harness on a quiet machine.
 
@@ -695,7 +794,12 @@ clone, fetch and push against `git http-backend`, git's own ssh transport
 through a stand-in, and relic's upload-pack, with refs, reflogs,
 `.git/shallow` and `.promisor` files compared; merges, cherry-picks, rebases
 and rerere against the git that made the fixture, state files and reflogs
-included; LFS transfers and locks against git-lfs on a local server; a pack
+included; `describe` (with `--contains`), `shortlog` and `check-mailmap`
+under each of their options; notes added, appended, copied, removed and
+merged under every strategy, commit for commit, fanout included; a bundle's
+header byte for byte and what git unbundles from it, and git's bundles read
+and fetched from; a bisection step by step, its state files, refs, logs and
+checkouts, through skips, `--first-parent`, replay and `run`; LFS transfers and locks against git-lfs on a local server; a pack
 this wrote against `git verify-pack -v` and `git index-pack --verify`, with
 and without deltas and with either delta kind; the reachable object set
 against `git rev-list --objects --all`; a repository whose loose objects have
@@ -722,14 +826,20 @@ that lock, and this refusing it by name and leaving it alone. A stale lock is
 reported with its process id and never removed. A `gc` packs the objects under
 a reader's feet and every one of them still reads back.
 
-Sixty-five fuzz tests. Most of them take arbitrary bytes and hold a parser to
+Seventy-seven fuzz tests. Most of them take arbitrary bytes and hold a parser to
 one rule — any input either parses to a value or returns a named error — and
 between them they cover every format relic reads: the object formats, packs
 and their indexes, the index file, refs, reftable and reflogs, config and
 attributes, the glob matcher, the accelerators, packet lines and the wire
 protocol's answers, credential helper answers, filter specs, LFS batch and
-lock answers, TLS handshake messages and private keys, and the merge state
-files. Five check
+lock answers, TLS handshake messages and private keys, the merge state
+files, mailmaps, bundle headers, notes trees and the bisect log's quoting.
+The notes fuzzer also edits a notes tree against a map and reads back what it
+wrote. Five check
+lock answers, TLS handshake messages and private keys, the merge state files,
+patches, mailboxes, binary hunks and dates. Five check
+files, patches, mailboxes, binary hunks, regular expressions, dates and
+pathspecs. Five check
 more than that. The diff fuzzer applies the
 edit script it produced and checks that it reproduces the other side, which is
 the property that catches an off-by-one nothing else would. The

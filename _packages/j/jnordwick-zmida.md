@@ -6,16 +6,16 @@ author: jnordwick
 author_github: jnordwick
 repository: https://github.com/jnordwick/zmida
 keywords:
-date: 2026-10-01
-updated_at: 2026-10-01T15:12:34+00:00
-last_sync: 2026-10-01T15:12:34Z
+date: 2026-10-04
+updated_at: 2026-10-04T14:59:38+00:00
+last_sync: 2026-10-04T14:59:38Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 1
-distributable_binary_count: 1
-multiple_binaries: false
+binary_count: 2
+distributable_binary_count: 2
+multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
 sync_source: zigistry
@@ -149,3 +149,15 @@ that is what really messes things up.
 [[./gamma.png]]
 
 [[./gamma-perf.png]]
+
+* Ten Things I Hate About You
+
+My ongoing love-hate thing with zig:
+
+- [ ] a way per test, to signal this should be compiled and attached in in the documentation
+  but is not a test, it is an example
+- [ ] anytype still sucks. I want `fn func(x: []const anytype)` as a minimum
+- [ ] io is painfully overdone. Zig Io is J2EE Spring for C.
+- [ ] io is painfully overdone. why do i need to it to get time?
+- [ ] casting casting everywhere and getting worse by the release
+- [ ] no doc comment syntax (we'll spacings and other things, but not doc comments)
