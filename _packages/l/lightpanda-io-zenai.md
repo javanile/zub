@@ -10,9 +10,9 @@ keywords:
   - gemini-api
   - openai-api
   - tavily-api
-date: 2026-10-03
-updated_at: 2026-10-03T13:24:42+00:00
-last_sync: 2026-10-03T13:24:42Z
+date: 2026-10-05
+updated_at: 2026-10-05T18:59:30+00:00
+last_sync: 2026-10-05T18:59:30Z
 package_kind: hybrid
 has_library: true
 has_binary: true

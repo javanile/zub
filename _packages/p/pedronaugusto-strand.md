@@ -6,9 +6,9 @@ author: pedronaugusto
 author_github: pedronaugusto
 repository: https://github.com/pedronaugusto/strand
 keywords:
-date: 2026-10-02
-updated_at: 2026-10-02T16:16:51+00:00
-last_sync: 2026-10-02T16:16:51Z
+date: 2026-10-05
+updated_at: 2026-10-05T18:54:25+00:00
+last_sync: 2026-10-05T18:54:25Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -40,7 +40,7 @@ settings.
 optional `note` and defaulted `level` fields. `arena` is released after the retained
 values are used.
 
-<!-- BEGIN GENERATED ci/readme_usage.sh -->
+<!-- BEGIN GENERATED zig build docs -- usage -->
 ```zig
 const strand = @import("strand");
 
@@ -65,7 +65,7 @@ while (try events.next()) |line| {
         last_open = try events.keep(arena, line);
     }
     if (line.value.level == .warn) warnings += 1;
-    std.debug.print("line {d}: {s}\n", .{ line.number, line.line });
+    std.log.info("line {d}: {s}", .{ line.number, line.line });
 }
 
 const kind = strand.kindOf("{\"kind\":\"open\",\"at\":1}");
@@ -98,12 +98,22 @@ Directory durability remains the caller's responsibility.
 
 `Tail(T)` reads a seekable file backwards. `Follower(T)` waits for complete terminated
 records and stops with `error.Canceled` when its `std.Io` is cancelled. A supplied
-`Opener` lets it follow replacement files after draining the old one. File identity can
+`Opener` lets it follow replacement files after draining the old one, waiting while the
+path names nothing between a rotation's rename and its create. File identity can
 use the platform's file identifier or an opening-byte fingerprint; checkpoints retain
 that identity, the byte offset and line numbering.
 
+`kindOf` and `tagOf` route a line by its first key without parsing it. `memberOf` and
+`memberStringOf` read one top-level member's scalar value wherever it sits, the first of
+a repeated one, as a view into the line. A union that declares
+`pub const jsonl_tag = "type"` is read and written tagged inside its object
+(`{"type":"assistant",...}`), as serde's `#[serde(tag)]`; `jsonl_other` names the arm
+for a tag no arm has, holding nothing or the record as a `Raw`. A missing, repeated or
+non-string tag is refused, and `tagOf` reads the arm from the tag member.
+
 `Raw` retains a JSON value's bytes for later parsing or forwarding. `Versioned(T)` wraps
 records with a version and a migration hook. Both compose with the readers and writer.
+Parsing a `Raw` checks JSON syntax and UTF-8 before returning its bytes.
 Pretty records span physical lines; ASCII record separators provide optional RFC 7464
 framing when enabled at both ends. [examples/logbook.zig](examples/logbook.zig)
 exercises file following, tailing and a line protocol.
@@ -120,14 +130,14 @@ exercises file following, tailing and a line protocol.
 
 ## Testing
 
-Local build scripts clear `.zig-cache/{o,h,z,tmp}` above the measured cap in `ci/cache.sh`; run `sh ci/cache.sh` before direct Zig builds (only a rebuild is lost).
+Local build scripts clear `.zig-cache/{o,h,z,tmp}` above the measured cap through preflight; run `zig build cache` before direct Zig builds (only a rebuild is lost).
 
 `zig build test` runs the unit suite, scratch tests and examples in Debug by default.
 The suite covers framing, codec agreement with `std.json`, owned copies, rotation,
 cancellation and malformed records. Properties run from corpus inputs and 32 seeded
 rounds by default; `-Dcampaign=N` and `-Dseed=N` select a generated-input run. `zig
 build test --fuzz` runs the coverage-guided targets until stopped. CI also runs
-`ci/check-readme.sh`.
+`zig build lint`.
 
 [CI](.github/workflows/ci.yml) runs tests and examples in Debug and ReleaseSafe on
 `ubuntu-latest`, `macos-latest` and `windows-latest`, plus ReleaseFast on Ubuntu.

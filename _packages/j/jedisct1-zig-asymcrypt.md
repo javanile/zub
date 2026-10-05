@@ -8,9 +8,9 @@ repository: https://github.com/jedisct1/zig-asymcrypt
 keywords:
   - asymcrypt
   - encryption
-date: 2026-07-20
-updated_at: 2026-07-20T00:54:38+00:00
-last_sync: 2026-07-20T00:54:38Z
+date: 2026-10-05
+updated_at: 2026-10-05T17:52:28+00:00
+last_sync: 2026-10-05T17:52:28Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -26,99 +26,114 @@ permalink: /packages/jedisct1/zig-asymcrypt/
 
 # asymcrypt
 
-`asymcrypt`: encrypt anything offline with a key that cannot decrypt what it just wrote.
+Encrypt stuff offline, with a key that can't decrypt it afterwards.
 
-It works like [`encpipe`](https://github.com/jedisct1/encpipe): input defaults to `stdin`, output defaults to `stdout`, can process arbitrary large inputs ; file paths are optional.
+If you've used [`encpipe`](https://github.com/jedisct1/encpipe), you already know how it works. It reads from `stdin`, writes to `stdout`, and doesn't care how big the input is. You can pass file names too, but you don't have to.
 
-Encryption is authenticated, fast, post-quantum resistant, etc. The underlying cipher is [AEGIS-128X](https://datatracker.ietf.org/doc/draft-irtf-cfrg-aegis-aead/), a parallel AES-based AEAD that runs at memory speed on anything with hardware AES support.
+The cipher is [AEGIS-128X](https://www.rfc-editor.org/rfc/rfc10032.html). It's fast (on any CPU with AES instructions, it basically goes as fast as your memory), and it also catches any tampering with the data.
 
-Key encapsulation uses [X-Wing](https://datatracker.ietf.org/doc/draft-connolly-cfrg-xwing-kem/) (ML-KEM-768 + X25519), a hybrid post-quantum KEM. Each encryption generates a fresh shared secret via KEM encapsulation against the public key, so the device key (a public encapsulation key) can never decrypt what it produced.
+For the keys, it uses [X-Wing](https://datatracker.ietf.org/doc/draft-connolly-cfrg-xwing-kem/), a mix of ML-KEM-768 and X25519. So it's ready for quantum computers, while still relying on good old elliptic curves.
 
-Decryption requires the offline decapsulation seed (or a password) that was set aside when the keys were generated. It never has to live on the encrypting host.
+## But why?
 
-This shape fits a lot of situations: backups on a host that might later be stolen or compromised, log shipping from a machine you don't fully trust to read its own history, append-only archives written by a service that should not be able to look back at what it wrote, drop boxes where one party encrypts to another, and so on.
+With regular encryption, the key that encrypts your data can also decrypt it. Here, that's not the case.
 
-Anywhere you want a writer that cannot also be a reader, this tool applies.
+The machine doing the encryption only gets a public key. Every time it encrypts something, a brand new secret is created for that file. And since the machine never has the private key, it simply can't read back what it wrote.
 
-The whole thing runs offline. There is no handshake, no server, no per-message coordination with anyone.
+To decrypt, you need the recovery key (or a password) that you put aside when you created the keys. That key never needs to be on the machine doing the encryption.
 
-You generate a keypair once, in a single local command, and from then on the encrypting host can produce as many ciphertexts as it likes without ever talking to the holder of the recovery key. The recovery key sits alone, wherever you decided to put it, and is only consulted when something actually needs to be decrypted.
+Where is this handy? A few examples:
+
+- Backups on a server that might get stolen or hacked one day.
+- Logs coming from a machine you don't really trust to read its own history.
+- Archives written by a service that shouldn't be able to look back at what it wrote.
+- Drop boxes, where someone encrypts files for someone else.
+
+Basically, anytime you want something that can write but not read.
+
+And it's all offline. No handshake, no server, nobody to talk to.
+
+You create the keys once, with a single command. After that, the machine can encrypt as much as it wants without ever contacting whoever has the recovery key. The recovery key just sits wherever you put it, until you actually need to decrypt something.
 
 ## Installing
 
-Build from source with a recent Zig toolchain (0.16 or later):
+You'll need Zig 0.16 or later. Then:
 
 ```sh
 zig build -Doptimize=ReleaseFast
 ```
 
-The resulting binary lands in `zig-out/bin/asymcrypt`. Drop it somewhere on your `PATH`, or run `zig build run -- ...` to invoke it through the build system.
+The binary ends up in `zig-out/bin/asymcrypt`. Copy it somewhere in your `PATH`, or just use `zig build run -- ...`.
 
 ## Setting up
 
-You start by creating a fresh X-Wing keypair. Both keys are produced locally in one shot, with no network involved and no exchange between machines.
-
-The recovery key (decapsulation seed) is the one you need to keep offline. Print it, write it to a USB stick, store it in a password manager, whatever fits your threat model. It is the only thing that can ever decrypt the ciphertexts, and it never has to leave the place you stored it until you actually need to recover something.
-
-The device key (encapsulation key) lives on the encrypting host. It is a public key that can encrypt an unbounded number of inputs on its own.
+First, create a key pair. Everything happens locally, in one step. No network, nothing sent anywhere.
 
 ```sh
 asymcrypt init -o device.key -r recovery.key
 ```
 
-Move `recovery.key` somewhere the encrypting host cannot reach, and keep `device.key` on the host.
+You now have two files.
 
-If you ever lose `recovery.key`, every ciphertext ever produced becomes unrecoverable, so treat it accordingly.
+`recovery.key` is the one to keep offline. Print it, put it on a USB stick, save it in your password manager, whatever works for you. It's the only thing that can decrypt your files, so it can stay there until you need it.
+
+`device.key` goes on the machine that encrypts. It's a public key, and it can encrypt as much data as you want.
+
+So, move `recovery.key` somewhere the encrypting machine can't get to, and leave `device.key` where it is.
+
+One warning, though: lose `recovery.key`, and everything encrypted with it is gone. Forever. So don't lose it.
 
 ## Encrypting
 
-Point `encrypt` at the device key and feed it any stream:
+Give `encrypt` the device key, and pipe whatever you want into it:
 
 ```sh
 tar c /etc | asymcrypt encrypt -k device.key -o etc.asym
 ```
 
-Each encryption generates a fresh KEM shared secret. The device key is never modified and the host cannot decrypt what it just produced.
+Each time, a new one-time secret is created, and the device key doesn't change. And right after that, the machine can't read what it just encrypted.
 
-The encrypted output can sit on the same machine, on a NAS, or be uploaded somewhere shared; the host has already lost the ability to read it (it never had it in the first place).
+So you can keep the encrypted file on the same machine, copy it to a NAS, or upload it somewhere. It doesn't matter: the machine can't read it, and it never could.
 
-## Recovering
+## Decrypting
 
-Anywhere with the offline recovery key:
+On any machine that has the recovery key:
 
 ```sh
 asymcrypt decrypt -k recovery.key -i etc.asym | tar x
 ```
 
-Decapsulation with the recovery seed recovers the per-file shared secret directly. No chain walking or key search is needed.
+The recovery key gets each file's secret back directly. No searching, no extra steps.
 
 ## Password mode
 
-If you would rather remember a passphrase than store a recovery key, set things up with `--password`:
+Would you rather remember a password than keep a recovery key around? Then use `--password` when setting up:
 
 ```sh
 asymcrypt init --password -o device.key
 ```
 
-You will be prompted for a password and then for a confirmation. The device key file contains the public encapsulation key alongside the password-encrypted decapsulation seed. Recovery only needs the password and the ciphertext:
+You'll be asked for a password, and then asked to type it again.
+
+This time, `device.key` contains the public key, plus the private key encrypted with your password. To decrypt, all you need is the password and the encrypted file:
 
 ```sh
 tar c /etc | asymcrypt encrypt -k device.key -o etc.asym
 asymcrypt decrypt --password -i etc.asym | tar x
 ```
 
-The password is the recovery secret in this mode, so there is no separate recovery key to store.
+In other words, the password is your recovery key now. There's nothing else to keep.
 
-If you forget the password, the ciphertexts are gone.
+But if you forget the password, your files are gone.
 
-If you want to script things, set `ASYMCRYPT_PASSWORD` in the environment and `asymcrypt` will use that instead of prompting.
+For scripts, you can set the `ASYMCRYPT_PASSWORD` environment variable, and `asymcrypt` will use it instead of asking.
 
-Be careful: anything in the environment is generally readable by other processes running as the same user.
+Just keep in mind that other programs running as the same user can usually read your environment variables.
 
 ## Input and output
 
-- `-i PATH` reads from `PATH`. Without `-i`, or with `-i -`, `asymcrypt` reads `stdin`. This is the usual case — encryption is meant to sit in a pipe.
-- `-o PATH` writes to `PATH`. Without `-o`, or with `-o -`, output goes to `stdout`.
-- File output never overwrites an existing path. Pass `--force` if you really mean to clobber it.
+- `-i PATH` reads from `PATH`. Without `-i` (or with `-i -`), it reads from `stdin`. That's how you'd normally use it anyway, in a pipe.
+- `-o PATH` writes to `PATH`. Without `-o` (or with `-o -`), it writes to `stdout`.
+- It never overwrites an existing file. If that's really what you want, add `--force`.
 
-File output is staged in a temporary file in the destination directory and renamed into place only after the whole stream has been written and flushed. A crash mid-write leaves no partial file behind.
+When writing to a file, `asymcrypt` first writes everything to a temporary file in the same folder, and only renames it once it's all written and saved. So if something crashes halfway, you won't be left with a half-written file.

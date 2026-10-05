@@ -6,9 +6,9 @@ author: pedronaugusto
 author_github: pedronaugusto
 repository: https://github.com/pedronaugusto/chronicle
 keywords:
-date: 2026-10-02
-updated_at: 2026-10-02T16:16:57+00:00
-last_sync: 2026-10-02T16:16:57Z
+date: 2026-10-05
+updated_at: 2026-10-05T17:36:13+00:00
+last_sync: 2026-10-05T17:36:13Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -41,7 +41,7 @@ optimize settings.
 and a `Balances` fold over account, deposit and withdrawal events. It opens the journal
 at `path` with the supplied allocator and `std.Io`.
 
-<!-- BEGIN GENERATED ci/readme_usage.sh -->
+<!-- BEGIN GENERATED zig build docs -- usage -->
 ```zig
 const chronicle = @import("chronicle");
 
@@ -63,7 +63,7 @@ var last: u64 = 0;
     last = try ledger.appendAll(io, &.{
         .{ .at = now, .event = .{ .deposited = .{ .id = 1, .cents = 5_000 } } },
         .{ .at = now, .event = .{ .withdrawn = .{ .id = 1, .cents = 1_250 } } },
-    });
+    }, .group);
     try follower.rearmAt(io, follower.position());
     var followed: usize = 0;
     while (try follower.next(io)) |_| followed += 1;
@@ -101,14 +101,20 @@ provides best-effort cleanup.
 
 `append` takes the timestamp from the caller. With the default `sync = .always`, it
 syncs the record before publishing it or returning its sequence number; `appendAll`
-shares a record sync across a batch. A crash during a batch can leave a prefix, so a
-batch is not a transaction. `appendDeferred` publishes before durability and requires a
-later flush. The `.on_segment` policy syncs at sealing and close; `.never` leaves record
-writeback to the operating system. Structural replacement flushes still apply under both
-policies.
+shares a record sync across a batch. A `.group` batch cut by a crash leaves a prefix; an
+`.atomic` batch names its first and last records in each of its records, stays in one
+segment, and is dropped whole by an open that finds the log ending inside it. Readers
+beside the writer read an atomic batch only once it is whole. `appendIf` and
+`appendAllIf` append only while the newest record is still the one the caller expected,
+and otherwise return `error.WrongExpectedSeq` with the newest sequence number.
+`appendDeferred` publishes before durability and requires a later flush. The
+`.on_segment` policy syncs at sealing and close; `.never` leaves record writeback to the
+operating system. Structural replacement flushes still apply under both policies.
 
 Durable writes use `fcntl(F_FULLFSYNC)` on macOS, `fsync` on Linux with `fdatasync` for
-writes into reserved space, and `NtFlushBuffersFile` on Windows. The implementation
+writes into reserved space, and `NtFlushBuffersFile` on Windows: strand's `syncFile`. A
+macOS filesystem that declines `F_FULLFSYNC` gets `fsync`, and `status().flushed` says
+which call the records got. The implementation
 syncs directory changes on POSIX. Windows cannot provide that directory-sync guarantee,
 so record flushing does not guarantee a new filename survives power loss.
 
@@ -133,7 +139,8 @@ exercises schema migration.
 
 ## Scope
 
-- It does not provide transactions spanning multiple records or journals.
+- It does not provide transactions spanning journals, or across appends: one atomic
+  batch is the unit that is all or nothing.
 - It does not replicate a journal or coordinate writers across machines.
 - It does not query event fields or build application indexes.
 - It does not serialize the application's snapshot state for it.
@@ -143,13 +150,13 @@ exercises schema migration.
 
 ## Testing
 
-Local build scripts clear `.zig-cache/{o,h,z,tmp}` above the measured cap in `ci/cache.sh`; run `sh ci/cache.sh` before direct Zig builds (only a rebuild is lost).
+Local build scripts clear `.zig-cache/{o,h,z,tmp}` above the measured cap through preflight; run `zig build cache` before direct Zig builds (only a rebuild is lost).
 
 `zig build test` runs the unit suite, writer-lock helper and examples in Debug by
 default. Tests cover crash prefixes, checksum and chain failures, recovery, replay,
 snapshots, retention, concurrency and allocation cleanup. `zig build examples` runs the
 examples separately; `zig build check` compiles the suite, helper and examples without
-running them. CI also runs `ci/readme_usage.sh --check`.
+running them. CI also runs `zig build docs -- usage --check`.
 
 [CI](.github/workflows/ci.yml) runs tests and examples in Debug and ReleaseSafe on
 `ubuntu-latest`, `macos-latest` and `windows-latest`, plus ReleaseFast on Ubuntu.

@@ -6,16 +6,16 @@ author: pedronaugusto
 author_github: pedronaugusto
 repository: https://github.com/pedronaugusto/morse
 keywords:
-date: 2026-10-02
-updated_at: 2026-10-02T16:16:48+00:00
-last_sync: 2026-10-02T16:16:48Z
+date: 2026-10-05
+updated_at: 2026-10-05T17:13:27+00:00
+last_sync: 2026-10-05T17:13:27Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 1
-distributable_binary_count: 1
-multiple_binaries: false
+binary_count: 2
+distributable_binary_count: 2
+multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
 sync_source: zigistry
@@ -39,7 +39,7 @@ settings.
 
 [examples/quickstart.zig](examples/quickstart.zig)
 
-<!-- BEGIN GENERATED ci/readme_usage.sh -->
+<!-- BEGIN GENERATED zig build docs -- usage -->
 ```zig
 const std = @import("std");
 const morse = @import("morse");
@@ -75,25 +75,55 @@ consumer builds do not fetch it. Writers take a `*std.Io.Writer` and leave flush
 the caller. Parsers borrow their input; `KeyParser` retains incomplete sequences in a
 caller-owned buffer. Drain each `Events` iterator before feeding more bytes, and consume
 borrowed event data before the next iterator step, feed or flush.
+Key events own their text; retained sequence bytes keep split input intact and borrowed
+replies independent of the read buffer.
 
 `Style` describes SGR attributes and colours. `setStyle` writes from the terminal's
-default state; `diffStyle` writes the changes between two known styles. Cursor and erase
-commands use typed parameters. Text-bearing control sequences reject C0 controls and DEL
-before writing; `printable` explicitly strips them into a supplied buffer.
+default state; `diffStyle` writes the changes between two known styles. `Color.fit`
+and `Style.fit` turn colours into the nearest a terminal with 256 colours, sixteen or
+none can show; the caller says which it has. Cursor and erase
+commands use typed parameters. `cost` counts what the style, cursor, erase, repeat, mode,
+hyperlink, text-size, key, sixel and iTerm2 writers would write, through
+the code that writes it.
+`applySgr` reads a style change back into a `Style`, `parseHyperlink` and
+`parseTextSize` read the bodies of OSC 8 and OSC 66, and `parseCsi` and
+`parseControlString` frame sequences, for a program that reads what was written.
+`strip` and `Stripper` take the sequences and C1 controls out of output on
+the same framers, whole or a read at a time, keeping C0 controls.
+Text-bearing control sequences reject C0 controls and DEL before writing; `printable`
+explicitly strips them into a supplied buffer.
 
 `KeyParser` frames legacy and kitty keys, win32 input sequences, paste, focus, resize,
 mouse reports and replies in one stream. An unknown framed sequence becomes
-`Event.unhandled`. A lone ESC stays undecided until more input or `flush`; the
-application decides when to settle it. Whole-sequence parsers return null for
+`Event.unhandled`. A lone ESC stays undecided until more input or `flush`, and
+`undecided` says when it is; the application decides when to settle it. Whole-sequence parsers return null for
 unrecognized or malformed input.
+
+`encodeKey` goes the other way, for a program that stands where a terminal
+stands: it writes a `KeyEvent` as the bytes a terminal sends for it, given
+the kitty flags, `modifyOtherKeys` and cursor, keypad and backspace modes
+in a `KeyEncoding`. The kitty encoding follows kitty's encoder and the
+legacy one xterm's as ghostty writes it; the conformance step compares
+both with ghostty's encoder and names where kitty and ghostty differ. With
+every kitty flag set, `KeyParser` reads back what `encodeKey` wrote as the
+key it was written from.
 
 `ConsoleDecoder` accepts Windows console records without reading a console handle. It
 maintains keyboard and mouse state, including held Ctrl records and UTF-16 surrogate
 pairs. Release events are available when the input protocol reports them.
 
-Graphics commands cover kitty image transmission, placement and deletion. Clipboard and
+Graphics commands cover kitty image transmission, placement and deletion.
+`sixel` writes an image as a sixel string from palette indices or RGBA and
+a caller's palette of up to 256 colours, a band at a time from a fixed block
+of stack; `itermImage` and `itermImageMultipart` send a file as iTerm2's
+`OSC 1337` inline image, whole or in pieces. Both are bytes only: choosing
+a palette, decoding and scaling are the caller's. `querySixelGraphics`
+asks how many colour registers a sixel image may use and how big it may be
+(XTSMGRAPHICS), `parseSixelGraphics` reads the answer, and
+`sixelCursorRight` is mode 8452, which leaves the cursor beside an image
+rather than below it; `Probe` asks all three. Clipboard and
 capability replies borrow their encoded payloads and decode into supplied buffers.
-`Probe` writes startup questions; `probeAnswered` routes replies to those questions. The
+`Probe` writes startup questions, including the colour count `Co`; `probeAnswered` routes replies to those questions. The
 caller supplies deadlines because a terminal need not answer.
 
 ## Scope
@@ -102,18 +132,19 @@ caller supplies deadlines because a terminal need not answer.
 - It does not hold a screen grid, lay out text or measure grapheme widths.
 - It does not provide widgets or an event loop.
 - It does not track image placement or assign image identifiers.
+- It does not decode or scale an image, or choose a palette for one.
 - It does not maintain a terminal capability database.
 
 <!-- performance: quiet pass -->
 
 ## Testing
 
-Local build scripts clear `.zig-cache/{o,h,z,tmp}` above the measured cap in `ci/cache.sh`; run `sh ci/cache.sh` before direct Zig builds (only a rebuild is lost).
+Local build scripts clear `.zig-cache/{o,h,z,tmp}` above the measured cap through preflight; run `zig build cache` before direct Zig builds (only a rebuild is lost).
 
 `zig build test` runs the unit suite and both examples in Debug by default. Tests check
 writer bytes, malformed input, split framing, console records and parser round trips.
 `zig build examples` runs the examples separately; `zig build check` compiles the tests
-and examples without running them. CI also runs `ci/check-readme.sh`.
+and examples without running them. CI also runs `zig build lint`.
 
 [CI](.github/workflows/ci.yml) runs tests and examples in Debug and ReleaseSafe on
 `ubuntu-latest`, `macos-latest` and `windows-latest`, plus ReleaseFast on Ubuntu.
