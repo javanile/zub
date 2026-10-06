@@ -13,8 +13,8 @@ keywords:
   - zero-dependency
 date: 2026-09-27
 category: data-formats
-updated_at: 2026-09-27T14:27:24+00:00
-last_sync: 2026-09-27T14:27:24Z
+updated_at: 2026-09-27T15:53:26+00:00
+last_sync: 2026-09-27T15:53:26Z
 package_kind: library
 has_library: true
 has_binary: false

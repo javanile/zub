@@ -10,9 +10,9 @@ keywords:
   - cipher
   - format-preserving-encryption
   - fpe
-date: 2026-05-27
-updated_at: 2026-05-27T12:28:25+00:00
-last_sync: 2026-05-27T12:28:25Z
+date: 2026-10-06
+updated_at: 2026-10-06T15:34:44+00:00
+last_sync: 2026-10-06T15:34:44Z
 package_kind: hybrid
 has_library: true
 has_binary: true

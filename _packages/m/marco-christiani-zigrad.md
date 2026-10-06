@@ -1,19 +1,19 @@
 ---
-title: zigrad
+title: Zigrad
 description: A deep learning framework built on an autograd engine with high level abstractions and low level control.
 license: LGPL-3.0
 author: Marco-Christiani
 author_github: Marco-Christiani
-repository: https://github.com/Marco-Christiani/zigrad
+repository: https://github.com/Marco-Christiani/Zigrad
 keywords:
   - autograd
   - deep-learning
   - machine-learning
   - neural-network
   - tensor
-date: 2026-09-14
-updated_at: 2026-09-14T21:32:28+00:00
-last_sync: 2026-09-14T21:32:28Z
+date: 2026-09-30
+updated_at: 2026-09-30T03:43:55+00:00
+last_sync: 2026-09-30T03:43:55Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -24,7 +24,7 @@ multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
 sync_source: zigistry
-permalink: /packages/Marco-Christiani/zigrad/
+permalink: /packages/Marco-Christiani/Zigrad/
 ---
 
 <p align="center">
@@ -32,27 +32,26 @@ permalink: /packages/Marco-Christiani/zigrad/
 </p>
 
 <p align="center">
-	<img src="https://img.shields.io/github/license/Marco-Christiani/zigrad?style=flat&logo=opensourceinitiative" alt="license">
-	<img src="https://img.shields.io/github/last-commit/Marco-Christiani/zigrad?style=flat&logo=git&logoColor=white" alt="last-commit">
-	<img src="https://img.shields.io/github/languages/count/Marco-Christiani/zigrad?style=flat" alt="repo-language-count">
-	<img src="https://img.shields.io/github/languages/top/Marco-Christiani/zigrad?style=flat&color=F7A41D" alt="repo-top-language">
+	<!-- <img src="https://img.shields.io/github/license/Marco-Christiani/zigrad?style=flat&logo=opensourceinitiative" alt="license"> -->
+	<img src="https://img.shields.io/github/last-commit/Marco-Christiani/Zigrad?style=flat&logo=git&logoColor=white" alt="last-commit">
+	<img src="https://img.shields.io/github/languages/count/Marco-Christiani/Zigrad?style=flat" alt="repo-language-count">
+	<!-- <img src="https://img.shields.io/github/languages/top/Marco-Christiani/zigrad?style=flat&color=F7A41D" alt="repo-top-language"> -->
 	<!-- <img src="https://img.shields.io/badge/Zig-F7A41D.svg?style=flat&logo=Zig&logoColor=white" alt="Zig"> -->
 	<!-- 1325584101809324113 -->
 	<img alt="Discord" src="https://img.shields.io/discord/1325584101809324113?style=flat">
 </p>
 <br>
-<p align="center" class="markdown-heading"><strong><i>Supporting AI innovation from ideation to results.</i></strong></p>
 
 ---
-> ⚠️ **Zigrad is undergoing a rewrite**
-> Public release tentatively planned for mid 2026 please stay tuned.
 
-> 🚧 **Zigrad is under active development.**  
-> By using Zigrad, you are participating in its development and contributing to its early testing and validation. Expect APIs to change and features to evolve rapidly. Bug reports, benchmarks, and contributions are welcome.
+> ⚠️ **Zigrad is undergoing a rewrite (again).**  
+> Public release tentatively planned for Q4 2026.  
+> If eager, you can find an intermediate rewrite on this branch: https://github.com/Marco-Christiani/Zigrad/tree/modular  
+> The system that will be released, however, will not require foreign compiler stacks (unlike the above)
 
-> 🧪 **CUDA support is experimental.**  
-> CUDA integration is in **beta** and may be incomplete, unstable, or suboptimal. Use it for testing and feedback. Full GPU support is actively being developed.
+> *NOTE: Zigrad is under active development. By using Zigrad, you are participating in its development and contributing to its early testing and validation. Expect APIs to change. Bug reports, benchmarks, and collaborations are welcome but reach out first to for access to the unreleased system(s).*
 ---
+
 
 AI frameworks optimized for rapid research iteration do not seamlessly transition into the infrastructure required for large-scale training. This fragmented pipeline creates redundant engineering effort and slows iteration cycles. Zigrad provides a path to performance that preserves the natural development workflow researchers prefer; bridging research and engineering. Using Zigrad you can:
 

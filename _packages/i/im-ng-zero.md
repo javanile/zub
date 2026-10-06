@@ -13,10 +13,10 @@ keywords:
   - web
   - webframework
   - zero
-date: 2026-09-20
+date: 2026-09-28
 category: networking
-updated_at: 2026-09-20T13:23:44+00:00
-last_sync: 2026-09-20T13:23:44Z
+updated_at: 2026-09-28T06:17:32+00:00
+last_sync: 2026-09-28T06:17:32Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -65,6 +65,16 @@ unsafe_reason: "contains a URL pointing to a .zip file"
 - **One static binary** — ~16–65 MiB RSS, no managed runtime, ships anywhere (including Kubernetes).
 - **Observable by default** — structured JSON logs, Prometheus metrics, distributed tracing and health endpoints from the first request.
 - **Fast and small** — tens of thousands of requests/sec at ~50 MiB RSS, no GC pauses, no JIT warm-up.
+
+> [!caution]
+> I am actively refining the core concepts, integrations, and overall specifications for the stable release. Please be cautious, and likely to introduce breaking changes as I do weekly release.
+
+| Branch            | Zero Version         | Zig Support |
+| ----------------- | -------------------- | ----------- |
+| **main**          | 0.5.2 (experimental) | 0.16.0      |
+| **stable-0.15.2** | 0.0.3                | 0.15.2      |
+
+I am expecting, _0.5.5_ will be stable enough to serve any production load.
 
 ---
 
@@ -180,6 +190,7 @@ Every feature ships with a runnable example under [`examples/`](examples). Pick 
 
 **Data & Stores**
 
+- [`zero-basic`](examples/zero-basic) — Postgres CRUD.
 - [`zero-sqlite`](examples/zero-sqlite) — SQLite CRUD.
 - [`zero-duckdb`](examples/zero-duckdb) — in-process DuckDB OLAP + CRUD.
 - [`zero-nosql`](examples/zero-nosql) — Cassandra / NoSQL key-value CRUD.
@@ -191,9 +202,7 @@ Every feature ships with a runnable example under [`examples/`](examples). Pick 
 
 **Messaging**
 
-- [`zero-mqtt-publisher`](examples/zero-mqtt-publisher) / [`zero-mqtt-subscriber`](examples/zero-mqtt-subscriber) — MQTT publish/subscribe.
-- [`zero-kafka-publisher`](examples/zero-kafka-publisher) / [`zero-kafka-subscriber`](examples/zero-kafka-subscriber) — Kafka publish/subscribe.
-- [`zero-nats-publisher`](examples/zero-nats-publisher) / [`zero-nats-subscriber`](examples/zero-nats-subscriber) — NATS publish/subscribe.
+- [`zero-pubsub-publisher`](examples/zero-pubsub-publisher) / [`zero-pubsub-subscriber`](examples/zero-pubsub-subscriber) — Kafka/MQTT/NATS publish/subscribe.
 
 **Auth & API**
 

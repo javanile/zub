@@ -12,9 +12,9 @@ keywords:
   - polyglot
   - rust
   - zeromq
-date: 2026-09-27
-updated_at: 2026-09-27T15:07:40+00:00
-last_sync: 2026-09-27T15:07:40Z
+date: 2026-10-06
+updated_at: 2026-10-06T15:38:13+00:00
+last_sync: 2026-10-06T15:38:13Z
 package_kind: library
 has_library: false
 has_binary: false
@@ -250,7 +250,7 @@ OMQ_SOAK_DURATION_SECS=600 cargo test -p omq-tokio \
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines and [DEVELOPMENT.md](DEVELOPMENT.md) for build, test, and benchmark commands.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines and [DEVELOPMENT.md](DEVELOPMENT.md) for build and test commands, and [RUNNING_BENCHMARKS.md](RUNNING_BENCHMARKS.md) for benchmarks.
 
 ## AI disclosure
 

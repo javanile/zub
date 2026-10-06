@@ -10,10 +10,10 @@ keywords:
   - nostr-relay
   - self-hosted
   - websocket
-date: 2026-09-15
+date: 2026-10-06
 category: networking
-updated_at: 2026-09-15T18:12:41+00:00
-last_sync: 2026-09-15T18:12:41Z
+updated_at: 2026-10-06T16:03:53+00:00
+last_sync: 2026-10-06T16:03:53Z
 package_kind: binary
 has_library: false
 has_binary: true
@@ -53,7 +53,7 @@ docker run -d --restart unless-stopped -p 7777:7777 -v wisp-data:/data ghcr.io/p
 Download the [latest release](https://github.com/privkeyio/wisp/releases) or build from source:
 
 ```sh
-# 1. Install dependencies (requires Zig 0.16.0)
+# 1. Install dependencies (requires Zig 0.17.0)
 sudo apt install -y liblmdb-dev libsecp256k1-dev libssl-dev
 
 # 2. Build

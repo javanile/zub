@@ -15,9 +15,9 @@ keywords:
   - cipher
   - cryptography
   - libaegis
-date: 2026-09-19
-updated_at: 2026-09-19T13:54:08+00:00
-last_sync: 2026-09-19T13:54:08Z
+date: 2026-10-06
+updated_at: 2026-10-06T16:03:22+00:00
+last_sync: 2026-10-06T16:03:22Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -33,7 +33,7 @@ permalink: /packages/aegis-aead/libaegis/
 
 # libaegis
 
-Portable C implementations of the [AEGIS](https://datatracker.ietf.org/doc/draft-irtf-cfrg-aegis-aead/) family of high-performance authenticated ciphers (AEGIS-128L, AEGIS-128X2, AEGIS-128X4, AEGIS-256, AEGIS-256X2, AEGIS-256X4), with runtime CPU detection.
+Portable C implementations of the [AEGIS](https://www.rfc-editor.org/rfc/rfc10032.html) family of high-performance authenticated ciphers (AEGIS-128L, AEGIS-128X2, AEGIS-128X4, AEGIS-256, AEGIS-256X2, AEGIS-256X4), with runtime CPU detection.
 
 ## Features
 
@@ -203,6 +203,8 @@ This mode does not detect changes to the data. Use it only when something else a
 `aegis256_encrypt_unauthenticated()` and `aegis256_decrypt_unauthenticated()` are deprecated. Their output is different from the output of `aegis256_stream_xor()`. Keep them only for data in the old format.
 
 ### Random-Access File API
+
+For the on-disk layout, key derivation, and guidance on writing a compatible implementation, see the [RAF file format guide](RAF.md).
 
 The RAF (Random-Access File) API lets you work with encrypted files as naturally as regular files. Read any byte range, write anywhere, extend or truncate at will, all with full encryption and authentication. Files can be arbitrarily large without ever loading them entirely into memory. This makes it straightforward to build encrypted filesystems, databases, or any application that needs to modify encrypted data in place without re-encrypting the entire file.
 

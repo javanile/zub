@@ -10,10 +10,10 @@ keywords:
   - encoder-decoder
   - parsing
   - rfc-8949
-date: 2026-08-22
+date: 2026-10-06
 category: data-formats
-updated_at: 2026-08-22T19:53:55+00:00
-last_sync: 2026-08-22T19:53:55Z
+updated_at: 2026-10-06T16:29:01+00:00
+last_sync: 2026-10-06T16:29:01Z
 package_kind: hybrid
 has_library: true
 has_binary: true
