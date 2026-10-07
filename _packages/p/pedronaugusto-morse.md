@@ -6,16 +6,16 @@ author: pedronaugusto
 author_github: pedronaugusto
 repository: https://github.com/pedronaugusto/morse
 keywords:
-date: 2026-10-05
-updated_at: 2026-10-05T17:13:27+00:00
-last_sync: 2026-10-05T17:13:27Z
+date: 2026-10-07
+updated_at: 2026-10-07T15:41:01+00:00
+last_sync: 2026-10-07T15:41:01Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 2
-distributable_binary_count: 2
-multiple_binaries: true
+binary_count: 1
+distributable_binary_count: 1
+multiple_binaries: false
 is_sponsor: false
 sync_priority: normal
 sync_source: zigistry
@@ -30,7 +30,7 @@ input split across reads.
 
 ## Install
 
-Requires Zig 0.16.0. Fetch with `zig fetch --save
+Requires Zig 0.17.0. Fetch with `zig fetch --save
 git+https://github.com/pedronaugusto/morse`, then obtain the `morse` module through
 `b.dependency` and add it to your executable's imports. Forward your target and optimize
 settings.
@@ -137,23 +137,41 @@ caller supplies deadlines because a terminal need not answer.
 
 <!-- performance: quiet pass -->
 
+## Built with
+
+- [Zig](https://ziglang.org) 0.17.0 and its standard library; nothing else is
+  linked into the module.
+- [preflight](https://github.com/pedronaugusto/preflight) runs the source checks,
+  the tests and CI.
+- [Ghostty](https://github.com/ghostty-org/ghostty)'s `libghostty-vt` is the
+  emulator the conformance step writes to, fetched only for that step.
+
 ## Testing
 
 Local build scripts clear `.zig-cache/{o,h,z,tmp}` above the measured cap through preflight; run `zig build cache` before direct Zig builds (only a rebuild is lost).
 
-`zig build test` runs the unit suite and both examples in Debug by default. Tests check
-writer bytes, malformed input, split framing, console records and parser round trips.
-`zig build examples` runs the examples separately; `zig build check` compiles the tests
-and examples without running them. CI also runs `zig build lint`.
+`zig build test` runs `zig build lint` first, then the unit suite and both examples, in
+Debug by default; `-Dci-lint=false` leaves the lint step out. Tests check writer bytes,
+malformed input, split framing, console records and parser round trips.
+`zig build examples` runs the examples separately; `zig build check` compiles the tests,
+examples and benchmarks without running them. `zig build check-consumer`, part of lint, builds a
+project that depends on morse with no packages fetched.
 
-[CI](.github/workflows/ci.yml) runs tests and examples in Debug and ReleaseSafe on
-`ubuntu-latest`, `macos-latest` and `windows-latest`, plus ReleaseFast on Ubuntu.
-ReleaseSmall is compile-only on Ubuntu. Source jobs check formatting, cast reasons and
+`zig build bench` runs the speed ceilings in `bench/` on this machine, best with
+`-Doptimize=ReleaseFast` and nothing else running. They are wide on purpose and catch a
+change that costs many times what it did; CI compiles them and never runs them.
+
+[CI](.github/workflows/ci.yml) runs in tiers. The fast tier runs the source checks and
+the Debug suite on `ubuntu-latest`; the merge tier, on the candidate for `main`, adds
+the Debug suite on `macos-latest` and `windows-latest`; the release tier, before a cut,
+runs tests and examples in Debug and ReleaseSafe on all three, plus ReleaseFast on Ubuntu,
+and compiles ReleaseSmall on Ubuntu. Source jobs check formatting, cast reasons and
 the clock policy. There is no ThreadSanitizer job.
 
 Compile-only jobs cover `x86_64-linux-gnu`, `aarch64-linux-gnu`, `x86_64-windows-gnu`,
 `aarch64-windows-gnu`, `x86_64-macos` and `aarch64-macos`. Separate Ubuntu and macOS
-jobs run `zig build conformance`.
+jobs run `zig build conformance` on pull requests and merge or release dispatches, not on
+pushes to `main`.
 
 ## Licence
 

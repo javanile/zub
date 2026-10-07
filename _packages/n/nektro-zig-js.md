@@ -6,9 +6,9 @@ author: nektro
 author_github: nektro
 repository: https://github.com/nektro/zig-js
 keywords:
-date: 2026-05-05
-updated_at: 2026-05-05T05:45:49+00:00
-last_sync: 2026-05-05T05:45:49Z
+date: 2026-09-27
+updated_at: 2026-09-27T08:32:15+00:00
+last_sync: 2026-09-27T08:32:15Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -27,7 +27,7 @@ permalink: /packages/nektro/zig-js/
 ![loc](https://sloc.xyz/github/nektro/zig-js)
 [![license](https://img.shields.io/github/license/nektro/zig-js.svg)](https://github.com/nektro/zig-js/blob/master/LICENSE)
 [![nektro @ github sponsors](https://img.shields.io/badge/sponsors-nektro-purple?logo=github)](https://github.com/sponsors/nektro)
-[![Zig](https://img.shields.io/badge/Zig-0.14-f7a41d)](https://ziglang.org/)
+[![Zig](https://img.shields.io/badge/Zig-0.16-f7a41d)](https://ziglang.org/)
 [![Zigmod](https://img.shields.io/badge/Zigmod-latest-f7a41d)](https://github.com/nektro/zigmod)
 
 An ECMAScript module for Zig. Currently includes a parser.

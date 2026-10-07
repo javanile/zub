@@ -6,15 +6,15 @@ author: pedronaugusto
 author_github: pedronaugusto
 repository: https://github.com/pedronaugusto/chronicle
 keywords:
-date: 2026-10-05
-updated_at: 2026-10-05T17:36:13+00:00
-last_sync: 2026-10-05T17:36:13Z
+date: 2026-10-07
+updated_at: 2026-10-07T15:42:36+00:00
+last_sync: 2026-10-07T15:42:36Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 2
-distributable_binary_count: 2
+binary_count: 3
+distributable_binary_count: 3
 multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
@@ -30,7 +30,7 @@ folding them into state.
 
 ## Install
 
-Requires Zig 0.16.0. Fetch with `zig fetch --save
+Requires Zig 0.17.0. Fetch with `zig fetch --save
 git+https://github.com/pedronaugusto/chronicle`, then obtain the `chronicle` module
 through `b.dependency` and add it to your executable's imports. Forward your target and
 optimize settings.
@@ -82,7 +82,7 @@ defer reopened.deinit(io);
 var restored: Balances = .{};
 var from: u64 = 0;
 if (opened.snapshot) |snapshot| {
-    defer gpa.free(snapshot.state);
+    defer snapshot.deinit();
     restored = std.mem.bytesToValue(Balances, snapshot.state[0..@sizeOf(Balances)]);
     from = snapshot.seq;
 }
@@ -96,8 +96,9 @@ chronicle depends on a pinned strand package for record encoding and decoding. A
 takes an allocator that must outlive it and owns a directory, active segment files, a
 bounded in-memory tail and a mutex. Journal, replay, tailer, copied batch and
 reader-list results are opaque pointer owners: release each exactly once. Release
-replays and tailers before the journal. `close` reports finalization errors; `deinit`
-provides best-effort cleanup.
+replays and tailers before the journal. `finish` makes the active segment durable and
+reports what failed, leaving the journal open; `deinit` releases it, writing the same as
+best it can.
 
 `append` takes the timestamp from the caller. With the default `sync = .always`, it
 syncs the record before publishing it or returning its sequence number; `appendAll`
@@ -108,17 +109,24 @@ beside the writer read an atomic batch only once it is whole. `appendIf` and
 `appendAllIf` append only while the newest record is still the one the caller expected,
 and otherwise return `error.WrongExpectedSeq` with the newest sequence number.
 `appendDeferred` publishes before durability and requires a later flush. The
-`.on_segment` policy syncs at sealing and close; `.never` leaves record writeback to the
+`.on_segment` policy syncs at sealing and at `finish`; `.never` leaves record writeback to the
 operating system. Structural replacement flushes still apply under both policies.
 
-Durable writes use `fcntl(F_FULLFSYNC)` on macOS, `fsync` on Linux with `fdatasync` for
-writes into reserved space, and `NtFlushBuffersFile` on Windows: strand's `syncFile`. A
-macOS filesystem that declines `F_FULLFSYNC` gets `fsync`, and `status().flushed` says
-which call the records got. The implementation
-syncs directory changes on POSIX. Windows cannot provide that directory-sync guarantee,
-so record flushing does not guarantee a new filename survives power loss.
+Durable writes are [airlock](https://github.com/pedronaugusto/airlock)'s: `fcntl(F_FULLFSYNC)`
+on macOS, `fsync` on Linux and `NtFlushBuffersFile` on Windows, with the data-only sync
+(`fdatasync`, `NtFlushBuffersFileEx(DATA_SYNC_ONLY)` on NTFS) for writes into reserved
+space. A filesystem that declines the call gets the strongest one it takes, and
+`status().flushed` says what the records reached (`chronicle.flush` where nothing
+declined). A new segment, a compaction, a snapshot and a cursor are each made durable
+under their name, the directory included, on every platform: Windows flushes the
+directory too. A snapshot, a cursor and a compacted segment are written under a
+temporary name drawn at random and renamed into place; a writer's open removes the
+temporaries a crash left once they are an hour old. A backup makes its copies durable
+together, a writeout of each and one flush of the device on macOS and Windows.
 
-Opening repairs an unfinished final line by default; `.on_truncated = .fail` refuses it.
+Opening repairs an unfinished final record by default: a line with no newline, or one
+whose newline reached the disk without all of its bytes, as a power cut can leave it.
+`.on_truncated = .fail` refuses either. Damage before the final record is always refused.
 Quick verification checks the active segment and older segment headers; full
 verification checks the history. Failed persistence blocks later appends until
 `reconcile` determines whether the attempted write survived. Schema versions newer than
@@ -146,24 +154,41 @@ exercises schema migration.
 - It does not serialize the application's snapshot state for it.
 - It does not choose retention policy or protect history automatically from compaction.
 
-<!-- performance: quiet pass -->
+## Built with
+
+- [Zig](https://ziglang.org) 0.17.0 and its standard library; nothing is linked.
+- [strand](https://github.com/pedronaugusto/strand) reads and writes each record's
+  line.
+- [airlock](https://github.com/pedronaugusto/airlock) makes the files durable: every
+  sync, atomic replace and backup batch, and the identity that tells two directories
+  apart.
+- [shakedown](https://github.com/pedronaugusto/shakedown) supplies the tests' doubles:
+  faulted and counted `Io` calls and allocators. Only the tests import it, so a project
+  depending on chronicle never fetches it.
+- [preflight](https://github.com/pedronaugusto/preflight) runs the source checks,
+  the tests and CI.
 
 ## Testing
-
-Local build scripts clear `.zig-cache/{o,h,z,tmp}` above the measured cap through preflight; run `zig build cache` before direct Zig builds (only a rebuild is lost).
 
 `zig build test` runs the unit suite, writer-lock helper and examples in Debug by
 default. Tests cover crash prefixes, checksum and chain failures, recovery, replay,
 snapshots, retention, concurrency and allocation cleanup. `zig build examples` runs the
 examples separately; `zig build check` compiles the suite, helper and examples without
-running them. CI also runs `zig build docs -- usage --check`.
+running them. CI also runs `zig build docs -- usage --check`, and
+`zig build check-consumer` builds a project that depends on chronicle with only strand
+fetched.
 
-[CI](.github/workflows/ci.yml) runs tests and examples in Debug and ReleaseSafe on
-`ubuntu-latest`, `macos-latest` and `windows-latest`, plus ReleaseFast on Ubuntu.
-ReleaseSmall is compile-only on Ubuntu. Separate Ubuntu jobs run ThreadSanitizer in
-Debug and check formatting and cast reasons.
+[CI](.github/workflows/ci.yml) has three tiers. The fast tier runs the source checks and
+the Debug suite with the examples on `ubuntu-latest`. The merge tier also runs the Debug
+suite on `macos-latest` and `windows-latest`. The release tier runs Debug and ReleaseSafe
+on all three hosts, ReleaseFast on Ubuntu, ReleaseSmall compile-only, every cross target
+and ThreadSanitizer. The merge and release tiers also run the Debug suite on Ubuntu with
+Zig master, a job that reports and never blocks.
 
-Compile-only jobs cover `x86_64-linux-gnu`, `aarch64-linux-gnu`, `x86_64-linux-musl`,
+`zig build bench -Doptimize=fast` installs the benchmarks in [bench/](bench/) under
+`zig-out/bench`, and each says at its top how it is run; CI only compiles them.
+
+The release tier's compile-only jobs cover `x86_64-linux-gnu`, `aarch64-linux-gnu`, `x86_64-linux-musl`,
 `x86_64-windows-gnu`, `aarch64-windows-gnu`, `x86_64-macos` and `aarch64-macos`.
 Additional Linux builds select `x86_64_v2` and `cortex_a72` CPUs to compile the checksum
 instruction paths.

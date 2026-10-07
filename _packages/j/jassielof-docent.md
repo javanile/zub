@@ -21,10 +21,10 @@ keywords:
   - linter
   - static-analysis
   - style
-date: 2026-08-21
+date: 2026-10-07
 category: tooling
-updated_at: 2026-08-21T22:40:28+00:00
-last_sync: 2026-08-21T22:40:28Z
+updated_at: 2026-10-07T16:05:03+00:00
+last_sync: 2026-10-07T16:05:03Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -170,6 +170,32 @@ When explicit paths are provided, the default project discovery is disabled and 
 == Linting rules
 
 To check the rules documentation, check link:{website}lib/#docent.rules[library documentation rules namespace] for the actual implemented rules.
+
+== Formatting
+
+`docent fmt` formats explicit command-line paths first. When no paths are given,
+it uses `[fmt].include` from `.config/docent.toml`; when that is also unset, it
+uses `.paths` from the nearest `build.zig.zon`. Manifest-derived files are
+limited to `.zig` and `.zon`, while manifest-derived directories are walked
+recursively with the same filter. Entries such as README and license files are
+therefore ignored, as are local path dependencies unless they are selected
+explicitly. If a manifest has no `.paths` field, its project directory is used
+as the filtered recursive root.
+
+Explicit file arguments remain strict: requesting a non-Zig file attempts to
+format that file and reports parsing errors rather than silently ignoring a
+likely typo.
+
+In minimal output, the dedicated `check cogni` and `check cyclo` commands show
+their raw `score/threshold` pair (for example, `30/15`) instead of repeating the
+rule selected by the command. Aggregate `check all` output keeps rule IDs so
+every finding remains attributable. Complexity is an unbounded count, so
+Docent does not present it as a percentage.
+
+`docent check all` ends its full diagnostic report with both the overall
+warning/error total and a per-category, per-rule count breakdown. This keeps
+the aggregate command convenient for CI while making the responsible checks
+explicit.
 
 == Test suite
 

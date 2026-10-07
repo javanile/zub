@@ -6,16 +6,16 @@ author: pedronaugusto
 author_github: pedronaugusto
 repository: https://github.com/pedronaugusto/strand
 keywords:
-date: 2026-10-05
-updated_at: 2026-10-05T18:54:25+00:00
-last_sync: 2026-10-05T18:54:25Z
+date: 2026-10-07
+updated_at: 2026-10-07T15:31:07+00:00
+last_sync: 2026-10-07T15:31:07Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 1
-distributable_binary_count: 1
-multiple_binaries: false
+binary_count: 2
+distributable_binary_count: 2
+multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
 sync_source: zigistry
@@ -29,7 +29,7 @@ byte offset, and damaged lines can be refused or skipped while reading continues
 
 ## Install
 
-Requires Zig 0.16.0. Fetch with `zig fetch --save
+Requires Zig 0.17.0. Fetch with `zig fetch --save
 git+https://github.com/pedronaugusto/strand`, then obtain the `strand` module through
 `b.dependency` and add it to your executable's imports. Forward your target and optimize
 settings.
@@ -51,7 +51,7 @@ try log.write(.{ .kind = "retry", .at = 2, .level = .warn });
 try log.write(.{ .kind = "close", .at = 3 });
 
 var source: std.Io.Reader = .fixed(out.written());
-var events: strand.Reader(Event) = .init(std.heap.page_allocator, &source, .{
+var events: strand.Reader(Event) = .init(arena, &source, .{
     .ignore_unknown_fields = true,
     .max_line_bytes = 64 * 1024,
     .on_malformed = .fail,
@@ -84,20 +84,28 @@ readers have independent state; one reader is not shared between threads.
 `LineReader` frames and checks bytes without parsing. `Reader(T)` decodes them into `T`,
 following `std.json`'s typed rules and custom hooks. `max_line_bytes` bounds the JSON
 payload, excluding its terminator, optional separator and discarded torn prefix.
-Oversized records are consumed before the next read. `lines.fault` records the last
-refusal's line, byte offset and parse cause; `on_malformed = .skip` counts skipped
-lines. Unknown fields are ignored by default and duplicate fields are errors by default.
+An oversized record is consumed to its end before the next record is framed, also
+when its end arrives later in a growing file. With `record_separator`, every separator
+starts a record: a torn record is dropped and counted, and the record after it on the
+same line is read. `lines.fault` records the last refusal's line, byte offset and parse
+cause; `on_malformed = .skip` counts skipped lines. Unknown fields are ignored by default and duplicate fields are errors by default.
 
 `Writer(T)` writes to a caller-owned `*std.Io.Writer`. `init` and `initFile` stream
 records without owned scratch. `initBounded` and `initFileBounded` take an allocator and
 byte limit, encode into reusable owned storage and refuse an oversized record before
 emitting it; these writers require `deinit`. Flush and sync policies are set separately
 to never, per record, per batch or every specified number of records. Sync requires a
-file writer, drains it first and latches a failure so later records are refused.
-Directory durability remains the caller's responsibility.
+file writer, drains it first and latches a failure so later records are refused. A
+sync is [airlock](https://github.com/pedronaugusto/airlock)'s `syncFile` at level
+`.data`: `fdatasync` on Linux, `F_FULLFSYNC` on macOS, a data-only flush on Windows
+NTFS. A filesystem that declines it gets the strongest call it takes, and
+`Writer.reached` says what the last sync reached. Directory durability remains the
+caller's responsibility.
 
 `Tail(T)` reads a seekable file backwards. `Follower(T)` waits for complete terminated
-records and stops with `error.Canceled` when its `std.Io` is cancelled. A supplied
+records on the `std.Io` each blocking call is given (`next`, `checkpoint`, `truncated`
+and `deinit`; it keeps none), and stops with `error.Canceled` when that `std.Io` is
+cancelled. A supplied
 `Opener` lets it follow replacement files after draining the old one, waiting while the
 path names nothing between a rotation's rename and its create. File identity can
 use the platform's file identifier or an opening-byte fingerprint; checkpoints retain
@@ -107,7 +115,7 @@ that identity, the byte offset and line numbering.
 `memberStringOf` read one top-level member's scalar value wherever it sits, the first of
 a repeated one, as a view into the line. A union that declares
 `pub const jsonl_tag = "type"` is read and written tagged inside its object
-(`{"type":"assistant",...}`), as serde's `#[serde(tag)]`; `jsonl_other` names the arm
+(`{"type":"assistant",...}`), the arm a member of the record; `jsonl_other` names the arm
 for a tag no arm has, holding nothing or the record as a `Raw`. A missing, repeated or
 non-string tag is refused, and `tagOf` reads the arm from the tag member.
 
@@ -118,6 +126,12 @@ Pretty records span physical lines; ASCII record separators provide optional RFC
 framing when enabled at both ends. [examples/logbook.zig](examples/logbook.zig)
 exercises file following, tailing and a line protocol.
 
+For a caller that frames its own lines, `writeValue` and `writeObjectOpen` write one
+value's JSON without a terminator, `lines` walks the lines of a buffer already in
+memory, `indexOfControl` finds a raw control byte, and `memberOf`, `kindOf` and
+`leadingIntMembers` read members of a line without parsing it. `FileId` is airlock's,
+a file named by its volume and number, as `Follower` uses it to notice a rotation.
+
 ## Scope
 
 - It does not lock or own the supplied stream.
@@ -126,11 +140,18 @@ exercises file following, tailing and a line protocol.
 - It does not read pretty records backwards or decompress a stream.
 - It does not watch the filesystem or flush on a timer.
 
-<!-- performance: quiet pass -->
+## Built with
+
+- [Zig](https://ziglang.org) 0.17.0 and its standard library; nothing is linked.
+- [airlock](https://github.com/pedronaugusto/airlock) syncs the file under a `Writer`
+  and numbers files for a `Follower`.
+- [shakedown](https://github.com/pedronaugusto/shakedown) supplies the tests' doubles:
+  faulted and counted `Io` calls and allocators. Only the tests import it, so a
+  project depending on strand never fetches it.
+- [preflight](https://github.com/pedronaugusto/preflight) runs the source checks,
+  the tests and CI.
 
 ## Testing
-
-Local build scripts clear `.zig-cache/{o,h,z,tmp}` above the measured cap through preflight; run `zig build cache` before direct Zig builds (only a rebuild is lost).
 
 `zig build test` runs the unit suite, scratch tests and examples in Debug by default.
 The suite covers framing, codec agreement with `std.json`, owned copies, rotation,
@@ -139,11 +160,17 @@ rounds by default; `-Dcampaign=N` and `-Dseed=N` select a generated-input run. `
 build test --fuzz` runs the coverage-guided targets until stopped. CI also runs
 `zig build lint`.
 
-[CI](.github/workflows/ci.yml) runs tests and examples in Debug and ReleaseSafe on
-`ubuntu-latest`, `macos-latest` and `windows-latest`, plus ReleaseFast on Ubuntu.
-ReleaseSmall is compile-only on Ubuntu. Separate Ubuntu jobs run ThreadSanitizer in
-Debug and a 20,000-round property campaign in ReleaseSafe, and check formatting and cast
-reasons.
+[CI](.github/workflows/ci.yml) has three tiers. The fast tier runs the source checks and
+the Debug suite with the examples on `ubuntu-latest`, and compiles the macOS and Windows
+test binaries. The merge tier also runs those binaries on `macos-latest` and
+`windows-latest`. The release tier runs Debug and ReleaseSafe on all three hosts,
+ReleaseFast on Ubuntu, ReleaseSmall compile-only, every cross target and
+ThreadSanitizer. The merge and release tiers add a 20,000-round property campaign in
+ReleaseSafe on Ubuntu, and run the Debug suite on Ubuntu with Zig master, a job that
+reports and never blocks.
+
+`zig build bench -Doptimize=fast` runs the benchmarks in [bench/](bench/); CI only
+compiles them.
 
 `zig build check` compiles without running. CI uses it for `x86_64-linux-gnu`,
 `aarch64-linux-gnu`, `x86_64-linux-musl`, `x86_64-windows-gnu`, `aarch64-windows-gnu`,

@@ -6,16 +6,16 @@ author: pedronaugusto
 author_github: pedronaugusto
 repository: https://github.com/pedronaugusto/lookout
 keywords:
-date: 2026-10-04
-updated_at: 2026-10-04T14:59:57+00:00
-last_sync: 2026-10-04T14:59:57Z
+date: 2026-10-07
+updated_at: 2026-10-07T15:53:53+00:00
+last_sync: 2026-10-07T15:53:53Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 2
-distributable_binary_count: 2
-multiple_binaries: true
+binary_count: 1
+distributable_binary_count: 1
+multiple_binaries: false
 is_sponsor: false
 sync_priority: normal
 sync_source: zigistry
@@ -30,43 +30,141 @@ capability queries.
 
 ## Install
 
-Requires Zig 0.16.0. Fetch with `zig fetch --save
+Requires Zig 0.17.0. Fetch with `zig fetch --save
 git+https://github.com/pedronaugusto/lookout`, then obtain the `lookout` module through
 `b.dependency` and add it to your executable's imports. Forward your target and optimize
 settings.
 
 ## Usage
 
-[examples/usage.zig](examples/usage.zig) watches an absolute `dir_path` and writes
-through an open scratch directory with the supplied `std.Io`.
+[examples/usage.zig](examples/usage.zig) watches an absolute `dir_path`, writes
+through an open scratch directory with the supplied `std.Io`, and prints to a
+buffered standard output writer, `output`.
 
-<!-- BEGIN GENERATED ci/readme_usage.sh -->
+<!-- BEGIN GENERATED zig build docs -- usage -->
 ```zig
 const lookout = @import("lookout");
 
-var watcher: lookout.Watcher = try .init(gpa, io, .{});
-defer watcher.deinit();
+var watcher: lookout.Watcher = try .init(gpa, .{});
+defer watcher.deinit(io);
 
-const id = try watcher.add(dir_path, .{ .recursive = true });
-defer watcher.remove(id);
+const id = try watcher.add(io, dir_path, .{ .recursive = true });
+defer watcher.remove(io, id);
 
 try scratch.writeFile(io, .{ .sub_path = "notes.txt", .data = "hello" });
 
-for (try watcher.poll(1_000)) |event| {
-    std.debug.print("{s} {s}\n", .{ @tagName(event.kind), event.path });
+const one_second: std.Io.Timeout = .{ .duration = .{ .raw = .fromSeconds(1), .clock = .awake } };
+for (try watcher.poll(io, one_second)) |event| {
+    try output.print("{s} {s}\n", .{ @tagName(event.kind), event.path });
 }
 ```
 <!-- END GENERATED -->
 
 ## Design
 
-lookout has no package dependencies. Apple targets link libc and CoreServices for
-FSEvents and need a macOS SDK; the build locates the host SDK or uses the supplied
-sysroot. A watcher uses the caller's allocator for watches, paths and event storage. A
-returned event slice and its paths belong to the watcher until the next poll or
-`deinit`. Baselines and checkpoints retain their storage and must be released.
-A checkpoint can outlive its watcher; the watcher allocator must remain valid
-until every shared checkpoint is released.
+The watcher module uses Zig's standard library and two packages of the same family,
+[airlock](https://github.com/pedronaugusto/airlock) for the baseline file and
+[sweep](https://github.com/pedronaugusto/sweep) for filter patterns. A watcher keeps
+the allocator it is made with for watches, paths and event storage, and keeps no
+`std.Io`: `add`, `remove`, `refilter`, `poll` and `deinit` each take the `io` they go
+through. A returned event slice and its paths belong to the watcher until the next poll or
+`deinit`. Baselines keep their allocator the same way and take `io` per call;
+baselines and checkpoints retain their storage and must be released. A checkpoint
+can outlive its watcher; the watcher allocator must remain valid until every shared
+checkpoint is released.
+
+`add` accepts file or directory watches, optional recursion and filters. Pending watches
+wait at an existing ancestor for a missing path to appear. Filters select paths by
+pattern or predicate, and `refilter` changes the selection. Patterns are git's, as
+in a `.gitignore` line: `*`, `?` and brackets within a component, `**` as a whole
+component across components, `\` escapes (a separator on Windows), and a pattern
+with no separator matching a name at any depth. A pattern git refuses is
+`InvalidPattern`. Each path is matched against all of a watch's patterns in one
+pass over it, compared as the file system compares names. Excluded directories are
+pruned where the backend supports it; other backends discard their events.
+
+Every change within a watch's scope and filters made after `add` returns is reported, subject to coalescing.
+
+Recursive watches do not follow symbolic links unless `follow_symlinks` is set. With it,
+a link to a directory is watched as if the directory were there, wherever it leads,
+including outside the root, and changes below it are reported under the link's path
+with the watch's id and filter. A link into a directory the watch already reaches, or
+into one holding such a directory, is not followed; this is decided by device and inode,
+or volume and file id on Windows, not by path. Each followed link is a registration of its
+own, and `add` walks the tree once more to find the links. A link changed to lead
+elsewhere is reported on its own path and the watch moves to the new directory; a
+dangling link is an entry until it changes. A watch follows at most `max_followed_links`
+links and reports a link past that as `unwatched`. Such a watch produces no checkpoint.
+
+`Watcher.Options` holds the watcher's settings and `Watcher.AddOptions` a watch's.
+Their spans are `std.Io.Duration`s, kept to the millisecond and rounded up.
+`latency` combines events collected together. `settle` waits for modified file
+contents to stop changing. `debounce` holds ordinary changes until the path is quiet
+and reports the last kind; it takes precedence over the other windows. Overflow and
+unwatched notices bypass these waits. A seeded `Baseline` can diff the current tree
+after an overflow. A baseline does not follow symbolic links, so for a watch with
+`follow_symlinks` it answers for the tree itself and not for what lies below its links.
+`save(io, filename, .{})` atomically replaces a versioned, SHA-256 checksummed file;
+`Baseline.load(gpa, io, filename, root, options)` restores it on every backend, and
+`diff(io)` answers what changed since the last run with one walk.
+Keep the file outside the watched tree. Corrupt files return `InvalidBaseline`,
+old versions `UnsupportedBaselineVersion`, and mismatched platform, root, scope,
+budget or patterns `ForeignBaseline`. Predicate filters return
+`UnsupportedBaselineFilter`: executable predicates cannot be stored. `save` writes
+through [airlock](https://github.com/pedronaugusto/airlock): a temporary file next to
+the destination, renamed over it, so readers see the old file or the new one. It does
+not sync by default. `save(io, filename, .{ .durable = true })` also makes the new file
+survive a power cut on every platform: the temporary file is synced before the rename
+and the directory after it, one barrier and one flush on macOS and two flushes on Linux
+and Windows. A failed sync before the rename leaves the old file; a failed directory
+sync after it is `PublishedNotDurable`, with the new file in place; a filesystem that
+refuses the syncs is `LevelUnavailable`. A crash during a save can leave a temporary
+file named after `Baseline.temp_prefix`, which `airlock.pruneTemps` removes. Neither in-memory nor persisted baselines
+recover transient changes absent from both snapshots.
+Each change carries its `target`, file or directory, from the listing that saw it, so a
+removed directory is known for one without a `stat`.
+
+`poll` takes a `std.Io.Timeout` and is a `std.Io` cancellation point. Cancellation preserves
+gathered events for a later poll. Native waits observe cancellation when they wake; use
+`wake` to end a blocked wait on any backend. `fd` returns a pollable descriptor where
+the backend provides one.
+
+FSEvents checkpoints retain per-watch volume and log identity, durable cursors and
+pending changes and the path baseline the watch knew. Capture retains a shared
+path revision without walking or copying the tree; token writing flattens it
+to a self-contained baseline. Paths removed since a retained revision are reclaimed
+when that revision is released. On resume a path in that
+baseline that is gone is reported as a deletion once, independent of event ids
+and replay arrival time. The replay has no time window or id-space barrier;
+version-1 checkpoint tokens are refused. Resume with matching canonical roots, scopes and filters: a
+token records its ignore and include patterns and is refused under others, while a predicate
+filter cannot be recorded and is the caller's to keep the same. Saved changes a resumed watch
+would not report live are dropped. A changed
+volume or log yields `InvalidCheckpoint`; watches spanning mounted volumes keep live
+coverage but cannot produce a checkpoint. Other backends return null.
+[examples/since.zig](examples/since.zig) exercises checkpoint tokens and resuming.
+
+## API
+
+| API | Result |
+| --- | --- |
+| `Baseline.seed`, `diff`, `deinit` | Own, compare and release a tree snapshot. |
+| `Baseline.save`, `load` | Atomically persist, durably on request, and restore a checked snapshot for any backend. |
+| `Watcher.checkpoint`, `Checkpoint.token`, `parse`, `deinit` | Own, persist and resume FSEvents log cursors and known path baselines. |
+| `Watcher.capabilities(id)` | The backend and filesystem fact for one watch; null for an unknown id. |
+
+## Scope
+
+- It does not guarantee delivery of every intermediate write or rename.
+- It does not turn overflow recovery into a complete history of transient changes.
+- It does not follow symbolic links during recursive tree walks unless `follow_symlinks` asks for it, and never into a directory the watch already reaches: loops and overlapping paths would produce duplicate reports.
+- It does not read ignore files: a pattern is one line of gitignore syntax, and negation (`!`), directory-only rules (a trailing `/`), files and their precedence are a predicate's, backed by the repository's own matcher.
+- It does not recover transient history on backends without a persistent log.
+- It does not supply an application event loop or rebuild policy.
+
+<!-- performance: quiet pass -->
+
+## Platforms
 
 The automatic backend is FSEvents on Apple targets, kqueue on supported BSD targets,
 inotify on Linux, ReadDirectoryChangesW on Windows and polling elsewhere.
@@ -89,95 +187,44 @@ differences that affect event handling.
 | --- | --- |
 | Polling | Entries whose mtime or ctime is not strictly older than their snapshot in a conservative two-second tick are checked by content until they age; hashes cover files up to 1 MiB, and larger or unreadable racy entries report modification. |
 
-`add` accepts file or directory watches, optional recursion and filters. Pending watches
-wait at an existing ancestor for a missing path to appear. Filters select paths by
-pattern or predicate, and `refilter` changes the selection. Excluded directories are
-pruned where the backend supports it; other backends discard their events.
+Apple targets link libc and CoreServices for FSEvents and need a macOS SDK. A
+native macOS build finds the host's SDK by itself. A named Apple target links
+against the SDK given with `-Dmacos-sdk=$(xcrun --show-sdk-path)` or, without one,
+a pinned SDK package; `-Dbundled-macos-sdk=true` selects the pinned SDK for a
+native build too.
 
-Every change within a watch's scope and filters made after `add` returns is reported, subject to coalescing.
+## Built with
 
-Recursive watches do not follow symbolic links unless `follow_symlinks` is set. With it,
-a link to a directory is watched as if the directory were there, wherever it leads,
-including outside the root, and changes below it are reported under the link's path
-with the watch's id and filter. A link into a directory the watch already reaches, or
-into one holding such a directory, is not followed; this is decided by device and inode,
-or volume and file id on Windows, not by path. Each followed link is a registration of its
-own, and `add` walks the tree once more to find the links. A link changed to lead
-elsewhere is reported on its own path and the watch moves to the new directory; a
-dangling link is an entry until it changes. A watch follows at most `max_followed_links`
-links and reports a link past that as `unwatched`. Such a watch produces no checkpoint.
-
-`latency_ms` combines events collected together. `settle_ms` waits for modified file
-contents to stop changing. `debounce_ms` holds ordinary changes until the path is quiet
-and reports the last kind; it takes precedence over the other windows. Overflow and
-unwatched notices bypass these waits. A seeded `Baseline` can diff the current tree
-after an overflow. `save(gpa, filename)` atomically replaces a versioned, SHA-256
-checksummed file; `Baseline.load(gpa, io, filename, root, options)` restores it on
-every backend, and `diff` answers what changed since the last run with one walk.
-Keep the file outside the watched tree. Corrupt files return `InvalidBaseline`,
-old versions `UnsupportedBaselineVersion`, and mismatched platform, root, scope,
-budget or patterns `ForeignBaseline`. Predicate filters return
-`UnsupportedBaselineFilter`: executable predicates cannot be stored. Replacement
-does not fsync; it promises atomic visibility. For filesystem durability, use
-`saveWithOptions(gpa, filename, .{ .durable = true })`: POSIX syncs the temporary
-file before replacement and the parent directory afterwards. A directory-sync
-failure returns its error after the new file has become visible. Windows returns
-`UnsupportedBaselineDurability` before writing because the I/O API cannot promise
-a durable directory replacement there. Neither in-memory nor persisted baselines
-recover transient changes absent from both snapshots.
-Each change carries its `target`, file or directory, from the listing that saw it, so a
-removed directory is known for one without a `stat`.
-
-`poll` accepts a timeout and is a `std.Io` cancellation point. Cancellation preserves
-gathered events for a later poll. Native waits observe cancellation when they wake; use
-`wake` to end a blocked wait on any backend. `fd` returns a pollable descriptor where
-the backend provides one.
-
-FSEvents checkpoints retain per-watch volume and log identity, durable cursors and
-pending changes and the path baseline the watch knew. Capture retains a shared
-path revision without walking or copying the tree; token writing flattens it
-to a self-contained baseline. Paths removed since a retained revision are reclaimed
-when that revision is released. On resume a path in that
-baseline that is gone is reported as a deletion once, independent of event ids
-and replay arrival time. The replay has no time window or id-space barrier;
-version-1 checkpoint tokens are refused. Resume with matching canonical roots, scopes and filters. A changed
-volume or log yields `InvalidCheckpoint`; watches spanning mounted volumes keep live
-coverage but cannot produce a checkpoint. Other backends return null.
-[examples/since.zig](examples/since.zig) exercises checkpoint tokens and resuming.
-
-## API
-
-| API | Result |
-| --- | --- |
-| `Baseline.seed`, `diff`, `deinit` | Own, compare and release a tree snapshot. |
-| `Baseline.save`, `saveWithOptions`, `load` | Atomically persist and restore a checked snapshot for any backend. |
-| `Watcher.checkpoint`, `Checkpoint.token`, `parse`, `deinit` | Own, persist and resume FSEvents log cursors and known path baselines. |
-| `Watcher.capabilities(id)` | The backend and filesystem fact for one watch; null for an unknown id. |
-
-## Scope
-
-- It does not guarantee delivery of every intermediate write or rename.
-- It does not turn overflow recovery into a complete history of transient changes.
-- It does not follow symbolic links during recursive tree walks unless `follow_symlinks` asks for it, and never into a directory the watch already reaches: loops and overlapping paths would produce duplicate reports.
-- It does not read gitignore syntax: use a predicate with the repository matcher, which owns anchoring, negation and directory rules.
-- It does not recover transient history on backends without a persistent log.
-- It does not supply an application event loop or rebuild policy.
-
-<!-- performance: quiet pass -->
+- [Zig](https://ziglang.org) 0.17.0 and its standard library. On Apple targets the
+  module links libc and CoreServices; nothing else is linked anywhere.
+- [airlock](https://github.com/pedronaugusto/airlock) writes the baseline file
+  atomically and, on request, durably.
+- [sweep](https://github.com/pedronaugusto/sweep) compiles and matches filter
+  patterns.
+- [preflight](https://github.com/pedronaugusto/preflight) runs the source checks,
+  the tests and CI.
+- [shakedown](https://github.com/pedronaugusto/shakedown) is the clock, fault
+  injection and counting allocator the tests run on, fetched only for them.
+- A pinned macOS SDK package, fetched only to link a named Apple target without
+  an SDK of its own.
 
 ## Testing
 
-Local build scripts clear `.zig-cache/{o,h,z,tmp}` above the measured cap in `ci/cache.sh`; run `sh ci/cache.sh` before direct Zig builds (only a rebuild is lost).
-
 `zig build test` runs the suite and examples in Debug by default, exercising the
-backends available on the host. Tests cover filters, pending paths, renames, overflow,
-cancellation, settling, checkpoints and resource cleanup. `zig build examples` runs the
-examples separately. CI also runs `ci/check-docs.sh`.
+backends available on the host. Tests cover filters, pending paths, renames,
+overflow, cancellation, settling, checkpoints and resource cleanup. `zig build
+examples` runs the examples separately. `zig build bench` runs lookout's own speed
+checks; run it on a quiet machine, with `-Doptimize=ReleaseFast`. CI also runs
+`zig build lint`, which includes `zig build check-consumer`: a project that depends
+on lookout by path, built with only airlock and sweep fetched.
 
-[CI](.github/workflows/ci.yml) runs tests and examples in Debug and ReleaseSafe on
-`ubuntu-latest`, `macos-latest` and `windows-latest`, plus ReleaseFast on Ubuntu.
-ReleaseSmall compiles the tests and library without running them on Ubuntu. Separate
-Ubuntu jobs run ThreadSanitizer in Debug and check formatting and cast reasons.
+[CI](.github/workflows/ci.yml) has three tiers. The fast tier runs the source
+checks and the Linux Debug suite with the examples, compiles the benchmarks, and
+compiles the tests for macOS, Windows and every configured target without running
+them. The merge tier adds the Debug suite on `macos-latest` and `windows-latest`.
+The release tier runs the tests and examples in Debug and ReleaseSafe on all three
+hosts, plus ReleaseFast on Ubuntu; it compiles ReleaseSmall without running it, and
+runs ThreadSanitizer in Debug on Ubuntu.
 
 The default `zig build` compiles the backend-bearing tests and library. CI uses it for
 `x86_64-linux-gnu`, `aarch64-linux-gnu`, `x86_64-linux-musl`, `x86_64-windows-gnu`,
