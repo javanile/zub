@@ -23,16 +23,16 @@ keywords:
   - sqlite
   - web-framework
   - websocket
-date: 2026-10-01
+date: 2026-10-08
 category: tooling
-updated_at: 2026-10-01T16:59:03+00:00
-last_sync: 2026-10-01T16:59:03Z
+updated_at: 2026-10-08T14:45:42+00:00
+last_sync: 2026-10-08T14:45:42Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 24
-distributable_binary_count: 24
+binary_count: 30
+distributable_binary_count: 30
 multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
@@ -52,11 +52,11 @@ permalink: /packages/nevindra/nilo/
 </p>
 
 <p align="center">
-  <a href="https://ziglang.org/"><img alt="Zig 0.16" src="https://img.shields.io/badge/zig-0.16-f7a41d?style=flat-square&logo=zig&logoColor=white"></a>
-  <a href="./CHANGELOG.md"><img alt="version 0.6.0" src="https://img.shields.io/badge/version-0.6.0-3b82f6?style=flat-square"></a>
-  <a href="./docs/reference/"><img alt="11 modules" src="https://img.shields.io/badge/modules-11-8957e5?style=flat-square"></a>
-  <a href="./refusals/README.md"><img alt="411 refusals" src="https://img.shields.io/badge/mistakes%20refused%20while%20compiling-411-e05d44?style=flat-square"></a>
-  <a href="./docs/adr/"><img alt="296 ADRs" src="https://img.shields.io/badge/decisions%20on%20file-296-6b7280?style=flat-square"></a>
+  <a href="https://ziglang.org/"><img alt="Zig 0.17" src="https://img.shields.io/badge/zig-0.17-f7a41d?style=flat-square&logo=zig&logoColor=white"></a>
+  <a href="./CHANGELOG.md"><img alt="version 0.7.0" src="https://img.shields.io/badge/version-0.7.0-3b82f6?style=flat-square"></a>
+  <a href="./docs/reference/"><img alt="12 modules" src="https://img.shields.io/badge/modules-12-8957e5?style=flat-square"></a>
+  <a href="./refusals/README.md"><img alt="532 refusals" src="https://img.shields.io/badge/mistakes%20refused%20while%20compiling-532-e05d44?style=flat-square"></a>
+  <a href="./docs/adr/"><img alt="252 ADRs" src="https://img.shields.io/badge/decisions%20on%20file-252-6b7280?style=flat-square"></a>
   <a href="./LICENSE"><img alt="MIT" src="https://img.shields.io/badge/license-MIT-16a34a?style=flat-square"></a>
 </p>
 
@@ -71,7 +71,7 @@ permalink: /packages/nevindra/nilo/
 
 ---
 
-Zig gives you a fast compiler and leaves the rest to you: routing, settings, password hashing, tables, Postgres. **nilo is that rest**, as twelve small modules you import one at a time.
+Zig gives you a fast compiler and leaves the rest to you: routing, settings, password hashing, tables, Postgres. **nilo is that rest: an HTTP framework for Zig, and the toolkit it is built from**, twelve small modules you import one at a time.
 
 Every module runs on the same idea. **A plain function is a route. A plain struct is a table.** nilo reads your types while the program compiles, so there is nothing to annotate and nothing to keep in sync.
 
@@ -93,19 +93,19 @@ Those three lines are a complete route. From them you get:
 - 🏁 **#2 of 79** on [HttpArena](https://www.http-arena.com/frameworks/nilo/)'s HTTP/1.1 board, and **#1 of 22** on WebSocket, among untuned entries.
 - 🪶 **1 allocation** per request. A test fails if it ever becomes 2.
 - 💾 **4,669 bytes** per idle connection.
-- 🧯 **411 mistakes caught while compiling**, each with a sentence that tells you the fix.
+- 🧯 **532 mistakes caught while compiling**, each with a sentence that tells you the fix.
 - 🔌 **Zero glue.** Routing, errors, OpenAPI and SQL all read the same struct.
 
 ## ⚡ Quickstart
 
-You need Zig 0.16 and nothing else: no C library, no system package.
+You need Zig 0.17 and nothing else: no C library, no system package. **v0.7.0, the tag below, and every tag before it build on Zig 0.16.0**, so pin one of them with 0.16, or follow `main` with 0.17 until the next tag.
 
 ```console
 $ zig init                                                          # only if you have no build.zig.zon yet
-$ zig fetch --save 'git+https://github.com/nevindra/nilo?ref=v0.6.0#221e1b3eaed531efe13de7ab39dedc4091a8775c'
+$ zig fetch --save 'git+https://github.com/nevindra/nilo?ref=v0.7.0#e1b859f8230a4cffd09d8e84411f7bcd7524258a'
 ```
 
-**Keep the `#commit` part.** The tag is annotated, and Zig 0.16's `zig fetch` doesn't peel it, so `?ref=v0.6.0` on its own gives you whatever `main` is that day.
+**Keep the `#commit` part.** The tag is annotated, and `zig fetch` doesn't peel it (still true on 0.17), so `?ref=v0.7.0` on its own gives you whatever `main` is that day.
 
 ```zig
 const std = @import("std");
@@ -165,7 +165,7 @@ Run `zig build run` and it's serving. [Getting started](./docs/guide/getting-sta
 
 The package is `nilo`, and each module is its own import: `nilo_http`, `nilo_sql`, `nilo_s3`, `nilo_fetch`, `nilo_job`, `nilo_cache`, `nilo_jwt`, `nilo_proto`, `nilo_config`, `nilo_pw`, `nilo_id` and `nilo_core`. **There is no module called `nilo`**, so alias the one you use: `const nilo = @import("nilo_http");`.
 
-> **Upgrading from 0.5.0?** [Read this before you deploy](https://github.com/nevindra/nilo/releases/tag/v0.6.0#read-this-before-you-deploy): each change, and how to fix it. From 0.4.0, read [v0.5.0's](https://github.com/nevindra/nilo/releases/tag/v0.5.0#read-this-before-you-deploy) first.
+> **Upgrading from 0.6.0?** [Read this before you deploy](https://github.com/nevindra/nilo/releases/tag/v0.7.0#read-this-before-you-deploy): each change, and how to fix it. From 0.5.0, read [v0.6.0's](https://github.com/nevindra/nilo/releases/tag/v0.6.0#read-this-before-you-deploy) first.
 
 ## ✨ A route is just a function
 
@@ -320,9 +320,9 @@ Against eight other servers returning the same JSON, nilo is 1st on throughput, 
 
 | Module | What it does | Left out |
 |---|---|---|
-| **`nilo_http`** | Routing, typed handlers, middleware, cookies and sessions, static files, streaming, WebSocket, rooms that broadcast to sockets and event streams and reach one user by key, OpenAPI, metrics, rate limiting, CSRF, gzip, optional TLS 1.3, and optional unary gRPC over HTTP/2 ([guide](./docs/guide/grpc.md)) | Templates, HTTP/2 for ordinary routes, streaming gRPC |
-| **`nilo_sql`** | Postgres and SQLite: reads, writes, transactions, streaming, schema and migrations | Window functions, CTEs and joins no foreign key names (use `db.raw`), `down` migrations |
-| **`nilo_s3`** | S3, MinIO and R2: get, put, range, stream, list, presigned URLs | `COPY`, multipart |
+| **`nilo_http`** | Routing, typed handlers, middleware, cookies and sessions, static files, streaming, WebSocket, rooms that broadcast to sockets and event streams and reach one user by key, OpenAPI, metrics, OpenTelemetry tracing ([guide](./docs/guide/tracing.md)), rate limiting, CSRF, security headers, gzip (libdeflate behind `.libdeflate = true`, [guide](./docs/guide/responses.md#compression)), optional TLS 1.3, and optional HTTP/2 beside HTTP/1.1 for every route ([guide](./docs/guide/deploying.md#http2-for-a-browser)) with unary gRPC on it ([guide](./docs/guide/grpc.md)) | Templates, HTTP/2 in the default build, WebSocket over HTTP/2, streaming gRPC |
+| **`nilo_sql`** | Postgres and SQLite: reads, writes, transactions, streaming, schema and migrations. Window functions, CTEs and any other join go through `db.raw`, which still fills your struct, counts its columns while compiling and checks their types the first time it runs ([guide](./docs/guide/sql/raw.md)) | Window functions and CTEs written in Zig rather than SQL, `down` migrations |
+| **`nilo_s3`** | S3, MinIO and R2: get, put, multipart upload, copy and compose inside the store, range, stream, list, presigned URLs | A `list` that follows its own cursor |
 | **`nilo_fetch`** | Calling another HTTP API from inside a request | Retries, circuit breaker |
 | **`nilo_job`** | Background and scheduled work, queued in the database you already have, with three levels of urgency and cron schedules | Exactly-once, time zones |
 | **`nilo_cache`** | An expiring in-process cache on a fixed memory budget | Pointers in cached values |
@@ -336,14 +336,15 @@ Against eight other servers returning the same JSON, nilo is 1st on throughput, 
 ## 🚫 What it won't do
 
 - **Templates.** If your app is mostly HTML, [jetzig](https://www.jetzig.dev/) is built for it.
-- **HTTP/2 for your routes.** Put a proxy in front if you need it. TLS 1.3 is built in behind `.tls = true`, or a proxy can terminate it ([deploying guide](./docs/guide/deploying.md#tls-and-a-reverse-proxy)). gRPC is served, unary calls on a listener of its own, behind `.grpc = true` ([gRPC guide](./docs/guide/grpc.md)).
+- **HTTP/2 in the default build.** It is behind `.http2 = true`, and a browser reaches it only over TLS, which is `.tls = true` or a proxy in front ([deploying guide](./docs/guide/deploying.md#tls-and-a-reverse-proxy)). With both flags a TLS listener offers `h2` and `http/1.1` and serves every route on either; gRPC rides it, unary calls only ([gRPC guide](./docs/guide/grpc.md)).
 - **Revoking a session.** Sessions are sealed into the cookie, so there's no session table to delete from.
+- **State shared between instances.** The cache, rate limits, idempotency keys and WebSocket rooms live in the process. At two instances, which a rolling deploy always is for a while, each keeps its own: a limit of 100 admits 200, a retried request that reaches the other instance runs again, and a room message reaches only that instance's sockets ([ADR 110](./docs/adr/110-an-in-process-cache-and-a-redis-client-are-two-modules.md)).
 
 Each of these was decided on purpose; [`docs/decided.md`](./docs/decided.md) says why.
 
 ## 🧪 Examples
 
-Ten runnable examples live in [`examples/`](./examples/):
+Eleven runnable examples live in [`examples/`](./examples/):
 
 ```console
 $ zig build run-hello      # the smallest thing that serves
@@ -351,6 +352,7 @@ $ zig build run-rest       # a service: JSON in and out, query params, auth midd
 $ zig build run-orders     # the same ideas on a domain that is not one flat struct
 $ zig build run-forms      # an HTML form, a session cookie, an upload and a redirect
 $ zig build run-spa        # a single-page app's files next to its API
+$ zig build run-embedded   # a single-page app carried inside the binary, next to its own JSON API
 $ zig build run-stream     # a streamed report, an event stream, an upload
 $ zig build run-chat       # a WebSocket, browser page included
 $ zig build run-scheduled  # work that is not a request, owned by the server
@@ -374,7 +376,7 @@ Nilo was my cat. She was quick, the kind of quick you notice from across a room,
 
 ## 🤝 Contributing
 
-Questions, issues and "why on earth is it like this?" are all welcome. [CONTRIBUTING.md](./CONTRIBUTING.md) covers where to start, and [the roadmap](./docs/roadmap.md) has what's open. Mail is the most useful module nobody has written yet.
+Questions, issues and "why on earth is it like this?" are all welcome. [CONTRIBUTING.md](./CONTRIBUTING.md) covers where to start, and [the roadmap](./docs/roadmap.md) says where it is going and [the todo list](./docs/todo.md) has what's open. Mail is the most useful module nobody has written yet.
 
 nilo borrows from FastAPI, Elysia, Elm and Drizzle; [ADR 014](./docs/adr/014-what-nilo-borrows-and-from-whom.md) says what came from where.
 

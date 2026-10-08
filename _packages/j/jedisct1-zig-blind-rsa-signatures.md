@@ -12,9 +12,9 @@ keywords:
   - rsa-blind-signatures
   - rsa-blinded-signatures
   - signatures
-date: 2026-05-21
-updated_at: 2026-05-21T07:48:01+00:00
-last_sync: 2026-05-21T07:48:01Z
+date: 2026-09-25
+updated_at: 2026-09-25T10:29:05+00:00
+last_sync: 2026-09-25T10:29:05Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -241,5 +241,5 @@ All values are returned as big-endian byte slices.
 ## For other languages
 
 * [Rust](https://github.com/jedisct1/rust-blind-rsa-signatures)
-* [C](https://github.com/jedisct1/blind-rsa-signatures)
+* [C](https://github.com/jedisct1/c-blind-rsa-signatures)
 * [Go](https://github.com/cloudflare/circl/tree/master/blindsign)

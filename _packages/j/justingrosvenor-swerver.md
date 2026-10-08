@@ -19,16 +19,16 @@ keywords:
   - tls
   - web-server
   - zero-copy
-date: 2026-09-13
+date: 2026-10-08
 category: networking
-updated_at: 2026-09-13T18:14:33+00:00
-last_sync: 2026-09-13T18:14:33Z
+updated_at: 2026-10-08T07:40:47+00:00
+last_sync: 2026-10-08T07:40:47Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 7
-distributable_binary_count: 7
+binary_count: 8
+distributable_binary_count: 8
 multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
@@ -60,6 +60,8 @@ HTTP/3   ──┘      │
 > **Alpha release.** The public library API in `src/lib.zig` will change between alpha versions as it's iterated on. Breaking changes are announced in release notes. See [Known limitations](#known-limitations) for what's in and out of scope for the current release.
 
 📖 **Documentation: [docs.swerver.net](https://docs.swerver.net)**: getting started, routing, handlers, middleware, configuration, the reverse proxy, and the PostgreSQL client.
+
+Native handlers can [suspend for timers or events](docs/guide/async-handlers.md) while the reactor continues serving ready requests.
 
 ## What
 

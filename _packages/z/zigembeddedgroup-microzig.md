@@ -8,10 +8,10 @@ repository: https://github.com/ZigEmbeddedGroup/microzig
 keywords:
   - embedded
   - hal
-date: 2026-09-16
+date: 2026-10-08
 category: embedded
-updated_at: 2026-09-16T11:18:59+00:00
-last_sync: 2026-09-16T11:18:59Z
+updated_at: 2026-10-08T15:47:00+00:00
+last_sync: 2026-10-08T15:47:00Z
 package_kind: binary
 has_library: false
 has_binary: true
@@ -31,7 +31,7 @@ permalink: /packages/ZigEmbeddedGroup/microzig/
 
 ## What version of Zig to use
 
-`0.17.0-dev.1936+5a625d5f3`
+`0.17.0`
 
 ## Getting Started With MicroZig
 

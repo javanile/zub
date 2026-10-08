@@ -13,10 +13,10 @@ keywords:
   - websocket
   - websocket-client
   - websocket-server
-date: 2026-10-03
+date: 2026-10-08
 category: networking
-updated_at: 2026-10-03T10:43:10+00:00
-last_sync: 2026-10-03T10:43:10Z
+updated_at: 2026-10-08T16:22:14+00:00
+last_sync: 2026-10-08T16:22:14Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -50,8 +50,10 @@ or if you are using WebSocket. However, it's usable with any implementation, lik
 
 ## Installation
 
+Requires Zig 0.16 or 0.17.
+
 ```sh
-zig fetch --save "git+https://github.com/lalinsky/dusty#v0.3.1"
+zig fetch --save "git+https://github.com/lalinsky/dusty#v0.4.0"
 ```
 
 Then in your `build.zig`, add the module as a dependency:
@@ -63,6 +65,33 @@ const dusty = b.dependency("dusty", .{
 });
 exe.root_module.addImport("dusty", dusty.module("dusty"));
 ```
+
+### Using a custom tls.zig
+
+TLS is enabled with Dusty's pinned tls.zig dependency by default. To inject a
+different compatible version without fetching or compiling the bundled one,
+disable only the bundled provider and replace the `tls` import:
+
+```zig
+const dusty = b.dependency("dusty", .{
+    .target = target,
+    .optimize = optimize,
+    .use_tls = true,
+    .use_bundled_tls = false,
+});
+const custom_tls = b.dependency("custom_tls", .{
+    .target = target,
+    .optimize = optimize,
+});
+
+const dusty_mod = dusty.module("dusty");
+dusty_mod.addImport("tls", custom_tls.module("tls"));
+exe.root_module.addImport("dusty", dusty_mod);
+```
+
+The application declares `custom_tls` in its own `build.zig.zon`, so it can
+point to another commit, fork, or local path. Omitting the injected module is a
+compile error. Use `.use_tls = false` instead when TLS should be compiled out.
 
 ## Usage
 
@@ -81,7 +110,7 @@ fn handleUser(req: *http.Request, res: *http.Response) !void {
 pub fn main(init: std.process.Init) !void {
     const addr: http.Address = .{ .ip = try std.Io.net.IpAddress.parse("127.0.0.1", 8080) };
     var server = http.Server(void).init(init.gpa, init.io, .{
-        .listen = &.{.{ .address = addr }},
+        .listeners = &.{.{ .address = addr }},
     }, {});
     defer server.deinit();
 
@@ -91,18 +120,52 @@ pub fn main(init: std.process.Init) !void {
 }
 ```
 
-`listen` takes any number of listeners, each with its own TLS, so one server
+`listeners` takes any number of listeners, each with its own TLS, so one server
 can serve HTTPS on 443 and plain HTTP on 80 with the same router:
 
 ```zig
-.listen = &.{
+.listeners = &.{
     .{ .address = addr443, .tls = .{ .cert_path = "server.pem", .key_path = "server.key" } },
     .{ .address = addr80 },
 },
 ```
 
+When `listeners` is omitted or empty, the server listens on `127.0.0.1:8080`.
+
 A handler can tell them apart through `req.listener` and `req.secure`, and
 `server.addresses` has each listener's bound address once `server.ready` is set.
+
+### Templating
+
+Dusty has no templating system of its own. We recommend [zt](https://github.com/lalinsky/zt),
+which compiles templates to Zig at build time. A template in `src/templates/pages.zt`:
+
+```zig
+pub templ UserPage(name: []const u8, admin: bool) {
+    <html>
+        <body>
+            <h1>Hello, {name}</h1>
+            if (admin) {
+                <p>You are an admin.</p>
+            }
+        </body>
+    </html>
+}
+```
+
+`res.render` writes it into the response with the given content type:
+
+```zig
+const pages = @import("templates/pages.zig");
+
+fn handleUser(req: *http.Request, res: *http.Response) !void {
+    const name = req.params.get("name") orelse "guest";
+    try res.render(.html, pages.UserPage, .{ name, false });
+}
+```
+
+`res.render` also takes a plain function whose last parameter is the `*std.Io.Writer`.
+For something small, `res.print(.html, "<p>Hello, {s}</p>", .{name})` formats the body directly.
 
 ### Client Example
 
@@ -150,7 +213,7 @@ The server side is symmetric. TLS is configured per listener, and `client_auth`
 makes it ask connecting clients for a certificate:
 
 ```zig
-.listen = &.{.{
+.listeners = &.{.{
     .address = addr,
     .tls = .{
         .cert_path = "server.pem",
@@ -260,6 +323,7 @@ const zio = b.dependency("zio", .{
     .optimize = optimize,
 });
 exe.root_module.addImport("zio", zio.module("zio"));
+dusty.module("dusty").addImport("zio", zio.module("zio"));
 ```
 
 Then initialize zio's runtime and pass it to dusty:
@@ -274,7 +338,7 @@ pub fn main(init: std.process.Init) !void {
     defer rt.deinit();
 
     var server = http.Server(void).init(init.gpa, rt.io(), .{
-        .listen = &.{.{ .address = addr }},
+        .listeners = &.{.{ .address = addr }},
     }, {});
     defer server.deinit();
 

@@ -18,10 +18,10 @@ keywords:
   - zig-database
   - zig-dsl
   - zig-sqlite
-date: 2026-09-24
+date: 2026-10-06
 category: data-formats
-updated_at: 2026-09-24T13:30:02+00:00
-last_sync: 2026-09-24T13:30:02Z
+updated_at: 2026-10-06T23:43:30+00:00
+last_sync: 2026-10-06T23:43:30Z
 package_kind: hybrid
 has_library: true
 has_binary: true
