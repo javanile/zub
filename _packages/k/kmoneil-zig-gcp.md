@@ -19,9 +19,9 @@ keywords:
   - secrets-management
   - service-account
   - workload-identity-federation
-date: 2026-10-08
-updated_at: 2026-10-08T15:28:24+00:00
-last_sync: 2026-10-08T15:28:24Z
+date: 2026-10-09
+updated_at: 2026-10-09T16:04:37+00:00
+last_sync: 2026-10-09T16:04:37Z
 package_kind: hybrid
 has_library: true
 has_binary: true

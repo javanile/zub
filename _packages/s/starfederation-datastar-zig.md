@@ -6,9 +6,9 @@ author: starfederation
 author_github: starfederation
 repository: https://github.com/starfederation/datastar-zig
 keywords:
-date: 2026-09-22
-updated_at: 2026-09-22T14:40:54+00:00
-last_sync: 2026-09-22T14:40:54Z
+date: 2026-09-29
+updated_at: 2026-09-29T14:34:26+00:00
+last_sync: 2026-09-29T14:34:26Z
 package_kind: library
 has_library: true
 has_binary: false

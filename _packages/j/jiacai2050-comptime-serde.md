@@ -7,9 +7,9 @@ author_github: jiacai2050
 repository: https://github.com/jiacai2050/comptime-serde
 keywords:
   - serde
-date: 2026-05-24
-updated_at: 2026-05-24T03:39:25+00:00
-last_sync: 2026-05-24T03:39:25Z
+date: 2026-10-09
+updated_at: 2026-10-09T11:28:15+00:00
+last_sync: 2026-10-09T11:28:15Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -25,7 +25,7 @@ permalink: /packages/jiacai2050/comptime-serde/
 
 # comptime-serde
 
-![](https://img.shields.io/badge/zig%20version-0.16.0-F7A41D.svg)
+![](https://img.shields.io/badge/zig%20version-0.17.0-F7A41D.svg)
 [![](https://github.com/jiacai2050/comptime-serde/actions/workflows/ci.yml/badge.svg)](https://github.com/jiacai2050/comptime-serde/actions/workflows/ci.yml)
 
 > Compile-time serialization and deserialization for Zig.

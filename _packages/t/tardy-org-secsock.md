@@ -9,10 +9,10 @@ keywords:
   - async
   - tardy
   - tls
-date: 2026-08-16
+date: 2026-09-21
 category: networking
-updated_at: 2026-08-16T12:25:45+00:00
-last_sync: 2026-08-16T12:25:45Z
+updated_at: 2026-09-21T18:04:41+00:00
+last_sync: 2026-09-21T18:04:41Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -38,7 +38,7 @@ This is an implementation of `SecureSocket`, a wrapper for the Tardy `Socket` ty
 
 ## Installing
 
-For in development secsock which uses [tardy/main](https://github.com/tardy-org/tardy/tree/main/) and Zig `0.17.0-dev.1413+addc3c3b8`
+For in development secsock which uses [tardy/main](https://github.com/tardy-org/tardy/tree/main/) and Zig `0.17.0-dev.2248+3f6a02acd`
 
 ```elvish
 zig fetch --save 'git+https://github.com/tardy-org/secsock?ref=main#commit_hash'

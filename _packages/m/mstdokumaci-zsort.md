@@ -8,9 +8,9 @@ repository: https://github.com/mstdokumaci/zsort
 keywords:
   - import-organizer
   - zig-application
-date: 2026-08-11
-updated_at: 2026-08-11T10:41:49+00:00
-last_sync: 2026-08-11T10:41:49Z
+date: 2026-10-01
+updated_at: 2026-10-01T03:33:57+00:00
+last_sync: 2026-10-01T03:33:57Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -54,7 +54,7 @@ Add to `build.zig.zon`:
 
 ```zig
 .zsort = .{
-    .url = "https://github.com/mstdokumaci/zsort/archive/refs/tags/v0.6.0.tar.gz",
+    .url = "https://github.com/mstdokumaci/zsort/archive/refs/tags/v0.8.0.tar.gz",
     // .hash
     .lazy = true,
 },
@@ -102,6 +102,7 @@ Modes:
 Options:
   --ban-prefix <p>   Reject imports starting with <p> (repeatable)
   --bottom           Place the import block at the end of the file
+  --remove-unused    Drop imports and aliases no code references (opt-in)
   -h, --help         Show help
   --version          Print version
 ```
@@ -112,6 +113,7 @@ zsort fix .                                       # fix everything
 zsort check src/ build.zig                        # mixed targets
 zsort check . --ban-prefix ./ --ban-prefix src/   # ban relative paths
 zsort fix . --bottom                              # imports at the end of the file
+zsort fix . --remove-unused                       # also prune dead imports
 ```
 
 - `check` prints unified diffs for files that need changes.
@@ -176,6 +178,19 @@ detached by a blank line stay at the top, comments directly attached to an
 import travel with it, and comments after the last import stay with the
 body. The sort order and bands are unchanged.
 
+With `--remove-unused`, `fix` also deletes imports and aliases that nothing
+in the file references (and `check` reports them; exit code 1). The flag is
+opt-in and conservative:
+
+- `pub`, `extern`, and `export` decls stay: other files can reference them
+- a decl with a `///` doc comment stays, so the comment is never orphaned
+- a comment run that leads the import block (top of file, or top of the
+  block in `--bottom` layout) is never removed; comments attached to a
+  removed import inside the block are removed with it
+- files using reflection (`refAllDecls`, `declarations`, `.decls` iteration,
+  `@field`, `@hasDecl`) are left untouched, since those can reference decls
+  without naming them
+
 ## Pre-commit
 
 Add to `.pre-commit-config.yaml`:
@@ -183,7 +198,7 @@ Add to `.pre-commit-config.yaml`:
 ```yaml
 repos:
   - repo: https://github.com/mstdokumaci/zsort
-    rev: v0.6.0
+    rev: v0.8.0
     hooks:
       - id: zsort        # check mode (fail on unsorted)
       # - id: zsort-fix  # fix mode (rewrite in place)

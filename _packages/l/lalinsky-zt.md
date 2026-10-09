@@ -9,10 +9,10 @@ keywords:
   - html
   - template
   - web-development
-date: 2026-08-16
+date: 2026-10-09
 category: tooling
-updated_at: 2026-08-16T19:00:07+00:00
-last_sync: 2026-08-16T19:00:07Z
+updated_at: 2026-10-09T12:48:25+00:00
+last_sync: 2026-10-09T12:48:25Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -28,7 +28,10 @@ permalink: /packages/lalinsky/zt/
 
 # Zig Templating
 
-*This is still an experimental project. Feedback is welcome, but use with caution.*
+*This is a young project. The syntax is mostly settled, but one breaking change is still under
+discussion: how block-level control flow is written ([#27]). Feedback is very welcome, especially there.*
+
+[#27]: https://github.com/lalinsky/zt/issues/27
 
 A small HTML templating language that compiles to Zig at build-time.
 Inspired by [Templ], [Zeix] and [JSX].
@@ -45,6 +48,8 @@ overhead at runtime. Output is directly written to a `std.Io.Writer`, so there i
 [Templ]: https://templ.guide/
 
 ## Installation
+
+zt supports Zig 0.16 and 0.17. Both versions are tested in CI.
 
 ```bash
 zig fetch --save git+https://github.com/lalinsky/zt
@@ -85,6 +90,16 @@ pub fn build(b: *std.Build) void {
 
     b.installArtifact(exe);
 }
+```
+
+The template compiler is built in debug mode by default. To build it optimized, pass `tool_optimize`:
+
+```zig
+const zt_dep = b.dependency("zt", .{
+    .target = target,
+    .optimize = optimize,
+    .tool_optimize = .fast,
+});
 ```
 
 ## Usage
@@ -235,13 +250,20 @@ All HTML elements must be explicitly closed, but void elements like `<img>` and 
 <div class="container" id="main"></div>
 ```
 
+Single-quoted values are always static, so `{` has no special meaning inside them. Use them for JSON or JavaScript object literals:
+
+```zig
+<meta name="htmx-config" content='{"noSwap": [204, 304, "5xx"]}' />
+<div x-data='{ open: false }'></div>
+```
+
 **Dynamic** - Zig expressions in braces:
 
 ```zig
 <div class={className} data-id={item.id}></div>
 ```
 
-**Interpolated** - mix static and dynamic parts:
+**Interpolated** - mix static and dynamic parts (double quotes only):
 
 ```zig
 <a href="/posts/{post.id}/{post.slug}">Read more</a>
@@ -251,6 +273,19 @@ All HTML elements must be explicitly closed, but void elements like `<img>` and 
 
 ```zig
 <input type="checkbox" checked disabled />
+```
+
+**Conditional** - `?=` takes a `bool` (or `?bool`) and renders the bare attribute when it is true, nothing otherwise:
+
+```zig
+<input type="checkbox" checked?={item.done} />
+```
+
+A plain dynamic attribute rejects a `bool` at compile time, because `checked="false"` still means checked.
+For attributes that expect the strings `"true"`/`"false"` (`aria-expanded`, `draggable`, `hx-boost`, ...), pass a string:
+
+```zig
+<button aria-expanded={if (open) "true" else "false"}>Menu</button>
 ```
 
 **Optional** - attribute omitted when value is null:

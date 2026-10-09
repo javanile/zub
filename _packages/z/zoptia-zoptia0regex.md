@@ -14,10 +14,10 @@ keywords:
   - regex-engine
   - regexp
   - regular-expression
-date: 2026-09-23
+date: 2026-10-07
 category: systems
-updated_at: 2026-09-23T08:06:12+00:00
-last_sync: 2026-09-23T08:06:12Z
+updated_at: 2026-10-07T00:33:14+00:00
+last_sync: 2026-10-07T00:33:14Z
 package_kind: hybrid
 has_library: true
 has_binary: true
