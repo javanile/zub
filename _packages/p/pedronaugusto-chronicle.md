@@ -6,15 +6,15 @@ author: pedronaugusto
 author_github: pedronaugusto
 repository: https://github.com/pedronaugusto/chronicle
 keywords:
-date: 2026-10-07
-updated_at: 2026-10-07T15:42:36+00:00
-last_sync: 2026-10-07T15:42:36Z
+date: 2026-10-10
+updated_at: 2026-10-10T15:27:27+00:00
+last_sync: 2026-10-10T15:27:27Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 3
-distributable_binary_count: 3
+binary_count: 2
+distributable_binary_count: 2
 multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
@@ -46,7 +46,7 @@ at `path` with the supplied allocator and `std.Io`.
 const chronicle = @import("chronicle");
 
 var balances: Balances = .{};
-var last: u64 = 0;
+var last: chronicle.Seq = chronicle.beginning;
 {
     const ledger = try Ledger.open(gpa, io, path, .{ .schema_version = 1 });
     defer ledger.deinit(io);
@@ -56,7 +56,7 @@ var last: u64 = 0;
     const now = std.Io.Clock.real.now(io).toMilliseconds();
     _ = try ledger.append(io, now, .{ .account_opened = .{ .id = 1, .owner = "ada" } });
 
-    const follower = try ledger.replayAt(io, .after(0));
+    const follower = try ledger.replayAt(io, .after(chronicle.beginning));
     defer follower.deinit(io);
     _ = (try follower.next(io)).?;
 
@@ -80,7 +80,7 @@ const reopened = opened.journal;
 defer reopened.deinit(io);
 
 var restored: Balances = .{};
-var from: u64 = 0;
+var from: chronicle.Seq = chronicle.beginning;
 if (opened.snapshot) |snapshot| {
     defer snapshot.deinit();
     restored = std.mem.bytesToValue(Balances, snapshot.state[0..@sizeOf(Balances)]);
@@ -92,7 +92,10 @@ try reopened.subscribeFrom(io, restored.sink(), from);
 
 ## Design
 
-chronicle depends on a pinned strand package for record encoding and decoding. A journal
+chronicle depends on a pinned strand package for record encoding and decoding: an
+`Event` is any type `strand.json` writes and reads back, a tagged union of structs being
+the expected shape, and a type with a meaning of its own declares strand's
+`strandSerialize` and `strandDeserialize`. A journal
 takes an allocator that must outlive it and owns a directory, active segment files, a
 bounded in-memory tail and a mutex. Journal, replay, tailer, copied batch and
 reader-list results are opaque pointer owners: release each exactly once. Release
@@ -139,6 +142,13 @@ and `rearmAt` resume a replay after validating its prior record; changed history
 yield `StalePosition`. `copySince` returns an independent owned batch from the memory
 tail; check `complete()` before treating it as the whole interval.
 
+A sequence number is a `chronicle.Seq`, a size is a `chronicle.Bytes` and a count of
+records is a `chronicle.Records`: [aegis](https://github.com/pedronaugusto/aegis) types
+that cannot be mixed or added across kinds. `Seq.fromRaw(n)` and `raw()` cross to a plain
+integer, and `chronicle.beginning` is the place before the first record, which a cursor
+that has handled nothing stands at. Arithmetic on them is checked in every build. What the
+package reads raw, and why, is in [docs/design.md](docs/design.md).
+
 Snapshots store caller-supplied state bytes and the sequence they cover. Restore the
 bytes, then replay after that sequence. Named tailers persist committed cursors.
 Compaction, segment removal and backup are explicit calls; the journal does not decide
@@ -157,14 +167,17 @@ exercises schema migration.
 ## Built with
 
 - [Zig](https://ziglang.org) 0.17.0 and its standard library; nothing is linked.
+- [aegis](https://github.com/pedronaugusto/aegis) supplies the types that keep sequence
+  numbers, byte counts and record counts apart, and the checked arithmetic on them.
 - [strand](https://github.com/pedronaugusto/strand) reads and writes each record's
   line.
 - [airlock](https://github.com/pedronaugusto/airlock) makes the files durable: every
   sync, atomic replace and backup batch, and the identity that tells two directories
   apart.
 - [shakedown](https://github.com/pedronaugusto/shakedown) supplies the tests' doubles:
-  faulted and counted `Io` calls and allocators. Only the tests import it, so a project
-  depending on chronicle never fetches it.
+  faulted and counted `Io` calls and allocators, and airlock's syncs through
+  `airlock.testing`, its test seam. Only the tests import them, so a project depending
+  on chronicle never fetches them.
 - [preflight](https://github.com/pedronaugusto/preflight) runs the source checks,
   the tests and CI.
 
@@ -175,8 +188,8 @@ default. Tests cover crash prefixes, checksum and chain failures, recovery, repl
 snapshots, retention, concurrency and allocation cleanup. `zig build examples` runs the
 examples separately; `zig build check` compiles the suite, helper and examples without
 running them. CI also runs `zig build docs -- usage --check`, and
-`zig build check-consumer` builds a project that depends on chronicle with only strand
-fetched.
+`zig build check-consumer` builds a project that depends on chronicle with only aegis,
+strand, airlock and warp fetched.
 
 [CI](.github/workflows/ci.yml) has three tiers. The fast tier runs the source checks and
 the Debug suite with the examples on `ubuntu-latest`. The merge tier also runs the Debug
@@ -185,13 +198,16 @@ on all three hosts, ReleaseFast on Ubuntu, ReleaseSmall compile-only, every cros
 and ThreadSanitizer. The merge and release tiers also run the Debug suite on Ubuntu with
 Zig master, a job that reports and never blocks.
 
-`zig build bench -Doptimize=fast` installs the benchmarks in [bench/](bench/) under
-`zig-out/bench`, and each says at its top how it is run; CI only compiles them.
+`zig build bench` builds the benchmarks in [bench/](bench/) in ReleaseFast under
+`zig-out/bench` and runs each, one after another, over every workload it has; each says
+at its top how to run one workload alone. `zig build test` runs each once with
+`--smoke`; CI times nothing.
 
 The release tier's compile-only jobs cover `x86_64-linux-gnu`, `aarch64-linux-gnu`, `x86_64-linux-musl`,
 `x86_64-windows-gnu`, `aarch64-windows-gnu`, `x86_64-macos` and `aarch64-macos`.
-Additional Linux builds select `x86_64_v2` and `cortex_a72` CPUs to compile the checksum
-instruction paths.
+CRC32C uses [warp](https://github.com/pedronaugusto/warp), which selects its hardware
+kernel at run time, including in baseline builds. Additional Linux builds select
+`x86_64_v2` and `cortex_a72` CPUs.
 
 ## Licence
 

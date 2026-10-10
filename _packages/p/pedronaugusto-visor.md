@@ -8,17 +8,17 @@ repository: https://github.com/pedronaugusto/visor
 keywords:
   - terminal
   - tui
-date: 2026-10-07
+date: 2026-10-10
 category: tooling
-updated_at: 2026-10-07T16:04:06+00:00
-last_sync: 2026-10-07T16:04:06Z
+updated_at: 2026-10-10T15:45:19+00:00
+last_sync: 2026-10-10T15:45:19Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 3
-distributable_binary_count: 3
-multiple_binaries: true
+binary_count: 1
+distributable_binary_count: 1
+multiple_binaries: false
 is_sponsor: false
 sync_priority: normal
 sync_source: zigistry
@@ -31,9 +31,9 @@ permalink: /packages/pedronaugusto/visor/
 
 visor is a cell grid and a diff renderer for programs that draw their own
 screen. You draw into a grid; it writes the shortest run of bytes that moves
-the terminal from the frame it is showing to the one it should be showing. A
-second module, `visor.widgets`, holds a layout solver and twenty widgets
-drawn on that grid, and the base never imports it.
+the terminal from the frame it is showing to the one it should be showing.
+`visor.widgets` holds a layout solver and twenty widgets drawn on that grid,
+and the base never imports it.
 
 ## Install
 
@@ -46,21 +46,24 @@ zig fetch --save git+https://github.com/pedronaugusto/visor
 ```zig
 const visor_dep = b.dependency("visor", .{ .target = target, .optimize = optimize });
 exe.root_module.addImport("visor", visor_dep.module("visor"));
-exe.root_module.addImport("visor.widgets", visor_dep.module("visor.widgets"));
 ```
 
-One fetch, three modules. `visor` is the grid and the renderer;
-`visor.widgets` is the layout solver and the widgets, and a program that wants
-only the base leaves the second line out. `morse` comes with it, re-exported
+One fetch, one module. `visor` is the grid and the renderer, and
+`visor.widgets` inside it is the layout solver and the widgets. A second
+module would buy nothing here: the widgets bring no dependency and link
+nothing the base does not, and Zig compiles only what a program names, so a
+program that draws no widget builds none. `morse` comes with it, re-exported
 as `visor.morse`, and is also available as `visor_dep.module("morse")` for a
 program that wants the writers on their own.
 
-Three dependencies: [`morse`](https://github.com/pedronaugusto/morse) for
+Four dependencies: [`morse`](https://github.com/pedronaugusto/morse) for
 every escape sequence written and every reply parsed,
 [`conduit`](https://github.com/pedronaugusto/conduit) for the terminal's own
 calls — raw mode and the way back, the size, the device's name — of which only
 its `conduit.tty` module is imported, which on Linux links no C library, and
-`uucode` for grapheme segmentation and width. All are pinned by commit. `uucode` builds its tables
+`uucode` for grapheme segmentation and width, and
+[`aegis`](https://github.com/pedronaugusto/aegis) for distinct pool identities,
+byte addresses, table positions and checked byte counts. All are pinned by commit. `uucode` builds its tables
 at build time, and visor asks for six fields and no more — `grapheme_break`
 and `grapheme_break_no_control` for where one cluster ends and the next begins,
 `wcwidth_standalone` and `wcwidth_zero_in_grapheme` for what a codepoint is
@@ -223,6 +226,13 @@ unused channels are zeroed on the way in, so comparing the memory and
 comparing the meaning are the same answer.
 
 A checked cell copies forty-eight bytes and binds pooled text and links to their issuing generation; the grid keeps thirty-two bytes per cell.
+`Text.offset()` returns `?GraphemeOffset`, `Text.length()` returns `ByteLength`,
+`Text.generation()` and `Link.generation()` return `PoolGeneration`, and
+`Link.index()` returns `?LinkIndex`. These aegis scalar domains preserve their
+integer layouts and cannot be assigned across meanings. Use `fromRaw` for an
+explicit import and `raw()` at a slice-index or encoding boundary. Importing a
+number does not establish that a handle belongs to a screen; resolution still
+checks its generation and bounds.
 `Screen.diff` yields changed positions without copying checked cells; `Row.diff` yields changed columns and `Row.eql` compares whole rows. They use the same pool identity semantics as `Cell.eql`: equal pooled contents in different generations differ. The iterators borrow both screens until iteration ends; neither screen may change, compact, resize or be destroyed during that borrow.
 
 State documented `Private:` belongs to the value that holds it and is
@@ -459,6 +469,7 @@ caller's grace period runs out, and a terminal that never answers is not waited
 for twice. A shared-memory trial needs its own answer; silence refuses that
 picture and releases its object.
 
+Image ids are morse's `ImageId` and `PlacementId` (`visor.ImageId`, built with `.fromRaw`), and sizes in pixels are its `Pixels`.
 `Replacement` keeps a current picture while a new one is in flight. Share an
 `ImageIds` range between replacements, with the probe's graphics id excluded.
 Construct it through `init` and issue ids through `acquire`; bounds and the
@@ -638,7 +649,7 @@ its own.
 | Layout | `Layout` — `horizontal`, `vertical`, `split`, `splitFixed`, `repeat`, `fitCount`, and the fields `direction`, `constraints`, `spacing`, `margin`. `Constraint` — `fixed`, `percent`, `min`, `max`, `fill`. `Direction`, `Padding`, `Align`, `place`, `offset`. |
 | The widgets | `Block` (borders, corners, titles, padding, and the window inside), `Paragraph` (wrap, alignment, scroll, `Rows` iterator), `Markdown` (owned `Document` with its `cells` and `alignments`, caller `Theme`, `Rows` iterator with `columns`, `TableLine`, `Quoted` line iterator, wrap, scroll, code scrolling, GFM tables and task lists), `Edges` (styled items at both edges of a row), `List` — `draw`, `visible` — with `List.State`, `List.Segment` and `List.Visible`, `Table` — `draw`, `visible` — with `Table.State`, `Table.Row` and `Table.Visible`, `Tree` — `draw`, `visible`, `rowCount`, `rowOf`, `nodeAt`, `parentOf`, `hasChildren`, `isShown`, `shownAncestor`, `firstShown`, `lastShown`, `nextShown`, `previousShown` — with `Tree.Node` (depth, and open as the program keeps it), `Tree.State` (`next`, `previous`, `first`, `last`, `parent`, `child`), `Tree.Guides`, `Tree.Symbols` and `Tree.Visible`, `Tabs`, `Gauge`, `LineGauge`, `Sparkline`, `BarChart`, `Chart`, `Scrollbar` and `Scrollbar.State`, `Canvas`, `Calendar`, `TextInput` (layout, selection drawn in its own style) and `TextInput.State`, `TextInput.Buffer` — `init`, `initText`, `deinit`, `text`, `cursor`, `selection`, `selectedText`, `input`, `target`, `move`, `moveRows`, `moveTo`, `selectAll`, `selectNone`, `insert`, `delete`, `replaceAll`, `reset`, `undo`, `redo`, `canUndo`, `canRedo`, `seal`, `clearHistory`, and the field `history_limit` — with `TextInput.Buffer.Motion` and `TextInput.Range`, `Keys`, `Rule`, `Sextants`. Beside them: `Item`, `Line`, `Bar`, `Dataset`, `Axis`, `Marker`, `Date`, `sextant`. |
 | Scrolling | `Scroll` and `Scroll.State`: which rows of something longer a view shows, held still while it grows. |
-| The base, re-exported | `widgets.visor`, so a file that draws does not need both imports, and `DrawError`, what every `draw` fails with. |
+| What every draw fails with | `DrawError`. |
 
 ### Canvas
 
@@ -649,7 +660,7 @@ by the caller; there is no bundled geographic dataset. The existing
 half blocks, dots or bars. Its y bounds name the bottom and top.
 
 ```zig
-const widgets = @import("visor.widgets");
+const widgets = @import("visor").widgets;
 const canvas: widgets.Canvas = .{
     .x_bounds = .{ 0, 100 }, .y_bounds = .{ 0, 100 }, .marker = .sextant,
 };
@@ -797,7 +808,7 @@ own structural marks. `examples/gallery.zig` includes a themed document.
 
 ## Scope
 
-- **No widgets in the base.** They are a second module, which `visor` never imports.
+- **No widgets in the base.** They are `visor.widgets`, in the same module, and no file of the base imports them.
 - **No event loop and no threads.** A base layer that owns the loop cannot be used by a program that already has one. `Input` is a read, not a loop: the program decides where it runs and what an event means.
 - **No widget whose substance is handling keys, focus or a clock.** Those are three quarters event handling, and the program has the loop. `Keys` shows which keys work and handles none; `TextInput` says where the cursor lands, and `TextInput.Buffer` does the edit a key asks for (insert, delete by a motion, select, undo, redo, on whole clusters), but which key asks for which is the program's.
 - **No constraint solver.** Fixed, percent, floor, ceiling and share cover what a screen layer owes.
@@ -854,10 +865,11 @@ tier, on the candidate for `main`, adds the Debug suite on `macos-latest` and
 and ReleaseSafe on all three, plus ReleaseFast and ThreadSanitizer on Ubuntu,
 and compiles ReleaseSmall.
 
-`zig build bench` builds visor's own benchmarks in `bench/`: every
-drawing-core workload and every public operation, checked by an independent
-decoder before they are timed. [`bench/README.md`](bench/README.md) says how
-to run them; CI compiles them and never runs them.
+`zig build bench` builds visor's own benchmarks in `bench/` in ReleaseFast and
+runs them: every drawing-core workload and every public operation, checked by
+an independent decoder before they are timed. `zig build test` checks and runs
+each once on the smallest grid, and runs the decoder's own tests.
+[`bench/README.md`](bench/README.md) says how to run them by hand.
 
 The headline test is a round trip. Random grid operations are drawn, the bytes
 are fed to the emulator this package ships, and the grid it rebuilt is
@@ -887,8 +899,8 @@ compares the renderer with the terminal inside a shipping emulator, read
 through its own grid — every column's grapheme, its width, its style and its
 link, with two links that differ only by their `id` being two links. It is a
 build of its own under `conformance/`, with its own manifest pinning that
-emulator by commit, so nothing that builds a program on this package fetches
-one. The resize property runs there too, against the emulator's own resize,
+emulator by commit, so no build of a program on this package fetches or
+compiles one. The resize property runs there too, against the emulator's own resize,
 with pictures placed and moved across it and checked where the emulator has
 them; and the probe's questions go to the emulator and its answers back. CI
 runs it on Linux and macOS.

@@ -6,9 +6,9 @@ author: pedronaugusto
 author_github: pedronaugusto
 repository: https://github.com/pedronaugusto/morse
 keywords:
-date: 2026-10-07
-updated_at: 2026-10-07T15:41:01+00:00
-last_sync: 2026-10-07T15:41:01Z
+date: 2026-10-10
+updated_at: 2026-10-10T14:26:01+00:00
+last_sync: 2026-10-10T14:26:01Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -26,7 +26,7 @@ permalink: /packages/pedronaugusto/morse/
 
 morse writes terminal control sequences and decodes terminal input in Zig. Typed writers
 and parsers cover screen commands, keys, mouse reports and query replies, including
-input split across reads.
+input split across reads. The Zig 0.17 changes are work in progress and unreleased.
 
 ## Install
 
@@ -69,12 +69,13 @@ const mouse = (events.next() orelse return error.MissingMouse).mouse;
 
 ## Design
 
-The library uses only `std` and allocates no storage of its own. The conformance step
-alone fetches a lazy, pinned Ghostty emulator dependency to check terminal behaviour;
-consumer builds do not fetch it. Writers take a `*std.Io.Writer` and leave flushing to
-the caller. Parsers borrow their input; `KeyParser` retains incomplete sequences in a
-caller-owned buffer. Drain each `Events` iterator before feeding more bytes, and consume
-borrowed event data before the next iterator step, feed or flush.
+The library uses `std` and aegis scalar types and allocates no storage of its own. The conformance build
+under `conformance/` pins a Ghostty emulator in a manifest of its own to check terminal
+behaviour; morse's manifest does not name it, so no build of a program on morse fetches
+or compiles it. Writers take a `*std.Io.Writer` and leave flushing to the caller.
+Parsers borrow their input; `KeyParser` retains incomplete sequences in a caller-owned
+buffer. Drain each `Events` iterator before feeding more bytes, and consume borrowed
+event data before the next iterator step, feed or flush.
 Key events own their text; retained sequence bytes keep split input intact and borrowed
 replies independent of the read buffer.
 
@@ -141,10 +142,11 @@ caller supplies deadlines because a terminal need not answer.
 
 - [Zig](https://ziglang.org) 0.17.0 and its standard library; nothing else is
   linked into the module.
+- [shakedown](https://github.com/pedronaugusto/shakedown) supplies test support and benchmark measurement.
 - [preflight](https://github.com/pedronaugusto/preflight) runs the source checks,
   the tests and CI.
 - [Ghostty](https://github.com/ghostty-org/ghostty)'s `libghostty-vt` is the
-  emulator the conformance step writes to, fetched only for that step.
+  emulator the conformance build writes to, named only in `conformance/build.zig.zon`.
 
 ## Testing
 
@@ -153,13 +155,26 @@ Local build scripts clear `.zig-cache/{o,h,z,tmp}` above the measured cap throug
 `zig build test` runs `zig build lint` first, then the unit suite and both examples, in
 Debug by default; `-Dci-lint=false` leaves the lint step out. Tests check writer bytes,
 malformed input, split framing, console records and parser round trips.
-`zig build examples` runs the examples separately; `zig build check` compiles the tests,
-examples and benchmarks without running them. `zig build check-consumer`, part of lint, builds a
+`zig build examples` runs the examples separately; `zig build check` compiles the tests
+and examples without running them. `zig build check-consumer`, part of lint, builds a
 project that depends on morse with no packages fetched.
 
-`zig build bench` runs the speed ceilings in `bench/` on this machine, best with
-`-Doptimize=ReleaseFast` and nothing else running. They are wide on purpose and catch a
-change that costs many times what it did; CI compiles them and never runs them.
+`zig build bench` measures the workloads in `bench/` in ReleaseFast through
+`shakedown.bench`, emitting JSON lines with samples, best, median, p99, throughput
+and build provenance. `zig build bench-build` compiles them without running them.
+Local `zig build test` smoke-runs every row once with small inputs; hosted CI
+compiles the benchmarks and leaves timings to manual runs. Byte counts and buffer
+bounds remain unit tests. Timing results have no pass/fail ceilings.
+
+The executable accepts `--row <prefix>` and `--smoke`. Units name the work
+performed: calls, moves, images or bytes; sample values are always nanoseconds per
+unit. A smoke image is 32×32 RGBA; a measured image is 512×512. The parser grid
+keeps two input streams, three buffer sizes and four read sizes.
+
+`zig build bench-ab -- --base <commit> --program budgets --row <prefix> --pairs 5`
+uses preflight's interleaved runner and shakedown's comparison. Both revisions must
+already implement `bench-build` and JSONL row selection; revisions before this
+migration use the old tab-separated output and cannot be compared by that command.
 
 [CI](.github/workflows/ci.yml) runs in tiers. The fast tier runs the source checks and
 the Debug suite on `ubuntu-latest`; the merge tier, on the candidate for `main`, adds
@@ -170,8 +185,9 @@ the clock policy. There is no ThreadSanitizer job.
 
 Compile-only jobs cover `x86_64-linux-gnu`, `aarch64-linux-gnu`, `x86_64-windows-gnu`,
 `aarch64-windows-gnu`, `x86_64-macos` and `aarch64-macos`. Separate Ubuntu and macOS
-jobs run `zig build conformance` on pull requests and merge or release dispatches, not on
-pushes to `main`.
+jobs run the conformance build under `conformance/` (`zig build conformance` locally)
+on pull requests and merge or release dispatches, not on pushes to `main`. The merge and release
+tiers also run the Debug suite on Zig master on Ubuntu; it never blocks.
 
 ## Licence
 

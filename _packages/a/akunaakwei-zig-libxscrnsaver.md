@@ -6,9 +6,9 @@ author: akunaakwei
 author_github: akunaakwei
 repository: https://github.com/akunaakwei/zig-libxscrnsaver
 keywords:
-date: 2026-09-05
-updated_at: 2026-09-05T07:27:43+00:00
-last_sync: 2026-09-05T07:27:43Z
+date: 2026-09-20
+updated_at: 2026-09-20T07:37:22+00:00
+last_sync: 2026-09-20T07:37:22Z
 package_kind: library
 has_library: true
 has_binary: false

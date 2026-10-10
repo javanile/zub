@@ -6,9 +6,9 @@ author: akunaakwei
 author_github: akunaakwei
 repository: https://github.com/akunaakwei/zig-libxrandr
 keywords:
-date: 2026-09-05
-updated_at: 2026-09-05T07:28:48+00:00
-last_sync: 2026-09-05T07:28:48Z
+date: 2026-09-20
+updated_at: 2026-09-20T07:39:23+00:00
+last_sync: 2026-09-20T07:39:23Z
 package_kind: library
 has_library: true
 has_binary: false

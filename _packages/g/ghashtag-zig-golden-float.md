@@ -1,6 +1,6 @@
 ---
 title: zig-golden-float
-description: GoldenFloat / GF-T — φ-derived ternary number formats, benchmarked to beat comparable formats
+description: "GoldenFloat / GF-T — φ-derived ternary number formats with bit-exact reference vectors. At matched physical width, precision is at parity with the comparable conventional format (±2%); gains appear only on wide-dynamic-range workloads."
 license: MIT
 author: gHashTag
 author_github: gHashTag
@@ -17,9 +17,9 @@ keywords:
   - rust-library
   - rustlang
   - trinity-ecosystem
-date: 2026-08-19
-updated_at: 2026-08-19T20:56:08+00:00
-last_sync: 2026-08-19T20:56:08Z
+date: 2026-09-20
+updated_at: 2026-09-20T12:02:17+00:00
+last_sync: 2026-09-20T12:02:17Z
 package_kind: hybrid
 has_library: true
 has_binary: true

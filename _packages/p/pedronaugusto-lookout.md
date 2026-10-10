@@ -6,9 +6,9 @@ author: pedronaugusto
 author_github: pedronaugusto
 repository: https://github.com/pedronaugusto/lookout
 keywords:
-date: 2026-10-07
-updated_at: 2026-10-07T15:53:53+00:00
-last_sync: 2026-10-07T15:53:53Z
+date: 2026-10-10
+updated_at: 2026-10-10T15:10:01+00:00
+last_sync: 2026-10-10T15:10:01Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -28,6 +28,9 @@ lookout watches files and directory trees in Zig. One `Watcher` coalesces change
 native notification backends or polling, with explicit overflow events and backend
 capability queries.
 
+Work in progress toward the public cut. Filesystem policy is measured per root
+and directory where supported; sweep parses and composes normalized filters.
+
 ## Install
 
 Requires Zig 0.17.0. Fetch with `zig fetch --save
@@ -45,7 +48,7 @@ buffered standard output writer, `output`.
 ```zig
 const lookout = @import("lookout");
 
-var watcher: lookout.Watcher = try .init(gpa, .{});
+var watcher: lookout.Watcher = try .init(gpa, io, .{});
 defer watcher.deinit(io);
 
 const id = try watcher.add(io, dir_path, .{ .recursive = true });
@@ -62,7 +65,13 @@ for (try watcher.poll(io, one_second)) |event| {
 
 ## Design
 
-The watcher module uses Zig's standard library and two packages of the same family,
+[docs/design.md](docs/design.md) gives the layers, who owns which state, what
+always holds, and the reasons behind the decisions. What follows is what a user
+of the API needs to know.
+
+The watcher module uses Zig's standard library and three packages of the same family,
+[aegis](https://github.com/pedronaugusto/aegis) for typed ids, byte counts, limits and
+the lock beside the data the system's delivery thread shares,
 [airlock](https://github.com/pedronaugusto/airlock) for the baseline file and
 [sweep](https://github.com/pedronaugusto/sweep) for filter patterns. A watcher keeps
 the allocator it is made with for watches, paths and event storage, and keeps no
@@ -125,9 +134,14 @@ Each change carries its `target`, file or directory, from the listing that saw i
 removed directory is known for one without a `stat`.
 
 `poll` takes a `std.Io.Timeout` and is a `std.Io` cancellation point. Cancellation preserves
-gathered events for a later poll. Native waits observe cancellation when they wake; use
-`wake` to end a blocked wait on any backend. `fd` returns a pollable descriptor where
-the backend provides one.
+gathered events for a later poll. Every backend waits through reactor, so a cancellation
+ends a blocked `poll` on every backend but Windows, where the completion port is waited on
+by a call nothing can interrupt and the cancellation lands when it comes back. Under a
+reactor runtime the wait holds no thread and wakes for nothing; under any other `std.Io`
+the calling thread waits and looks for a cancellation every few milliseconds, which keeps
+an idle `poll` waking about 150 times a second. `wake` ends a blocked wait from
+another thread on every backend. `fd` returns a pollable descriptor where the backend
+provides one.
 
 FSEvents checkpoints retain per-watch volume and log identity, durable cursors and
 pending changes and the path baseline the watch knew. Capture retains a shared
@@ -136,13 +150,32 @@ to a self-contained baseline. Paths removed since a retained revision are reclai
 when that revision is released. On resume a path in that
 baseline that is gone is reported as a deletion once, independent of event ids
 and replay arrival time. The replay has no time window or id-space barrier;
-version-1 checkpoint tokens are refused. Resume with matching canonical roots, scopes and filters: a
+Version-1/2 checkpoint tokens are refused. Resume with matching canonical roots, scopes and filters: a
 token records its ignore and include patterns and is refused under others, while a predicate
 filter cannot be recorded and is the caller's to keep the same. Saved changes a resumed watch
 would not report live are dropped. A changed
 volume or log yields `InvalidCheckpoint`; watches spanning mounted volumes keep live
 coverage but cannot produce a checkpoint. Other backends return null.
 [examples/since.zig](examples/since.zig) exercises checkpoint tokens and resuming.
+
+Filesystem name capabilities and caller policy are separate: `Watcher.capabilities(id)`
+reports `names` (nullable facts) and `policy` (effective matching policy).
+`directoryCapabilities(io, id, directory)` probes a canonical directory below a watch.
+Unknown capability selects exact spelling and sensitive matching; `AddOptions.identity`
+can override the policy without changing the reported facts. Darwin measures volume
+case sensitivity, Windows measures directory case flags, and Linux measures supported
+filesystem/directory flags. Normalization remains unknown where no supported query
+establishes it; lookout makes no platform guess about Unicode equivalence.
+
+`Filter.case` and `Filter.normalization` are independent matching preferences.
+Set normalization to `.nfc` for canonical equivalence: `[é]` matches `é` and `e` plus
+combining acute, and never plain `e`; `?` consumes one composed scalar. Sweep owns
+composition, classes, ranges, escapes and folding; lookout passes original glob text.
+A class member that remains several scalars under NFC is `InvalidPattern`.
+Kernel event names and canonical roots are retained unchanged; `WatchInfo.requested`
+retains the original caller root independently. Public `path` helpers take canonical
+kernel paths and compare exact bytes. Baseline format 2 and checkpoint format 3
+retain matching preferences and refuse older formats.
 
 ## API
 
@@ -197,14 +230,22 @@ native build too.
 
 - [Zig](https://ziglang.org) 0.17.0 and its standard library. On Apple targets the
   module links libc and CoreServices; nothing else is linked anywhere.
+- [aegis](https://github.com/pedronaugusto/aegis) supplies the watch and revision
+  ids, the byte count of `Options.buffer_bytes`, the limits and the guarded state
+  shared with the system's delivery thread.
 - [airlock](https://github.com/pedronaugusto/airlock) writes the baseline file
   atomically and, on request, durably.
+- [reactor](https://github.com/pedronaugusto/reactor) waits for a backend's
+  descriptor and for `wake`, over any `std.Io`, and on Windows runs the wait on
+  the completion port off the runtime's workers.
 - [sweep](https://github.com/pedronaugusto/sweep) compiles and matches filter
   patterns.
 - [preflight](https://github.com/pedronaugusto/preflight) runs the source checks,
   the tests and CI.
 - [shakedown](https://github.com/pedronaugusto/shakedown) is the clock, fault
-  injection and counting allocator the tests run on, fetched only for them.
+  injection and counting allocator the tests run on, and under airlock's test
+  seam, `airlock.testing`, which counts and fails a durable save's syncs;
+  fetched only for the tests.
 - A pinned macOS SDK package, fetched only to link a named Apple target without
   an SDK of its own.
 
@@ -213,13 +254,14 @@ native build too.
 `zig build test` runs the suite and examples in Debug by default, exercising the
 backends available on the host. Tests cover filters, pending paths, renames,
 overflow, cancellation, settling, checkpoints and resource cleanup. `zig build
-examples` runs the examples separately. `zig build bench` runs lookout's own speed
-checks; run it on a quiet machine, with `-Doptimize=ReleaseFast`. CI also runs
+examples` runs the examples separately. `zig build bench` holds lookout's own speed
+claims to their ceilings in ReleaseFast; run it on a quiet machine. `zig build test`
+runs each once with `--smoke`, judging nothing. CI also runs
 `zig build lint`, which includes `zig build check-consumer`: a project that depends
-on lookout by path, built with only airlock and sweep fetched.
+on lookout by path, built with only aegis, airlock, reactor and sweep fetched.
 
 [CI](.github/workflows/ci.yml) has three tiers. The fast tier runs the source
-checks and the Linux Debug suite with the examples, compiles the benchmarks, and
+checks and the Linux Debug suite with the examples and each benchmark once, and
 compiles the tests for macOS, Windows and every configured target without running
 them. The merge tier adds the Debug suite on `macos-latest` and `windows-latest`.
 The release tier runs the tests and examples in Debug and ReleaseSafe on all three

@@ -6,9 +6,9 @@ author: akunaakwei
 author_github: akunaakwei
 repository: https://github.com/akunaakwei/zig-dbus
 keywords:
-date: 2026-08-02
-updated_at: 2026-08-02T07:21:20+00:00
-last_sync: 2026-08-02T07:21:20Z
+date: 2026-09-20
+updated_at: 2026-09-20T07:39:54+00:00
+last_sync: 2026-09-20T07:39:54Z
 package_kind: library
 has_library: true
 has_binary: false
