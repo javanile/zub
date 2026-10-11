@@ -9,10 +9,10 @@ keywords:
   - html
   - template
   - web-development
-date: 2026-10-09
+date: 2026-10-11
 category: tooling
-updated_at: 2026-10-09T12:48:25+00:00
-last_sync: 2026-10-09T12:48:25Z
+updated_at: 2026-10-11T15:32:25+00:00
+last_sync: 2026-10-11T15:32:25Z
 package_kind: hybrid
 has_library: true
 has_binary: true

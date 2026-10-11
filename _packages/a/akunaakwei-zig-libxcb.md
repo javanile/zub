@@ -6,9 +6,9 @@ author: akunaakwei
 author_github: akunaakwei
 repository: https://github.com/akunaakwei/zig-libxcb
 keywords:
-date: 2026-09-05
-updated_at: 2026-09-05T06:45:38+00:00
-last_sync: 2026-09-05T06:45:38Z
+date: 2026-09-20
+updated_at: 2026-09-20T07:25:58+00:00
+last_sync: 2026-09-20T07:25:58Z
 package_kind: library
 has_library: true
 has_binary: false

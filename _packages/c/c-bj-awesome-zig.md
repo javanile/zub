@@ -8,9 +8,9 @@ repository: https://github.com/C-BJ/awesome-zig
 keywords:
   - awesome
   - awesome-list
-date: 2026-09-08
-updated_at: 2026-09-08T17:18:12+00:00
-last_sync: 2026-09-08T17:18:12Z
+date: 2026-10-08
+updated_at: 2026-10-08T19:13:22+00:00
+last_sync: 2026-10-08T19:13:22Z
 package_kind: library
 has_library: false
 has_binary: false
@@ -247,7 +247,9 @@ permalink: /packages/C-BJ/awesome-zig/
   - ![Star](https://img.shields.io/github/stars/chwayne/rem?color=orange)
   [rem🗒️An HTML parsing library, written in Zig](https://github.com/chwayne/rem) 
   - ![Star](https://img.shields.io/github/stars/ziglibs/tres?color=orange)
-  [tres🗒️ValueTree-based JSON parser](https://github.com/ziglibs/tres) 
+  [tres🗒️ValueTree-based JSON parser](https://github.com/ziglibs/tres)
+  - ![Star](https://img.shields.io/github/stars/npmonster/yayl?color=orange)
+  [yayl🗒️YAML 1.2 parser, editor and emitter for Zig](https://github.com/npmonster/yayl) 
   - ![Star](https://img.shields.io/github/stars/kubkon/zacho?color=orange)
   [zacho🗒️Zig's Mach-O parser](https://github.com/kubkon/zacho)
   - ![Star](https://img.shields.io/github/stars/chaoyangnz/zava?color=orange)
@@ -349,8 +351,6 @@ permalink: /packages/C-BJ/awesome-zig/
   [curses-minesweeper🗒️Minesweeper game written in curses with zig](https://github.com/Akuli/curses-minesweeper) 
   - ![Star](https://img.shields.io/github/stars/Avokadoen/gamejam-zig-vulkan?color=orange)
   [gamejam-zig-vulkan🗒️A game written in ~1 day using zig and vulkan](https://github.com/Avokadoen/gamejam-zig-vulkan)
-  - ![Star](https://img.shields.io/github/stars/hyperpolymath/gossamer?color=orange)
-  [gossamer🗒️Cross-platform desktop webview shell with Zig FFI](https://github.com/hyperpolymath/gossamer)
   - ![Star](https://img.shields.io/github/stars/zig-community/hello-triangle?color=orange)
   [hello-triangle🗒️Opens a window and draws a nice little triangle](https://github.com/zig-community/hello-triangle) 
   - ![Star](https://img.shields.io/github/stars/thejoshwolfe/legend-of-swarkland?color=orange)
@@ -574,6 +574,8 @@ permalink: /packages/C-BJ/awesome-zig/
 
 - ### Database Operation
 
+  - ![Star](https://img.shields.io/github/stars/pedronaugusto/chronicle?color=orange)
+  [chronicle🗒️An append-only event log for Zig](https://github.com/pedronaugusto/chronicle)
   - ![Star](https://img.shields.io/github/stars/lithdew/lmdb-zig?color=orange)
   [lithdew/lmdb-zig🗒️Lightweight, fully-featured, idiomatic cross-platform Zig bindings to Lightning Memory-Mapped Database (LMDB)](https://github.com/lithdew/lmdb-zig) 
   - ![Star](https://img.shields.io/github/stars/vrischmann/zig-sqlite?color=orange)
@@ -593,10 +595,10 @@ permalink: /packages/C-BJ/awesome-zig/
   [inon🗒️Data serialization format in Zig](https://github.com/iddev5/inon) 
   - ![Star](https://img.shields.io/github/stars/Hejsil/mecha?color=orange)
   [mecha🗒️A parser combinator library for Zig](https://github.com/Hejsil/mecha) 
-  - ![Star](https://img.shields.io/github/stars/mattnite/protobuf?color=orange)
-  [protobuf🗒️A pure-Zig Protocol Buffers library with standalone .proto parser, build-time code generator, and RPC stub generation. Supports proto2 and proto3](https://github.com/mattnite/protobuf)
   - ![Star](https://img.shields.io/github/stars/ziglibs/s2s?color=orange)
   [s2s🗒️A zig binary serialization format](https://github.com/ziglibs/s2s) 
+  - ![Star](https://img.shields.io/github/stars/pedronaugusto/strand?color=orange)
+  [strand🗒️Typed JSON Lines for Zig, one JSON value per line](https://github.com/pedronaugusto/strand)
   - ![Star](https://img.shields.io/github/stars/shiguredo/tls13-zig?color=orange)
   [tls13-zig🗒️The first TLS1.3 implementation in Zig(master/HEAD) only with std](https://github.com/shiguredo/tls13-zig) 
   - ![Star](https://img.shields.io/github/stars/ziglibs/uuencode?color=orange)
@@ -620,7 +622,9 @@ permalink: /packages/C-BJ/awesome-zig/
   - ![Star](https://img.shields.io/github/stars/deatil/zig-md2?color=orange)
   [zig-md2🗒️A MD2 hash function for Zig](https://github.com/deatil/zig-md2) 
   - ![Star](https://img.shields.io/github/stars/deatil/zig-md4?color=orange)
-  [zig-md4🗒️A MD4 hash function for Zig](https://github.com/deatil/zig-md4) 
+  [zig-md4🗒️A MD4 hash function for Zig](https://github.com/deatil/zig-md4)
+  - ![Star](https://img.shields.io/github/stars/deatil/zig-rsa?color=orange)
+  [zig-rsa🗒️An RSA library for Zig](https://github.com/deatil/zig-rsa) 
   - ![Star](https://img.shields.io/github/stars/deatil/zig-sm3?color=orange)
   [zig-sm3🗒️A SM3 hash function for Zig](https://github.com/deatil/zig-sm3) 
   - ![Star](https://img.shields.io/github/stars/leroycep/zig-tzif?color=orange)
@@ -635,7 +639,6 @@ permalink: /packages/C-BJ/awesome-zig/
   [zpem🗒️A pem parse and encode library for Zig](https://github.com/deatil/zpem) 
 
 - ### Game Dev & GUI Dev & Media Framework
-
   - ![Star](https://img.shields.io/github/stars/EvWilson/2jz?color=orange)
   [2jz🗒️An archetype-based entity-component-system library written in Zig](https://github.com/EvWilson/2jz) 
   - ![Star](https://img.shields.io/github/stars/Kiakra/Alka?color=orange)
@@ -694,6 +697,10 @@ permalink: /packages/C-BJ/awesome-zig/
   [wasm4🗒️Build retro games using WebAssembly for a fantasy console](https://github.com/aduros/wasm4) 
   - ![Star](https://img.shields.io/github/stars/kooparse/zalgebra?color=orange)
   [zalgebra🗒️Linear algebra library for games and real-time graphics](https://github.com/kooparse/zalgebra) 
+  - ![Star](https://img.shields.io/github/stars/pedronaugusto/zcgltf?color=orange)
+  [zcgltf🗒️Zig bindings for cgltf, glTF 2.0 parsing and writing](https://github.com/pedronaugusto/zcgltf)
+  - ![Star](https://img.shields.io/github/stars/pedronaugusto/zecs?color=orange)
+  [zecs🗒️Zig bindings for flecs, an entity component system](https://github.com/pedronaugusto/zecs)
   - ![Star](https://img.shields.io/github/stars/MasterQ32/zero-graphics?color=orange)
   [zero-graphics🗒️Application framework based on OpenGL ES 2.0. Runs on desktop machines, Android phones and the web](https://github.com/MasterQ32/zero-graphics) 
   - ![Star](https://img.shields.io/github/stars/ziglibs/zgl?color=orange)
@@ -730,12 +737,22 @@ permalink: /packages/C-BJ/awesome-zig/
   [zig-window🗒️window client library](https://github.com/andrewrk/zig-window) 
   - ![Star](https://img.shields.io/github/stars/swaywm/zig-wlroots?color=orange)
   [zig-wlroots🗒️Zig bindings for wlroots](https://github.com/swaywm/zig-wlroots) 
+  - ![Star](https://img.shields.io/github/stars/pedronaugusto/zjolt?color=orange)
+  [zjolt🗒️Zig bindings for Jolt Physics](https://github.com/pedronaugusto/zjolt)
   - ![Star](https://img.shields.io/github/stars/ziglibs/zlm?color=orange)
   [zlm🗒️Zig linear mathematics](https://github.com/ziglibs/zlm) 
+  - ![Star](https://img.shields.io/github/stars/pedronaugusto/zmeshopt?color=orange)
+  [zmeshopt🗒️Zig bindings for meshoptimizer](https://github.com/pedronaugusto/zmeshopt)
+  - ![Star](https://img.shields.io/github/stars/pedronaugusto/zozz?color=orange)
+  [zozz🗒️Zig bindings for the ozz-animation runtime](https://github.com/pedronaugusto/zozz)
   - ![Star](https://img.shields.io/github/stars/jack-ji/zplay?color=orange)
   [zplay🗒️A simple framework intended for game/tool creation](https://github.com/jack-ji/zplay) 
+  - ![Star](https://img.shields.io/github/stars/pedronaugusto/zrecast?color=orange)
+  [zrecast🗒️Zig bindings for recastnavigation, navmesh baking and path queries](https://github.com/pedronaugusto/zrecast)
   - ![Star](https://img.shields.io/github/stars/JonSnowbd/ZT?color=orange)
   [ZT🗒️A zig based Imgui Application framework](https://github.com/JonSnowbd/ZT) 
+  - ![Star](https://img.shields.io/github/stars/pedronaugusto/ztypeset?color=orange)
+  [ztypeset🗒️Text shaping and glyph rasterisation over FreeType, HarfBuzz, SheenBidi and libunibreak](https://github.com/pedronaugusto/ztypeset)
   - ![Star](https://img.shields.io/github/stars/ziglibs/zwin?color=orange)
   [zwin🗒️Making windows with Zig! (Only works on Windows at the moment)](https://github.com/ziglibs/zwin) 
   - ![Star](https://img.shields.io/github/stars/Aransentin/ZWL?color=orange)
@@ -758,6 +775,8 @@ permalink: /packages/C-BJ/awesome-zig/
 
   - ![Star](https://img.shields.io/github/stars/ziglibs/ansi-term?color=orange)
   [ansi-term🗒️Zig library for dealing with ANSI terminals](https://github.com/ziglibs/ansi-term)
+  - ![Star](https://img.shields.io/github/stars/pedronaugusto/conduit?color=orange)
+  [conduit🗒️Starts child processes and gives them pseudo-terminals](https://github.com/pedronaugusto/conduit)
   - ![Star](https://img.shields.io/github/stars/00jciv00/cova?color=orange)
    [cova🗒️Commands, Options, Values, Arguments. A simple yet robust cross-platform command line argument parsing library for Zig.](https://github.com/00JCIV00/cova)
   - ![Star](https://img.shields.io/github/stars/jayschwa/dos.zig?color=orange)
@@ -766,10 +785,14 @@ permalink: /packages/C-BJ/awesome-zig/
   [known-folders🗒️Provides access to well-known folders across several operating systems](https://github.com/ziglibs/known-folders) 
   - ![Star](https://img.shields.io/github/stars/joachimschmidt557/linenoize?color=orange)
   [linenoize🗒️A port of linenoise to zig](https://github.com/joachimschmidt557/linenoize) 
+  - ![Star](https://img.shields.io/github/stars/pedronaugusto/lookout?color=orange)
+  [lookout🗒️A file-system watcher for Zig, over each platform's own notification interface](https://github.com/pedronaugusto/lookout)
   - ![Star](https://img.shields.io/github/stars/ziglibs/lscolors?color=orange)
   [lscolors🗒️A zig library for colorizing paths according to LS_COLORS](https://github.com/ziglibs/lscolors) 
   - ![Star](https://img.shields.io/github/stars/xyaman/mibu?color=orange)
   [mibu🗒️Pure Zig library for low-level terminal manipulation](https://github.com/xyaman/mibu) 
+  - ![Star](https://img.shields.io/github/stars/pedronaugusto/morse?color=orange)
+  [morse🗒️Writes terminal control sequences and parses the bytes a terminal sends back](https://github.com/pedronaugusto/morse)
   - ![Star](https://img.shields.io/github/stars/fabioarnold/nfd-zig?color=orange)
   [nfd-zig🗒️OS-native file dialogs on Linux, macOS and Windows](https://github.com/fabioarnold/nfd-zig) 
   - ![Star](https://img.shields.io/github/stars/MasterQ32/TextEditor?color=orange)
@@ -790,8 +813,6 @@ permalink: /packages/C-BJ/awesome-zig/
   [zigra🗒️Command line toolkit for Zig](https://github.com/Gonzih/zigra) 
   - ![Star](https://img.shields.io/github/stars/MasterQ32/zig-serial?color=orange)
   [zig-serial🗒️Serial port configuration library for Zig](https://github.com/MasterQ32/zig-serial)
-  - ![Star](https://img.shields.io/github/stars/javiorfo/zig-syslinfo)
-  [zig-syslinfo🗒️Linux sysinfo Zig library](https://github.com/javiorfo/zig-syslinfo)
   - ![Star](https://img.shields.io/github/stars/marlersoft/zigwin32?color=orange)
   [zigwin32🗒️Autogenerated Zig bindings for Win32](https://github.com/marlersoft/zigwin32) 
   - ![Star](https://img.shields.io/github/stars/ziglibs/zig-windows-console?color=orange)

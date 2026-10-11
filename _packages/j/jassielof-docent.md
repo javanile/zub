@@ -21,10 +21,10 @@ keywords:
   - linter
   - static-analysis
   - style
-date: 2026-10-07
+date: 2026-10-11
 category: tooling
-updated_at: 2026-10-07T16:05:03+00:00
-last_sync: 2026-10-07T16:05:03Z
+updated_at: 2026-10-11T15:51:40+00:00
+last_sync: 2026-10-11T15:51:40Z
 package_kind: hybrid
 has_library: true
 has_binary: true

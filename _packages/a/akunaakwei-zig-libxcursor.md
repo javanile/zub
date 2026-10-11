@@ -6,9 +6,9 @@ author: akunaakwei
 author_github: akunaakwei
 repository: https://github.com/akunaakwei/zig-libxcursor
 keywords:
-date: 2026-09-05
-updated_at: 2026-09-05T07:29:59+00:00
-last_sync: 2026-09-05T07:29:59Z
+date: 2026-09-20
+updated_at: 2026-09-20T07:34:46+00:00
+last_sync: 2026-09-20T07:34:46Z
 package_kind: library
 has_library: true
 has_binary: false

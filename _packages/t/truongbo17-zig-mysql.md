@@ -7,17 +7,17 @@ author_github: truongbo17
 repository: https://github.com/truongbo17/zig-mysql
 keywords:
   - mysql
-date: 2026-10-10
+date: 2026-10-11
 category: data-formats
-updated_at: 2026-10-10T15:49:51+00:00
-last_sync: 2026-10-10T15:49:51Z
+updated_at: 2026-10-11T13:40:00+00:00
+last_sync: 2026-10-11T13:40:00Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 1
-distributable_binary_count: 1
-multiple_binaries: false
+binary_count: 2
+distributable_binary_count: 2
+multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
 sync_source: zigistry
@@ -128,6 +128,76 @@ Do not concatenate untrusted input into SQL. Use `prepare` and `execute` with ty
 
 For large `SELECT` results, use `queryRows` and call `RowStream.deinit(io)` after iteration. Each returned row's byte slices remain valid until the next `next(io)` call. A connection rejects other commands while streaming rows remain unread; `deinit` drains them so the connection can be reused.
 
+## Multiple results and safe framing (Sprint B1, issue #20)
+
+The opt-in `queryAll(io, sql)` buffers every classic-protocol response
+part returned by one SQL command, including row resultsets and a terminal OK
+from a stored procedure. Each `MultiResult.items[i]` is a normal `Result`
+(`.rows` or `.ok`) with independent arena ownership. Call
+`MultiResult.deinit()` after consuming all parts.
+
+```zig
+var responses = try client.queryAll(io, "CALL get_dashboard_stats()");
+defer responses.deinit();
+for (responses.items) |result| {
+    switch (result.value) {
+        .rows => |rows| _ = rows.items.len,
+        .ok => |status| _ = status.affected_rows,
+    }
+}
+```
+
+The handshake negotiates `CLIENT_MULTI_RESULTS` and
+`CLIENT_PS_MULTI_RESULTS` when supported, **not**
+`CLIENT_MULTI_STATEMENTS`. Multiple SQL statements separated by semicolons
+are not enabled. Existing single-result `query` and prepared `execute`
+drain additional result parts and return `error.MultipleResults`;
+streaming text `RowStream.next` does likewise after the first resultset.
+The subsequent connection is reusable only when draining fully succeeds.
+Malformed packets, later result errors, read failures, or unbounded (>256)
+result part chains poison the connection and require eviction. Buffered
+`queryAll` is not for unbounded datasets and has no streaming prepared
+counterpart yet (#22). Zig 0.16/0.17 full MySQL/MariaDB/TLS CI passed for the implementation
+([run #38116254824](https://github.com/truongbo17/zig-mysql/actions/runs/38116254824));
+production acceptance remains independently blocked by #13.
+
+## Stored procedure CALL result iteration (Sprint B2, issue #21)
+
+For procedures returning multiple resultsets, `callResults(io, sql)`
+returns an iterator rather than buffering the complete CALL. Invoke
+`next(io)` to obtain each independently owned `Result`; call
+`Result.deinit()` on each returned value. The iterator yields row
+resultsets (including empty ones) and a terminal OK status, available in
+`final_ok` after exhaustion. OUT/INOUT session variables should be
+queried **after** the procedure has fully completed. Example:
+
+```zig
+var call = try conn.callResults(io, "CALL monthly_rollup(7, @total, @status)");
+defer call.deinit(io);
+while (try call.next(io)) |part| {
+    var owned = part;
+    defer owned.deinit();
+    switch (owned.value) {
+        .rows => |rows| _ = rows.items.len,
+        .ok => |status| _ = status.affected_rows,
+    }
+}
+// OUT/INOUT variables now reflect procedure completion.
+var vars = try conn.query(io, "SELECT @total, @status");
+defer vars.deinit();
+```
+
+Use fixed trusted CALL SQL; never interpolate untrusted values into SQL.
+Procedure parts are buffered **one resultset at a time**, not one row at
+a time; use the dedicated prepared streaming API from #22 for very large
+resultsets. `call.deinit(io)` drains remaining resultsets without retaining
+all rows, so a clean connection may return to the pool; `call.abandon()`
+intentionally poisons it when draining is unsafe or unwanted.
+`call.nextWithTimeout(io, duration)` bounds **one result part**, not
+the complete procedure; it poisons a timed-out session. Connection commands
+are rejected with `error.RowsNotConsumed` while iteration is active.
+Always deinitialize the iterator, even after the last `next()`.
+
 ## Typed text row scanning (A4, issue #18)
 
 The additive `mysql.TextRow.init(row)` adapter provides **checked**, allocation-free
@@ -152,6 +222,106 @@ On streams, discard borrowed slices before the next `next()` call; use an
 allocator-owned copy if values need to outlive the row. This is text-protocol
 scanning only; typed prepared/binary rows are tracked under issue #19.
 No ORM or implicit SQL casts are introduced.
+
+## SQL JSON, UTF-8 and BLOB value views (A3, issue #17)
+
+`mysql.SqlBytes.blob(raw)` retains arbitrary bytes including embedded
+NUL and non-UTF-8 bytes with no allocation. `mysql.SqlBytes.text(raw)`
+validates UTF-8, and `mysql.SqlBytes.json(allocator, raw)` validates
+UTF-8 and JSON with temporary parser allocations; the returned view
+still **borrows** the original bytes. The MySQL/MariaDB server may
+canonicalize JSON during storage.
+
+```zig
+const blob = mysql.SqlBytes.blob(row.values[0].?); // opaque bytes
+const utf8 = try mysql.SqlBytes.text(row.values[1].?);
+const validated = try mysql.SqlBytes.json(allocator, row.values[2].?);
+_ = .{blob, utf8, validated};
+```
+
+All views expire on `Result.deinit()` (or the next `RowStream.next()`);
+copy into caller-owned storage to extend their lifetimes. These
+helpers never enable LOCAL INFILE or implicitly decode a BLOB as text.
+Unit and live MySQL/MariaDB tests cover invalid UTF-8, embedded NUL and
+prepared BLOB/JSON roundtrips.
+
+## Typed prepared/binary row scanning (A5, issue #19)
+
+`mysql.PreparedRow.init(result.value.rows, row_index)` is an opt-in
+adapter for **COM_STMT_EXECUTE** buffered binary resultsets. It reuses the
+driver's already-decoded, result-owned byte slices, while checking MySQL
+column type metadata and the UNSIGNED flag **before** numeric, temporal
+and decimal conversion. `int`, `uint`, `boolean`, `exactDecimal`,
+`date`, `dateTime`, `time`, `string` and `bytes` return optional
+values; NULL remains NULL, wrong SQL type returns
+`error.ColumnTypeMismatch`, numeric overflow is rejected and invalid
+UTF-8 is rejected by `string`. `bytes` never alters BLOB values.
+
+```zig
+var result = try conn.execute(io, select_statement, &.{.{ .int = 1 }});
+defer result.deinit();
+const scan = try mysql.PreparedRow.init(result.value.rows, 0);
+const amount = (try scan.exactDecimal(0)).?;
+_ = amount.bytes; // exact borrowed digits; copy before result.deinit()
+```
+
+Unlike streaming text rows, a buffered prepared row is valid until
+`Result.deinit()`. This adapter is **not** a streaming binary result API
+(see issue #22); passing a text-query result is unsupported. Typed values
+retain the original session timezone for TIMESTAMP, and this layer never
+automatically retries SQL or changes charset.
+
+## Streaming prepared binary rows (Sprint B3, issue #22)
+
+Use `executeRows(io, statement, params)` when a prepared `SELECT`
+may return many rows. It reuses the existing `RowStream` ownership
+contract and returns decoded binary-protocol values as nullable byte
+slices, with column type metadata in `stream.columns`.
+`RowStream.binary` distinguishes prepared binary results from text
+results. Each row is borrowed and expires on the next `next(io)` or
+`deinit(io)` call; copy values if you must retain them. No server cursor
+is requested, and there is no automatic query retry.
+
+```zig
+var stmt = try client.prepare(io, "SELECT id, data FROM events WHERE id > ?");
+defer client.closeStatement(io, &stmt) catch {};
+var stream = try client.executeRows(io, stmt, &.{.{ .int = 100 }});
+defer stream.deinit(io);
+while (try stream.nextWithTimeout(io, .fromSeconds(5))) |row| {
+    // Any SQL NULL remains null; BLOB bytes retain NUL and non-UTF8.
+    _ = row.values;
+}
+```
+
+Use `executeRowsWithTimeout(io, statement, params, duration)` to bound
+execution and initial result metadata; use `RowStream.nextWithTimeout`
+for a separate deadline on each row. `deinit(io)` drains the unread
+rows when the connection is healthy, while `abandon()` poisons it
+without I/O. On any cancellation or malformed response, discard the
+connection rather than returning it as reusable. `execute()` continues
+to return buffered binary results; the new API is additive.
+
+## Prepared streaming robustness tests (Sprint B4, issue #23)
+
+See the [Sprint B evidence report](docs/SPRINT_B_REPORT.md) for exact CI,
+resource-budget and throughput evidence, and remaining release blockers.
+
+The MySQL/MariaDB integration suite scans **101,000** prepared binary rows
+under a **2 MiB fixed allocator cap** for the driver. This proves per-row
+allocation stays bounded over that fixture (it does not measure universal RSS
+or cover arbitrary concurrent workloads). The MySQL suite additionally checks
+one **16,777,216-byte** binary result requiring classic-protocol message
+reassembly, then verifies a mid-stream `KILL CONNECTION` cannot return an
+unsynchronized connection to a pool (`max_open=1`). Both server families
+exercise a prepared `SELECT SLEEP(2)` with a 50 ms client cancellation
+and verify that a fresh pooled connection can recover.
+
+`zig build integration` and `zig build mariadb-integration` run the
+live fixtures. The full disposable database, TLS, restart, stress and pool
+soak smoke matrix is `bash integration/run.sh`. GitHub Actions results are
+commit-specific and do not replace the production release 24-hour soak
+or realistic p95/p99, throughput, memory/CPU/FD and HA/security validation
+(OPS #13).
 
 ## Connection pooling
 
@@ -473,19 +643,21 @@ before dependents; Zig 0.16/0.17 tests plus real MySQL/MariaDB integration;
 self-review; no merge when CI is red. Prioritize correctness and SQL data
 fidelity before broadening APIs and chasing benchmarks.
 
-### Sprint A — Lossless data types and typed row scanning (P0)
+### Sprint A — Lossless data types and typed row scanning (P0, COMPLETE)
 
 Epic trackers: [#10 SQL values](https://github.com/truongbo17/zig-mysql/issues/10)
 and [#11 typed scanner](https://github.com/truongbo17/zig-mysql/issues/11).
+
+**Completed:** all six child issues [#14–#19](https://github.com/truongbo17/zig-mysql/issues/19) are closed following merged PRs with exact-head Zig 0.16/0.17 and live MySQL/MariaDB integration evidence. This is **feature completeness**, not production certification; 24-hour soak, cluster HA and security acceptance are still pending in #13.
 
 | Order | Small issue (one PR each) | Dependency | Status |
 | --- | --- | --- | --- |
 | A0 | [#14 Audit type codes, parsers and row ownership](https://github.com/truongbo17/zig-mysql/issues/14) | — completed | Done — [PR #40](https://github.com/truongbo17/zig-mysql/pull/40) |
 | A1 | [#15 Lossless DECIMAL/NEWDECIMAL](https://github.com/truongbo17/zig-mysql/issues/15) | #14 | Done — [PR #41](https://github.com/truongbo17/zig-mysql/pull/41) |
-| A2 | [#16 DATE/TIME/DATETIME/TIMESTAMP](https://github.com/truongbo17/zig-mysql/issues/16) | #14 | In progress — [PR #42](https://github.com/truongbo17/zig-mysql/pull/42) (read parsers; native binding pending) |
-| A3 | [#17 JSON/BLOB/UTF-8 byte safety](https://github.com/truongbo17/zig-mysql/issues/17) | #14 | Planned |
+| A2 | [#16 DATE/TIME/DATETIME/TIMESTAMP](https://github.com/truongbo17/zig-mysql/issues/16) | #14 | Done — [PR #42](https://github.com/truongbo17/zig-mysql/pull/42) + [PR #47](https://github.com/truongbo17/zig-mysql/pull/47), Zig 0.16/0.17 CI PASS |
+| A3 | [#17 JSON/BLOB/UTF-8 byte safety](https://github.com/truongbo17/zig-mysql/issues/17) | #14 | Done — [PR #49](https://github.com/truongbo17/zig-mysql/pull/49), Zig 0.16/0.17 CI PASS |
 | A4 | [#18 Typed scanner for text rows](https://github.com/truongbo17/zig-mysql/issues/18) | #14–#17 as applicable | **Done — [PR #44](https://github.com/truongbo17/zig-mysql/pull/44), Zig 0.16/0.17 CI PASS** |
-| A5 | [#19 Typed scanner for prepared binary rows](https://github.com/truongbo17/zig-mysql/issues/19) | #18 + scalar types | Planned |
+| A5 | [#19 Typed scanner for prepared binary rows](https://github.com/truongbo17/zig-mysql/issues/19) | #18 + scalar types | Done — [PR #50](https://github.com/truongbo17/zig-mysql/pull/50), Zig 0.16/0.17 CI PASS |
 
 ### Lossless DECIMAL binding (A1)
 
@@ -518,8 +690,9 @@ retain exact microseconds; invalid and zero dates fail explicitly.
 `TIME` is a duration and can be negative or longer than 24 hours.
 No timezone conversion is inferred (MySQL TIMESTAMP depends on server
 session timezone). The values are independent numeric structs, with
-no hidden allocations. Native typed prepared **input** binding is not
-implemented by this PR; issue #16 stays open until that follow-up is tested.
+no hidden allocations. Native typed prepared **input** binding for DATE,
+DATETIME, TIMESTAMP and signed TIME is now implemented in [PR #47](https://github.com/truongbo17/zig-mysql/pull/47), validated **before sending** COM_STMT_EXECUTE.
+The server session timezone and SQL mode still govern stored TIMESTAMP values.
 
 ### Sprint B — Correct resultset lifecycle and streaming (P1)
 
@@ -527,19 +700,105 @@ Epic tracker: [#12 Multiple results and prepared streaming](https://github.com/t
 
 | Order | Small issue | Dependency | Status |
 | --- | --- | --- | --- |
-| B1 | [#20 Multi-result framing and safe drain](https://github.com/truongbo17/zig-mysql/issues/20) | — first in Sprint B | Planned |
-| B2 | [#21 Stored procedure CALL resultsets](https://github.com/truongbo17/zig-mysql/issues/21) | #20 | Planned |
-| B3 | [#22 Prepared binary row streaming API](https://github.com/truongbo17/zig-mysql/issues/22) | #20 | Planned |
-| B4 | [#23 100k rows, >16 MiB and streaming fault tests](https://github.com/truongbo17/zig-mysql/issues/23) | #22 | Planned |
+| B1 | [#20 Multi-result framing and safe drain](https://github.com/truongbo17/zig-mysql/issues/20) | — first in Sprint B | Done — [PR #52](https://github.com/truongbo17/zig-mysql/pull/52), [Zig 0.16/0.17 full CI PASS](https://github.com/truongbo17/zig-mysql/actions/runs/38116254824) |
+| B2 | [#21 Stored procedure CALL resultsets](https://github.com/truongbo17/zig-mysql/issues/21) | #20 | Done — [PR #53](https://github.com/truongbo17/zig-mysql/pull/53), [Zig 0.16/0.17 CI PASS](https://github.com/truongbo17/zig-mysql/actions/runs/38134426983) |
+| B3 | [#22 Prepared binary row streaming API](https://github.com/truongbo17/zig-mysql/issues/22) | #20 | Done — [PR #54](https://github.com/truongbo17/zig-mysql/pull/54), [Zig 0.16/0.17 CI PASS](https://github.com/truongbo17/zig-mysql/actions/runs/38135291250) |
+| B4 | [#23 100k rows, >16 MiB and streaming fault tests](https://github.com/truongbo17/zig-mysql/issues/23) | #22 | Done — [PR #55](https://github.com/truongbo17/zig-mysql/pull/55), [Zig 0.16/0.17 CI PASS](https://github.com/truongbo17/zig-mysql/actions/runs/38135757213) |
+
+### Savepoint helpers (Sprint C1 — issue #24)
+
+`Client.savepoint(io, "step_1")`, `rollbackToSavepoint(io, "step_1")`
+and `releaseSavepoint(io, "step_1")` use explicitly named SQL
+savepoints. The helper validates **1–64 ASCII letters, digits and
+underscores** and backtick-quotes the identifier; malicious or invalid
+names fail locally with `error.InvalidSavepointName` without sending SQL.
+
+```zig
+try conn.begin(io);
+try conn.savepoint(io, "address");
+errdefer conn.rollback(io) catch {};
+// perform an optional set of writes...
+try conn.rollbackToSavepoint(io, "address");
+try conn.releaseSavepoint(io, "address");
+try conn.commit(io);
+```
+
+MySQL replaces an earlier savepoint with the same name. Rolling back to a
+savepoint keeps it active; releasing it does not commit. Transaction
+`COMMIT`/`ROLLBACK` and `COM_RESET_CONNECTION` invalidate savepoints.
+DDL can implicitly commit in MySQL. No implicit transaction, nested
+transaction abstraction, auto-retry or isolation changes are introduced.
+
+### Bounded transaction completion (Sprint C2 — issue #25)
+
+Use `commitWithTimeout(io, .fromSeconds(5))` or
+`rollbackWithTimeout(io, .fromSeconds(5))` when a network stall must not
+block transaction completion indefinitely. The deadline bounds the **entire
+command and server response**. When transport dies or the deadline expires
+after an attempted completion, both methods return
+`error.TransactionOutcomeUnknown`, set
+`client.transaction_outcome_unknown = true`, and permanently mark the
+connection broken. The COMMIT **may already have succeeded** on MySQL:
+**never automatically retry a COMMIT or replay non-idempotent mutations**.
+Reconcile a durable business transaction ID using a **new** connection.
+A confirmed server ERR packet returns `error.ServerError`, and local
+prechecks (active stream, already broken) do not falsely claim an unknown
+server-side outcome. No transaction retry mechanism is introduced.
+
+### Per-session prepared statement LRU (Sprint C3 — issue #26)
+
+Caching is **opt-in** with `Config.statement_cache_capacity` (default 0).
+Call `executeCached(io, sql, params)`; SQL bytes identify the cached handle,
+while parameter values are still bound with the binary protocol.
+
+```zig
+const cfg: mysql.Config = .{
+    .address = .{ .ip = try std.Io.net.IpAddress.parseLiteral("127.0.0.1:3306") },
+    .username = "app", .password = password, .database = "app",
+    .statement_cache_capacity = 32,
+};
+var conn = try mysql.Client.connect(allocator, io, cfg);
+defer conn.deinit(io);
+var result = try conn.executeCached(io, "SELECT value FROM metrics WHERE id=?", &.{.{ .int = 3 }});
+defer result.deinit();
+const stats = conn.statementCacheStats(); // entries, hits, misses, evictions
+```
+
+Cache capacity bounds the number of server-side prepared handles **per
+connection**, not across a pool. LRU eviction sends `COM_STMT_CLOSE`.
+`selectDatabase` explicitly closes all cached handles **before** switching
+schemas; `resetConnection` clears local cache after server reset. The pool
+resets sessions between borrowers, so cache entries never cross a pool
+lease boundary; pooled reuse does **not** preserve prepared handles.
+Standalone `prepare`/`execute`/`closeStatement` remain independent;
+do not assume that a `Statement` survives a reset or reconnect.
+
+### Prepared statement cache benchmark (Sprint C4 — issue #27)
+
+Run `zig build -Doptimize=ReleaseFast cache-bench` against local
+disposable MySQL 8.0. CI executes this benchmark in
+`integration/run.sh`. The benchmark uses **the same eight prepared
+`SELECT ? + N` statements**, 200 operations per worker and
+1/8/32-worker matrix with cache disabled/enabled. It reports
+request throughput, p50/p95/p99, process CPU, cache hits/misses,
+server `Com_stmt_prepare` delta and remaining server
+`Prepared_stmt_count`. The benchmark tests **intra-connection**
+prepared reuse, not an HTTP request that returns its pooled session
+after each statement. Cached handles are intentionally lost at pool
+release due mandatory COM_RESET_CONNECTION.
+
+[Measured CI diagnostics and limitations](docs/SPRINT_C_REPORT.md).
+Performance differences are dominated by a ~41 ms uncached TCP close
+path on the GitHub runner; do not use these values as production SLAs.
 
 ### Sprint C — Transactions and prepared-statement cache (P1)
 
 | Order | Small issue | Dependency | Status |
 | --- | --- | --- | --- |
-| C1 | [#24 Savepoints and transaction helpers](https://github.com/truongbo17/zig-mysql/issues/24) | Existing transaction API | Planned |
-| C2 | [#25 Bounded COMMIT/ROLLBACK and ambiguous outcomes](https://github.com/truongbo17/zig-mysql/issues/25) | #24 contract | Planned |
-| C3 | [#26 Per-connection bounded statement cache](https://github.com/truongbo17/zig-mysql/issues/26) | #20, reset safety | Planned |
-| C4 | [#27 Cache benchmarks and regressions](https://github.com/truongbo17/zig-mysql/issues/27) | #26 | Planned |
+| C1 | [#24 Savepoints and transaction helpers](https://github.com/truongbo17/zig-mysql/issues/24) | Existing transaction API | Done — [PR #56](https://github.com/truongbo17/zig-mysql/pull/56), [Zig CI](https://github.com/truongbo17/zig-mysql/actions/runs/38141738935) |
+| C2 | [#25 Bounded COMMIT/ROLLBACK and ambiguous outcomes](https://github.com/truongbo17/zig-mysql/issues/25) | #24 contract | Done — [PR #57](https://github.com/truongbo17/zig-mysql/pull/57), [Zig CI](https://github.com/truongbo17/zig-mysql/actions/runs/38142540809) |
+| C3 | [#26 Per-connection bounded statement cache](https://github.com/truongbo17/zig-mysql/issues/26) | #20, reset safety | Done — [PR #58](https://github.com/truongbo17/zig-mysql/pull/58), [Zig 0.16/0.17 CI PASS](https://github.com/truongbo17/zig-mysql/actions/runs/38143171954) |
+| C4 | [#27 Cache benchmarks and regressions](https://github.com/truongbo17/zig-mysql/issues/27) | #26 | Done — [PR #59](https://github.com/truongbo17/zig-mysql/pull/59), [Zig 0.16/0.17 benchmark CI PASS](https://github.com/truongbo17/zig-mysql/actions/runs/38142640379) |
 
 ### Sprint D — Observability, batching and high CCU (P2)
 
@@ -574,9 +833,9 @@ replica is **not** proof of completed production acceptance. See
 [release runbook](docs/RELEASE_RUNBOOK.md) and
 [production-readiness gates](docs/PRODUCTION_READINESS.md).
 
-**Next implementation:** [#14 — type/protocol audit](https://github.com/truongbo17/zig-mysql/issues/14).
-Only proceed to #15–#17 after its API contract is reviewed. Feature PRs may
-continue while the independent OPS release gate remains open.
+**Next implementation:** Sprint D starts at [#28](https://github.com/truongbo17/zig-mysql/issues/28), with further observability, batching and CCU tasks tracked in the roadmap. Sprint C issues #24–#27 are implemented and covered by PRs #56–#59; OPS production gate #13 remains open.
+**Sprint A is complete** (#14–#19, epics #10/#11 closed). Feature PRs may
+continue while the independent OPS release gate #13 remains open.
 
 ## Pool performance benchmark
 

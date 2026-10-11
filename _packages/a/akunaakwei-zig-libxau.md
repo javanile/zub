@@ -6,9 +6,9 @@ author: akunaakwei
 author_github: akunaakwei
 repository: https://github.com/akunaakwei/zig-libxau
 keywords:
-date: 2026-08-02
-updated_at: 2026-08-02T06:16:59+00:00
-last_sync: 2026-08-02T06:16:59Z
+date: 2026-09-20
+updated_at: 2026-09-20T07:23:06+00:00
+last_sync: 2026-09-20T07:23:06Z
 package_kind: library
 has_library: true
 has_binary: false

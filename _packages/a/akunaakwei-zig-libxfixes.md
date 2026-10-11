@@ -6,9 +6,9 @@ author: akunaakwei
 author_github: akunaakwei
 repository: https://github.com/akunaakwei/zig-libxfixes
 keywords:
-date: 2026-09-05
-updated_at: 2026-09-05T07:22:51+00:00
-last_sync: 2026-09-05T07:22:51Z
+date: 2026-09-20
+updated_at: 2026-09-20T07:32:48+00:00
+last_sync: 2026-09-20T07:32:48Z
 package_kind: library
 has_library: true
 has_binary: false

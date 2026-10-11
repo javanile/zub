@@ -6,9 +6,9 @@ author: akunaakwei
 author_github: akunaakwei
 repository: https://github.com/akunaakwei/zig-libx11
 keywords:
-date: 2026-09-05
-updated_at: 2026-09-05T07:21:30+00:00
-last_sync: 2026-09-05T07:21:30Z
+date: 2026-09-20
+updated_at: 2026-09-20T07:30:01+00:00
+last_sync: 2026-09-20T07:30:01Z
 package_kind: hybrid
 has_library: true
 has_binary: true
