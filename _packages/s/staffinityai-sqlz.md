@@ -13,10 +13,10 @@ keywords:
   - sql
   - sqlite
   - sqlite3
-date: 2026-09-19
+date: 2026-09-30
 category: data-formats
-updated_at: 2026-09-19T13:12:29+00:00
-last_sync: 2026-09-19T13:12:29Z
+updated_at: 2026-09-30T07:56:10+00:00
+last_sync: 2026-09-30T07:56:10Z
 package_kind: hybrid
 has_library: true
 has_binary: true

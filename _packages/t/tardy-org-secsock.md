@@ -9,10 +9,10 @@ keywords:
   - async
   - tardy
   - tls
-date: 2026-09-21
+date: 2026-10-12
 category: networking
-updated_at: 2026-09-21T18:04:41+00:00
-last_sync: 2026-09-21T18:04:41Z
+updated_at: 2026-10-12T18:16:23+00:00
+last_sync: 2026-10-12T18:16:23Z
 package_kind: hybrid
 has_library: true
 has_binary: true

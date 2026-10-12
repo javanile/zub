@@ -1,6 +1,6 @@
 ---
 title: nethernet-zig
-description: Zig library implementing a basic version of the NetherNet protocol.
+description: "High-performance, low-latency, and secure NetherNet implementation for Minecraft: Bedrock Edition"
 license: Apache-2.0
 author: Bedrock-Phanatics
 author_github: Bedrock-Phanatics
@@ -10,15 +10,15 @@ keywords:
   - nethernet
   - networking
   - webrtc
-date: 2026-09-08
-updated_at: 2026-09-08T04:24:03+00:00
-last_sync: 2026-09-08T04:24:03Z
+date: 2026-09-19
+updated_at: 2026-09-19T16:41:40+00:00
+last_sync: 2026-09-19T16:41:40Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 4
-distributable_binary_count: 4
+binary_count: 5
+distributable_binary_count: 5
 multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
@@ -26,130 +26,97 @@ sync_source: zigistry
 permalink: /packages/Bedrock-Phanatics/nethernet-zig/
 ---
 
-# nethernet-zig
+# NetherNet
 
-A Minecraft Bedrock NetherNet networking library for Zig 0.16.
+NetherNet is a Zig transport library for Minecraft Bedrock networking. It
+provides authenticated WebRTC connections over HTTP or LAN signaling, with
+reliable and unreliable message delivery through libdatachannel.
 
-- LAN discovery and signaling, including encrypted advertisements.
-- HTTP/HTTPS endpoint dialing and an HTTP endpoint listener.
-- ES384 identity tokens and signed SDP fingerprint assertions.
-- Reliable ordered and unreliable unordered WebRTC messages.
-- Bounded queues, explicit ownership, configurable limits, and reusable buffers.
+## Features
 
-WebRTC uses **libdatachannel 0.24.5** with a local bounds patch and **Mbed TLS 3.6.7**.
+- HTTP endpoint and LAN discovery connection flows
+- Reliable and unreliable DataChannel messages
+- Authenticated SDP exchange and configurable identity verification
+- Bounded queues, message sizes, candidates, and signaling payloads
+- Graceful shutdown, connection diagnostics, and transport statistics
+
+## Requirements
+
+- Zig 0.16.0
+- Git and CMake
+- A C/C++ toolchain supported by libdatachannel
 
 ## Build
 
-Run all commands from the repository root.
+Set up the pinned native dependencies, then build in `ReleaseSafe` mode:
 
-### Windows
-
-Requires Zig **0.16.0**, Git, and Python:
-
-~~~powershell
-./tools/setup-native.ps1
-zig build
-~~~
-
-Setup keeps downloaded sources, CMake, Ninja, and native build output under `.deps/`. The build compiles the tests and installs examples and the native DLL into `zig-out/bin/`.
-
-### Linux and macOS
-
-The POSIX setup script requires Zig 0.16.0, Git, Python 3, CMake, and a C/C++ toolchain:
-
-~~~sh
+```sh
+# Linux and macOS
 sh tools/setup-native.sh
-zig build
-~~~
+zig build -Doptimize=ReleaseSafe
+```
 
-These platforms have not been runtime-validated. Ensure the installed libdatachannel shared library is discoverable by your platform's loader when running installed executables.
+```powershell
+# Windows
+powershell -ExecutionPolicy Bypass -File tools/setup-native.ps1
+zig build -Doptimize=ReleaseSafe
+```
 
-To use an existing installation of the patched native dependency:
+An existing patched libdatachannel installation can be selected with
+`-Dnative-prefix=/path/to/prefix`.
 
-~~~powershell
-zig build -Dnative-prefix=/absolute/path/to/native
-~~~
+## Quick start
 
-## Run the echo example
-
-After building, start the listener in one terminal:
-
-~~~powershell
-./zig-out/bin/echo.exe
-~~~
-
-In a second terminal, also in this directory:
-
-~~~powershell
-./zig-out/bin/client.exe
-~~~
-
-The client prints `received hello`. These examples bind to loopback port 18750, exchange one reliable message, and exit. The listener allows anonymous clients for this local demonstration.
-
-Source: [client.zig](examples/client.zig) · [echo.zig](examples/echo.zig)
-
-## Use the library
-
-The public module is `nethernet`. Add this directory as a dependency in your application's package manifest, then import it in your build:
-
-~~~zig
-const dependency = b.dependency("nethernet", .{
-    .target = target,
-    .optimize = optimize,
-    .@"native-prefix" = native_prefix,
-});
-exe.root_module.addImport("nethernet", dependency.module("nethernet"));
-~~~
-
-The native prefix is the absolute installation path of the patched native dependency. Distribute its shared library and applicable license notices with your application.
-
-A minimal endpoint client:
-
-~~~zig
+```zig
 const std = @import("std");
 const nethernet = @import("nethernet");
 
 pub fn main(init: std.process.Init) !void {
     const connection = try nethernet.dialEndpoint(
-        init.gpa, init.io, "http://127.0.0.1:18750", 123, .{},
+        init.gpa,
+        init.io,
+        "http://127.0.0.1:18750",
+        123,
+        .{},
     );
     defer connection.destroy();
 
     try connection.send("hello", .reliable);
+
     const message = try connection.receive();
-    std.debug.print("received {s}\n", .{message.data});
+    std.debug.print("received: {s}\n", .{message.data});
 }
-~~~
+```
 
-Connections have one application owner. Received data borrows connection storage until the next poll/receive. Closing is idempotent; call `destroy()` exactly once. See the [API and ownership guide](docs/GUIDE.md) before integrating custom signaling or authentication.
+Complete client and server programs are available in
+[`examples/client.zig`](examples/client.zig) and
+[`examples/server.zig`](examples/server.zig).
 
-## Test and benchmark
+## API overview
 
-| Command | Purpose |
-|---|---|
-| `zig build test` | Core tests; no native dependency required |
-| `zig build test-native` | Real WebRTC, LAN, HTTP, and UDP fault-relay tests |
-| `zig build fuzz -Dfuzz-iterations=100000` | Fuzz corpus and deterministic malformed-input campaign |
-| `zig build test -Doptimize=ReleaseSafe` | Core tests with release safety checks |
-| `zig build test-native -Doptimize=ReleaseSafe` | Native suite with release safety checks |
-| `zig build bench` | Codec, framing, and queue microbenchmarks |
-| `zig fmt --check build.zig build.zig.zon tests.zig native_tests.zig src tests bench examples` | Formatting check |
+| API | Use |
+| --- | --- |
+| `dialEndpoint` | Connect to a server through HTTP signaling. |
+| `EndpointListener` | Listen for HTTP-signaled connections. |
+| `dialLan` | Discover and connect to a server on the local network. |
+| `LanListener` | Advertise and accept connections on the local network. |
+| `Connection` | Send and receive messages, inspect state, and close a connection. |
+| `ConnectionOptions` | Configure timeouts, limits, ICE servers, and identity policy. |
+| `Identity` / `IdentityKeyPair` | Configure authenticated SDP identities. |
 
-Coverage-guided fuzzing is unavailable on Windows in Zig 0.16. The ordinary test suite runs the fuzz corpus and deterministic malformed-input tests.
+The supported public surface is exposed by `@import("nethernet")`. Everything
+under `src/internal` is private implementation detail.
 
-## Directory guide
+## Verification
 
-| Path | Contents |
-|---|---|
-| [src/root.zig](src/root.zig) | Public API exports |
-| [src/](src/) | Production library code and colocated unit tests |
-| [tests/](tests/) | Core, fuzz, wire, and native integration suites and fixtures |
-| [bench/](bench/) | Performance benchmarks |
-| [examples/](examples/) | Small applications using the public module |
-| [tools/](tools/) | Native setup and bounds patch |
-| [docs/GUIDE.md](docs/GUIDE.md) | API, ownership, authentication, and resource limits |
-| [docs/BENCHMARKS.md](docs/BENCHMARKS.md) | Measurements, methodology, and limitations |
-| [docs/AUDIT.md](docs/AUDIT.md) | Compatibility review and validation scope |
-| [docs/THIRD_PARTY.md](docs/THIRD_PARTY.md) | Native dependencies and licensing |
+```sh
+zig fmt --check build.zig build.zig.zon src tests examples
+zig build test
+zig build fuzz -Dfuzz-iterations=100000
+zig build test-integration -Doptimize=ReleaseSafe
+zig build stress-smoke -Doptimize=ReleaseSafe
+```
 
-Local validation covers Windows x64. Public TURN, long-running production load, native leak/race instrumentation, and non-Windows runtimes still need validation.
+## License
+
+Licensed under Apache-2.0. See [LICENSE](LICENSE).

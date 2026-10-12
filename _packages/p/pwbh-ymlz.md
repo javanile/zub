@@ -7,9 +7,9 @@ author_github: pwbh
 repository: https://github.com/pwbh/ymlz
 keywords:
   - yaml-parser
-date: 2026-09-18
-updated_at: 2026-09-18T10:25:35+00:00
-last_sync: 2026-09-18T10:25:35Z
+date: 2026-09-19
+updated_at: 2026-09-19T14:16:23+00:00
+last_sync: 2026-09-19T14:16:23Z
 package_kind: hybrid
 has_library: true
 has_binary: true

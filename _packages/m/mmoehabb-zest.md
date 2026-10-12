@@ -10,10 +10,10 @@ keywords:
   - game-development
   - graphics
   - sdl3
-date: 2026-08-06
+date: 2026-09-18
 category: game-development
-updated_at: 2026-08-06T23:45:22+00:00
-last_sync: 2026-08-06T23:45:22Z
+updated_at: 2026-09-18T23:43:57+00:00
+last_sync: 2026-09-18T23:43:57Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -100,12 +100,12 @@ pub fn main(init: std.process.Init) !void {
     const allocator = init.gpa;
 
     // Define and add plugins
+    try zest.modules.PluginManager.init(allocator);
+    defer zest.modules.PluginManager.deinit();
+
     var eventManager = zest.plugins.EventManager.init(allocator);
     defer eventManager.deinit();
-
-    try zest.modules.PluginManager.init(allocator);
     try zest.modules.PluginManager.add(&eventManager, "EventManager"); // Required by the Movement Script
-    defer zest.modules.PluginManager.deinit();
 
     // Create a drawable object
     var rect = zest.drawables.Rect.new(
