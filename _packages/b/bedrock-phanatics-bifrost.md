@@ -14,10 +14,10 @@ keywords:
   - proxy
   - proxy-server
   - reverse-proxy
-date: 2026-10-12
+date: 2026-10-13
 category: networking
-updated_at: 2026-10-12T19:21:53+00:00
-last_sync: 2026-10-12T19:21:53Z
+updated_at: 2026-10-13T17:35:34+00:00
+last_sync: 2026-10-13T17:35:34Z
 package_kind: hybrid
 has_library: true
 has_binary: true

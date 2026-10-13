@@ -8,9 +8,9 @@ repository: https://github.com/deatil/zig-rsa
 keywords:
   - rsa
   - zig-rsa
-date: 2026-09-23
-updated_at: 2026-09-23T15:07:22+00:00
-last_sync: 2026-09-23T15:07:22Z
+date: 2026-10-13
+updated_at: 2026-10-13T16:44:12+00:00
+last_sync: 2026-10-13T16:44:12Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -31,7 +31,7 @@ An RSA library for zig.
 
 ### Env
 
- - Zig >= 0.16.0
+ - Zig >= 0.17.0
 
 
 ### Adding zig-rsa as a dependency
@@ -117,14 +117,27 @@ pub fn main(init: std.process.Init) !void {
 
 ### RSA functions
 
+Parse key der: 
+~~~zig
+var pri_key = try SecretKey.fromDer(prikey_bytes);
+var pri_key = try SecretKey.fromPKCS8Der(prikey_bytes);
+
+defer pri_key.deinit(alloc);
+~~~
+
+~~~zig
+const pub_key = try PublicKey.fromDer(pubkey_bytes);
+const pub_key = try PublicKey.fromPKCS8Der(pubkey_bytes);
+~~~
+
 Generate key: 
-~~~v
-generateKey(alloc: Allocator, random: Random, bits: usize) !KeyPair
+~~~zig
+pub fn generateKey(alloc: Allocator, random: Random, bits: usize) !KeyPair
 ~~~
 
 PKCS1v15 sign: 
-~~~v
-signPkcs1v15(
+~~~zig
+pub fn signPkcs1v15(
     alloc: Allocator,
     secret_key: SecretKey,
     comptime Hash: type,
@@ -132,8 +145,8 @@ signPkcs1v15(
 ) ![]u8
 ~~~
 
-~~~v
-verifyPkcs1v15(
+~~~zig
+pub fn verifyPkcs1v15(
     alloc: Allocator,
     public_key: PublicKey,
     comptime Hash: type,
@@ -143,14 +156,14 @@ verifyPkcs1v15(
 ~~~
 
 PSS sign: 
-~~~v
+~~~zig
 pub const PSSOptions = struct {
     salt_leng: isize = 0,
     salt: ?[]const u8 = null,
 };
 ~~~
 
-~~~v
+~~~zig
 pub fn signPss(
     alloc: Allocator,
     random: Random,
@@ -161,7 +174,7 @@ pub fn signPss(
 ) ![]u8
 ~~~
 
-~~~v
+~~~zig
 pub fn verifyPss(
     alloc: Allocator,
     public_key: PublicKey,
@@ -173,8 +186,8 @@ pub fn verifyPss(
 ~~~
 
 PKCS1v15 encrypt: 
-~~~v
-encryptPkcs1v15(
+~~~zig
+pub fn encryptPkcs1v15(
     alloc: Allocator,
     random: std.Random,
     public_key: PublicKey,
@@ -182,7 +195,7 @@ encryptPkcs1v15(
 ) ![]const u8
 ~~~
 
-~~~v
+~~~zig
 pub fn decryptPkcs1v15(
     alloc: Allocator,
     secret_key: SecretKey,
@@ -191,8 +204,8 @@ pub fn decryptPkcs1v15(
 ~~~
 
 OAEP encrypt: 
-~~~v
-encryptOaep(
+~~~zig
+pub fn encryptOaep(
     alloc: Allocator,
     random: std.Random,
     public_key: PublicKey,
@@ -202,8 +215,8 @@ encryptOaep(
 ) ![]const u8
 ~~~
 
-~~~v
-decryptOaep(
+~~~zig
+pub fn decryptOaep(
     alloc: Allocator,
     secret_key: SecretKey,
     comptime Hash: type,

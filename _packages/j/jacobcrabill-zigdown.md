@@ -8,10 +8,10 @@ repository: https://github.com/JacobCrabill/zigdown
 keywords:
   - markdown
   - terminal
-date: 2026-07-28
+date: 2026-10-13
 category: tooling
-updated_at: 2026-07-28T18:09:10+00:00
-last_sync: 2026-07-28T18:09:10Z
+updated_at: 2026-10-13T15:42:36+00:00
+last_sync: 2026-10-13T15:42:36Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -32,7 +32,7 @@ permalink: /packages/JacobCrabill/zigdown/
 ![CI Status](https://github.com/JacobCrabill/zigdown/actions/workflows/main.yml/badge.svg)
 
 > [!TIP]
-> Zig 0.16.x Required
+> Zig 0.17.x Required
 
 - [Tools & Features](#tools-&-features)
   - [Command-Line Tools](#command-line-tools)
@@ -147,7 +147,7 @@ subset of all Markdown syntax, and ignoring anything I personally find useless o
 ## Usage
 
 The current version of Zig this code compiles with is
-[0.16.0](https://ziglang.org/download/0.16.0/zig-x86_64-linux-0.16.0.tar.xz). I highly recommend
+[0.17.0](https://ziglang.org/download/0.17.0/zig-x86_64-linux-0.17.0.tar.xz). I highly recommend
 using the [Zig version manager](https://github.com/tristanisham/zvm) to install and manage various
 Zig versions.
 
