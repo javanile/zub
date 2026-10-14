@@ -8,9 +8,9 @@ repository: https://github.com/deatil/zig-jwt
 keywords:
   - jwt
   - zig-jwt
-date: 2026-10-03
-updated_at: 2026-10-03T11:25:20+00:00
-last_sync: 2026-10-03T11:25:20Z
+date: 2026-10-14
+updated_at: 2026-10-14T14:22:42+00:00
+last_sync: 2026-10-14T14:22:42Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -96,6 +96,9 @@ pub fn main(init: std.process.Init) !void {
     const alloc = init.arena.allocator();
 
     const kp = jwt.eddsa.Ed25519.KeyPair.generate(io);
+
+    var prng = std.Random.DefaultPrng.init(1234);
+    const random = prng.random();
 
     const claims = .{
         .aud = "example.com",
@@ -183,6 +186,7 @@ The JWT library have signing methods:
 
  - `ES256`: jwt.SigningMethodES256
  - `ES384`: jwt.SigningMethodES384
+ - `ES512`: jwt.SigningMethodES512
  - `ES256K`: jwt.SigningMethodES256K
  
  - `EdDSA`: jwt.SigningMethodEdDSA
@@ -255,6 +259,16 @@ const p384_public_key = try ecdsa.EcdsaP384Sha384.PublicKey.fromSec1(pub_key_byt
 const p384_secret_key = try jwt.ecdsa.ParseP384Sha384Der.parseSecretKeyDer(pri_key_bytes);
 const p384_secret_key = try jwt.ecdsa.ParseP384Sha384Der.parseSecretKeyPKCS8Der(pri_key_bytes);
 const p384_public_key = try jwt.ecdsa.ParseP384Sha384Der.parsePublicKeyDer(pub_key_bytes);
+
+// generate p521 public key
+const p521_kp = jwt.ecdsa.EcdsaP521Sha512.KeyPair.generate(io);
+// from plain bytes
+const p521_secret_key = try jwt.ecdsa.EcdsaP521Sha512.SecretKey.fromBytes(pri_key_bytes);
+const p521_public_key = try jwt.ecdsa.EcdsaP521Sha512.PublicKey.fromSec1(pub_key_bytes);
+// from der bytes
+const p521_secret_key = try jwt.ecdsa.ParseP521Sha512Der.parseSecretKeyDer(pri_key_bytes);
+const p521_secret_key = try jwt.ecdsa.ParseP521Sha512Der.parseSecretKeyPKCS8Der(pri_key_bytes);
+const p521_public_key = try jwt.ecdsa.ParseP521Sha512Der.parsePublicKeyDer(pub_key_bytes);
 
 // generate p256k public key
 const p256k_kp = ecdsa.EcdsaSecp256k1Sha256.KeyPair.generate(io);

@@ -14,10 +14,10 @@ keywords:
   - wasm
   - webassembly
   - zero-dependency
-date: 2026-10-04
+date: 2026-10-14
 category: systems
-updated_at: 2026-10-04T12:10:18+00:00
-last_sync: 2026-10-04T12:10:18Z
+updated_at: 2026-10-14T14:52:39+00:00
+last_sync: 2026-10-14T14:52:39Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -82,7 +82,7 @@ module.addImport("zignal", zignal.module("zignal"));
 pip install zignal-processing
 ```
 
-Requires Python 3.10+, no external dependencies
+Requires Python 3.11+, no external dependencies
 
 <img src="./assets/python_print.gif" width=600>
 

@@ -9,10 +9,10 @@ keywords:
   - html
   - template
   - web-development
-date: 2026-10-11
+date: 2026-10-14
 category: tooling
-updated_at: 2026-10-11T15:32:25+00:00
-last_sync: 2026-10-11T15:32:25Z
+updated_at: 2026-10-14T12:25:00+00:00
+last_sync: 2026-10-14T12:25:00Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -309,6 +309,49 @@ For attributes that expect the strings `"true"`/`"false"` (`aria-expanded`, `dra
 
 ```zig
 <div>{!article.html_content}</div>
+```
+
+### Custom Formatting
+
+A value with a `format` method is written through it, and the output is escaped like any other text (or written as is with `{!...}`):
+
+```zig
+const Money = struct {
+    cents: u32,
+
+    pub fn format(self: Money, writer: *std.Io.Writer) std.Io.Writer.Error!void {
+        try writer.print("{d}.{d:0>2} EUR", .{ self.cents / 100, self.cents % 100 });
+    }
+};
+
+pub templ Price(price: Money) {
+    <span>{price}</span>
+}
+```
+
+A value with a `formatHtml` method writes HTML that is not escaped, so it must produce safe markup itself:
+
+```zig
+const Icon = enum {
+    home,
+    search,
+
+    pub fn formatHtml(self: Icon, writer: *std.Io.Writer) std.Io.Writer.Error!void {
+        try writer.print("<svg class=\"icon\"><use href=\"#{t}\"></use></svg>", .{self});
+    }
+};
+```
+
+`zt.fmt` turns a function that writes to a writer into a value with a `format` method, called with the arguments followed by the writer:
+
+```zig
+fn dateTime(ts: i64, writer: *std.Io.Writer) std.Io.Writer.Error!void {
+    // ...
+}
+
+pub templ RecipeInfo(recipe: Recipe) {
+    <p>Created {zt.fmt(dateTime, .{recipe.created_at})}</p>
+}
 ```
 
 ---

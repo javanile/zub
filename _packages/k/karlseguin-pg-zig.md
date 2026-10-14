@@ -7,9 +7,9 @@ author_github: karlseguin
 repository: https://github.com/karlseguin/pg.zig
 keywords:
   - postgresql-client
-date: 2026-09-24
-updated_at: 2026-09-24T13:59:19+00:00
-last_sync: 2026-09-24T13:59:19Z
+date: 2026-10-14
+updated_at: 2026-10-14T12:48:28+00:00
+last_sync: 2026-10-14T12:48:28Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -30,7 +30,7 @@ A native PostgresSQL driver / client for Zig. Supports [LISTEN](#listen--notify)
 See or run [example/main.zig](https://github.com/karlseguin/pg.zig/blob/master/example/main.zig) for a number of examples.
 
 ## Zig Version
-This is for Zig 0.16.0. Use the [zig-0.15.2](https://github.com/karlseguin/pg.zig/tree/zig-0.15) branch for Zig 0.15 or the [dev](https://github.com/karlseguin/pg.zig/tree/dev) which may or may not be up to date with zig dev.
+This is for Zig 0.17.0. See branches for other versions.
 
 ## Install
 1) Add pg.zig as a dependency in your `build.zig.zon`:
@@ -82,16 +82,16 @@ while (try result.next()) |row| {
 ```
 
 ## Pool
-The pool keeps a configured number of database connection open. The `acquire()` method is used to retrieve a connection from the pool. The pool may start one background thread to attempt to reconnect disconnected connections (or connections which are in an invalid state).
+The pool holds up to `size` database connections. The `acquire()` method is used to retrieve a connection from the pool. When no idle connection is available and the pool holds fewer than `size` connections, `acquire()` opens a new one. A connection released in an invalid state (e.g. after an error mid-query) is closed, and a new one is opened the next time one is needed.
 
 ### init(io: std.Io, allocator: std.mem.allocator, opts: Opts) !\*Pool
 Initializes a connection pool. Pool options are:
 
-* `size` - Number of connections to maintain. Defaults to `10`.
+* `size` - Maximum number of connections. Defaults to `10`.
 * `auth`: - See [Conn.auth](#authopts-opts-void)
 * `connect`: - See the [Conn.open](#openallocator-stdmemallocator-opts-opts-conn).
 * `timeout`: - The amount of time, in milliseconds, to wait for a connection to be available when `acquire()` is called.
-* `connect_on_init_count`:  - The # of connections in the pool to eagerly connect during `init`. Defaults to `null` which will initiliaze all connections (`size`). The background reconnector is used to setup the remaining (`size - connect_on_init_count`) connections. This can be set to `0`, to prevent `init` from failing except in extreme cases (i.e. OOM), but that will hide any configuration/connection issue until the first query is executed.
+* `connect_on_init_count`:  - The # of connections in the pool to eagerly connect during `init`. Defaults to `null` which will initiliaze all connections (`size`). The remaining (`size - connect_on_init_count`) connections are opened on demand by `acquire()`. This can be set to `0`, to prevent `init` from failing except in extreme cases (i.e. OOM), but that will hide any configuration/connection issue until the first query is executed.
 
 ### initUri(io: std.Io, allocator: std.mem.Allocator, uri: std.Uri, opts: Opts) !\*Pool
 Initializes a connection pool using a std.Uri. When using this function, the `auth` and `connect` fields of `opts` should **not** be set, as these will automatically set based on the provided `uri`.
@@ -103,7 +103,7 @@ defer pool.deinit();
 ```
 
 ### acquire() !\*Conn
-Returns a [\*Conn](#conn) for the connection pool. Returns an `error.Timeout` if the connection cannot be acquired (i.e. if the pool remains empty) for the  `timeout` configuration passed to `init`.
+Returns a [\*Conn](#conn) for the connection pool. If a new connection has to be opened and that fails, the error is returned. Returns an `error.Timeout` if the connection cannot be acquired (i.e. if all `size` connections remain in use) for the  `timeout` configuration passed to `init`.
 
 
 ```zig
@@ -293,6 +293,9 @@ When `.map = .ordinal`, the default, the order of the field names must match the
 When `.map = .name`, the query must be executed with the  `{.column_names = true}` option or the `column_names` build option must be set. Columns with no field equivalent are ignored. Fields with no column equivalent are set to their default value; if they do not have a default value the function will return `error.FieldColumnMismatch`. If you're going to use this in a loop with a `result`, consider using a [Mapper](#mapper) to avoid the name->index lookup on each iteration.
 
 Slice fields can either be mapped to a `pg.Iterator(T)` or a slice. When mapped to a `slice`, an allocator MUST be provided. When mapping to an array of strings (i.e. [][]const u8), the values are duped, and thus both the values and the slice itself must be freed. When mapping to a slice of primitives (i.e. []i32) the slice must be freed. When mapping to an `pg.Iterator(T)` with a custom allocator (`.{.allocator = allocator}`), the iterator must be freed by calling `iteartor.deinit(allocator)`. Whether you're mapping to an `pg.Iterator(T)` or a slice, I Strongly suggest you use an ArenaAllocator.
+
+#### JSON/JSONB
+If a JSON/JSONB column will map to a `field: T` using `std.json.parseFromSliceLeaky`. An `allocator` _must_ be given and the `allocator` _must_ be an arena. For cases where the allocator is not an arena, declare the field as `std.json.Parsed(T)` (which exposes a `value: T` and a `deinit` method)
 
 ## QueryRow
 A `QueryRow` is returned from a call to `conn.row` or `conn.rowOpts` and wraps both a `Result` and a `Row.` It exposes the same methods as `Row` as well as `deinit`, which must be called once the `QueryRow` is no longer needed. This is a rare case where `deinit()` can fail. In most cases, you can simply throw away the error (because failure is extremely rare and, if the connection came from a pool, it should repair itself).

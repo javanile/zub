@@ -12,10 +12,10 @@ keywords:
   - tardy
   - tls
   - zzz
-date: 2026-09-12
+date: 2026-10-14
 category: networking
-updated_at: 2026-09-12T07:16:40+00:00
-last_sync: 2026-09-12T07:16:40Z
+updated_at: 2026-10-14T06:55:38+00:00
+last_sync: 2026-10-14T06:55:38Z
 package_kind: hybrid
 has_library: true
 has_binary: true
