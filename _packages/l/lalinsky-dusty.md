@@ -13,17 +13,17 @@ keywords:
   - websocket
   - websocket-client
   - websocket-server
-date: 2026-10-08
+date: 2026-10-15
 category: networking
-updated_at: 2026-10-08T16:22:14+00:00
-last_sync: 2026-10-08T16:22:14Z
+updated_at: 2026-10-15T10:00:47+00:00
+last_sync: 2026-10-15T10:00:47Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 1
-distributable_binary_count: 1
-multiple_binaries: false
+binary_count: 2
+distributable_binary_count: 2
+multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
 sync_source: zigistry
@@ -43,6 +43,8 @@ or if you are using WebSocket. However, it's usable with any implementation, lik
 - Transparent gzip/deflate decoding of request and response bodies
 - gzip compression of response bodies, opt-in per response with `res.compress = true`
 - Server-Sent Events (SSE) for streaming responses
+- Static file serving with conditional and range requests, and precompressed files
+- Assets embedded in the binary at build time, with cache-busting URLs
 - WebSocket support (RFC 6455)
 - HTTP/HTTPS client with connection pooling
 - Unix domain socket support for client connections
@@ -59,11 +61,11 @@ zig fetch --save "git+https://github.com/lalinsky/dusty#v0.4.0"
 Then in your `build.zig`, add the module as a dependency:
 
 ```zig
-const dusty = b.dependency("dusty", .{
+const dusty_dep = b.dependency("dusty", .{
     .target = target,
     .optimize = optimize,
 });
-exe.root_module.addImport("dusty", dusty.module("dusty"));
+exe.root_module.addImport("dusty", dusty_dep.module("dusty"));
 ```
 
 ### Using a custom tls.zig
@@ -73,7 +75,7 @@ different compatible version without fetching or compiling the bundled one,
 disable only the bundled provider and replace the `tls` import:
 
 ```zig
-const dusty = b.dependency("dusty", .{
+const dusty_dep = b.dependency("dusty", .{
     .target = target,
     .optimize = optimize,
     .use_tls = true,
@@ -84,7 +86,7 @@ const custom_tls = b.dependency("custom_tls", .{
     .optimize = optimize,
 });
 
-const dusty_mod = dusty.module("dusty");
+const dusty_mod = dusty_dep.module("dusty");
 dusty_mod.addImport("tls", custom_tls.module("tls"));
 exe.root_module.addImport("dusty", dusty_mod);
 ```
@@ -104,7 +106,7 @@ const http = @import("dusty");
 fn handleUser(req: *http.Request, res: *http.Response) !void {
     const user_id = req.params.get("id") orelse "guest";
     try req.io.sleep(.fromMilliseconds(10), .real);
-    try res.json(.{ .id = user_id, .name = "John Doe" }, .{});
+    try res.print(.text, "Hello, user {s}!\n", .{user_id});
 }
 
 pub fn main(init: std.process.Init) !void {
@@ -166,6 +168,106 @@ fn handleUser(req: *http.Request, res: *http.Response) !void {
 
 `res.render` also takes a plain function whose last parameter is the `*std.Io.Writer`.
 For something small, `res.print(.html, "<p>Hello, {s}</p>", .{name})` formats the body directly.
+
+[examples/todo](examples/todo) is a complete app built with zt, [pg.zig](https://github.com/lalinsky/pg.zig)
+and [htmx](https://htmx.org), with live updates across browser tabs over Server-Sent Events.
+
+### Serialization
+
+`res.encode` writes a value with a serializer's write-to-writer function, telling its parameters
+apart by type, so libraries plug in as they are. We recommend
+[json.zig](https://github.com/lalinsky/json.zig) for JSON and
+[msgpack.zig](https://github.com/lalinsky/msgpack.zig) for MessagePack, both specialized to your
+types at compile time.
+
+```zig
+const json = @import("json");
+const msgpack = @import("msgpack");
+
+fn handleUser(req: *http.Request, res: *http.Response) !void {
+    const input = try json.decodeFromSliceLeaky(UserInput, req.arena, try req.body() orelse "", .{});
+    const user = try updateUser(input);
+    try res.encode(.json, json.encode, user);
+}
+
+fn handleUserMsgpack(req: *http.Request, res: *http.Response) !void {
+    const user = try loadUser(req.params.get("id").?);
+    try res.encode(.msgpack, msgpack.encode, user);
+}
+```
+
+Other serializers fit the same way, [serde.zig](https://github.com/OrlovEvgeny/serde.zig)'s `toWriter` for one. Unlike `std.json`, json.zig
+leaves out optional fields that are null, unless the type says otherwise.
+
+`res.json` and `req.json` are there for convenience. They use `std.json`, so they take any type,
+`std.json.Value` included, but json.zig is considerably faster at both encoding and decoding.
+
+### Static Files
+
+`router.static` serves a directory under a prefix:
+
+```zig
+var public = try std.Io.Dir.cwd().openDir(io, "public", .{});
+defer public.close(io);
+
+server.router.static("/assets", public, .{
+    // Serve style.css.br or style.css.gz in place of style.css when the client accepts them.
+    .precompressed = &.{ .br, .gzip },
+});
+```
+
+Responses carry `ETag` and `Last-Modified`, and the conditional and `Range` headers that use
+them are honored. A directory serves its `index.html`; paths with `..` are 404s, and so are
+dotfiles unless `.hide_dotfiles = false`. Symlinks are followed unless `.resolve_beneath = true`,
+which depends on the platform.
+
+`router.embedded` serves a single file compiled into the binary:
+
+```zig
+server.router.embedded("/assets/app.css", @embedFile("assets/app.css"), .{
+    // Optional compressed copies, served to clients that accept them.
+    .br = @embedFile("assets/app.css.br"),
+});
+```
+
+The content type comes from the path's extension unless `.content_type` is set. The `ETag` is
+a hash of the content, and there is no `Last-Modified`.
+
+#### Embedded Assets
+
+`addAssets` in `build.zig` embeds a whole directory into the binary, as a module:
+
+```zig
+const dusty = @import("dusty");
+
+exe.root_module.addImport("assets", dusty.addAssets(b, dusty_dep, .{
+    .dir = b.path("assets"),
+    .prefix = "/assets", // the default
+}));
+```
+
+Templates link to the files with `assets.url`, which adds a hash of the content, such as
+`/assets/app.css?v=6ec8ea7d`. An unknown name is a compile error.
+
+```zig
+const assets = @import("assets");
+
+pub templ Layout(title: []const u8) {
+    <link rel="stylesheet" href={assets.url("app.css")} />
+    ...
+}
+```
+
+`assets.register` serves them:
+
+```zig
+assets.register(&server.router);
+```
+
+A request with the current hash is cached for good (`immutable`); anything else is answered with
+the current file and `no-cache`, so a page still open from before a deploy gets the new file
+rather than a 404. A compressed copy next to a file, `app.css.br`, is served to clients that
+accept it, and dotfiles are left out.
 
 ### Client Example
 
@@ -323,7 +425,7 @@ const zio = b.dependency("zio", .{
     .optimize = optimize,
 });
 exe.root_module.addImport("zio", zio.module("zio"));
-dusty.module("dusty").addImport("zio", zio.module("zio"));
+dusty_dep.module("dusty").addImport("zio", zio.module("zio"));
 ```
 
 Then initialize zio's runtime and pass it to dusty:

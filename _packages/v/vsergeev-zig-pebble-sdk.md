@@ -9,9 +9,9 @@ keywords:
   - pebble
   - pebble-sdk
   - pebble-watch
-date: 2026-06-24
-updated_at: 2026-06-24T23:40:43+00:00
-last_sync: 2026-06-24T23:40:43Z
+date: 2026-09-29
+updated_at: 2026-09-29T22:40:07+00:00
+last_sync: 2026-09-29T22:40:07Z
 package_kind: hybrid
 has_library: true
 has_binary: true

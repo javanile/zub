@@ -7,9 +7,9 @@ author_github: pedronaugusto
 repository: https://github.com/pedronaugusto/zjolt
 keywords:
   - zig-gamedev
-date: 2026-09-14
-updated_at: 2026-09-14T03:30:52+00:00
-last_sync: 2026-09-14T03:30:52Z
+date: 2026-10-14
+updated_at: 2026-10-14T06:52:58+00:00
+last_sync: 2026-10-14T06:52:58Z
 package_kind: hybrid
 has_library: true
 has_binary: true

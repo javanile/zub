@@ -7,9 +7,9 @@ author_github: pedronaugusto
 repository: https://github.com/pedronaugusto/zrecast
 keywords:
   - zig-gamedev
-date: 2026-09-14
-updated_at: 2026-09-14T04:10:48+00:00
-last_sync: 2026-09-14T04:10:48Z
+date: 2026-10-04
+updated_at: 2026-10-04T02:40:38+00:00
+last_sync: 2026-10-04T02:40:38Z
 package_kind: hybrid
 has_library: true
 has_binary: true

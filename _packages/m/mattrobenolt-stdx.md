@@ -1,14 +1,14 @@
 ---
 title: stdx
-description: A small library of Zig standard-library extensions and data structures, built on Zig 0.16.
+description: "Extensions to the Zig 0.16 standard library: fixed-capacity containers, strict parsers, IPv4 types, and the primitives std lacks."
 license: MIT
 author: mattrobenolt
 author_github: mattrobenolt
 repository: https://github.com/mattrobenolt/stdx
 keywords:
-date: 2026-10-14
-updated_at: 2026-10-14T14:56:45+00:00
-last_sync: 2026-10-14T14:56:45Z
+date: 2026-10-15
+updated_at: 2026-10-15T10:31:12+00:00
+last_sync: 2026-10-15T10:31:12Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -22,51 +22,67 @@ sync_source: zigistry
 permalink: /packages/mattrobenolt/stdx/
 ---
 
-# stdx
+<h1>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/static/logo-dark.svg">
+    <img src="docs/static/logo.svg" alt="stdx" height="48">
+  </picture>
+</h1>
 
-A small library of Zig standard-library extensions and data structures,
-built on Zig 0.16.
+Extensions to the Zig 0.16 standard library: fixed-capacity containers, strict parsers, IPv4 types, and the primitives std lacks.
 
-The same helpers kept showing up copy-pasted across projects: strict
-number parsing, IPv4 and CIDR handling, fixed-capacity buffers, a bounded
-writer, a slab allocator. stdx is where they live now — tested
-standalone, no dependencies.
+The same helpers kept showing up copy-pasted across projects: strict number parsing, IPv4 and CIDR handling, fixed-capacity buffers, a bounded writer, a slab allocator. stdx is where they live. Each module is tested on its own, and the package has no dependencies.
 
-The modules mirror the std namespaces they extend (`memx`, `fmtx`,
-`netx`, `posixx`, `heapx`); the data structures (`ArrayBuffer`,
-`SliceBuffer`, `BoundedWriter`, `multi_array`) sit at the top level. The
-source is the documentation: every type and function carries doc
-comments that render with `zig doc`, alongside its own tests.
+## What is in it
 
-## Use it
+- [Fixed-capacity containers](https://stdx.withmatt.com/#fixed-capacity-containers): lists, queues, maps, sets, Bloom filters, and comptime lookup tables. The storage lives in the value, with no allocator and no `deinit`.
+- [Strict parsing](https://stdx.withmatt.com/#strict-parsing): `fmt.atoi` accepts one grammar for machine-written integers and rejects the rest.
+- [IP addresses](https://stdx.withmatt.com/#ip-addresses): `net.Ip4` and `net.Prefix4`, following Go's `net/netip`: classification, ordering, canonical prefixes, and overlap checks.
+- [UUIDs](https://stdx.withmatt.com/#uuids): `Uuid` generates version 4 and version 7 values, formats them, and parses the canonical text form.
+- [Timekeeping](https://stdx.withmatt.com/#timekeeping): clock reads with no `Io` value, a per-tick cached clock, wall time for log lines, and a log rate limiter.
+- The [module list](https://stdx.withmatt.com/#modules) covers the rest: Swiss-table maps, a slab allocator, rapidhash, secure random, and buffered stdio.
 
+## Install
+
+```sh
+zig fetch --save git+https://github.com/mattrobenolt/stdx
 ```
-zig fetch --save git+https://github.com/mattrobenolt/stdx.git
+
+Add the module to your build:
+
+```zig
+const stdx = b.dependency("stdx", .{ .target = target, .optimize = optimize });
+exe.root_module.addImport("stdx", stdx.module("stdx"));
 ```
 
-Then import it as `stdx` in your build, as normal.
+stdx builds with Zig 0.16 only.
+
+## Documentation
+
+- The [guide](https://stdx.withmatt.com) says which module to use for a task, with examples that compile.
+- The [API reference](https://stdx.withmatt.com/api/) documents every symbol.
 
 ## Work on it
 
 ```
-zig build test
+just test
 ```
 
-Zig 0.16. `nix develop` gives you the toolchain, ziglint, and zigdoc.
+Zig 0.16. `nix develop` gives you the toolchain, ziglint, zigdoc, oxfmt,
+and just — the justfile carries the rest (`just ci` for the full set).
+The site tools live in a lighter shell, `nix develop .#docs`, which the
+doc recipes enter on their own: `just guide` serves the guide with live
+reload, and `just doc` builds the whole site into `zig-out/site/`.
 
 MIT licensed — see `LICENSE`. A few pieces were adapted from other code;
 `THIRD_PARTY.md` says which, and under what terms.
 
 ## Related projects
 
-Other pieces of the same effort — low-level primitives Zig is missing:
+stdx is one of several libraries for low-level primitives that Zig lacks:
 
-- [fastmem](https://github.com/mattrobenolt/fastmem-zig) — SIMD
-  memcpy, memmove, and memset
-- [ztls](https://github.com/mattrobenolt/ztls) — a TLS library
-- [zcompress](https://github.com/mattrobenolt/zcompress) — fast,
-  self-contained compression codecs
-- [ztest](https://github.com/mattrobenolt/ztest) — a test runner that
-  writes plain text instead of a TUI
-- [zig-benchmark](https://github.com/mattrobenolt/zig-benchmark) — a
-  benchmark harness
+- [fastmem](https://github.com/mattrobenolt/fastmem-zig): SIMD memcpy, memmove, and memset.
+- [ztls](https://github.com/mattrobenolt/ztls): a sans-I/O TLS 1.3 state machine.
+- [zcompress](https://github.com/mattrobenolt/zcompress): fast, self-contained compression codecs.
+- [ztest](https://github.com/mattrobenolt/ztest): a test runner that writes plain, parseable text instead of a TUI.
+- [zig-benchmark](https://github.com/mattrobenolt/zig-benchmark): Go-style benchmarking with allocation metrics.

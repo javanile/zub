@@ -7,9 +7,9 @@ author_github: pedronaugusto
 repository: https://github.com/pedronaugusto/zozz
 keywords:
   - zig-gamedev
-date: 2026-09-14
-updated_at: 2026-09-14T03:05:21+00:00
-last_sync: 2026-09-14T03:05:21Z
+date: 2026-10-04
+updated_at: 2026-10-04T02:40:37+00:00
+last_sync: 2026-10-04T02:40:37Z
 package_kind: hybrid
 has_library: true
 has_binary: true

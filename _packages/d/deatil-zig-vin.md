@@ -1,0 +1,168 @@
+---
+title: zig-vin
+description: A template library like jinja for zig.
+license: Apache-2.0
+author: deatil
+author_github: deatil
+repository: https://github.com/deatil/zig-vin
+keywords:
+  - jinja
+  - vin
+  - zig-jinja
+  - zig-vin
+date: 2026-10-15
+updated_at: 2026-10-15T14:25:34+00:00
+last_sync: 2026-10-15T14:25:34Z
+package_kind: library
+has_library: true
+has_binary: false
+has_distributable_binary: false
+binary_count: 0
+distributable_binary_count: 0
+multiple_binaries: false
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
+permalink: /packages/deatil/zig-vin/
+---
+
+## Zig-vin 
+
+A template library like jinja for zig.
+
+
+### Env
+
+ - Zig >= 0.17.0
+
+
+### Adding zig-vin as a dependency
+
+Add the dependency to your project:
+
+```sh
+zig fetch --save=zig-vin git+https://github.com/deatil/zig-vin#main
+```
+
+or use local path to add dependency at `build.zig.zon` file
+
+```zig
+.{
+    .dependencies = .{
+        .@"zig-vin" = .{
+            .path = "./lib/zig-vin",
+        },
+        ...
+    },
+    ...
+}
+```
+
+And the following to your `build.zig` file:
+
+```zig
+const zig_vin_dep = b.dependency("zig-vin", .{});
+exe.root_module.addImport("zig-vin", zig_vin_dep.module("zig-vin"));
+```
+
+The `zig-vin` structure can be imported in your application with:
+
+```zig
+const vin = @import("zig-vin");
+```
+
+
+### Get Starting
+
+~~~zig
+const std = @import("std");
+const vin = @import("zig-vin");
+
+pub fn main(init: std.process.Init) !void {
+    const alloc = init.arena.allocator();
+
+    const tpl = 
+        \\hostname {{ host }}
+        \\!
+        \\{% for i in interfaces %}
+        \\interface {{ i.name }}
+        \\ ip address {{ i.address }} {{ i.mask }}
+        \\ {{ 'shutdown' if i.shutdown else 'no shutdown' }}
+        \\!
+        \\{% endfor %}
+    ;
+
+    const ctx = try vin.valueFrom(alloc, .{
+        .host = "sw1",
+        .interfaces = [_]struct {
+            name: []const u8,
+            address: []const u8,
+            mask: []const u8,
+            shutdown: bool,
+        }{
+            .{ .name = "Gi0/1", .address = "196.56.0.1", .mask = "255.255.255.0", .shutdown = false },
+        },
+    });
+
+    var env = try vin.Environment.init(alloc, .{
+        .trim_blocks = true,
+        .lstrip_blocks = true,
+    });
+    defer env.deinit();
+
+    const out = try env.renderAlloc(alloc, tpl, ctx, null);
+    defer alloc.free(out);
+}
+~~~
+
+
+### Use DirLoader
+
+~~~zig
+const std = @import("std");
+const vin = @import("zig-vin");
+
+pub fn main(init: std.process.Init) !void {
+    const io = init.io;
+    const alloc = init.arena.allocator();
+
+    const ctx = try vin.valueFrom(alloc, .{
+        .host = "sw1",
+        .interfaces = [_]struct {
+            name: []const u8,
+            address: []const u8,
+            mask: []const u8,
+            shutdown: bool,
+        }{
+            .{ .name = "Gi0/1", .address = "196.56.0.1", .mask = "255.255.255.0", .shutdown = false },
+        },
+    });
+
+    const dl: *vin.DirLoader = try .create(
+        a, io, 
+        try std.Io.Dir.cwd().openDir(io, "views", .{}), 
+        .{ 
+            .suffix = ".htm",
+        },
+    );
+
+    var env = try vin.Environment.initWithLoader(alloc, .{
+        .trim_blocks = true,
+        .lstrip_blocks = true,
+    }, dl.loader());
+    defer env.deinit();
+
+    const out = try env.renderTemplateAlloc(alloc, tpl, ctx, null);
+    defer alloc.free(out);
+}
+~~~
+
+
+### LICENSE
+
+*  The library LICENSE is `Apache2`, using the library need keep the LICENSE.
+
+
+### Copyright
+
+*  Copyright deatil(https://github.com/deatil).

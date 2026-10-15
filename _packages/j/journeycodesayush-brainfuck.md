@@ -14,10 +14,10 @@ keywords:
   - interpreter
   - modern-cpp
   - zig-index
-date: 2026-10-10
+date: 2026-10-15
 category: systems
-updated_at: 2026-10-10T14:36:44+00:00
-last_sync: 2026-10-10T14:36:44Z
+updated_at: 2026-10-15T10:21:16+00:00
+last_sync: 2026-10-15T10:21:16Z
 package_kind: library
 has_library: false
 has_binary: false
@@ -34,7 +34,7 @@ permalink: /packages/JourneyCodesAyush/BrainFuck/
 # Brainfuck
 
 ![C++](https://img.shields.io/badge/C%2B%2B-17-orange)
-![Zig](https://img.shields.io/badge/Zig-v0.15.2-yellow)
+![Zig](https://img.shields.io/badge/Zig-v0.17.0-f7a41d)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 ---

@@ -14,9 +14,9 @@ keywords:
   - pcx
   - png
   - png-decoder
-date: 2026-09-08
-updated_at: 2026-09-08T20:42:54+00:00
-last_sync: 2026-09-08T20:42:54Z
+date: 2026-10-15
+updated_at: 2026-10-15T12:48:07+00:00
+last_sync: 2026-10-15T12:48:07Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -40,7 +40,7 @@ This is a work in progress library to create, process, read and write different 
 
 ## Install & Build
 
-This library currently uses zig [0.16.0](https://ziglang.org/download/)
+This library currently uses zig [0.17.0](https://ziglang.org/download/)
 
 ### Use zigimg in your project
 
@@ -50,7 +50,7 @@ How to add to your project:
 
 1. Clone this repository or add as a submodule
 1. Add to your `build.zig`
-```
+```zig
 pub fn build(b: *std.Build) void {
     exe.root_module.addAnonymousModule("zigimg", .{ .root_source_file = b.path("zigimg.zig") });
 }

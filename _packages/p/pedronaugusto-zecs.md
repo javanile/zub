@@ -9,10 +9,10 @@ keywords:
   - ecs
   - flecs
   - zig-gamedev
-date: 2026-09-14
+date: 2026-10-04
 category: game-development
-updated_at: 2026-09-14T02:59:14+00:00
-last_sync: 2026-09-14T02:59:14Z
+updated_at: 2026-10-04T02:40:35+00:00
+last_sync: 2026-10-04T02:40:35Z
 package_kind: hybrid
 has_library: true
 has_binary: true

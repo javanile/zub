@@ -7,9 +7,9 @@ author_github: pedronaugusto
 repository: https://github.com/pedronaugusto/ztypeset
 keywords:
   - zig-gamedev
-date: 2026-09-14
-updated_at: 2026-09-14T03:11:19+00:00
-last_sync: 2026-09-14T03:11:19Z
+date: 2026-10-04
+updated_at: 2026-10-04T02:40:39+00:00
+last_sync: 2026-10-04T02:40:39Z
 package_kind: hybrid
 has_library: true
 has_binary: true

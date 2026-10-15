@@ -7,9 +7,9 @@ author_github: nexxii04
 repository: https://github.com/nexxii04/zphp-bindings
 keywords:
   - php
-date: 2026-09-11
-updated_at: 2026-09-11T13:55:52+00:00
-last_sync: 2026-09-11T13:55:52Z
+date: 2026-10-10
+updated_at: 2026-10-10T01:46:14+00:00
+last_sync: 2026-10-10T01:46:14Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -152,6 +152,7 @@ _ = zphp.extension(.{
     .functions = &.{ .{ .name = "fn", .handler = fnHandler } },
     .classes = &.{.{
         .name = "My\\Class",
+        .flags = .{ final = 1 },
         .parent = null,
         .interfaces = &.{"My\\Iface"},
         .methods = &.{.{ .name = "m", .handler = mHandler, .arity = 1, .is_static = false }},
