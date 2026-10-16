@@ -8,9 +8,9 @@ repository: https://github.com/karlseguin/zuckdb.zig
 keywords:
   - duckdb
   - duckdb-driver
-date: 2026-04-20
-updated_at: 2026-04-20T23:33:18+00:00
-last_sync: 2026-04-20T23:33:18Z
+date: 2026-10-04
+updated_at: 2026-10-04T01:51:31+00:00
+last_sync: 2026-10-04T01:51:31Z
 package_kind: library
 has_library: true
 has_binary: false

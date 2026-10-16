@@ -6,9 +6,9 @@ author: srjilarious
 author_github: srjilarious
 repository: https://github.com/srjilarious/testz
 keywords:
-date: 2026-04-19
-updated_at: 2026-04-19T14:04:08+00:00
-last_sync: 2026-04-19T14:04:08Z
+date: 2026-10-03
+updated_at: 2026-10-03T23:35:31+00:00
+last_sync: 2026-10-03T23:35:31Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -25,8 +25,8 @@ permalink: /packages/srjilarious/testz/
 ![Testz Logo](images/testz.png)
 
 
-![Version Badge](https://img.shields.io/badge/Version-1.4.0-brightgreen)
-![Zig Version Badge](https://img.shields.io/badge/Zig%20Version-0.16.0-%23f7a41d?logo=zig)
+![Version Badge](https://img.shields.io/badge/Version-1.8.0-brightgreen)
+![Zig Version Badge](https://img.shields.io/badge/Zig%20Version-0.17.0--dev.1857%2B3c46da14d-%23f7a41d?logo=zig)
 ![License Badge](https://img.shields.io/badge/License-MIT-blue)
 
 # Overview
@@ -58,6 +58,7 @@ Testz is a testing library for zig that provides some extra features compared to
 
 - Per-test stdout/stderr capture, shown alongside failure output so diagnostic prints don't get lost in the overall run.
     - Note: doesn't work on Windows properly.
+    - A panic inside a captured test still prints its message, plus whatever the test wrote before it (see `addTestExe` below).
 
 Testz runners are just another executable you setup in your `build.zig`, where the library provides a number of helpers to make it as easy as possible to create tests.  Debugging is simple since you can run your debugger just like with any normal flat executable and use the built in filtering to narrow down what test or set of tests gets run.
 
@@ -264,13 +265,32 @@ const passed = try testz.runTests(myTests, .{
 
 Run `zig fetch --save https://github.com/srjilarious/testz` to add `testz` as a dependency in your `build.zig.zon` file.
 
-Next, in your `build.zig`, you would create a new exe for your tests and add:
+Next, in your `build.zig`, create the test runner exe with `addTestExe`:
 
 ```zig
-    const testzMod = b.dependency("testz", .{});
-    [...]
-    testsExe.root_module.addImport("testz", testzMod.module("testz"));
+const testz = @import("testz");
+[...]
+    const testsExe = testz.addTestExe(b, .{
+        .target = target,
+        .optimize = optimize,
+        .testz_dep = b.dependency("testz", .{ .target = target, .optimize = optimize }),
+        .name = "unit_tests",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("tests/unit_tests.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
 ```
+
+`addTestExe` adds the `testz` import to your module and wraps your test `main` in a small generated root module that installs `testz.panic`.  Without it, a panic inside a test run with `--capture` writes its message into the capture pipe and is lost.  If your module declares its own `panic` or `std_options`, the wrapper forwards those instead.
+
+If you'd rather build the exe yourself, add the import directly and put `pub const panic = testz.panic;` in your test runner's root file:
+
+```zig
+    testsExe.root_module.addImport("testz", b.dependency("testz", .{}).module("testz"));
+```
+
 See the project under `example/` for how this looks in a simple dummy project.
 
 # Contributing

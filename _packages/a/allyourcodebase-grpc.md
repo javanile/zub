@@ -6,9 +6,9 @@ author: allyourcodebase
 author_github: allyourcodebase
 repository: https://github.com/allyourcodebase/grpc
 keywords:
-date: 2026-10-12
-updated_at: 2026-10-12T19:02:19+00:00
-last_sync: 2026-10-12T19:02:19Z
+date: 2026-10-16
+updated_at: 2026-10-16T14:51:46+00:00
+last_sync: 2026-10-16T14:51:46Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -31,10 +31,10 @@ permalink: /packages/allyourcodebase/grpc/
 | x86_64            | ✅    | ✅    |
 | arm 64            | ✅    | ✅    |
 
-| Refname  | libGRPC version         | Core version | Zig `0.17.x` | Zig `0.16.x` | Zig `0.15.x` |
-|:---------|:------------------------|-------------:|:------------:|:------------:|:------------:|
-| `master` | `v1.85.0-pre1` "googol" |     `58.0.0` | ✅           | ✅           | ✅           |
-| `1.84.0` | `v1.84.0` "gimbal"      |     `56.0.0` | ✅           | ✅           | ✅           |
+| Refname  | libGRPC version         | Core version | Zig `0.18-dev` | Zig `0.17.x` | Zig `0.16.x` | Zig `0.15.x` |
+|:---------|:------------------------|-------------:|:--------------:|:------------:|:------------:|:------------:|
+| `master` | `v1.85.0-pre1` "googol" |     `58.0.0` | ✅             | ✅           | ✅           | ✅           |
+| `1.84.0` | `v1.84.0` "gimbal"      |     `56.0.0` | :cross:        | ✅           | ✅           | ✅           |
 
 <details>
 <summary>Older versions</summary>
@@ -75,7 +75,7 @@ const grpc = b.dependency("grpc", .{
 	.target = target,
 	.optimize = optimize,
 	.link_mode = grpc_link_mode,
-	.pic = true, // needed to link a static libgrpc into a shared library or a PIE, defaults to true only when dynamic
+	.pic = true, // may be used to force PIC when linking libgrpc statically inside a dynamic library or PIE
 });
 const libgrpc_built = if (b.systemIntegrationOption("grpc", .{})) null else grpc.artifact("grpc");
 
@@ -107,7 +107,7 @@ The [`example`](example) directory is a complete project using it from both Zig 
                                  Supported Values:
                                    static
                                    dynamic
-  -Dpic=[bool]                 Produce Position Independent Code. Defaults to true when link_mode is dynamic
+  -Dpic=[bool]                 Produce Position Independent Code. Defaults to true when link_mode is dynamic, to the target's default otherwise
 ```
 
 ## System Integration

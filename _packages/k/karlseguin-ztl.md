@@ -7,9 +7,9 @@ author_github: karlseguin
 repository: https://github.com/karlseguin/ztl
 keywords:
   - template-engine
-date: 2026-06-18
-updated_at: 2026-06-18T04:52:09+00:00
-last_sync: 2026-06-18T04:52:09Z
+date: 2026-10-04
+updated_at: 2026-10-04T01:30:34+00:00
+last_sync: 2026-10-04T01:30:34Z
 package_kind: library
 has_library: true
 has_binary: false
