@@ -9,9 +9,9 @@ keywords:
   - property-based-testing
   - software-framework
   - software-testing
-date: 2026-08-06
-updated_at: 2026-08-06T11:16:04+00:00
-last_sync: 2026-08-06T11:16:04Z
+date: 2026-10-06
+updated_at: 2026-10-06T18:34:07+00:00
+last_sync: 2026-10-06T18:34:07Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -37,7 +37,7 @@ permalink: /packages/CogitatorTech/minish/
 [![License](https://img.shields.io/badge/license-Apache--2.0-007ec6?label=license&style=flat&labelColor=282c34&logo=open-source-initiative)](https://github.com/CogitatorTech/minish/blob/main/LICENSE)
 [![Examples](https://img.shields.io/badge/examples-view-green?style=flat&labelColor=282c34&logo=zig)](https://github.com/CogitatorTech/minish/tree/main/examples)
 [![Docs](https://img.shields.io/badge/docs-read-blue?style=flat&labelColor=282c34&logo=read-the-docs)](https://CogitatorTech.github.io/minish/)
-[![Zig Version](https://img.shields.io/badge/Zig-0.16.0-orange?logo=zig&labelColor=282c34)](https://ziglang.org/download/)
+[![Zig](https://img.shields.io/badge/zig-0.17.0-F7A41D?style=flat&labelColor=282c34&logo=zig)](https://ziglang.org/download/)
 [![Release](https://img.shields.io/github/release/CogitatorTech/minish.svg?label=release&style=flat&labelColor=282c34&logo=github)](https://github.com/CogitatorTech/minish/releases/latest)
 
 A property-based testing framework for Zig
@@ -86,7 +86,7 @@ Here is a brief comparison between example-based testing and property-based test
 - Written in pure Zig with no external dependencies
 - Includes over 20 built-in generators (for integers, floats, strings, lists, structs, UUIDs, timestamps, and more)
 - Seven combinators for composing generators (`map`, `flatMap`, `filter`, `sized`, `frequency`, `oneOf`, and `dependent`)
-- Supports automatic shrinking for integers, floats, strings, lists, tuples, arrays, and optionals
+- Supports automatic shrinking for integers, floats, strings, lists, tuples, arrays, optionals, and structs
 - Supports reproducible failures via fixed seeds and a verbose mode
 - Configurable and easy to integrate into existing Zig projects
 
@@ -110,19 +110,20 @@ Run the following command in the root directory of your project to download Mini
 zig fetch --save=minish "https://github.com/CogitatorTech/minish/archive/<branch_or_tag>.tar.gz"
 ```
 
-Replace `<branch_or_tag>` with the desired branch or release tag, like `main` (for the development version) or `v0.3.0`.
+Replace `<branch_or_tag>` with the desired branch or release tag, like `main` (for the development version) or `v0.4.0`.
 This command will download Minish and add it to Zig's global cache and update your project's `build.zig.zon` file.
 
 ##### Zig Version Support
 
 Zig version supported by the main releases of Minish:
 
-| Zig      | Minish Tags |
-|----------|-------------|
-| `0.16.0` | `v0.3.x`    |
-| `0.15.2` | `v0.1.x`    |
+| Zig      | Minish Tags           |
+|----------|-----------------------|
+| `0.17.0` | `v0.5.x` |
+| `0.16.0` | `v0.3.x` and `v0.4.x` |
+| `0.15.2` | `v0.1.x`              |
 
-The `main` branch normally is developed and build using the latest (non-developmental) Zig release.
+The `main` branch normally is developed and built using the latest (non-developmental) Zig release.
 
 #### Adding to Build Script
 
@@ -195,12 +196,11 @@ pub fn main() !void {
 
 You can find the API documentation for the latest release of Minish [here](https://CogitatorTech.github.io/minish/).
 
-Alternatively, you can use the `make docs` command to generate the documentation for the current version of Minish.
-This will generate HTML documentation in the `docs/api` directory, which you can serve locally with `make serve-docs` and view in a web browser.
-
 ### Examples
 
 Check out the [examples](examples) directory for example usages of Minish.
+The [Zig test example](examples/e9_zig_test.zig) demonstrates properties inside
+`test` blocks and runs alongside the library tests with `zig build test`.
 
 ---
 

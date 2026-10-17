@@ -17,9 +17,9 @@ keywords:
   - web
   - web-assembly
   - web-framework
-date: 2026-09-25
-updated_at: 2026-09-25T14:03:46+00:00
-last_sync: 2026-09-25T14:03:46Z
+date: 2026-10-17
+updated_at: 2026-10-17T13:30:00+00:00
+last_sync: 2026-10-17T13:30:00Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -206,7 +206,8 @@ const zx = @import("zx");
 | Zig      | Ziex                                                                              | Branch     | Status      |
 | -------- | --------------------------------------------------------------------------------- | ---------- | ----------- |
 | `0.17.x` |                                                                                   | `main`     | Development |
-| `0.16.x` | [`0.1.0-dev.1259`](https://github.com/ziex-dev/ziex/releases/tag/v0.1.0-dev.1259) | `zig-0.16` | **Latest**  |
+| `0.17.x` | [`0.1.0-rc.1`](https://github.com/ziex-dev/ziex/releases/tag/v0.1.0-rc.1)         |            | **Latest**  |
+| `0.16.x` | [`0.1.0-dev.1259`](https://github.com/ziex-dev/ziex/releases/tag/v0.1.0-dev.1259) | `zig-0.16` | Outdated    |
 | `0.15.x` | [`0.1.0-dev-1050`](https://github.com/ziex-dev/ziex/releases/tag/v0.1.0-dev.1050) | `zig-0.15` | Outdated    |
 
 ## Roadmap

@@ -9,10 +9,10 @@ keywords:
   - crypto
   - minisign
   - signatures
-date: 2026-07-21
+date: 2026-10-04
 category: systems
-updated_at: 2026-07-21T04:33:17+00:00
-last_sync: 2026-07-21T04:33:17Z
+updated_at: 2026-10-04T17:52:21+00:00
+last_sync: 2026-10-04T17:52:21Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -49,6 +49,9 @@ zig build -Doptimize=ReleaseFast
 ```
 
 for a speed-optimized version.
+
+If you only need the `minizign` module as a dependency, pass `-Dno-cli` (or `.@"no-cli" = true` in `b.dependency()`) to skip the command-line tool.
+The `clap` dependency is lazy, so it won't be fetched in that case.
 
 ## Usage
 

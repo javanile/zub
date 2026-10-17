@@ -8,9 +8,9 @@ repository: https://github.com/deatil/zpem
 keywords:
   - pem
   - zig-pem
-date: 2026-07-18
-updated_at: 2026-07-18T07:05:28+00:00
-last_sync: 2026-07-18T07:05:28Z
+date: 2026-10-03
+updated_at: 2026-10-03T09:03:09+00:00
+last_sync: 2026-10-03T09:03:09Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -31,7 +31,7 @@ A pem parse and encode library for Zig.
 
 ### Env
 
- - Zig >= 0.16.0
+ - Zig >= 0.17.0
 
 
  ### Adding zpem as a dependency

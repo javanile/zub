@@ -7,9 +7,9 @@ author_github: KNnut
 repository: https://github.com/KNnut/blend2d
 keywords:
   - blend2d
-date: 2026-04-18
-updated_at: 2026-04-18T12:08:30+00:00
-last_sync: 2026-04-18T12:08:30Z
+date: 2026-10-03
+updated_at: 2026-10-03T09:46:11+00:00
+last_sync: 2026-10-03T09:46:11Z
 package_kind: library
 has_library: true
 has_binary: false

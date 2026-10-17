@@ -10,9 +10,9 @@ keywords:
   - datetime
   - time
   - timezone
-date: 2026-10-03
-updated_at: 2026-10-03T11:29:37+00:00
-last_sync: 2026-10-03T11:29:37Z
+date: 2026-10-16
+updated_at: 2026-10-16T05:19:28+00:00
+last_sync: 2026-10-16T05:19:28Z
 package_kind: hybrid
 has_library: true
 has_binary: true
