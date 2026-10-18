@@ -10,9 +10,9 @@ keywords:
   - paseto
   - token
   - zig-paseto
-date: 2026-09-12
-updated_at: 2026-09-12T15:12:51+00:00
-last_sync: 2026-09-12T15:12:51Z
+date: 2026-10-03
+updated_at: 2026-10-03T06:52:39+00:00
+last_sync: 2026-10-03T06:52:39Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -33,7 +33,7 @@ A PASETO (Platform-Agnostic SEcurity TOkens) library for zig.
 
 ### Env
 
- - Zig >= 0.16.0
+ - Zig >= 0.17.0
 
 
 ### What is PASETO?
@@ -94,8 +94,6 @@ const crypto = std.crypto;
 const paseto = @import("zig-paseto");
 
 pub fn main(init: std.process.Init) !void {
-    _ = init;
-
     const alloc = std.heap.page_allocator;
 
     const key = "707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f";
@@ -114,9 +112,14 @@ pub fn main(init: std.process.Init) !void {
     try e.withFooter(f);
     try e.withImplicit(i);
 
-    var prng = std.Random.DefaultPrng.init(1234);
+    // need rand: V1Local, V1Public, V2Local, V3Local, V4Local
+    const random = (std.Random.IoSource{
+        .io = init.io,
+    }).interface();
 
-    const token = try e.encode(prng.random(), k);
+    e.withRandom(random);
+
+    const token = try e.encode(k);
     defer alloc.free(token);
     
     // output: 

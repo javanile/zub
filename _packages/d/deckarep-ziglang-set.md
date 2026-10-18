@@ -10,9 +10,9 @@ keywords:
   - generics
   - set
   - standard-library
-date: 2026-04-23
-updated_at: 2026-04-23T03:59:23+00:00
-last_sync: 2026-04-23T03:59:23Z
+date: 2026-10-02
+updated_at: 2026-10-02T18:03:42+00:00
+last_sync: 2026-10-02T18:03:42Z
 package_kind: hybrid
 has_library: true
 has_binary: true

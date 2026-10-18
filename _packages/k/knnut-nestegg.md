@@ -7,9 +7,9 @@ author_github: KNnut
 repository: https://github.com/KNnut/nestegg
 keywords:
   - nestegg
-date: 2026-04-18
-updated_at: 2026-04-18T12:02:03+00:00
-last_sync: 2026-04-18T12:02:03Z
+date: 2026-10-03
+updated_at: 2026-10-03T08:06:20+00:00
+last_sync: 2026-10-03T08:06:20Z
 package_kind: library
 has_library: true
 has_binary: false

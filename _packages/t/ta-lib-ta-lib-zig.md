@@ -6,9 +6,9 @@ author: TA-Lib
 author_github: TA-Lib
 repository: https://github.com/TA-Lib/ta-lib-zig
 keywords:
-date: 2026-07-03
-updated_at: 2026-07-03T18:08:04+00:00
-last_sync: 2026-07-03T18:08:04Z
+date: 2026-10-14
+updated_at: 2026-10-14T01:25:53+00:00
+last_sync: 2026-10-14T01:25:53Z
 package_kind: library
 has_library: true
 has_binary: false

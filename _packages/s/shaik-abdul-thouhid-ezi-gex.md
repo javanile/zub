@@ -18,16 +18,16 @@ keywords:
   - unicode
   - unicode-characters
   - zero-allocation
-date: 2026-09-30
+date: 2026-10-03
 category: systems
-updated_at: 2026-09-30T16:18:56+00:00
-last_sync: 2026-09-30T16:18:56Z
+updated_at: 2026-10-03T08:33:45+00:00
+last_sync: 2026-10-03T08:33:45Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 4
-distributable_binary_count: 4
+binary_count: 6
+distributable_binary_count: 6
 multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
@@ -46,7 +46,7 @@ backend architecture.
   Unicode-correct. Classes resolve once to sorted code-point ranges and match by a range check,
   with no per-character table lookup; `\b` and `\X` read `ezi_code`'s property tables directly.
   All Unicode comes from [`ezi_code`](https://github.com/shaik-abdul-thouhid/ezi-code); ezi_gex
-  never touches `std.unicode`. `main` pins `ezi_code` `v0.5.0`, which tracks **Unicode 18.0.0**
+  never touches `std.unicode`. `main` pins `ezi_code` `v0.6.0`, which tracks **Unicode 18.0.0**
   (see [Unicode version](#unicode-version)). Every supported escape, property and script is listed
   in the [Unicode syntax reference](docs/usage-guide.md#11-unicode-syntax-reference).
 - **Comptime-capable.** You can compile a pattern and run the match at compile time: the program
@@ -58,16 +58,18 @@ backend architecture.
   [*write your own backend*](docs/usage-guide.md#8-writing-your-own-backend) walkthrough.
 - **Target-agnostic.** It's pure computation over caller-provided memory: no syscalls, no global
   allocator, no platform assumptions in the library code. It compiles anywhere Zig (plus
-  `ezi_code`) does, including `wasm32-freestanding`/`wasm32-wasi` and bare-metal `*-freestanding`
-  (all four are verified to compile).
+  `ezi_code`) does, including wasm and bare metal: `zig build freestanding` builds a demo for
+  `wasm32-freestanding` and bare-metal `aarch64`, `riscv64` and Cortex-M4. See
+  [wasm and bare metal](#wasm-and-bare-metal).
 
 ## Status
 
-The latest release is `v0.7.0`; `main` is the development branch (`0.8.0-dev`). See
+The latest release is `v0.8.0`; `main` is the development branch (`0.9.0-dev`). See
 [Installing](#installing) for pinning the tag versus tracking `main`. It is pre-1.0, so the API
 can still change, though everything public is annotated `@stable-since: vX.Y.Z` and follows
-SemVer. It needs a recent Zig dev build (`0.17.0-dev.2320+1e770dbef` or newer, the same minimum as
-its `ezi_code` dependency) and will not compile on stable 0.16.
+SemVer. It needs **Zig 0.17.0** or newer, the stable release (the same minimum as its `ezi_code`
+dependency). Releases up to `v0.7.0` tracked 0.17.0 dev builds instead; no release compiles on
+0.16.
 
 The default `auto` engine is byte-DFA-first: a Hopcroft-minimized eager DFA as the primary span
 engine, a lazy DFA as the fallback. It runs in O(input) on every pattern, is leftmost-first,
@@ -81,20 +83,20 @@ hardened, parallel **fuzz** suite (`fuzz/` — every backend differenced against
 
 ## Installing
 
-The latest **tagged** release is **`v0.7.0`** — the recommended choice for reproducible
+The latest **tagged** release is **`v0.8.0`** — the recommended choice for reproducible
 builds. Via git ref (resolves the tag and pins its content hash in `build.zig.zon`):
 
 ```sh
-zig fetch --save git+https://github.com/shaik-abdul-thouhid/ezi-gex.git#v0.7.0
+zig fetch --save git+https://github.com/shaik-abdul-thouhid/ezi-gex.git#v0.8.0
 ```
 
 Or via plain HTTP tarball (also pins the content hash):
 
 ```sh
-zig fetch --save https://github.com/shaik-abdul-thouhid/ezi-gex/archive/refs/tags/v0.7.0.tar.gz
+zig fetch --save https://github.com/shaik-abdul-thouhid/ezi-gex/archive/refs/tags/v0.8.0.tar.gz
 ```
 
-**Tracking `main` (unreleased `0.8.0-dev`)** — if you want the latest in-development surface
+**Tracking `main` (unreleased `0.9.0-dev`)** — if you want the latest in-development surface
 before it's tagged, fetch the branch instead of a tag. This resolves `main`'s current commit
 and pins its hash in `build.zig.zon`; re-run it to move up:
 
@@ -103,7 +105,7 @@ zig fetch --save git+https://github.com/shaik-abdul-thouhid/ezi-gex.git#main
 ```
 
 `main` is the development branch: it builds and is tested, but APIs there are not yet covered
-by a tag, so they can still change before `0.8.0`. For reproducible builds prefer the `v0.7.0`
+by a tag, so they can still change before `0.9.0`. For reproducible builds prefer the `v0.8.0`
 tag; reach for `main` only when you specifically need unreleased work.
 
 Then in `build.zig` (the `ezi_code` dependency is resolved transitively — you only
@@ -122,7 +124,7 @@ scripts, case folding, `\w` and `\b`, so the Unicode version depends on the ezi_
 | ezi_gex | Pinned `ezi_code` | Unicode |
 | ------- | ----------------- | ------- |
 | `v0.1.0` – `v0.6.2` | `main` commits, then `v0.4.1` (from `v0.3.0`) | 17.0.0 |
-| `v0.7.0`, `main` (`0.8.0-dev`) | `v0.5.0` | 18.0.0 |
+| `v0.7.0` – `main` | `v0.5.0`, then `v0.6.0` (from `v0.8.0`) | 18.0.0 |
 
 With Unicode 18, `\p{Script=…}` accepts the new scripts (`Jurchen`/`Jurc`, `Proto_Cuneiform`/`Pcun`,
 `Seal`), and the classes and case folding cover the newly assigned characters. To stay on Unicode 17,
@@ -568,22 +570,80 @@ a one-time build cost; match time stays O(input). For the details see
 
 As a reference point, here is the bundled `main.zig` demo — which exercises runtime and comptime
 compilation, classes, captures, replace, split, `\p{L}`, scripts, and all three byte backends —
-built with Zig `0.17.0-dev.2320+1e770dbef` against `ezi_code` `v0.5.0` (Unicode 18.0.0) on
+built with Zig `0.17.0` against `ezi_code` `v0.6.0` (Unicode 18.0.0) on
 macOS arm64:
 
 | Optimize mode | Demo binary |
 |---|---|
-| `debug` | 3.69 MB (3,870,904 B) |
-| `safe` | 1.38 MB (1,448,184 B) |
-| `fast` | 1.23 MB (1,293,176 B) |
-| `small` | 0.81 MB (847,592 B) |
+| `debug` | 3.74 MB (3,919,128 B) |
+| `safe` | 1.38 MB (1,449,112 B) |
+| `fast` | 1.23 MB (1,294,696 B) |
+| `small` | 0.81 MB (848,872 B) |
 
-On the same toolchain, moving from Unicode 17 to 18 adds about 1 KB to the `safe` and `fast`
-builds and about 16 KB to `small`.
+Measured on Zig `0.17.0-dev.2320`, moving from Unicode 17 to 18 added about 1 KB to the `safe` and
+`fast` builds and about 16 KB to `small`.
 
-Most of the `Debug` figure is Zig's debug runtime, not regex data. Your own binary will come in
+Most of the `debug` figure is Zig's debug runtime, not regex data. Your own binary will come in
 under the demo: it won't link the demo's full spread of backends and Unicode features, and
 `compileRuntime` adds nothing beyond the shared tables.
+
+## wasm and bare metal
+
+`src/freestanding.zig` is a second demo, next to `main.zig`, for running with no operating system:
+no syscalls, no libc, no heap. `zig build freestanding` builds it for each target into
+`zig-out/freestanding/<target>/` (`small` by default; `-Dfreestanding-optimize` changes it):
+
+| Target | Artifact |
+|---|---|
+| `wasm32-freestanding` | `ezi_gex.wasm`: no imports; exports `memory` and the `ezi_*` functions |
+| `aarch64-freestanding` | `libezi_gex.a`, a static library for 64-bit Arm firmware |
+| `riscv64-freestanding` | `libezi_gex.a`, built `medany` so it links at `0x8000_0000`, where RISC-V boards put RAM |
+| `thumb-freestanding-cortex_m4` | `libezi_gex.a`, for a Cortex-M4F microcontroller |
+| `wasm32-wasi` | `ezi_gex.wasm`: `main.zig`, the full demo, for any WASI runtime |
+
+The demo shows both ways to run without an allocator from the OS:
+
+- **Comptime regexes** (an ISO date, `\p{L}+`) are compiled during the build into read-only data.
+  A search needs only a scratch, which is a stack array. There is no allocator at all.
+- **A runtime regex**, from a pattern the host supplies, is compiled into a fixed 1 MiB arena (a
+  `FixedBufferAllocator` over a static buffer). Its scratch and capture slots come from the same
+  arena at compile time, so a search never allocates. When a pattern's DFA tables don't fit (a
+  Unicode class like `\w` needs 4–5 MB), `ezi_compile` recompiles it without the byte DFA and
+  returns `1`. The NFA engines that remain are slower but still linear-time.
+
+The `ezi_*` functions are a C ABI: the host copies a pattern or input into
+`ezi_pattern_buffer()` / `ezi_input_buffer()` and passes its length. From JavaScript:
+
+```js
+const { instance } = await WebAssembly.instantiate(wasmBytes);
+const ezi = instance.exports;
+const put = (ptr, text) => {
+  const bytes = new TextEncoder().encode(text);
+  new Uint8Array(ezi.memory.buffer, ptr, bytes.length).set(bytes);
+  return bytes.length;
+};
+ezi.ezi_compile(put(ezi.ezi_pattern_buffer(), "(\\w+)@(\\w+)")); // 0 or 1: compiled
+const len = put(ezi.ezi_input_buffer(), "mail bob@example now");
+if (ezi.ezi_captures(len, 0) === 1) {
+  console.log(ezi.ezi_group_start(1), ezi.ezi_group_end(1)); // 5 8 ("bob")
+}
+ezi.ezi_iso_date(put(ezi.ezi_input_buffer(), "2026-10-03")); // 20261003
+```
+
+C firmware calls the same functions. The file's doc comments list every function and its return
+codes. Two things to know when you link the library into your own firmware:
+
+- Any runtime compile needs about 400 KB of arena, mostly class scratch the HIR builder allocates
+  up front. On a microcontroller with less RAM, use comptime regexes and shrink or drop the
+  arena (`arena_size`).
+- On aarch64, turn the MMU on before calling in. With it off, every access is to Device memory,
+  where the unaligned loads that ordinary compiled code makes fault.
+
+Each target has been run: the `.wasm` modules under Node.js, and the three static libraries linked
+into small firmware images on QEMU (`virt` for riscv64 and aarch64, `mps2-an386` for the
+Cortex-M4). Each gave the same results as the native tests. `zig build test-freestanding` runs those
+tests natively, including a check that the arena-compiled regex agrees with the heap Pike VM at
+every start offset.
 
 ## Documentation
 
@@ -608,15 +668,16 @@ under the demo: it won't link the demo's full spread of backends and Unicode fea
 zig build                                   # build the demo exe (zig-out/bin/ezi_gex)
 zig build run                               # build + run it
 zig build bench                             # benchmarks (`fast` by default)
-zig build test -Doptimize=safe              # full suite (safe mode is faster than Debug)
+zig build freestanding                      # wasm + bare-metal demo (zig-out/freestanding/)
+zig build test -Doptimize=safe              # full suite (safe mode is faster than debug)
 ```
 
-The test suite is split into **16 independently-cacheable units** — one named module per area, so a
+The test suite is split into **17 independently-cacheable units** — one named module per area, so a
 test binary only ever contains its own `test {}` blocks (Zig pulls a file's tests into every module
 that reaches it via a *relative* import, but never across a *named*-module boundary). Editing one
 file recompiles and re-runs only the unit(s) whose inputs changed; the rest stay cached. The units:
 `utils`, `core`, `engine_base`, the eight backends (`backtrack`, `pikevm`, `bytepike`, `dfa`, `edfa`,
-`onepass`, `literal`, `auto`), `regex`, `conformance`, `redos`, `fuzz`, and `exe`.
+`onepass`, `literal`, `auto`), `regex`, `conformance`, `redos`, `fuzz`, `exe` and `freestanding`.
 
 ```sh
 zig build test-core                         # run ONE unit (cached; also test-auto, test-edfa, …)

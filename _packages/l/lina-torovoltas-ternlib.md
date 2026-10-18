@@ -8,9 +8,9 @@ repository: https://github.com/lina-torovoltas/TernLib
 keywords:
   - balanced-ternary
   - ternary-logic
-date: 2026-10-13
-updated_at: 2026-10-13T15:32:51+00:00
-last_sync: 2026-10-13T15:32:51Z
+date: 2026-10-18
+updated_at: 2026-10-18T11:38:48+00:00
+last_sync: 2026-10-18T11:38:48Z
 package_kind: library
 has_library: true
 has_binary: false

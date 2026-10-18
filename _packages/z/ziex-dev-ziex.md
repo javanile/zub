@@ -17,9 +17,9 @@ keywords:
   - web
   - web-assembly
   - web-framework
-date: 2026-10-17
-updated_at: 2026-10-17T13:30:00+00:00
-last_sync: 2026-10-17T13:30:00Z
+date: 2026-10-18
+updated_at: 2026-10-18T12:13:36+00:00
+last_sync: 2026-10-18T12:13:36Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -42,9 +42,12 @@ A full-stack web framework for Zig. Declarative UI components using familiar pat
 Ziex combines the power and performance of Zig with the expressiveness and simplicity of declarative UI, enabling you to build fast, type-safe web applications.
 
 
-> **Note:** Most of the API and syntax are finalized and stable, and server-side rendering (SSR) features are production-ready, Ziex continues to evolve with ongoing improvements to client-side rendering and state management, see the [roadmap](#roadmap). You can start using the documented features today, as they are stable and unlikely to change. Areas still under development are not yet documented and will be added as they mature. See [versions](#versions) for Zig and Ziex versions compatibility.
-
-**[Documentation →](https://ziex.dev/learn)**
+<p align="center">
+  <a href="https://ziex.dev">Website</a> ·
+  <a href="https://ziex.dev/learn">Docs</a> ·
+  <a href="https://ziex.dev/playground">Playground</a> ·
+  <a href="https://ziex.dev/r/discord">Discord</a>
+</p>
 
 ## Getting Started
 
@@ -206,7 +209,7 @@ const zx = @import("zx");
 | Zig      | Ziex                                                                              | Branch     | Status      |
 | -------- | --------------------------------------------------------------------------------- | ---------- | ----------- |
 | `0.17.x` |                                                                                   | `main`     | Development |
-| `0.17.x` | [`0.1.0-rc.1`](https://github.com/ziex-dev/ziex/releases/tag/v0.1.0-rc.1)         |            | **Latest**  |
+| `0.17.x` | [`0.1.0-rc.4`](https://github.com/ziex-dev/ziex/releases/tag/v0.1.0-rc.4)         |            | **Latest**  |
 | `0.16.x` | [`0.1.0-dev.1259`](https://github.com/ziex-dev/ziex/releases/tag/v0.1.0-dev.1259) | `zig-0.16` | Outdated    |
 | `0.15.x` | [`0.1.0-dev-1050`](https://github.com/ziex-dev/ziex/releases/tag/v0.1.0-dev.1050) | `zig-0.15` | Outdated    |
 

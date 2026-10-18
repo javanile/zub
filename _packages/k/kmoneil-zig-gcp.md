@@ -19,9 +19,9 @@ keywords:
   - secrets-management
   - service-account
   - workload-identity-federation
-date: 2026-10-16
-updated_at: 2026-10-16T13:08:26+00:00
-last_sync: 2026-10-16T13:08:26Z
+date: 2026-10-18
+updated_at: 2026-10-18T13:29:23+00:00
+last_sync: 2026-10-18T13:29:23Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -90,15 +90,18 @@ Pub/Sub, Cloud Storage, Secret Manager and Firestore, with credentials that find
 | 🪣 | [`storage`](docs/storage/README.md) | Cloud Storage: objects of any size, streamed, parallel, resumable and checksummed both ways; preconditions, compose and server-side copies; buckets, versions, soft delete, retention and holds, IAM; folders, tree renames and managed folders; access control lists; signed URLs and POST policies, signed by a service account or an HMAC key; HMAC keys; encryption keys; Pub/Sub notifications | experimental |
 | 🔥 | [`firestore`](docs/firestore/README.md) | Cloud Firestore: documents read and written under preconditions, commits with field transforms, batched reads, queries and aggregations over collections and collection groups, large answers read one document at a time as they arrive, transactions run again on contention; the default database or a named one | beta |
 | 🔑 | [`secret_manager`](docs/secret-manager/README.md) | Secret Manager v1: a secret's bytes, verified and wiped after use; versions; secrets global or regional, their settings, notifications, rotation, encryption keys and IAM policies | experimental |
+| 📜 | [`logging`](docs/logging/README.md) | Cloud Logging v2, the read side: entries a page at a time under the read quota, a tail by polling, log names, buckets and views for a picker; an in-memory Cloud Logging for your own tests | experimental |
+| 🗂️ | [`resource_manager`](docs/resource_manager/README.md) | Cloud Resource Manager v3: every project a credential can see, in one list for a project switcher; one project as it is now; the folders and organizations above them, by name; an in-memory Resource Manager for your own tests | experimental |
+| 🚨 | [`error_reporting`](docs/error_reporting/README.md) | Cloud Error Reporting, the read side: what each error group came to over a period, in buckets for a trend chart; a group's errors with their stack traces; resolving, acknowledging and muting a group; the per-user quota counted; an in-memory Error Reporting for your own tests | experimental |
 | 🪪 | [`auth`](docs/auth.md) | Credentials for the other modules: the metadata server, gcloud's login, service account keys, workload identity federation and impersonation; signing on this machine or through IAM | experimental |
 | ⚙️ | [`core`](docs/essentials.md) | What the service modules share: the HTTP transport, retries, `Diagnostics`, CRC-32C at the CPU's speed, IAM policies, the `TokenProvider` and `Signer` seams, and test fakes. Each service re-exports what its callers need. | beta |
 
 ```mermaid
 flowchart LR
-    app(["your program"]) --> pubsub & storage & secret_manager & firestore
+    app(["your program"]) --> pubsub & storage & secret_manager & firestore & logging & resource_manager & error_reporting
     app --> auth
-    auth -. credentials .-> pubsub & storage & secret_manager & firestore
-    pubsub & storage & secret_manager & firestore & auth --> core
+    auth -. credentials .-> pubsub & storage & secret_manager & firestore & logging & resource_manager & error_reporting
+    pubsub & storage & secret_manager & firestore & logging & resource_manager & error_reporting & auth --> core
 ```
 
 The service modules never import one another, or `auth`: credentials
@@ -111,7 +114,7 @@ Zig **0.17.0** (`minimum_zig_version` enforces it). For Zig 0.16.0, use
 v0.30.0, the last release that builds with it.
 
 ```sh
-zig fetch --save git+https://github.com/kmoneil/zig-gcp#v0.38.0
+zig fetch --save git+https://github.com/kmoneil/zig-gcp#v0.43.0
 ```
 
 ```zig
@@ -122,6 +125,9 @@ exe.root_module.addImport("auth", gcp.module("auth")); // for credentials
 exe.root_module.addImport("secret_manager", gcp.module("secret_manager"));
 exe.root_module.addImport("storage", gcp.module("storage"));
 exe.root_module.addImport("firestore", gcp.module("firestore"));
+exe.root_module.addImport("logging", gcp.module("logging"));
+exe.root_module.addImport("resource_manager", gcp.module("resource_manager"));
+exe.root_module.addImport("error_reporting", gcp.module("error_reporting"));
 ```
 
 ## Quick start
@@ -187,6 +193,8 @@ says how.
 | 🪣 [Cloud Storage](docs/storage/README.md) | Transfers of any size, checksums and gzip, safe writes, signed URLs, buckets, retention, encryption keys, notifications, folders, ACLs, HMAC keys |
 | 🔑 [Secret Manager](docs/secret-manager/README.md) | Reading secrets safely, changing them under an etag, notifications and rotation, regional secrets |
 | 🔥 [Firestore](docs/firestore/README.md) | Documents and their values, masks and preconditions, transforms and commits, queries and aggregations, transactions, and where the emulator differs |
+| 📜 [Cloud Logging](docs/logging/README.md) | Listing entries under the read quota, filters as production read them, a tail by polling, logs, buckets and views, and testing with a fake |
+| 🗂️ [Resource Manager](docs/resource_manager/README.md) | The projects a credential can see, for a switcher; the query language as production read it; the project each call is charged to; and testing with a fake |
 | 🛠️ [Development](docs/development.md) | Building, testing, fuzzing, coverage, and every integration suite |
 
 The [documentation index](docs/README.md) lists every page.
@@ -209,6 +217,9 @@ The [documentation index](docs/README.md) lists every page.
 | [`iam`](examples/iam.zig) | Reads, grants, revokes and tests permissions on a bucket, topic, subscription or secret | `zig build example-iam -- get gs://my-bucket` |
 | [`secret_rotation`](examples/secret_rotation.zig) | Rotates a secret when Secret Manager says it is time, through its topic | `zig build example-secret_rotation -- setup my-project db-password rotations` |
 | [`firestore`](examples/firestore.zig) | Writes, reads, updates, counts, queries and lists documents, and moves an amount between two in a transaction | `zig build example-firestore -- set cities/LA population=3900000` |
+| [`logs_read`](examples/logs_read.zig) | Lists log entries newest first, a page at a time, and says when a page came back empty with a token | `zig build example-logs_read -- --fake` |
+| [`logs_tail`](examples/logs_tail.zig) | Tails a filter by polling, each entry once, late ones caught by the overlap | `zig build example-logs_tail -- --fake` |
+| [`projects_list`](examples/projects_list.zig) | Lists every project the credentials can see, where each sits, and matches a few letters locally as a switcher would | `zig build example-projects_list -- --fake --match=pay` |
 
 `publish`, `publisher` and `worker` use the emulator when
 `PUBSUB_EMULATOR_HOST` is set, and otherwise a token in
