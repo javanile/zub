@@ -8,9 +8,9 @@ repository: https://github.com/ikskuh/zig-args
 keywords:
   - option-parser
   - option-parsing
-date: 2026-05-23
-updated_at: 2026-05-23T15:28:21+00:00
-last_sync: 2026-05-23T15:28:21Z
+date: 2026-10-02
+updated_at: 2026-10-02T10:00:25+00:00
+last_sync: 2026-10-02T10:00:25Z
 package_kind: hybrid
 has_library: true
 has_binary: true

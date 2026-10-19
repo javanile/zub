@@ -1,18 +1,20 @@
 ---
 title: zig-vin
-description: A template library like jinja for zig.
+description: A template render library like jinja2 for zig.
 license: Apache-2.0
 author: deatil
 author_github: deatil
 repository: https://github.com/deatil/zig-vin
 keywords:
   - jinja
+  - jinja2
+  - jinja2-template
   - vin
   - zig-jinja
   - zig-vin
-date: 2026-10-15
-updated_at: 2026-10-15T14:25:34+00:00
-last_sync: 2026-10-15T14:25:34Z
+date: 2026-10-19
+updated_at: 2026-10-19T14:46:28+00:00
+last_sync: 2026-10-19T14:46:28Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -110,8 +112,18 @@ pub fn main(init: std.process.Init) !void {
     });
     defer env.deinit();
 
-    const out = try env.renderAlloc(alloc, tpl, ctx, null);
+    var diag: vin.Diagnostic = undefined;
+
+    const out = try env.renderAlloc(alloc, tpl, ctx, &diag);
     defer alloc.free(out);
+
+    const err_msg = try alloc.print("{f}", .{diag});
+    if (err_msg.len > 0) {
+        std.debug.print("error: {s} \n", .{err_msg});
+        return;
+    }
+
+    std.debug.print("html: {s} \n", .{out});
 }
 ~~~
 
@@ -152,8 +164,18 @@ pub fn main(init: std.process.Init) !void {
     }, dl.loader());
     defer env.deinit();
 
-    const out = try env.renderTemplateAlloc(alloc, tpl, ctx, null);
+    var diag: vin.Diagnostic = undefined;
+
+    const out = try env.renderTemplateAlloc(alloc, tpl, ctx, &diag);
     defer alloc.free(out);
+
+    const err_msg = try alloc.print("{f}", .{diag});
+    if (err_msg.len > 0) {
+        std.debug.print("error: {s} \n", .{err_msg});
+        return;
+    }
+
+    std.debug.print("html: {s} \n", .{out});
 }
 ~~~
 

@@ -6,9 +6,9 @@ author: allyourcodebase
 author_github: allyourcodebase
 repository: https://github.com/allyourcodebase/libxml2
 keywords:
-date: 2026-09-28
-updated_at: 2026-09-28T11:04:24+00:00
-last_sync: 2026-09-28T11:04:24Z
+date: 2026-10-01
+updated_at: 2026-10-01T19:56:09+00:00
+last_sync: 2026-10-01T19:56:09Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -35,7 +35,7 @@ First, update your `build.zig.zon`:
 ```
 # Initialize a `zig build` project if you haven't already
 zig init
-zig fetch --save git+https://github.com/allyourcodebase/libxml2.git#2.15.3
+zig fetch --save git+https://github.com/allyourcodebase/libxml2.git#2.15.4
 ```
 
 You can then import `libxml2` in your `build.zig` with:
