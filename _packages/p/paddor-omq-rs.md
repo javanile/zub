@@ -12,9 +12,9 @@ keywords:
   - polyglot
   - rust
   - zeromq
-date: 2026-10-15
-updated_at: 2026-10-15T12:24:02+00:00
-last_sync: 2026-10-15T12:24:02Z
+date: 2026-10-20
+updated_at: 2026-10-20T13:53:39+00:00
+last_sync: 2026-10-20T13:53:39Z
 package_kind: library
 has_library: false
 has_binary: false
@@ -105,17 +105,17 @@ ZeroMQ Guide patterns to OMQ.
 </details>
 
 <details>
-<summary>LZ4 PUSH/PULL throughput</summary>
+<summary>Compressed PUSH/PULL throughput</summary>
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/paddor/omq.rs/main/doc/charts/pushpull/lz4_tcp.svg" alt="LZ4 PUSH/PULL throughput over TCP" width="950">
+  <img src="https://raw.githubusercontent.com/paddor/omq.rs/main/doc/charts/pushpull/compression_tcp.svg" alt="LZ4 and Zstd PUSH/PULL throughput over TCP" width="950">
 </p>
 
 [Full compression transport benchmarks (LZ4 and Zstd)](BENCHMARKS_COMPRESSION.md)
 </details>
 
 [Full comparison charts](COMPARISONS.md) |
-[Other protocol comparisons](PROTOCOL_COMPARISONS.md)
+[Other protocol comparisons][other-protocol-comparisons]
 
 ## Behavior under load
 
@@ -143,6 +143,19 @@ available:
 | `omq_tokio::exclusive::Socket::{connect, bind}(...)` | Caller task, one TCP peer, no socket driver task |
 
 </details>
+
+Owned contexts support independent aggregate ingress/egress byte limits,
+configured before the first socket; exhaustion applies backpressure.
+Limits count transport bytes after compression and each fan-out copy;
+IPC, inproc, and SHM are excluded.
+
+```rust,ignore
+let ctx = omq::Context::new();
+ctx.set_network_rate_limits(omq::NetworkRateLimits {
+    ingress: None,
+    egress: Some(omq::ByteRateLimit::new(10_000_000, 100_000)),
+})?;
+```
 
 ## Cargo features
 
@@ -199,7 +212,7 @@ Language bindings:
 ## Further reading
 
 - [COMPARISONS.md](COMPARISONS.md): cross-implementation comparison charts.
-- [PROTOCOL_COMPARISONS.md](PROTOCOL_COMPARISONS.md): throughput and
+- [PROTOCOL_COMPARISONS.md][other-protocol-comparisons]: throughput and
   request/reply-like latency against other messaging and RPC protocols.
 - [BENCHMARKS_COMPRESSION.md](BENCHMARKS_COMPRESSION.md): lz4+tcp
   throughput on bandwidth-limited links.
@@ -214,6 +227,8 @@ Language bindings:
 - [doc/udp_transports.md](doc/udp_transports.md): UDP, QUIC, and DART purposes,
   configuration, and benchmarks over loopback and lossy links.
 - [omq-shm/README.md](omq-shm/README.md): shared-memory transport on Linux.
+
+[other-protocol-comparisons]: https://github.com/paddor/omq.rs/blob/other-moms/PROTOCOL_COMPARISONS.md
 
 ## Platform and requirements
 

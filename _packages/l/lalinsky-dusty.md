@@ -13,10 +13,10 @@ keywords:
   - websocket
   - websocket-client
   - websocket-server
-date: 2026-10-15
+date: 2026-10-20
 category: networking
-updated_at: 2026-10-15T10:00:47+00:00
-last_sync: 2026-10-15T10:00:47Z
+updated_at: 2026-10-20T14:51:16+00:00
+last_sync: 2026-10-20T14:51:16Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -131,6 +131,9 @@ can serve HTTPS on 443 and plain HTTP on 80 with the same router:
     .{ .address = addr80 },
 },
 ```
+
+A TLS listener offers protocols through ALPN when given a list in preference
+order, for example `.tls = .{ ..., .alpn_protocols = &.{"http/1.1"} }`.
 
 When `listeners` is omitted or empty, the server listens on `127.0.0.1:8080`.
 

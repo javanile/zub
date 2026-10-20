@@ -17,10 +17,10 @@ keywords:
   - kqueue
   - networking
   - poll
-date: 2026-10-08
+date: 2026-10-20
 category: networking
-updated_at: 2026-10-08T14:25:40+00:00
-last_sync: 2026-10-08T14:25:40Z
+updated_at: 2026-10-20T14:45:34+00:00
+last_sync: 2026-10-20T14:45:34Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -205,6 +205,8 @@ pub fn main(init: std.process.Init) !void {
 ```
 
 See `examples/*.zig` for more examples.
+
+If you need an HTTP client or server, that works well with zio, have a look at [dusty](https://github.com/lalinsky/dusty).
 
 ## Frequently Asked Questions
 

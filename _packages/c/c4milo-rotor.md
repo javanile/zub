@@ -16,10 +16,10 @@ keywords:
   - networking
   - no-malloc
   - shared-nothing
-date: 2026-09-30
+date: 2026-10-20
 category: systems
-updated_at: 2026-09-30T15:18:49+00:00
-last_sync: 2026-09-30T15:18:49Z
+updated_at: 2026-10-20T14:20:14+00:00
+last_sync: 2026-10-20T14:20:14Z
 package_kind: binary
 has_library: false
 has_binary: true
@@ -55,7 +55,7 @@ Linux, kqueue on macOS, and epoll on Linux where io_uring is not available.
 | Threads | One loop per thread, with no locks. Loops post messages to each other, across threads or processes. |
 | Safety | Assertions stay on in release builds. Misuse stops the program at a named check. |
 | Dependencies | None. Zig 0.16.0 and its standard library. |
-| Version | 0.6.0 |
+| Version | 0.7.0 |
 | License | Apache-2.0 |
 
 ## Why rotor
@@ -84,7 +84,7 @@ Linux, kqueue on macOS, and epoll on Linux where io_uring is not available.
 
 ## Status
 
-rotor is at version 0.6.0. Everything planned for version one is built: TCP, UDP with ECN on
+rotor is at version 0.7.0. Everything planned for version one is built: TCP, UDP with ECN on
 both kernels and segmentation offload on Linux, files, timers, deadlines and cancellation, and
 messages between loops, in one process or several. One conformance suite, written against the
 public API, passes on all three backends, and CI runs it on every push.
@@ -99,7 +99,8 @@ public API, passes on all three backends, and CI runs it on every push.
 > **In a container, Linux runs epoll unless io_uring is allowed.** Docker's default seccomp
 > profile refuses io_uring. Run with `--security-opt seccomp=unconfined`, or a profile that allows
 > the io_uring system calls, to get io_uring. `rotor.backend()` says which backend a process runs;
-> a program that needs io_uring checks it at startup.
+> a program that needs io_uring checks it at startup, or calls `rotor.require_backend(.uring)`
+> first, which fails where the kernel refuses io_uring.
 
 > [!IMPORTANT]
 > **On macOS and on epoll, file operations need a policy.** Those kernels cannot complete a file
@@ -112,7 +113,7 @@ public API, passes on all three backends, and CI runs it on every push.
 Add rotor to a project:
 
 ```bash
-zig fetch --save git+https://github.com/c4milo/rotor#v0.6.0
+zig fetch --save git+https://github.com/c4milo/rotor#v0.7.0
 ```
 
 In `build.zig`:
@@ -262,6 +263,7 @@ and the commands to take every number again.
 | [20](docs/decisions/0020-an-epoll-backend.md) | an epoll backend | accepted |
 | [21](docs/decisions/0021-loops-in-several-processes.md) | loops in several processes | accepted |
 | [22](docs/decisions/0022-a-std-io-adapter.md) | a `std.Io` adapter | accepted, deferred |
+| [23](docs/decisions/0023-a-host-that-owns-the-wait.md) | a host that owns the wait | accepted |
 
 A proposed record describes something not yet built. A declined record describes something rotor
 will not build, and why.

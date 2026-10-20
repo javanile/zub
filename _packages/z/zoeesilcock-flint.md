@@ -12,10 +12,10 @@ keywords:
   - imgui
   - sdl
   - sdl3
-date: 2026-10-17
+date: 2026-10-20
 category: game-development
-updated_at: 2026-10-17T13:24:14+00:00
-last_sync: 2026-10-17T13:24:14Z
+updated_at: 2026-10-20T11:45:49+00:00
+last_sync: 2026-10-20T11:45:49Z
 package_kind: hybrid
 has_library: true
 has_binary: true

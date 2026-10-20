@@ -11,10 +11,10 @@ keywords:
   - pubgrub
   - semver
   - version-solver
-date: 2026-09-16
+date: 2026-10-20
 category: tooling
-updated_at: 2026-09-16T07:47:57+00:00
-last_sync: 2026-09-16T07:47:57Z
+updated_at: 2026-10-20T13:54:55+00:00
+last_sync: 2026-10-20T13:54:55Z
 package_kind: hybrid
 has_library: true
 has_binary: true
