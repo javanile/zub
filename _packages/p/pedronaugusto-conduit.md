@@ -6,9 +6,9 @@ author: pedronaugusto
 author_github: pedronaugusto
 repository: https://github.com/pedronaugusto/conduit
 keywords:
-date: 2026-10-10
-updated_at: 2026-10-10T14:59:21+00:00
-last_sync: 2026-10-10T14:59:21Z
+date: 2026-10-21
+updated_at: 2026-10-21T14:05:20+00:00
+last_sync: 2026-10-21T14:05:20Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -56,7 +56,7 @@ stable ABI to reach past it. Every Windows call is a `kernel32` import.
 ## Usage
 
 The block below is a region of [`examples/usage.zig`](examples/usage.zig),
-which `zig build examples` builds and runs; CI compares the two.
+which `bay examples` builds and runs; CI compares the two.
 
 <!-- BEGIN GENERATED zig build docs -- usage -->
 ```zig
@@ -76,7 +76,7 @@ defer shell.deinit(io);
 // separate standard error to collect.
 var result = try shell.child().output(gpa, io, .{
     .timeout = conduit.Deadline.within(.fromSeconds(5)),
-    .drain = .fromMilliseconds(250),
+    .drain = .literal("250ms"),
 });
 defer result.deinit();
 ```
@@ -103,7 +103,7 @@ ignored `SIGINT` and be deaf to Ctrl-C on its own terminal.
 **No signal handler is installed, ever**, and no disposition in the calling
 process is touched: a `SIGWINCH` or `SIGCHLD` handler is process-wide state
 that belongs to the program. `Proxy` forwards the window size by reading it on
-a task, and takes an optional `ticket` a program's own handler can bump.
+a task, and takes an optional reactor `Wake` a program's own handler can signal.
 `SIGPIPE` too — writing to a pipe whose reader is gone raises it, and what to
 do about that is the program's.
 
@@ -278,7 +278,7 @@ no file action can make. The fast path runs on Linux and macOS, which are the
 systems the suite runs on; the BSDs number the attribute flags differently and
 keep the fork. A child put in a
 cgroup of its own on Linux is forked too, unless the C library can start it in
-the cgroup (above). `zig build test
+the cgroup (above). `bay test
 -Dfork-spawn` runs the whole suite with it turned off.
 
 **A spawn that cannot run the program is an error**, not a child that exits
@@ -347,11 +347,11 @@ is a `std.Io.Duration`. Each function that allocates takes the allocator as
 
 | | |
 |---|---|
-| `Pty.open(gpa, options)` | A new pair. `options`: `rows`, `cols`, `x_pixel`, `y_pixel`, and on Windows `console`. |
+| `Pty.open(gpa, io, options)` | A new pair; a simulated one over `conduit.testing`'s `Io`. `options`: `rows`, `cols`, `x_pixel`, `y_pixel`, and on Windows `console`. |
 | `pty.readHandle()`, `pty.writeHandle()` | The master, as two handles: the same descriptor twice on POSIX, the two pipes of a pseudoconsole on Windows. `null` once closed. |
 | `pty.readFile()`, `pty.writeFile()`, `pty.master()` | Either end, or both, as `std.Io.File`s sharing the handle rather than duplicating it. |
 | `pty.slaveHandle()` | The terminal end: a descriptor on POSIX, an `HPCON` on Windows. `pty.slaveFile()` is POSIX only. |
-| `pty.resize(size)`, `pty.size()` | The window size. `size` borrows the pair; it and `resize` share the Windows geometry owner and are safe while another task reads or writes. |
+| `pty.resize(io, size)`, `pty.size(io)` | The window size. `size` borrows the pair; it and `resize` share the Windows geometry owner and are safe while another task reads or writes. |
 | `pty.consoleOptions()` | Windows only: which of `OpenOptions.console` the system granted. `win32_input` for keys a terminal encoding cannot spell, `passthrough` for the child's own bytes rather than the console host's redraw of them, `resize_quirk` for a resize that does not reflow. A Windows too old for one of them refuses the whole call, so `open` asks again without it. |
 | `pty.close(io)` | Everything. Idempotent, and correct after either of the next two. |
 | `pty.closeSlave(io)`, `pty.closeMaster(io)` | One end. The two systems want `closeSlave` at different moments — see Design. |
@@ -384,7 +384,7 @@ to read while a wait or Reaper runs.
 | `child.containment(buffer)` | Copies the detached group, private Linux supervisor identity and optional cgroup path, inode and boot id. The path borrows your buffer; the record owns no handles and survives retirement and deinit. |
 | `child.holdReap()` | The right to reap the child, taken and held — `null` if another task has it — for a caller that waits for the end its own way and reaps afterwards, as `Reaper` does. `HeldReap.wait(io)` reaps; `release()` gives it back. |
 | `child.waitTimeout(io, ms)` | Reaps it if it ends in time; `null` if it does not, and it is still running. Waits on a handle the system makes ready the moment the child ends — a `pidfd`, a kqueue registration — and asks again on a growing interval where there is neither. |
-| `child.kill(signal)` | `.interrupt`, `.terminate` or `.kill`, aimed at what the child started and not only at the child: on POSIX the process group of a detached child and a walk of its descendants; on Windows a console control event to a detached child's group, and for `.kill` — or `.terminate` with no group — the job object. On Windows, `.interrupt` without a group is `error.Unsupported`, there being nothing to fall back to that would mean the same thing. On POSIX any other signal goes the same way: `.hangup`, `.quit`, `.user1`, `.user2`, `.stop`, `.@"continue"`, `.window_change`, or `.{ .posix = .ALRM }` for one by number. Only the first three end the tree with the child; the rest leave it to `descendants`. Windows refuses each of the others with `error.Unsupported`, as POSIX does a number it does not define. |
+| `child.kill(io, signal)` | `.interrupt`, `.terminate` or `.kill`, aimed at what the child started and not only at the child: on POSIX the process group of a detached child and a walk of its descendants; on Windows a console control event to a detached child's group, and for `.kill` — or `.terminate` with no group — the job object. On Windows, `.interrupt` without a group is `error.Unsupported`, there being nothing to fall back to that would mean the same thing. On POSIX any other signal goes the same way: `.hangup`, `.quit`, `.user1`, `.user2`, `.stop`, `.@"continue"`, `.window_change`, or `.{ .posix = .ALRM }` for one by number. Only the first three end the tree with the child; the rest leave it to `descendants`. Windows refuses each of the others with `error.Unsupported`, as POSIX does a number it does not define. |
 | `child.killWait(io, grace)` | `.terminate`, the grace, `.kill`, a reap. |
 | `child.waitTree(io, ms)` | Waits for the container the child was put in to hold no process at all, which is the question `wait` does not answer — a child that exits having started something is a tree that is still running. Windows: the job object. Linux: the child's own cgroup, woken by `cgroup.events` rather than asking again; a child given none is `error.Unsupported`. A compile error on the other POSIX systems, which have nothing to ask. |
 | `child.deinit(io)` | Closes owned resources and leaves the child undefined. A contained scope `finish` has not confirmed is killed and reaped first, with nothing reported. Supplied streams stay open. |
@@ -422,7 +422,7 @@ child itself exited with, including the system's control-exit status.
 
 `SpawnOptions`: `argv`, `cwd`, `environ` (a `*const std.process.Environ.Map`),
 `stdio`, `detach`, `stderr_to`, `path_search`, `credentials`,
-`resource_limits`, `fd_policy`, `extra_fds`, `job_limits`, `parent_death_signal`, `descendants`.
+`resource_limits`, `fd_policy`, `extra_fds`, `channel`, `job_limits`, `parent_death_signal`, `descendants`.
 
 `descendants = .survive` is the default on every platform. Once the child
 exits normally and is reaped, `deinit` leaves what it started alone. This
@@ -504,7 +504,7 @@ No names or scans of init's children are used to guess the lost edge.
 The native test measures immediate double-forks and repeats them with a
 controlled observer delay; successful runs do not prove the race absent.
 
-Linux subreaping is explicit: call `reaper.enableSubreaper()` before spawning
+Linux subreaping is explicit: call `reaper.enableSubreaper(gpa)` before spawning
 into the Child address passed to `Reaper.init`, then call `start`. It needs
 Linux 5.4 or later and readable procfs. One Reaper owns the process setting;
 a second owner, including `Orphans.start`, is refused with `AlreadyStarted`.
@@ -576,8 +576,25 @@ numbers no descriptors: each file goes to the child as an inheritable
 duplicate named in the handle list, and in the table of inherited
 descriptors the Microsoft C runtime reads from the startup record
 (`lpReserved2`), so a child on that runtime — `cmd.exe`, Python, Node — has
-them at 3 and up. A child on no C runtime finds them with `GetStartupInfoW`. With `.pty` it is
-`error.Unsupported` there, as `stderr_to` is.
+them at 3 and up. A child on no C runtime finds them with `GetStartupInfoW`. Beside a
+pseudoconsole the handle list sits in the same attribute list, and the
+standard handles stay unnamed.
+
+`channel` is a stream both ways between the parent and the child, beside
+whatever `stdio` is, a terminal included: bytes, with no protocol of its
+own. `Channel.open` makes one; its `child` end goes in `.channel` with the
+name of an environment variable, and the child opens its end with
+`Channel.inherited(environ_map, name)`. On POSIX it is a pair of Unix stream
+sockets, the child's end the descriptor after the `extra_fds` and the
+variable its number. On Windows it is a duplex pipe with no name, made as the
+standard library makes a child's pipes, so nothing else can open it; the
+child inherits its end by handle, beside the pseudoconsole when there is
+one, and the variable holds the handle's value. Both ends are asynchronous
+there, so a read waiting on one does not hold back a write. Close the
+`child` end once `spawn` returns: a copy left in the parent keeps the
+channel open after the child has gone. The child's half is in `conduit.tty`
+too, for a program that runs no child and links no C library on Linux.
+The Windows half runs in the Windows jobs of CI.
 
 `credentials` is `uid`, `gid` and `umask`, and `resource_limits` a list of
 `std.posix.rlimit_resource` and `std.posix.rlimit` pairs. Both are set in the
@@ -600,7 +617,7 @@ machine's processor time, from 1 through 10,000; an out-of-range value is
 accepted, even when the backlog is full. A later `queue` checks again.
 
 ```zig
-var input = try child.inputWriter(gpa, io, .{ .max_backlog = aegis.units.Bytes(usize).fromRaw(1024 * 1024) });
+var input = try child.inputWriter(gpa, io, .{ .max_backlog = .literal("1MiB") });
 defer input.deinit(io);
 try input.queue(io, "first\n");
 try input.queue(io, "second\n");
@@ -690,6 +707,9 @@ process or nothing; it is `null` for a start time that does not match.
 `conduit.processExists(pid)` says whether any process has an id now, on POSIX
 and Windows; one that has ended but is not yet reaped still has it, and a
 reused id is told apart only by the start time written down beside it.
+`conduit.hostName(&buf)` gives the machine's name to write down beside a
+pid in a lock (POSIX `gethostname`'s; on Windows the DNS host name Winsock's
+`gethostname` returns, as WTF-8).
 `CapturedPid` exposes no token or handle. `captured.processId()` reads its
 number for reports. Release it exactly once with `deinit`; do not copy an
 owning capture. Darwin checks the stable unique id on every lookup, so exec
@@ -804,9 +824,10 @@ output one.
 
 `openControlling(io)` opens the process's own terminal rather than its standard
 streams: `/dev/tty` on POSIX, `CONIN$` and `CONOUT$` on Windows, as one
-`Controlling` with an `input` and an `output` file. `conduit.console` also
-carries `CreateFileW` and `WriteFile` for Windows code that writes to the
-console with no `std.Io` to hand, a panic handler among it.
+`Controlling` with an `input` and an `output` file. The kernel32 calls behind
+these are conduit's own and no part of its API; code that writes to a console
+with no `std.Io` to hand, a panic handler among it, has `std.os.windows`'s
+`NtWriteFile`.
 
 `rawMode` and `restore` take effect at once and throw away input nobody read;
 neither waits for the output to drain, so a terminal that has stopped reading
@@ -866,7 +887,7 @@ system.
 
 Cross-compiled in CI for `x86_64-windows-gnu`, `x86_64-windows-msvc`,
 `aarch64-windows-gnu`, glibc on two architectures and musl on one, both macOS
-architectures, FreeBSD and NetBSD. `zig build check -Dtarget=...` is what
+architectures, FreeBSD and NetBSD. `bay check -Dtarget=...` is what
 those jobs run: it compiles the library, the suite and the examples for the
 target and runs none of them, so a Windows-only path reached from a test and
 from nowhere else is still held to compiling.
@@ -890,22 +911,28 @@ before `CreateProcessW`; otherwise Windows resolves it.
 - [aegis](https://github.com/pedronaugusto/aegis) holds the data beside its lock (`Guarded`, `BlockingGuarded`), the bounded backlog and its owners, and the byte count and duration conversions.
 - [reactor](https://github.com/pedronaugusto/reactor) makes the waits on a child's end, a held process, the pipes `output` reads and a Windows job's messages, native on its runtime and over any other `std.Io`.
 - [preflight](https://github.com/pedronaugusto/preflight) runs the source checks,
-  the tests and CI.
+  the tests and CI, and [shakedown](https://github.com/pedronaugusto/shakedown) holds
+  the tests' clocks and fault plans. Both are dev dependencies, which
+  [bay](https://github.com/pedronaugusto/bay) gives conduit's own development and a
+  project that depends on conduit never sees; a project's build that asks for
+  `conduit.testing` gives it its own shakedown.
 - **tycho**, every coding agent in one folder (in development).
 
 ## Testing
 
-Local build scripts clear `.zig-cache/{o,h,z,tmp}` above the measured cap through preflight; run `zig build cache` before direct Zig builds (only a rebuild is lost).
+Development runs through bay. Local build scripts clear `.zig-cache/{o,h,z,tmp}` above the measured cap through preflight; run `bay cache` before direct Zig builds (only a rebuild is lost).
 
 ```sh
-zig build test                   # the suite, and the examples, which are run
-zig build test -Dfork-spawn      # the same, with the posix_spawn path off
-zig build test --fuzz            # the three properties, under the fuzzer
-zig build unit -Dthread-sanitizer   # the suite under ThreadSanitizer
-zig build examples               # the examples alone
+bay test                   # the suite, and the examples, which are run
+bay test -Dfork-spawn      # the same, with the posix_spawn path off
+bay test --fuzz            # the three properties, under the fuzzer
+bay hardened              # the suite with safety on, std.testing.allocator on shakedown's quarantine
+bay hardened-fuzz         # the properties under Zig's fuzzer, judged on what it left
+bay hardened-tsan         # on x86_64 or aarch64 Linux: the suite under ThreadSanitizer
+bay examples               # the examples alone
 zig fmt --check src examples build.zig
-zig build test -Dtarget=x86_64-linux-musl  # on Linux: the suite on musl, linked statically
-zig build install-unit -Drequire-cgroups && sudo zig-out/bin/conduit-tests
+bay test -Dtarget=x86_64-linux-musl  # on Linux: the suite on musl, linked statically
+bay install-unit -Drequire-cgroups && sudo zig-out/bin/conduit-tests
                                  # on Linux, as root: the cgroup tests, which fail
                                  # rather than skip where no cgroup can be made
 ```
@@ -914,25 +941,59 @@ Most of the suite starts a real child process and reaps it, and CI runs it in
 Debug and ReleaseSafe on Linux, macOS and Windows, and in ReleaseFast on
 Linux: the code between `fork` and `execve` is the kind an inlining decision
 can change. preflight's test runner fails a test that runs past its bound,
-its Io teardown included, by name and phase: preflight's default, or what
-`-Dtest-watchdog-ms` sets. The suite also runs with the
-`posix_spawn` path turned off, because that path is a second implementation of
-one contract and running both is what says they make the same child.
+its Io teardown included, by name and phase, and preflight's own tests hold
+that. The suite also runs with the `posix_spawn` path turned off, because that
+path is a second implementation of one contract and running both is what says
+they make the same child.
 
 Three things here read bytes the package did not write, and each is a property
-`zig build test --fuzz` puts a fuzzer on: that the search behind `until` and
+`bay test --fuzz` puts a fuzzer on: that the search behind `until` and
 `untilAny` reports what a search of the whole buffer would, however the child's
 output is cut into arrivals; that every candidate a `PATH` produces is an entry
 of it with the program on the end; and that an argument list survives the
 Windows command line it is written into, by the rules that parse it back. Each
 keeps a corpus of its own under `.zig-cache/f`.
 
-The package's own benchmarks are in `bench/`: `zig build bench` builds them in
+The package's own benchmarks are in `bench/`: `bay bench` builds them in
 ReleaseFast and runs them, and [bench/README.md](bench/README.md) says what
-each measures. CI never times them; `zig build test` runs each once in smoke
+each measures. CI never times them; `bay test` runs each once in smoke
 mode, so they keep working.
 
-`zig build unit` is the suite without the examples, `-Dtest-filter` runs part
+### Testing code that starts children
+
+conduit's children, terminals, signals and waits are the system's, past the
+`Io` they are given. Over a [shakedown](https://github.com/pedronaugusto/shakedown)
+`Sim`, `conduit.testing` is the `Io` that sends them to the simulation:
+`Child.spawn` starts a program registered on `sim.programs()` as a simulated
+process, on pipes, on a simulated pair from `Pty.open`, on the null device or
+on files; `kill` ends it as a signal it does not catch would, `wait`,
+`waitTimeout`, `tryWait` and a `Reaper` wait for it on the simulation's clock,
+and the run repeats from its seed. What a simulation cannot be (credentials,
+resource and job limits, a parent-death signal) is `error.Unsupported`, and a
+simulated child's own children are not ended with it. Under bay your tests link one
+shakedown and one aegis; without bay, pin the aegis release shakedown pins
+(shakedown's README says how).
+
+```zig
+const conduit_build = @import("conduit"); // conduit's build.zig, at the top of yours
+
+const conduit = b.dependency("conduit", .{ .target = target, .optimize = optimize });
+const shakedown = b.dependency("shakedown", .{ .target = target, .optimize = optimize });
+tests.root_module.addImport("conduit.testing", conduit_build.testing(conduit, shakedown.module("shakedown")));
+tests.root_module.addImport("shakedown", shakedown.module("shakedown"));
+```
+
+```zig
+try sim.programs().register("fake-git", fakeGit, .{});
+const routed = try @import("conduit.testing").Seam.create(gpa, sim.io());
+defer routed.destroy();
+// Inside sim.run: code under test spawns "git" through conduit on routed.io().
+```
+
+The suite runs conduit's own children, terminals, signals, timed waits and
+`Reaper` this way too, and checks that one seed makes one run.
+
+`bay unit` is the suite without the examples, `-Dtest-filter` runs part
 of it, and `CONDUIT_TRACE` in the environment logs what this package asked
 the operating system for, through `std.log` at the info level under the
 `conduit` scope, which the suite prints.

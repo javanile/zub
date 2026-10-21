@@ -11,10 +11,10 @@ keywords:
   - game-development
   - gamedev
   - raylib
-date: 2026-07-28
+date: 2026-10-21
 category: systems
-updated_at: 2026-07-28T03:19:32+00:00
-last_sync: 2026-07-28T03:19:32Z
+updated_at: 2026-10-21T15:08:25+00:00
+last_sync: 2026-10-21T15:08:25Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -34,7 +34,7 @@ permalink: /packages/raylib-zig/raylib-zig/
 
 Manually tweaked, auto-generated [raylib](https://github.com/raysan5/raylib) bindings for zig.
 
-Bindings tested on raylib version 6.0 and Zig 0.16.0
+Bindings tested on raylib version 6.2 and Zig 0.17.0
 
 Thanks to all the [contributors](https://github.com/raylib-zig/raylib-zig/graphs/contributors) for their help with this
 binding.

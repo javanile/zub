@@ -6,9 +6,9 @@ author: lalinsky
 author_github: lalinsky
 repository: https://github.com/lalinsky/msgpack.zig
 keywords:
-date: 2026-09-05
-updated_at: 2026-09-05T06:49:28+00:00
-last_sync: 2026-09-05T06:49:28Z
+date: 2026-10-16
+updated_at: 2026-10-16T20:35:44+00:00
+last_sync: 2026-10-16T20:35:44Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -33,6 +33,8 @@ but with the advantage that you use Zig's type system instead of a foreign schem
 There are multiple options on how to encode struct fields, in order to generate compact messages, see below for details.
 
 ## Installation
+
+Requires Zig 0.16 or 0.17.
 
 1) Add msgpack.zig as a dependency in your `build.zig.zon`:
 

@@ -1,27 +1,30 @@
 ---
 title: zig-gcp
-description: "Google Cloud clients for Zig 0.17, over the REST APIs, one module per service: Pub/Sub, Secret Manager (secret bytes in memory that is wiped on release), and credentials from ADC, service account keys or workload identity federation. No dependencies."
+description: "Google Cloud clients for Zig 0.17 over REST, one module per service: Pub/Sub, Cloud Storage, Firestore, Secret Manager, Logging, Monitoring, Error Reporting, KMS, Cloud Scheduler, Cloud Run, Dataflow and Resource Manager. Credentials from ADC, service account keys or workload identity federation. In-memory fakes for tests. No dependencies."
 license: MIT
 author: kmoneil
 author_github: kmoneil
 repository: https://github.com/kmoneil/zig-gcp
 keywords:
+  - cloud-kms
+  - cloud-logging
+  - cloud-monitoring
+  - cloud-run
+  - cloud-scheduler
+  - dataflow
+  - firestore
   - gcp
-  - gcp-pubsub
   - google-cloud
+  - google-cloud-platform
   - google-cloud-pubsub
-  - google-cloud-secret-manager
-  - messaging
-  - oauth2
+  - google-cloud-storage
   - pubsub
   - rest-client
   - secret-manager
-  - secrets-management
-  - service-account
   - workload-identity-federation
-date: 2026-10-20
-updated_at: 2026-10-20T15:06:20+00:00
-last_sync: 2026-10-20T15:06:20Z
+date: 2026-10-21
+updated_at: 2026-10-21T15:07:32+00:00
+last_sync: 2026-10-21T15:07:32Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -93,11 +96,11 @@ Pub/Sub, Cloud Storage, Secret Manager and Firestore, with credentials that find
 | 📜 | [`logging`](docs/logging/README.md) | Cloud Logging v2, the read side: entries a page at a time under the read quota, a tail by polling, log names, buckets and views for a picker; an in-memory Cloud Logging for your own tests | experimental |
 | 🗂️ | [`resource_manager`](docs/resource_manager/README.md) | Cloud Resource Manager v3: every project a credential can see, in one list for a project switcher; one project as it is now; the folders and organizations above them, by name; an in-memory Resource Manager for your own tests | experimental |
 | 🚨 | [`error_reporting`](docs/error_reporting/README.md) | Cloud Error Reporting, the read side: what each error group came to over a period, in buckets for a trend chart; a group's errors with their stack traces; resolving, acknowledging and muting a group; the per-user quota counted; an in-memory Error Reporting for your own tests | experimental |
-| 📈 | [`monitoring`](docs/monitoring/README.md) | Cloud Monitoring v3, for a program's own metrics: points written with what the server stored and refused; series read filtered, aligned and reduced; descriptors; the alerts open in the project; a recorder of counters, gauges, histograms and observers written every interval; an in-memory Cloud Monitoring for your own tests | experimental |
+| 📈 | [`monitoring`](docs/monitoring/README.md) | Cloud Monitoring v3, for a program's own metrics: points written with what the server stored and refused; series read filtered, aligned and reduced; descriptors; the alerts open in the project, their policies, enabling or disabling one, and snoozes; a recorder of counters, gauges, histograms and observers written every interval; an in-memory Cloud Monitoring for your own tests | experimental |
 | 🔐 | [`kms`](docs/kms/README.md) | Cloud KMS v1: encrypt, decrypt, sign and MAC with keys the server holds, every answer checked against its checksums and decrypted bytes wiped; signatures checked on this machine (ECDSA, RSA, Ed25519, ML-DSA); key rings, keys and versions from creation to deletion, with rotation and IAM; an in-memory Cloud KMS for your own tests | experimental |
-| ⏰ | [`scheduler`](docs/scheduler/README.md) | Cloud Scheduler v1, read only: the jobs a project schedules, with their state, target and last attempt; `Job.failing` for a health view; an in-memory Cloud Scheduler for your own tests | experimental |
-| 🏃 | [`run`](docs/run/README.md) | Cloud Run v2, read only: services with their traffic and conditions, revisions with their images and readiness, across one service or a whole region; deploy markers for a trend chart; an in-memory Cloud Run for your own tests | experimental |
-| 🌊 | [`dataflow`](docs/dataflow/README.md) | Dataflow v1b3, read only: every region's jobs in one call or one region at a time, with their states, stage states and error messages; `Job.terminal` and `Job.failing` for a pipelines widget; regions that did not answer named rather than silent; an in-memory Dataflow for your own tests | experimental |
+| ⏰ | [`scheduler`](docs/scheduler/README.md) | Cloud Scheduler v1: the jobs a project schedules, with their state, target and last attempt; `Job.failing` for a health view; run now, pause and resume, each with its exact request built first for a confirmation; an in-memory Cloud Scheduler for your own tests | experimental |
+| 🏃 | [`run`](docs/run/README.md) | Cloud Run v2: services with their traffic and conditions, revisions with their images and readiness, across one service or a whole region; deploy markers for a trend chart; jobs and their executions, with each execution's status; run a job, cancel an execution and send all traffic to one revision (guarded by the service's etag), each with its exact request first; an in-memory Cloud Run for your own tests | experimental |
+| 🌊 | [`dataflow`](docs/dataflow/README.md) | Dataflow v1b3: every region's jobs in one call or one region at a time, with their states, stage states and error messages; `Job.terminal` and `Job.failing` for a pipelines widget; regions that did not answer named rather than silent; cancel a job or drain a streaming one, each with its exact request built first; an in-memory Dataflow for your own tests | experimental |
 | 🪪 | [`auth`](docs/auth.md) | Credentials for the other modules: the metadata server, gcloud's login, service account keys, workload identity federation and impersonation; signing on this machine or through IAM | beta |
 | ⚙️ | [`core`](docs/essentials.md) | What the service modules share: the HTTP transport, retries, `Diagnostics`, CRC-32C at the CPU's speed, IAM policies, the `TokenProvider` and `Signer` seams, and test fakes. Each service re-exports what its callers need. | beta |
 

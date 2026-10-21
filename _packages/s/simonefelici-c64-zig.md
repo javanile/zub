@@ -1,6 +1,6 @@
 ---
 title: c64-zig
-description: Commodore 64 hardware definitions for Zig.
+description: Commodore 64 definitions and bindings for Zig.
 license: Apache-2.0
 author: SimoneFelici
 author_github: SimoneFelici
@@ -8,9 +8,9 @@ repository: https://github.com/SimoneFelici/c64-zig
 keywords:
   - c64
   - commodore-64
-date: 2026-10-20
-updated_at: 2026-10-20T14:40:22+00:00
-last_sync: 2026-10-20T14:40:22Z
+date: 2026-10-21
+updated_at: 2026-10-21T14:17:18+00:00
+last_sync: 2026-10-21T14:17:18Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -26,12 +26,13 @@ permalink: /packages/SimoneFelici/c64-zig/
 
 # c64-zig
 
-Commodore 64 hardware definitions in Zig.
+Commodore 64 definitions and bindings in Zig.
 
-A Zig translation of the C64 headers from [llvm-mos-sdk](https://github.com/llvm-mos/llvm-mos-sdk) (`c64.h`, `_vic2.h`, `_sid.h`, `_6526.h`).
+A Zig translation of the C64 headers from [llvm-mos-sdk](https://github.com/llvm-mos/llvm-mos-sdk) (`c64.h`, `_vic2.h`, `_sid.h`, `_6526.h`, `cbm.h`, `charset.h`).
 
 ## Requirements
 
+- zig 0.17.0
 - [zig-mos-bootstrap](https://github.com/kassane/zig-mos-bootstrap) 0.17.0
 - The C64 target `.cpu_arch = .mos, .os_tag = .c64)`
 

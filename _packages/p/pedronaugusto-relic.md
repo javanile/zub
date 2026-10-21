@@ -7,15 +7,15 @@ author_github: pedronaugusto
 repository: https://github.com/pedronaugusto/relic
 keywords:
   - git
-date: 2026-10-17
-updated_at: 2026-10-17T13:01:06+00:00
-last_sync: 2026-10-17T13:01:06Z
+date: 2026-10-21
+updated_at: 2026-10-21T15:25:24+00:00
+last_sync: 2026-10-21T15:25:24Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 12
-distributable_binary_count: 12
+binary_count: 13
+distributable_binary_count: 13
 multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
@@ -150,7 +150,7 @@ std.debug.assert(std.mem.eql(u8, changes.items[0].path(), "src/main.zig"));
 // And as the patch git prints, when text is what you want.
 var patch: std.Io.Writer.Allocating = .init(gpa);
 defer patch.deinit();
-try relic.diff.unified(gpa, io, .{ .db = repo.objectDatabase(), .change = changes.items[0] }, &patch.writer, .{});
+try relic.diff.unified(gpa, io, .{ .db = repo.objectDatabase(), .changes = changes.items[0..1] }, &patch.writer, .{});
 std.debug.assert(std.mem.startsWith(u8, patch.written(), "diff --git a/src/main.zig b/src/main.zig\n"));
 
 // Put the first tree back: files the tree lacks go, changed ones are
@@ -408,7 +408,11 @@ in process; the server is found where git-lfs looks for it and asked the way
 git-lfs asks it, over https or git-lfs's pure-ssh protocol; the last lock
 listing is kept where git-lfs keeps it, in its JSON, so either tool shows the
 other's locks offline. A repository carrying git-lfs's own hooks works on a
-machine without git-lfs.
+machine without git-lfs. The other side is here too: `lfs.server` serves the
+batch API and the locking API on uplink's server beside git's smart HTTP, the
+objects in a store the caller gives (a directory, or S3-compatible storage the
+client reaches through signed URLs) and every request put to the caller's
+hook, and git-lfs pushes, clones, pulls and locks against it.
 
 **The hash is the floor under a repository whose files have size.** Both
 architectures carry SHA-1 instructions, and this package uses them: aarch64's
@@ -627,10 +631,12 @@ writes beside them, and `relic.refs.reftable.table` is the table format.
 | `odb.commit_graph` | Module within `odb`. |
 | `odb.commit_graph.bloom` | Module within `odb.commit_graph`. |
 | `odb.rev_index` | Module within `odb`. |
+| `odb.mtimes` | Module within `odb`. |
 | `odb.index_pack` | Module within `odb`. |
 | `odb.pack` | Module within `odb`. |
 | `odb.delta` | Module within `odb`. |
 | `odb.midx` | Module within `odb`. |
+| `odb.quarantine` | `Quarantine` — objects held apart until accepted, git's `tmp_objdir`: begun, read through, migrated or discarded. |
 | `refs` | `Store`, `Ref`, `Resolved`, `Transaction`, `Expected`, `packed-refs` read and write. `Store.root` and `Store.special` own the root refs (`ORIG_HEAD`, `CHERRY_PICK_HEAD`, ...) and the special refs (`FETCH_HEAD`, `MERGE_HEAD`) in either ref format; `deleteRefs` removes refs by any safe name; `writeInitial` writes a new repository's first refs; `list` keeps what is no ref apart in `broken`; `main-worktree/` and `worktrees/<id>/` read another worktree's refs; `create` lays down a new ref store. Logs in either format through the store: `readLog` (`Log.at` for `HEAD@{n}`), `logExists`, `appendLog` under a `LogPolicy` (`core.logAllRefUpdates`), `createLog`, `expireLog` (git's `reflog expire` and `reflog delete`, `--rewrite` and `--updateref`), `deleteLog`. |
 | `refs.reftable` | Module within `refs`. |
 | `refs.reftable.table` | The reftable format: one table read and written. |
@@ -639,23 +645,25 @@ writes beside them, and `relic.refs.reftable.table` is the table format.
 | `refs.names` | What a ref may be named: `checkFormat` (git's `check_refname_format`, with its one-level and pattern flags), `isSafe` (what a deletion may name), the root, special and per-worktree classes, `parseWorktreeRef` for `main-worktree/` and `worktrees/<id>/`, and every root ref by name (`Root`, `Special`). |
 | `config` | `Config.open`, `get`, `all`, `getBool`, `getInt`, `getPath`, `subsections`, `origin`, `set`, `unset`, `renderWritable`. Lossless: setting a value rewrites one line; a repository's files are written through `Repository.writeConfig`. `include.path` and `includeIf` with `gitdir:`, `gitdir/i:`, `onbranch:` and `hasconfig:remote.*.url:`. |
 | `config.user` | Where the person's git reads its configuration from. |
+| `config.color` | `parse`, `When`, `wanted`, `readSlots` — git's colours: a value as `color_parse` writes it, `color.ui` beneath each writer's `color.<writer>`, and its `color.<writer>.<slot>` colours. |
 | `index` | `Index.read` / `write` / `toBytes`, `Entry`, `CacheTree`, `ResolveUndo`, `RawExtension`. Versions 2, 3 and 4. |
 | `index.sparse` | The sparse index. |
 | `worktree` | `addAll`, `writeTree`, `checkout`, `resetIndex`, `status`, `list`, `applySparse`. |
 | `worktree.sparse_checkout` | Module within `worktree`. |
 | `worktree.linked` | `list`, `add`, `remove`, `prune`, `lock`, `unlock`, `move`, `repair`, each worktree's refs in the repository's ref format. |
 | `worktree.snapshot` | `Store`, `capture`, `adoptTree`, `restore`, `diff`: working trees whose complete Git object closure belongs to a private store. |
+| `worktree.renames` | `find`, `configured`: the renames `git status` finds among the staged changes, through diff's rename detection, and what `status.renames` asks for. |
 | `worktree.sparse` | Module within `worktree`. |
 | `worktree.ignore` | `Rules.init` / `loadGlobal` / `addDirectory` / `addText` / `popTo` / `match` / `matchPath`, with the pattern that decided. |
 | `worktree.attributes` | `Attrs`, `Attributes`, `unsupported`, `toGit`, `toWorktree`, `isBinaryForDiff`, `isBinaryForCheckIn`. |
 | `worktree.convert` | Module within `worktree`. |
 | `worktree.encoding` | Module within `worktree`. |
-| `worktree.fsmonitor` | `refresh`, `configured`, `ChangeSource`: the file monitor git asks through `core.fsmonitor` (hook protocol 1 and 2), or a program's own, deciding which files `status` looks at; `FSMN` read and written. |
+| `worktree.fsmonitor` | `refresh`, `configured`, `ChangeSource`: the file monitor git asks through `core.fsmonitor` (its hook, protocol 1 and 2, or its own daemon, `true`, over the daemon's socket or pipe), or a program's own, deciding which files `status` looks at; `FSMN` read and written. |
 | `worktree.filter` | Module within `worktree`. |
 | `worktree.filter.native` | Native content-filter protocol. |
 | `worktree.dir_scan` | `Scan` — a directory's entries with their stats, from `getattrlistbulk(2)` where the volume has it and a read and a stat per name where it does not. |
 | `worktree.safe_path` | What a path from a tree is allowed to be. |
-| `diff` | `tree`, `numstat`, `blobNumStat`, `unified`, `unifiedBody`, `isBinary`. |
+| `diff` | `tree`, `numstat`, `blobNumStat`, `unified`, `unifiedBody`, `isBinary`, `Colors`, `WhitespaceRule` — a file's patch as `git diff` and `git format-patch` write it (git's headers, unique abbreviations, `--binary`, `--full-index`, `--relative`), in colour as `git diff --color` writes it where `Options.colors` is given: `color.diff.<slot>`, whitespace errors by `core.whitespace`, the `whitespace` attribute and `diff.wsErrorHighlight`. |
 | `diff.blame` | `file` — which commit each line of a file comes from, as `git blame` says, following renames. |
 | `diff.patch_id` | Patch ids: a name for what a commit changes. |
 | `diff.rename` | Module within `diff`. |
@@ -663,6 +671,9 @@ writes beside them, and `relic.refs.reftable.table` is the table format.
 | `rev_walk` | `Walk` and `Walk.count`, `mergeBase`, `mergeBases`, `mergeBasesMany`, `isAncestor`, `parentsOf` — git's date queue and topological order, commit-graph generation numbers, the shallow boundary, and history simplified by paths (`Walk.paths`) as git simplifies it by default. |
 | `rev_walk.bisect` | `start`, `mark`, `nextStep`, `reset`, `log`, `replay`, `run`, `terms`: `git bisect` as git 2.56 does it, with its state files, its choice of commit, skips, `--first-parent`, `--no-checkout`, `--reset-when-found`, terms and pathspecs. |
 | `rev_walk.describe` | `describe`, `head`, `Describer`: `git describe` with `--tags`, `--all`, `--long`, `--abbrev`, `--candidates`, `--match`, `--exclude`, `--first-parent`, `--always`, `--dirty`, `--broken`, a blob as `<commit>:<path>`, and `--contains` as `git name-rev` names it. |
+| `rev_walk.fork_point` | `forkPoint` — `git merge-base --fork-point`: where a branch forked from a ref, through the ref's log. |
+| `rev_walk.last_modified` | `lastModified` — `git last-modified`: for each path of a commit's tree, the commit that last changed it. |
+| `rev_walk.path_walk` | `PathWalk` — git's path-walk: the objects a history reaches, in batches by the path that reaches them. |
 | `rev_walk.mailmap` | `Mailmap.load`, `lookup`, `map`: `.mailmap`, `mailmap.blob` and `mailmap.file` read and matched as git reads and matches them. |
 | `rev_walk.rev_parse` | git's revision grammar, `@{<date>}` with git's approximate dates included. |
 | `rev_walk.shallow` | A shallow repository's boundary: `.git/shallow`. |
@@ -680,9 +691,11 @@ writes beside them, and `relic.refs.reftable.table` is the table format.
 | `commit.notes` | `Notes`, `add`, `append`, `copy`, `remove`, `prune`, `show`, `merge`, `mergeCommit`, `mergeAbort`, `formatNote`: `refs/notes/*` read and written as `git notes` does, git's fanout and every merge strategy included. |
 | `commit.todo` | Module within `commit`. |
 | `commit.rebase` | Module within `commit`. |
+| `commit.history` | `fixup`, `reword`, `split` — `git history`: one commit rewritten where it stands, its descendants replayed onto it and their branches moved. |
+| `commit.replay` | `replay` — `git replay`: commits made again in memory onto `--onto`, `--advance` or `--revert`, and the refs that pointed at them moved in one transaction. |
 | `commit.sequencer` | Module within `commit`. |
 | `commit.merging` | Module within `commit`. |
-| `commit.stash` | `push`, `apply`, `pop`, `list`, `show`, `drop`, `clear`. |
+| `commit.stash` | `push`, `create`, `store`, `apply`, `pop`, `list`, `show`, `drop`, `clear`; the autostash a merge or a rebase makes and brings back. |
 | `commit.in_progress` | `read`: which operations a worktree is in the middle of, as `git status` says. |
 | `commit.message` | Module within `commit`. |
 | `commit.trailer` | `process`, `processFile`, `format`, `iterate`, `amend`, `Settings.load` — `git interpret-trailers` byte for byte: the trailer block found as git finds it, `--trailer` added by `--where`, `--if-exists` and `--if-missing`, `--trim-empty`, `--only-trailers`, `--only-input`, `--unfold`, `--parse`, `--no-divider`, `--in-place`; `trailer.separators`, `.where`, `.ifExists`, `.ifMissing` and every `trailer.<name>.key`, `.command` and `.cmd`. `%(trailers)` and `git commit --trailer` go through it. |
@@ -700,6 +713,8 @@ writes beside them, and `relic.refs.reftable.table` is the table format.
 | `transport.push` | Module within `transport`. |
 | `transport.clone` | Module within `transport`. |
 | `transport.fetch` | Module within `transport`. |
+| `transport.pull` | `pull` — `git pull`: the fetch, then a fast-forward, a merge of `FETCH_HEAD` or a rebase from the fork point, as `pull.ff`, `pull.rebase` and `branch.<name>.rebase` say. |
+| `transport.backfill` | `backfill` — `git backfill`: a partial clone's missing blobs fetched in batches by path, within a range, a pathspec or the sparse checkout. |
 | `transport.refspec` | Module within `transport`. |
 | `transport.remote` | Module within `transport`. |
 | `transport.url` | Module within `transport`. |
@@ -714,7 +729,10 @@ writes beside them, and `relic.refs.reftable.table` is the table format.
 | `transport.connection` | Module within `transport`. |
 | `transport.pkt_line` | Module within `transport`. |
 | `transport.upload_pack` | `Server` — serving fetches, with shallow and every filter. |
+| `transport.receive_pack` | `Server`, `connect` — serving pushes as git's receive-pack: quarantine, connectivity and fsck, the receive hooks, `receive.*`, report-status v1 and v2. |
+| `transport.http_backend` | `Backend` — git's smart HTTP served on uplink's server: clone, fetch and push over `http://`. |
 | `transport.bundle` | `create`, `write`, `File.open`, `Header.read`, `listHeads`, `writeSummary`, `verify`, `unbundle`, `isBundle`: `git bundle` v2 and v3, its header byte for byte, filtered by any filter git takes, `sparse:oid=` included; a path to a bundle is fetched and cloned from. |
+| `transport.bundle_uri` | `fetch`, `fetchList`, `List`: bundle URIs as git's `bundle-uri.c` takes them, a bundle or a bundle list (`mode`, the `creationToken` heuristic) unbundled before a clone or a fetch asks the server, its refs under `refs/bundles/`. |
 | `transport.progress` | Module within `transport`. |
 | `transport.remote_helper` | `Helper`, `Spec`, `allowed` — `git-remote-<name>` run as git runs it: capabilities, options, `list`, `connect`, `fetch`, `import` (through `fast.importer`, `bidi-import` answered), `push`, `export` (through `fast.exporter`, with the helper's marks), private refs by its `refspec`. |
 | `transport.policy` | Module within `transport`. |
@@ -733,22 +751,23 @@ writes beside them, and `relic.refs.reftable.table` is the table format.
 | `lfs.transfer` | Module within `lfs`. |
 | `lfs.custom` | Module within `lfs`. |
 | `lfs.api` | Module within `lfs`. |
+| `lfs.server` | `Backend`, `Store`, `Directory`, `S3` — a Git LFS server as a handler for uplink's server: the batch API, basic transfers into the caller's store (a directory, or S3-compatible storage through signed URLs), the locking API, authorization by the caller's hook. |
 | `patch` | `parse`, `Patch`, `FilePatch`, `Fragment`: git patches and plain unified diffs read as `git apply` reads them, from whatever surrounds them. |
 | `patch.am` | `start`, `proceed`, `skip`, `abort`, `quit` — `git am` with `--3way`, its state in `rebase-apply` as git keeps it. |
 | `patch.mail` | `split`, `info` — `git mailsplit` and `git mailinfo`. |
 | `patch.format` | `format` — `git format-patch` byte for byte: numbering, the diffstat, binary hunks, a cover letter, base information, threading and attachments. |
 | `patch.apply` | `apply` — `git apply` to the working tree, the index or both: renames, copies, modes, binary hunks, `-R`, `--3way`, `--reject`, `--check`, whitespace checked or fixed, nothing written unless every file applies. |
-| `patch.range_diff` | `write`, `compute` — `git range-diff` byte for byte: two series' patches as git reads them out of `git log -p`, paired by git's own solver, and the diff of each pair; `--creation-factor`, `--left-only`, `--right-only`, `--no-notes`, `--no-patch`. |
-| `grep` | `grep` — `git grep` over the working tree, the index or a tree: fixed, basic and extended patterns with back-references, `--and`/`--or`/`--not` and `--all-match`, `-i -w -v -n -l -c`, context, `-p` and `-W` with git's `diff` driver function lines, pathspecs, binary files, written as git writes it; `-P` through the caller's `Matcher`. |
+| `patch.range_diff` | `write`, `compute` — `git range-diff` byte for byte: two series' patches as git reads them out of `git log -p`, paired by git's own solver, and the diff of each pair; `--creation-factor`, `--left-only`, `--right-only`, `--no-notes`, `--no-patch`, colour in dual colour or not. |
+| `grep` | `grep` — `git grep` over the working tree, the index or a tree: fixed, basic and extended patterns with back-references, `--and`/`--or`/`--not` and `--all-match`, `-i -w -v -n -l -c`, context, `-p` and `-W` with git's `diff` driver function lines, pathspecs, binary files, written as git writes it, in colour under `color.grep.<slot>`; `-P` through the caller's `Matcher`. |
 | `archive` | `archive` — `git archive` as tar or zip, git's bytes: the pax comment, `--prefix`, `export-ignore`, `export-subst`, `tar.umask`. |
-| `pretty` | `formatCommit`, `Context`, `Decorations` — git's `--format` placeholders for one commit, the mailmap's names, decorations, notes, signatures and `%(trailers)` with every option among them. |
-| `pretty.refs` | `Listing`, `listRefs`, `listBranches`, `listTags`, `branchFormat`, `versioncmp` — `git for-each-ref`, `git branch --list` and `git tag --list` byte for byte: every `%(...)` atom git has for refs, `*` peeling, dates in every mode, `align` and `if` blocks, four quoting styles; `--sort` with version sort and `versionsort.suffix`, `--contains`, `--no-contains`, `--merged`, `--no-merged`, `--points-at`, `--exclude`, `--start-after`, `--include-root-refs`, `--count`, `--omit-empty`, `branch.sort`, `tag.sort`. |
+| `pretty` | `formatCommit`, `Context`, `Decorations`, `Colors` — git's `--format` placeholders for one commit, the mailmap's names, decorations, notes, signatures, `%(trailers)` with every option and colour as `git log --color` writes it among them. |
+| `pretty.refs` | `Listing`, `listRefs`, `listBranches`, `listTags`, `branchFormat`, `versioncmp` — `git for-each-ref`, `git branch --list` and `git tag --list` byte for byte: every `%(...)` atom git has for refs, `*` peeling, dates in every mode, `align` and `if` blocks, four quoting styles; `--sort` with version sort and `versionsort.suffix`, `--contains`, `--no-contains`, `--merged`, `--no-merged`, `--points-at`, `--exclude`, `--start-after`, `--include-root-refs`, `--count`, `--omit-empty`, `branch.sort`, `tag.sort`; `%(color:...)` and `git branch`'s `color.branch.<slot>`. |
 | `pretty.shortlog` | `Shortlog.init`, `add`, `addCommit`, `write`, `configured`: `git shortlog` by author, committer, trailer or format, with `-s`, `-n`, `-e` and `-w`. |
 | `clean` | `clean` — `git clean`: `-n`, `-f`, `-ff`, `-d`, `-x`, `-X`, `-e`, pathspecs, repositories inside the tree left alone, git's lines. |
 | `fast` | git's fast-import stream. |
 | `fast.importer` | `import`, `Marks` — `git fast-import`: every command, its dates, marks files and notes fanout, branches updated as git updates them. |
 | `fast.exporter` | `write` — `git fast-export` byte for byte: marks, renames, tags, signatures, refspecs. |
-| `maintenance` | `writeCommitGraph`, `writeMidx`, `repackMidx`, `expireMidx`, `writePackBitmap`, `writeMidxBitmap`, `writeConfiguredCommitGraph`, `repackRepository`. The format modules own the bytes; these operations gather through the object database, diff and revision walk. Fetch applies `fetch.writeCommitGraph`; configured maintenance applies `gc.writeCommitGraph` and the bitmap settings. |
+| `maintenance` | `writeCommitGraph`, `writeMidx`, `repackMidx`, `expireMidx`, `writePackBitmap`, `writeMidxBitmap`, `writeConfiguredCommitGraph`, `repackRepository`, `packRefs`, `expireReflogs`, `prune` and `reachableObjects` (git's `pack-refs`, `reflog expire` and `prune`, with `gc.reflogExpire*` and `gc.pruneExpire`). The format modules own the bytes; these operations gather through the object database, diff and revision walk. Fetch applies `fetch.writeCommitGraph`; configured maintenance applies `gc.writeCommitGraph` and the bitmap settings. |
 <!-- END MODULES -->
 
 Native LFS belongs to the operation owner. Use `lfs.filter.load(gpa, io, &repo,
@@ -782,9 +801,10 @@ reread the affected refs before retrying.
 
 - **No pseudo-merge bitmap extension or incremental MIDX chains.** `UnsupportedBitmapOptions` and `ChainUnsupported` name these; ordinary pack and MIDX bitmaps are read and written. An unusable optional accelerator falls back to the object walk.
 - **`working-tree-encoding` for UTF-16 and UTF-32 only.** Any other character set is refused by name.
+- **Commit, log and mail character sets: UTF-8, US-ASCII and ISO-8859-1.** A commit's `encoding`, `i18n.logOutputEncoding`, `i18n.commitEncoding` or a mail's `charset` naming another, which git converts through iconv, is refused by name.
 - **No Negotiate or NTLM** authentication, to a server or a proxy; refused by name. **No GSS-API (Kerberos) to a SOCKS5 proxy:** it is never offered, so a proxy that takes nothing else refuses every method and the fetch stops with `ProxyAuthenticationRequired`.
 - **LFS without tus.** The tus adapter is refused by name; custom transfer adapters run as git-lfs runs them.
-- **No receive-pack server.** relic serves fetches; a push goes to git's server. `receive.fsckObjects` and `receive.fsck.*` are read (`fsck.Scope.receive`) for a program that receives pushes itself.
+- **receive-pack without `proc-receive`, push certificates or `updateInstead`.** A ref under `receive.procReceiveRefs` fails as git fails it with no `proc-receive` hook, a signed push is not served, and `receive.denyCurrentBranch=updateInstead` refuses as `refuse` does; a received pack is always kept as a pack, where git under `receive.unpackLimit` writes loose objects.
 - **A promisor fetch's pack takes every `.gitmodules` and `.gitattributes` it lacks as promised,** where git asks whether a promisor pack names the blob. With nothing configured, a fetch still checks what it receives, at git's levels with `.`, `..` and `.git` in a tree refused (`fsck.baseline`), where git checks nothing; `fetch.fsckObjects=false` checks nothing.
 - **No `git://` or dumb HTTP.** Refused by name. A remote helper is spoken to through `connect`, `fetch`, `import`, `push` and `export`; one with only `stateless-connect` or `get` cannot fetch here, `HelperCannotFetch`.
 - **No editor for a note.** Refused by name.
@@ -792,14 +812,14 @@ reread the affected refs before retrying.
 - **A binary hunk in a written patch is this package's deflate.** It decodes to the same file; the compressed bytes are not zlib's. A cover letter's shortlog under a mailmap is refused by name.
 - **`am` reads mailboxes only.** StGit and Mercurial patches are refused by name, as is a mail in a character set other than UTF-8, US-ASCII or ISO-8859-1.
 - **`grep -P` only through a caller's matcher.** Without one, Perl expressions are refused by name; back-references follow glibc's matcher, which git uses on Linux and builds in for Windows, where macOS's differs.
-- **A deflated zip entry is this package's deflate,** decoding to the same file; a stored zip and every tar are git's bytes. `export-subst` leaves `%N` as it stands, as git does, and refuses `%(describe)`, relative and human dates, wrapping, padding and colour by name.
+- **A deflated zip entry is this package's deflate,** decoding to the same file; a stored zip and every tar are git's bytes. `export-subst` leaves `%N` as it stands, as git does, and refuses `%(describe)`, relative and human dates, wrapping and padding by name; colour is written only where a `%C(always,...)` asks, as git's.
 - **No interactive `clean`.**
 - **A hunk's function line by git's default rule.** In `patch.format` and `patch.range_diff` a `diff` driver's `funcname` does not reach the `@@` line, and in `patch.range_diff` its `textconv` does not reach the patch.
-- **`range-diff` over commits that are not merges, without colour.** `--diff-merges`, `--remerge-diff` and dual colour are not offered; the notes compared are `core.notesRef`'s (or `refs/notes/commits`), not `--notes=<ref>` or `notes.displayRef`, and no `git log` arguments follow the ranges.
-- **Ref listings write no colour.** A `%(color:...)` git accepts writes nothing, as git's does when it is not writing to a terminal, and `--column` is not offered.
+- **`range-diff` over commits that are not merges.** `--diff-merges` and `--remerge-diff` are not offered; the notes compared are `core.notesRef`'s (or `refs/notes/commits`), not `--notes=<ref>` or `notes.displayRef`, and no `git log` arguments follow the ranges.
+- **Ref listings in columns.** `--column` is not offered.
 - **`info/` is made by `init` with or without a template,** where git makes it only from one. A template's configuration keeps the spelling of a key `init` sets again, where git writes its own.
 - **A root process is root.** git takes a repository owned by the user `sudo` ran it for (`SUDO_UID`) as the current user's; this package reads no environment, so `OpenOptions.ownership` is where a caller says otherwise.
-- **No fsmonitor daemon.** `core.fsmonitor=true`, git's built-in daemon, is `error.FsmonitorDaemonUnsupported`; a hook and a program's own change source are asked as git asks the hook.
+- **git's fsmonitor daemon is asked, never started.** With `core.fsmonitor=true` and no daemon listening, every file is looked at and the index keeps `builtin:fake`, where git starts `git fsmonitor--daemon` first. A daemon git keeps outside the git directory, for a repository on a network volume with `fsmonitor.allowRemote`, is not found, and such a repository is looked at in full.
 - **fast-import does not check signatures, and fast-export does not anonymize.** git's `--signed-commits=*-if-invalid`, `rewrite-submodules-*` and `export-pack-edges` are refused by name; fast-export takes no path limit and no `--reencode=yes`.
 - **No `-s subtree` strategy name.** The `-X subtree` forms are read.
 
@@ -827,8 +847,9 @@ running it, and CI does that for `x86_64-linux-gnu`, `aarch64-linux-gnu`,
 One module, with [conduit](https://github.com/pedronaugusto/conduit) for
 running programs, [sweep](https://github.com/pedronaugusto/sweep) for git's globs,
 [parallax](https://github.com/pedronaugusto/parallax) for line diffs and merges,
-[warp](https://github.com/pedronaugusto/warp) for checksums and DEFLATE, and
-[airlock](https://github.com/pedronaugusto/airlock) for durable writes. Conduit carries its libc linkage on POSIX; Windows needs
+[warp](https://github.com/pedronaugusto/warp) for checksums and DEFLATE,
+[airlock](https://github.com/pedronaugusto/airlock) for durable writes, and
+[xenoglyph](https://github.com/pedronaugusto/xenoglyph) for the Unicode composition behind `core.precomposeUnicode`. Conduit carries its libc linkage on POSIX; Windows needs
 no C runtime. SHA-256 comes from `std.crypto`; SHA-1 is in the package.
 
 Fetching and pushing over HTTP and HTTPS, and Git LFS, take three more:
@@ -883,7 +904,8 @@ once with offset deltas, once with reference deltas, and once under SHA-256;
 `diff-tree` and `diff`, with the `@@` header checked at four context widths;
 `worktree list` before and after an add, a lock, a prune and a remove;
 clone, fetch and push against `git http-backend`, git's own ssh transport
-through a stand-in, and relic's upload-pack, with refs, reflogs,
+through a stand-in, relic's upload-pack and receive-pack (hooks, their
+quarantine and `receive.*` included) and relic's HTTP backend, with refs, reflogs,
 `.git/shallow` and `.promisor` files compared; merges, cherry-picks, rebases
 and rerere against the git that made the fixture, state files and reflogs
 included; `for-each-ref`, `branch` and `tag` listings under every atom, sort key and filter; `interpret-trailers` under every option and `trailer.*` rule, and `%(trailers)` in `log` and `for-each-ref`; `describe` (with `--contains`), `shortlog` and `check-mailmap`

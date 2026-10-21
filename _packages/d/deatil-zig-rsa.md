@@ -8,9 +8,9 @@ repository: https://github.com/deatil/zig-rsa
 keywords:
   - rsa
   - zig-rsa
-date: 2026-10-13
-updated_at: 2026-10-13T16:44:12+00:00
-last_sync: 2026-10-13T16:44:12Z
+date: 2026-10-21
+updated_at: 2026-10-21T13:21:13+00:00
+last_sync: 2026-10-21T13:21:13Z
 package_kind: library
 has_library: true
 has_binary: false

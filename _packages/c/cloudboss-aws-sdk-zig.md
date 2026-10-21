@@ -8,9 +8,9 @@ repository: https://github.com/cloudboss/aws-sdk-zig
 keywords:
   - aws
   - cloud
-date: 2026-06-28
-updated_at: 2026-06-28T19:32:52+00:00
-last_sync: 2026-06-28T19:32:52Z
+date: 2026-10-17
+updated_at: 2026-10-17T05:06:55+00:00
+last_sync: 2026-10-17T05:06:55Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -28,7 +28,7 @@ permalink: /packages/cloudboss/aws-sdk-zig/
 
 An AWS SDK for Zig, providing AWS service clients from [Smithy models](https://aws.amazon.com/blogs/aws/introducing-aws-api-models-and-publicly-available-resources-for-aws-api-definitions/), built using a Kotlin code generator.
 
-The latest changes require Zig 0.16.0 or later. The `zig-0.15` branch exists for Zig 0.15.x.
+The latest changes require Zig 0.17.0 or later. Branches exist for prior versions going back to 0.15.x.
 
 ## Available Services
 
@@ -112,7 +112,10 @@ Credentials are resolved automatically in this order:
 4. **ECS container credentials** -- Via `AWS_CONTAINER_CREDENTIALS_RELATIVE_URI`
 5. **EC2 Instance Metadata** -- IMDS v2
 
-Additional providers (SSO, process credentials, assume role) can be configured through AWS profiles.
+Additional providers (AWS login, SSO, process credentials, assume role) use AWS profiles.
+Profiles with `login_session` read the `aws login` cache and refresh credentials through AWS Sign-In.
+`AWS_LOGIN_CACHE_DIRECTORY` overrides the default `~/.aws/login/cache` directory.
+Run `aws login --profile <profile>` again if the login session expires.
 
 ## Endpoint Resolution
 
@@ -175,6 +178,12 @@ AWS_PROFILE=<profile> make test-integration-live SCENARIO=networking
 # Regenerate service code from Smithy models.
 make codegen
 ```
+
+Make targets keep Zig build and package caches under `_output/zig-cache` and `_output/zig-pkg`.
+For direct Zig commands, set `ZIG_LOCAL_PKG_DIR=_output/zig-pkg` to use the same package cache.
+
+Integration tests compile the selected scenarios before starting LocalStack or running setup.
+`SCENARIO_TIMEOUT_SECS` limits test execution to 30 seconds by default; compilation has no such limit.
 
 ## License
 
