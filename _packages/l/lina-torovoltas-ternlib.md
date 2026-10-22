@@ -8,9 +8,9 @@ repository: https://github.com/lina-torovoltas/TernLib
 keywords:
   - balanced-ternary
   - ternary-logic
-date: 2026-10-18
-updated_at: 2026-10-18T11:38:48+00:00
-last_sync: 2026-10-18T11:38:48Z
+date: 2026-10-22
+updated_at: 2026-10-22T13:08:07+00:00
+last_sync: 2026-10-22T13:08:07Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -25,9 +25,6 @@ permalink: /packages/lina-torovoltas/TernLib/
 ---
 
 # TernLib
-![Release](https://img.shields.io/badge/release-v0.1.0-0078D4)
-![Language](https://img.shields.io/badge/language%20-%20Zig-orange)
-![License](https://img.shields.io/github/license/lina-torovoltas/TernLib)
-![GitHub last commit](https://img.shields.io/github/last-commit/lina-torovoltas/TernLib)</br>
+![Release](https://img.shields.io/badge/release-v0.3.7-0078D4)![Language](https://img.shields.io/badge/language%20-%20Zig-orange)![License](https://img.shields.io/github/license/lina-torovoltas/TernLib)![GitHub last commit](https://img.shields.io/github/last-commit/lina-torovoltas/TernLib)</br>
 
 Library for Balanced Ternary Logic on Bit Planes

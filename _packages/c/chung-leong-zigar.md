@@ -9,6 +9,7 @@ keywords:
   - bunjs
   - electron
   - javascript
+  - no-ai-used
   - nodejs
   - nwjs
   - php
@@ -17,10 +18,10 @@ keywords:
   - rollup-plugin
   - wasm
   - webpack-plugin
-date: 2026-10-03
+date: 2026-10-22
 category: systems
-updated_at: 2026-10-03T13:34:08+00:00
-last_sync: 2026-10-03T13:34:08Z
+updated_at: 2026-10-22T14:43:34+00:00
+last_sync: 2026-10-22T14:43:34Z
 package_kind: library
 has_library: false
 has_binary: false
@@ -58,8 +59,8 @@ and tutorials.
 ## Versioning
 
 The major and minor version numbers of Zigar correspond to the version of the Zig compiler
-it's designed for. The current version is 0.16.0. It works with Zig 0.16.0. The 0.17.0 alpha 
-version is designed to work with master (downloaded on Sept. 8 2026).
+it's designed for. The current version is 0.17.0. It works with Zig 0.17.0. Use version 0.16.0 
+if you're still using that version of Zig. It's functionally identical.
 
 ## Technical support
 

@@ -13,9 +13,9 @@ keywords:
   - r5rs
   - r7rs-small
   - scheme
-date: 2026-09-07
-updated_at: 2026-09-07T07:14:26+00:00
-last_sync: 2026-09-07T07:14:26Z
+date: 2026-10-20
+updated_at: 2026-10-20T22:35:16+00:00
+last_sync: 2026-10-20T22:35:16Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -38,10 +38,10 @@ permalink: /packages/Element0Lang/element-0/
 <h2>Element 0</h2>
 
 [![Tests](https://img.shields.io/github/actions/workflow/status/Element0Lang/element-0/tests.yml?label=tests&style=flat&labelColor=282c34&logo=github)](https://github.com/Element0Lang/element-0/actions/workflows/tests.yml)
-[![Docs](https://img.shields.io/badge/docs-read-blue?style=flat&labelColor=282c34&logo=read-the-docs)](https://Element0Lang.github.io/element-0/)
-[![Examples](https://img.shields.io/badge/examples-view-green?style=flat&labelColor=282c34&logo=zig)](https://github.com/Element0Lang/element-0/tree/main/examples)
+[![Examples](https://img.shields.io/badge/examples-view-507ec6?style=flat&labelColor=282c34&logo=zig)](https://github.com/Element0Lang/element-0/tree/main/examples)
+[![Docs](https://img.shields.io/badge/docs-read-507ec6?style=flat&labelColor=282c34&logo=read-the-docs)](https://Element0Lang.github.io/element-0/)
 [![License](https://img.shields.io/badge/license-Apache--2.0-007ec6?label=license&style=flat&labelColor=282c34&logo=open-source-initiative)](https://github.com/Element0Lang/element-0/blob/main/LICENSE)
-[![Zig](https://img.shields.io/badge/zig-0.16.0-F7A41D?style=flat&labelColor=282c34&logo=zig)](https://ziglang.org/download/)
+[![Zig](https://img.shields.io/badge/zig-0.17.0-F7A41D?style=flat&labelColor=282c34&logo=zig)](https://ziglang.org/download/)
 [![Release](https://img.shields.io/github/release/Element0Lang/element-0.svg?label=release&style=flat&labelColor=282c34&logo=github)](https://github.com/Element0Lang/element-0/releases/latest)
 
 A small embeddable Lisp for the Zig ecosystem λ
@@ -221,8 +221,6 @@ Result of (* 10 5) is: 50
 Result of (zig-mul 7 6) is: 42.0
 ```
 
-The result is `42.0` rather than `42` because `zig_multiply` returns an `f64`, which becomes an inexact number.
-
 ##### Restricting What a Script Can Do
 
 `Interpreter.init` takes a `SandboxFlags` value that selects which built-in capabilities the script can reach.
@@ -267,4 +265,3 @@ Element 0 is licensed under the Apache License, Version 2.0 (see [LICENSE](LICEN
 * [Bestline](https://github.com/jart/bestline) is used for the REPL's line editing and history features.
 * [Chibi-Scheme](https://github.com/ashinn/chibi-scheme) R7RS test suite is used for conformance testing.
 * [Chilli](https://github.com/CogitatorTech/chilli) is used for the CLI.
-* [BDWGC](https://github.com/bdwgc/bdwgc) is used for the garbage collector.

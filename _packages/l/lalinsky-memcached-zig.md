@@ -9,10 +9,10 @@ keywords:
   - async
   - memcached
   - memcached-client
-date: 2026-05-14
+date: 2026-10-15
 category: networking
-updated_at: 2026-05-14T11:34:06+00:00
-last_sync: 2026-05-14T11:34:06Z
+updated_at: 2026-10-15T08:02:50+00:00
+last_sync: 2026-10-15T08:02:50Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -29,6 +29,8 @@ permalink: /packages/lalinsky/memcached.zig/
 # memcached.zig
 
 A memcached client library for Zig, built on `std.Io` for async I/O. Uses the modern [meta protocol](https://docs.memcached.org/protocols/meta/) for efficient communication.
+
+Works with Zig 0.16 and 0.17.
 
 ## Features
 

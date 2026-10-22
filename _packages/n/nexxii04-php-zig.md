@@ -8,9 +8,9 @@ repository: https://github.com/nexxii04/php-zig
 keywords:
   - php
   - php-extension
-date: 2026-10-01
-updated_at: 2026-10-01T20:12:56+00:00
-last_sync: 2026-10-01T20:12:56Z
+date: 2026-10-22
+updated_at: 2026-10-22T15:01:50+00:00
+last_sync: 2026-10-22T15:01:50Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -28,7 +28,7 @@ permalink: /packages/nexxii04/php-zig/
 
 A Zig library for building PHP extensions. Provides cross-platform bindings and helpers for PHP 8.0 internals without requiring PHP headers.
 
-> **Note:** This library has been tested exclusively with **PHP 8.0 ZTS** (Thread Safe) on Linux and Windows x86_64. NTS builds and other PHP versions have not been tested and may require adjustments.
+> **Note:** The bindings target **PHP 8.4** by default. Pass `php_abi = "php80"` to build for **PHP 8.0 ZTS**, which is the combination exercised by the test extensions. NTS builds are untested.
 
 ## Requirements
 
@@ -93,6 +93,26 @@ pub fn build(b: *std.Build) void {
     b.installArtifact(lib);
 }
 ```
+
+## PHP ABI
+
+The `php_abi` option selects the module API the bindings compile against:
+
+| Value             | PHP | Module API |
+| ----------------- | --- | ---------- |
+| `php84` (default) | 8.4 | `20240924` |
+| `php80`           | 8.0 | `20200930` |
+
+```zig
+const php_dep = b.dependency("php-zig", .{
+    .target = target,
+    .optimize = optimize,
+    .php_abi = "php80",
+});
+```
+
+It changes `BUILD_ID`, `ZEND_API` and the `zend_function_entry` layout; a module
+built for one API will not load in the other.
 
 ## Quick Start
 
@@ -401,9 +421,9 @@ binaries available — the same ones used for development, from
 [PHP-Binaries](https://github.com/Benedikt05/PHP-Binaries) (BetterAltay's PHP 8.0
 builds). Place them in the repo root in a folder named after your platform:
 
-| Platform | Repo-root folder | Expected layout inside                        |
-| -------- | ---------------- | --------------------------------------------- |
-| Linux    | `linux-bin/`     | `linux-bin/php7/bin/php` (8.0.13 ZTS binary)  |
+| Platform | Repo-root folder | Expected layout inside                                      |
+| -------- | ---------------- | ----------------------------------------------------------- |
+| Linux    | `linux-bin/`     | `linux-bin/php7/bin/php` (8.0.13 ZTS binary)                |
 | Windows  | `win-bin/`       | `win-bin/php/` — the dev pack (`php.exe`, `dev/php8ts.lib`) |
 
 Then run:
