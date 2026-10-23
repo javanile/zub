@@ -12,9 +12,9 @@ keywords:
   - polyglot
   - rust
   - zeromq
-date: 2026-10-22
-updated_at: 2026-10-22T13:25:25+00:00
-last_sync: 2026-10-22T13:25:25Z
+date: 2026-10-23
+updated_at: 2026-10-23T14:28:38+00:00
+last_sync: 2026-10-23T14:28:38Z
 package_kind: library
 has_library: false
 has_binary: false
@@ -79,8 +79,9 @@ The application can await `bind`, `connect`, `send`, and `recv` on any runtime
 like Tokio or Compio. OMQ handles the network on its own background IO threads.
 Port `0` selects a free TCP port, returned by `bind()`.
 
-More examples in [examples/zguide/](examples/zguide/), a port of the
-ZeroMQ Guide patterns to OMQ.
+New to ZeroMQ? Start with [GETTING_STARTED.md](GETTING_STARTED.md). More
+examples in [examples/zguide/](examples/zguide/), a port of the ZeroMQ Guide
+patterns to OMQ.
 
 ## Performance
 
@@ -214,10 +215,11 @@ Language bindings:
 - [COMPARISONS.md](COMPARISONS.md): cross-implementation comparison charts.
 - [PROTOCOL_COMPARISONS.md][other-protocol-comparisons]: throughput and
   request/reply-like latency against other messaging and RPC protocols.
-- [BENCHMARKS_COMPRESSION.md](BENCHMARKS_COMPRESSION.md): lz4+tcp
-  throughput on bandwidth-limited links.
-- [doc/architecture.md](doc/architecture.md): architecture and tokio
-  backend internals.
+- [BENCHMARKS_COMPRESSION.md](BENCHMARKS_COMPRESSION.md): LZ4 and Zstd
+  transport throughput on bandwidth-limited links.
+- [doc/architecture.md](doc/architecture.md): components, threads, and
+  message paths.
+- [doc/bindings.md](doc/bindings.md): C and language bindings.
 - [doc/libzmq/semantics.md](doc/libzmq/semantics.md): exact compatibility
   notes for no-peer sends, linger, and HWM.
 - [doc/lz4-rfc.md](doc/lz4-rfc.md): LZ4 compression transport wire

@@ -13,10 +13,10 @@ keywords:
   - svg
   - tvg
   - vector-graphics
-date: 2026-07-10
+date: 2026-10-14
 category: game-development
-updated_at: 2026-07-10T21:42:01+00:00
-last_sync: 2026-07-10T21:42:01Z
+updated_at: 2026-10-14T21:06:28+00:00
+last_sync: 2026-10-14T21:06:28Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -32,7 +32,7 @@ permalink: /packages/nat3Github/zig-lib-svg2tvg/
 
 # svg2tvg - convert svg to tvg and render tvg to image!
 
-- written in zig 0.16.0
+- written in zig 0.17.0 (last zig 0.16.0 version: commit 2c72af8)
 - dependency name: svg2tvg, module name: svg2tvg
 
 ## status / background

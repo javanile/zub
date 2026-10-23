@@ -6,9 +6,9 @@ author: allyourcodebase
 author_github: allyourcodebase
 repository: https://github.com/allyourcodebase/kcov
 keywords:
-date: 2026-06-05
-updated_at: 2026-06-05T16:09:09+00:00
-last_sync: 2026-06-05T16:09:09Z
+date: 2026-10-14
+updated_at: 2026-10-14T21:28:51+00:00
+last_sync: 2026-10-14T21:28:51Z
 package_kind: hybrid
 has_library: true
 has_binary: true

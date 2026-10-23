@@ -6,9 +6,9 @@ author: allyourcodebase
 author_github: allyourcodebase
 repository: https://github.com/allyourcodebase/grpc
 keywords:
-date: 2026-10-16
-updated_at: 2026-10-16T14:51:46+00:00
-last_sync: 2026-10-16T14:51:46Z
+date: 2026-10-23
+updated_at: 2026-10-23T14:53:30+00:00
+last_sync: 2026-10-23T14:53:30Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -34,7 +34,7 @@ permalink: /packages/allyourcodebase/grpc/
 | Refname  | libGRPC version         | Core version | Zig `0.18-dev` | Zig `0.17.x` | Zig `0.16.x` | Zig `0.15.x` |
 |:---------|:------------------------|-------------:|:--------------:|:------------:|:------------:|:------------:|
 | `master` | `v1.85.0-pre1` "googol" |     `58.0.0` | ✅             | ✅           | ✅           | ✅           |
-| `1.84.0` | `v1.84.0` "gimbal"      |     `56.0.0` | :cross:        | ✅           | ✅           | ✅           |
+| `1.84.0` | `v1.84.0` "gimbal"      |     `56.0.0` | :x:            | ✅           | ✅           | ✅           |
 
 <details>
 <summary>Older versions</summary>

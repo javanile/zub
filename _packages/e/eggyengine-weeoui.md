@@ -12,16 +12,16 @@ keywords:
   - immediate-gui
   - immediate-mode
   - ui
-date: 2026-10-15
-updated_at: 2026-10-15T11:11:26+00:00
-last_sync: 2026-10-15T11:11:26Z
+date: 2026-10-23
+updated_at: 2026-10-23T13:23:40+00:00
+last_sync: 2026-10-23T13:23:40Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 1
-distributable_binary_count: 1
-multiple_binaries: false
+binary_count: 2
+distributable_binary_count: 2
+multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
 sync_source: zigistry
@@ -46,7 +46,7 @@ requires zig `0.16.0`
 
 to use this with the zig build system, import as so:
 ```bash
-zig fetch --save git+https://github.com/eggyengine/weeoui
+zig fetch --save git+https://github.com/eggyengine/weeoui#0.16.0
 ```
 
 and then in `build.zig`:

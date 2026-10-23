@@ -6,9 +6,9 @@ author: allyourcodebase
 author_github: allyourcodebase
 repository: https://github.com/allyourcodebase/binutils
 keywords:
-date: 2026-04-16
-updated_at: 2026-04-16T22:27:13+00:00
-last_sync: 2026-04-16T22:27:13Z
+date: 2026-10-14
+updated_at: 2026-10-14T21:14:05+00:00
+last_sync: 2026-10-14T21:14:05Z
 package_kind: hybrid
 has_library: true
 has_binary: true

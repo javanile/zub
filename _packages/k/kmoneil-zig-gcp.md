@@ -22,9 +22,9 @@ keywords:
   - rest-client
   - secret-manager
   - workload-identity-federation
-date: 2026-10-21
-updated_at: 2026-10-21T15:07:32+00:00
-last_sync: 2026-10-21T15:07:32Z
+date: 2026-10-23
+updated_at: 2026-10-23T14:50:49+00:00
+last_sync: 2026-10-23T14:50:49Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -101,15 +101,17 @@ Pub/Sub, Cloud Storage, Secret Manager and Firestore, with credentials that find
 | ⏰ | [`scheduler`](docs/scheduler/README.md) | Cloud Scheduler v1: the jobs a project schedules, with their state, target and last attempt; `Job.failing` for a health view; run now, pause and resume, each with its exact request built first for a confirmation; an in-memory Cloud Scheduler for your own tests | experimental |
 | 🏃 | [`run`](docs/run/README.md) | Cloud Run v2: services with their traffic and conditions, revisions with their images and readiness, across one service or a whole region; deploy markers for a trend chart; jobs and their executions, with each execution's status; run a job, cancel an execution and send all traffic to one revision (guarded by the service's etag), each with its exact request first; an in-memory Cloud Run for your own tests | experimental |
 | 🌊 | [`dataflow`](docs/dataflow/README.md) | Dataflow v1b3: every region's jobs in one call or one region at a time, with their states, stage states and error messages; `Job.terminal` and `Job.failing` for a pipelines widget; regions that did not answer named rather than silent; cancel a job or drain a streaming one, each with its exact request built first; an in-memory Dataflow for your own tests | experimental |
+| 🔎 | [`bigquery`](docs/bigquery/README.md) | BigQuery v2: datasets, tables with their schemas, and the job history, from any project (the public datasets included); queries dry-run for what they would bill, run under a bytes limit with a request id that makes them safe to retry, waited for and read a page at a time, every type decoded exactly (int64s, exact decimals, timestamps to the microsecond, intervals, ranges, arrays and records); cancels, each with its exact request built first; errors by reason and the editor's error position; an in-memory BigQuery for your own tests | experimental |
+| 🔁 | [`datatransfer`](docs/datatransfer/README.md) | BigQuery Data Transfer v1: scheduled queries and other transfer configs in every location, with their schedules, typed query and latest state; their runs and each run's messages; run a config now, its exact request built first and sent once; an in-memory Data Transfer for your own tests | experimental |
 | 🪪 | [`auth`](docs/auth.md) | Credentials for the other modules: the metadata server, gcloud's login, service account keys, workload identity federation and impersonation; signing on this machine or through IAM | beta |
 | ⚙️ | [`core`](docs/essentials.md) | What the service modules share: the HTTP transport, retries, `Diagnostics`, CRC-32C at the CPU's speed, IAM policies, the `TokenProvider` and `Signer` seams, and test fakes. Each service re-exports what its callers need. | beta |
 
 ```mermaid
 flowchart LR
-    app(["your program"]) --> pubsub & storage & secret_manager & firestore & logging & resource_manager & error_reporting & monitoring & kms & scheduler & run
+    app(["your program"]) --> pubsub & storage & secret_manager & firestore & logging & resource_manager & error_reporting & monitoring & kms & scheduler & run & dataflow & bigquery & datatransfer
     app --> auth
-    auth -. credentials .-> pubsub & storage & secret_manager & firestore & logging & resource_manager & error_reporting & monitoring & kms & scheduler & run
-    pubsub & storage & secret_manager & firestore & logging & resource_manager & error_reporting & monitoring & kms & auth --> core
+    auth -. credentials .-> pubsub & storage & secret_manager & firestore & logging & resource_manager & error_reporting & monitoring & kms & scheduler & run & dataflow & bigquery & datatransfer
+    pubsub & storage & secret_manager & firestore & logging & resource_manager & error_reporting & monitoring & kms & scheduler & run & dataflow & bigquery & datatransfer & auth --> core
 ```
 
 The service modules never import one another, or `auth`: credentials
@@ -122,7 +124,7 @@ Zig **0.17.0** (`minimum_zig_version` enforces it). For Zig 0.16.0, use
 v0.30.0, the last release that builds with it.
 
 ```sh
-zig fetch --save git+https://github.com/kmoneil/zig-gcp#v0.47.0
+zig fetch --save git+https://github.com/kmoneil/zig-gcp#v0.57.0
 ```
 
 ```zig

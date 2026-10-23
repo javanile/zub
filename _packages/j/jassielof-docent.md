@@ -21,10 +21,10 @@ keywords:
   - linter
   - static-analysis
   - style
-date: 2026-10-11
+date: 2026-10-15
 category: tooling
-updated_at: 2026-10-11T15:51:40+00:00
-last_sync: 2026-10-11T15:51:40Z
+updated_at: 2026-10-15T03:13:25+00:00
+last_sync: 2026-10-15T03:13:25Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -51,6 +51,10 @@ endif::[]
 :doctype: book
 :source-highlighter: rouge
 :stem: latexmath
+:linkcss:
+:!copycss:
+:stylesdir: https://jassielof.github.io/asciidoctor-styles/
+:stylesheet: article.css
 :repo: https://github.com/jassielof/docent/
 :default-repo-branch: main
 :repo-source: {repo}tree/{default-repo-branch}/

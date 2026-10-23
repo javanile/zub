@@ -9,9 +9,9 @@ keywords:
   - binding
   - wayland
   - wayland-protocol
-date: 2026-08-31
-updated_at: 2026-08-31T13:12:15+00:00
-last_sync: 2026-08-31T13:12:15Z
+date: 2026-10-14
+updated_at: 2026-10-14T20:54:38+00:00
+last_sync: 2026-10-14T20:54:38Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -39,7 +39,7 @@ However this repository has subtle differences for maintainability tasks:
 
 ## Dependencies
 
-The [Zig][4] part of this package requires the latest (0.16.0) or the master (0.17.0-dev) [Zig][4] release.
+The [Zig][4] part of this package requires the latest (0.17.0) or the master (0.18.0-dev) [Zig][4] release.
 
 For other dependencies see [the build.zig.zon](https://github.com/tiawl/wayland.zig/blob/stable/build.zig.zon)
 
