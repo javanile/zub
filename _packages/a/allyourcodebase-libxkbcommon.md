@@ -6,9 +6,9 @@ author: allyourcodebase
 author_github: allyourcodebase
 repository: https://github.com/allyourcodebase/libxkbcommon
 keywords:
-date: 2026-04-13
-updated_at: 2026-04-13T19:48:45+00:00
-last_sync: 2026-04-13T19:48:45Z
+date: 2026-10-14
+updated_at: 2026-10-14T20:37:23+00:00
+last_sync: 2026-10-14T20:37:23Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -35,7 +35,7 @@ First, update your `build.zig.zon`:
 ```
 # Initialize a `zig build` project if you haven't already
 zig init
-zig fetch --save git+https://github.com/allyourcodebase/libxkbcommon.git#1.13.1
+zig fetch --save git+https://github.com/allyourcodebase/libxkbcommon.git#1.13.2
 ```
 
 You can then import `libxkbcommon` in your `build.zig` with:
@@ -44,6 +44,10 @@ You can then import `libxkbcommon` in your `build.zig` with:
 const libxkbcommon_dependency = b.dependency("libxkbcommon", .{
     .target = target,
     .optimize = optimize,
+
+    // The system install prefix. Defaults to `/usr` which matches most distributions.
+    // This does not work on distributions that don't follow the Filesystem Hierarchy Standard (FHS) like NixOS.
+    // .@"install-prefix" = "/usr/local/",
 
     // Set the XKB config root.
     // Will default to "${INSTALL_PREFIX}/share/X11/xkb" i.e. `zig-out/share/X11/xkb`.
@@ -70,4 +74,4 @@ const libxkbcommon_dependency = b.dependency("libxkbcommon", .{
 your_exe.linkLibrary(libxkbcommon_dependency.artifact("libxkbcommon"));
 ```
 
-For more information, please refer to the [User-configuration](https://github.com/xkbcommon/libxkbcommon/blob/master/doc/user-configuration.md) docs of libxkbcommon.
+For more information, please refer to the [XKB data locations](https://github.com/xkbcommon/libxkbcommon/blob/master/doc/custom-configuration.md#xkb-data-locations) docs of libxkbcommon.

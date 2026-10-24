@@ -6,9 +6,12 @@ author: eggyengine
 author_github: eggyengine
 repository: https://github.com/eggyengine/vitellus
 keywords:
-date: 2026-09-01
-updated_at: 2026-09-01T00:55:25+00:00
-last_sync: 2026-09-01T00:55:25Z
+  - graphics
+  - graphics-library
+date: 2026-10-24
+category: game-development
+updated_at: 2026-10-24T11:16:43+00:00
+last_sync: 2026-10-24T11:16:43Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -26,12 +29,17 @@ permalink: /packages/eggyengine/vitellus/
 
 vitellus is a native-first rendering hardware interface written in Zig for building game engines and renderers on modern graphics APIs.
 
+guides and API reference: https://eggyengine.github.io/vitellus/
+
+> [!NOTE]
+> **Needed**: Metal developers or really anyone with a mac should consider contributing to this
+
 ## add to project
 requires zig `0.16.0`
 
 to use this with the zig build system, import as so:
 ```bash
-zig fetch --save git+https://github.com/eggyengine/vitellus
+zig fetch --save git+https://github.com/eggyengine/vitellus#0.16.0
 ```
 
 and then in `build.zig`:
@@ -40,18 +48,17 @@ const vit = b.dependency("vitellus", .{
     .target = target,
     .optimize = optimize,
 
-    .enable_dxc = true, // default is false
-    .enable_spirv-cross = true, // default is false
+    .enable_dxc = true, // default is false; adds the vitellus_dxc module
+    .enable_spirv_cross = true, // default is false
+    .enable_slang = true, // default is false; adds the vitellus_slangc module
 });
 
 exe.root_module.addImport("vitellus", vit.module("vitellus"));
+exe.root_module.addImport("vitellus_spirv", vit.module("vitellus_spirv")); // or vitellus_dxc, vitellus_slangc
+@import("vitellus").installLibraries(b, vit); // ships DXC and Slang beside your app
 ```
 
 and lastly in your library/executable:
 ```zig
 const vit = @import("vitellus");
 ```
-
-## documentation
-
-~~there is a tutorial available in [docs/tutorial](docs/tutorial/README.md) that might be worth checking out~~

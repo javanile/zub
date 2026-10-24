@@ -6,9 +6,9 @@ author: tiawl
 author_github: tiawl
 repository: https://github.com/tiawl/toolbox
 keywords:
-date: 2026-08-11
-updated_at: 2026-08-11T08:59:08+00:00
-last_sync: 2026-08-11T08:59:08Z
+date: 2026-10-14
+updated_at: 2026-10-14T20:40:45+00:00
+last_sync: 2026-10-14T20:40:45Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -32,7 +32,7 @@ This package was originally thought for the [tiawl/spaceporn][1] dependencies ch
 
 ## Dependencies
 
-The [Zig][2] part of this package requires the latest (0.16.0) or the master (0.17.0-dev) [Zig][2] release.
+The [Zig][2] part of this package requires the latest (0.17.0) or the master (0.18.0-dev) [Zig][2] release.
 
 ## License
 

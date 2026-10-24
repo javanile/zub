@@ -22,9 +22,9 @@ keywords:
   - rest-client
   - secret-manager
   - workload-identity-federation
-date: 2026-10-23
-updated_at: 2026-10-23T14:50:49+00:00
-last_sync: 2026-10-23T14:50:49Z
+date: 2026-10-24
+updated_at: 2026-10-24T13:35:07+00:00
+last_sync: 2026-10-24T13:35:07Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -124,7 +124,7 @@ Zig **0.17.0** (`minimum_zig_version` enforces it). For Zig 0.16.0, use
 v0.30.0, the last release that builds with it.
 
 ```sh
-zig fetch --save git+https://github.com/kmoneil/zig-gcp#v0.57.0
+zig fetch --save git+https://github.com/kmoneil/zig-gcp#v0.58.0
 ```
 
 ```zig

@@ -6,9 +6,9 @@ author: allyourcodebase
 author_github: allyourcodebase
 repository: https://github.com/allyourcodebase/wayland
 keywords:
-date: 2026-07-25
-updated_at: 2026-07-25T10:20:22+00:00
-last_sync: 2026-07-25T10:20:22Z
+date: 2026-10-14
+updated_at: 2026-10-14T20:34:05+00:00
+last_sync: 2026-10-14T20:34:05Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -35,7 +35,7 @@ First, update your `build.zig.zon`:
 ```
 # Initialize a `zig build` project if you haven't already
 zig init
-zig fetch --save git+https://github.com/allyourcodebase/wayland.git#1.24.0-4
+zig fetch --save git+https://github.com/allyourcodebase/wayland.git#1.26.0
 ```
 
 You can then import `wayland` in your `build.zig` with:

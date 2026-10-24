@@ -2,13 +2,13 @@
 title: glfw
 description: glfw ported to the zig build system
 license: MIT
-author: Techatrix
-author_github: Techatrix
-repository: https://github.com/Techatrix/glfw
+author: techatrix
+author_github: techatrix
+repository: https://github.com/techatrix/glfw
 keywords:
-date: 2026-04-25
-updated_at: 2026-04-25T11:36:29+00:00
-last_sync: 2026-04-25T11:36:29Z
+date: 2026-10-14
+updated_at: 2026-10-14T20:23:32+00:00
+last_sync: 2026-10-14T20:23:32Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -19,7 +19,7 @@ multiple_binaries: false
 is_sponsor: false
 sync_priority: normal
 sync_source: zigistry
-permalink: /packages/Techatrix/glfw/
+permalink: /packages/techatrix/glfw/
 ---
 
 [![CI](https://github.com/Techatrix/glfw/actions/workflows/ci.yaml/badge.svg)](https://github.com/Techatrix/glfw/actions)

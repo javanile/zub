@@ -12,9 +12,9 @@ keywords:
   - immediate-gui
   - immediate-mode
   - ui
-date: 2026-10-23
-updated_at: 2026-10-23T13:23:40+00:00
-last_sync: 2026-10-23T13:23:40Z
+date: 2026-10-24
+updated_at: 2026-10-24T11:16:46+00:00
+last_sync: 2026-10-24T11:16:46Z
 package_kind: hybrid
 has_library: true
 has_binary: true

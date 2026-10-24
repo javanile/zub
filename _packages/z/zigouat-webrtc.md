@@ -10,10 +10,10 @@ keywords:
   - media
   - video
   - webrtc
-date: 2026-10-22
+date: 2026-10-24
 category: game-development
-updated_at: 2026-10-22T13:23:37+00:00
-last_sync: 2026-10-22T13:23:37Z
+updated_at: 2026-10-24T11:00:54+00:00
+last_sync: 2026-10-24T11:00:54Z
 package_kind: library
 has_library: true
 has_binary: false

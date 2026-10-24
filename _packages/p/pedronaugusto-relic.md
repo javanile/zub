@@ -7,15 +7,15 @@ author_github: pedronaugusto
 repository: https://github.com/pedronaugusto/relic
 keywords:
   - git
-date: 2026-10-22
-updated_at: 2026-10-22T15:24:56+00:00
-last_sync: 2026-10-22T15:24:56Z
+date: 2026-10-24
+updated_at: 2026-10-24T13:36:55+00:00
+last_sync: 2026-10-24T13:36:55Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 14
-distributable_binary_count: 14
+binary_count: 15
+distributable_binary_count: 15
 multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
@@ -710,7 +710,7 @@ writes beside them, and `relic.refs.reftable.table` is the table format.
 | `commit` | Making a commit the way `git commit` does, its hooks in git's order. |
 | `commit.notes` | `Notes`, `add`, `append`, `copy`, `remove`, `prune`, `show`, `merge`, `mergeCommit`, `mergeAbort`, `formatNote`: `refs/notes/*` read and written as `git notes` does, git's fanout and every merge strategy included. |
 | `commit.todo` | Module within `commit`. |
-| `commit.branch` | `create`, `setUpstream` — `git branch <name> <start>` and `--set-upstream-to`: a branch made at a revision, tracking what `branch.autoSetupMerge` and `branch.autoSetupRebase` say. |
+| `commit.branch` | `create`, `setUpstream`, `deleteMerged` — `git branch <name> <start>`, `--set-upstream-to` and `--delete-merged`: a branch made at a revision, tracking what `branch.autoSetupMerge` and `branch.autoSetupRebase` say; the branches whose work their upstream holds, deleted as git 2.56 deletes them. |
 | `commit.rebase` | Module within `commit`. |
 | `commit.history` | `fixup`, `reword`, `split` — `git history`: one commit rewritten where it stands, its descendants replayed onto it and their branches moved. |
 | `commit.replay` | `replay` — `git replay`: commits made again in memory onto `--onto`, `--advance` or `--revert`, and the refs that pointed at them moved in one transaction. |
@@ -786,7 +786,7 @@ writes beside them, and `relic.refs.reftable.table` is the table format.
 | `archive.remote` | `remote` — `git upload-archive` and `git archive --remote`: the arguments as git's remote archiver reads them, the archive on the side band, git's words for each refusal. |
 | `pretty` | `formatCommit`, `Context`, `Decorations`, `Colors` — git's `--format` placeholders for one commit, the mailmap's names, decorations, notes, signatures, `%(trailers)` with every option and colour as `git log --color` writes it among them. |
 | `pretty.log` | `writeEntry`, `parse`, `configured`, `configuredAbbrevCommit`, `configuredShowSignature` — a log's entry for a commit in git's built-in formats (`raw`, `medium`, `short`, `full`, `fuller`, `oneline`) with its `commit` line, decorations, signatures and notes; the format by name, prefix, `pretty.<name>` alias or `format.pretty`. |
-| `pretty.refs` | `Listing`, `listRefs`, `listBranches`, `listTags`, `branchFormat`, `versioncmp` — `git for-each-ref`, `git branch --list` and `git tag --list` byte for byte: every `%(...)` atom git has for refs, `*` peeling, dates in every mode, `align` and `if` blocks, four quoting styles; `--sort` with version sort and `versionsort.suffix`, `--contains`, `--no-contains`, `--merged`, `--no-merged`, `--points-at`, `--exclude`, `--start-after`, `--include-root-refs`, `--count`, `--omit-empty`, `branch.sort`, `tag.sort`; `%(color:...)` and `git branch`'s `color.branch.<slot>`. |
+| `pretty.refs` | `Listing`, `listRefs`, `listBranches`, `listTags`, `branchFormat`, `versioncmp` — `git for-each-ref`, `git branch --list` and `git tag --list` byte for byte: every `%(...)` atom git has for refs, `*` peeling, dates in every mode, `align` and `if` blocks, four quoting styles; `--sort` with version sort and `versionsort.suffix`, `--contains`, `--no-contains`, `--merged`, `--no-merged`, `--forked`, `--points-at`, `--exclude`, `--start-after`, `--include-root-refs`, `--count`, `--omit-empty`, `branch.sort`, `tag.sort`; `%(color:...)` and `git branch`'s `color.branch.<slot>`. |
 | `pretty.shortlog` | `Shortlog.init`, `add`, `addCommit`, `write`, `configured`: `git shortlog` by author, committer, trailer or format, with `-s`, `-n`, `-e` and `-w`. |
 | `clean` | `clean` — `git clean`: `-n`, `-f`, `-ff`, `-d`, `-x`, `-X`, `-e`, pathspecs, repositories inside the tree left alone, git's lines. |
 | `fast` | git's fast-import stream. |
@@ -829,8 +829,9 @@ reread the affected refs before retrying.
 - **Commit, log and mail character sets: UTF-8, US-ASCII and ISO-8859-1.** A commit's `encoding`, `i18n.logOutputEncoding`, `i18n.commitEncoding` or a mail's `charset` naming another, which git converts through iconv, is refused by name.
 - **No Negotiate or NTLM** authentication, to a server or a proxy; refused by name. **No GSS-API (Kerberos) to a SOCKS5 proxy:** it is never offered, so a proxy that takes nothing else refuses every method and the fetch stops with `ProxyAuthenticationRequired`.
 - **LFS without tus.** The tus adapter is refused by name; custom transfer adapters run as git-lfs runs them.
-- **receive-pack without `proc-receive`, push certificates or `updateInstead`.** A ref under `receive.procReceiveRefs` fails as git fails it with no `proc-receive` hook, a signed push is not served, and `receive.denyCurrentBranch=updateInstead` refuses as `refuse` does; a received pack is always kept as a pack, where git under `receive.unpackLimit` writes loose objects.
 - **A promisor fetch's pack takes every `.gitmodules` and `.gitattributes` it lacks as promised,** where git asks whether a promisor pack names the blob. With nothing configured, a fetch still checks what it receives, at git's levels with `.`, `..` and `.git` in a tree refused (`fsck.baseline`), where git checks nothing; `fetch.fsckObjects=false` checks nothing.
+- **`repack --drop-filtered` drops promisor blobs only.** A blob the filter leaves out that no promisor remote has, one committed here, is still packed apart, where git 2.56 deletes it with the old packs and leaves the repository missing it.
+- **A fetch that takes packs by URI keeps none of them after.** git 2.56's fetch leaves its main pack's `.keep` when packfile URIs came (it records that lock for removal only when the fetch asked to keep the pack), so gc never repacks it; relic removes it as after any fetch. Nor does relic keep a pack of no objects, as git's fetch does when every object it asked for came by URI.
 - **No `git://` or dumb HTTP.** Refused by name. A remote helper is spoken to through `connect`, `fetch`, `import`, `push` and `export`; one with only `stateless-connect` or `get` cannot fetch here, `HelperCannotFetch`.
 - **No editor for a note.** Refused by name.
 - **`apply` with the index compares content where a stat differs.** git says "does not match index" until the index is refreshed; this reads the file and agrees when its content does.
@@ -869,7 +870,7 @@ running it, and CI does that for `x86_64-linux-gnu`, `aarch64-linux-gnu`,
 ## Built with
 
 One module, with [conduit](https://github.com/pedronaugusto/conduit) for
-running programs, [sweep](https://github.com/pedronaugusto/sweep) for git's globs,
+running programs, [reactor](https://github.com/pedronaugusto/reactor) for Unix sockets, [sweep](https://github.com/pedronaugusto/sweep) for git's globs,
 [parallax](https://github.com/pedronaugusto/parallax) for line diffs and merges,
 [warp](https://github.com/pedronaugusto/warp) for checksums and DEFLATE,
 [airlock](https://github.com/pedronaugusto/airlock) for durable writes, and
