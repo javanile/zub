@@ -6,9 +6,9 @@ author: pedronaugusto
 author_github: pedronaugusto
 repository: https://github.com/pedronaugusto/conduit
 keywords:
-date: 2026-10-21
-updated_at: 2026-10-21T14:05:20+00:00
-last_sync: 2026-10-21T14:05:20Z
+date: 2026-10-25
+updated_at: 2026-10-25T14:11:45+00:00
+last_sync: 2026-10-25T14:11:45Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -306,7 +306,8 @@ argument, environment and search-path arrays exist only for the spawn call.
 the bytes
 it collects and `environ` the map it returns; both say whose they are.
 `Child.exchange` allocates what `output` does, one call at a time, and copies
-none of its input.
+none of its input. `Child.exchangeInto` allocates nothing of its own: each read
+lands in the caller's writer's buffer, which grows only as that writer does.
 The descendant walks of POSIX signalling and `killRecorded` use the bounded
 workspace the kill section describes. Recorded
 cgroup handles use fixed storage and allocate nothing. `Orphans` keeps its
@@ -377,6 +378,7 @@ to read while a wait or Reaper runs.
 | `child.expect(buf)` | An `Expect` over both directions, or `null` if this process holds only one. |
 | `child.output(gpa, io, options)` | Run to the end and collect it: a cap (`max_bytes`, an `aegis.units.Bytes(usize)`), a timeout, a bounded drain, both streams read on their own tasks. |
 | `child.exchange(gpa, io, input, options)` | `output` with `input` written alongside and then closed, under one deadline over the input, the run, the reap and the drain. `input` is borrowed and never copied; input the child does not read is not an error; the allocator need not be thread-safe. |
+| `child.exchangeInto(io, input, sinks, options)` | `exchange` with the streams written into the caller's two `*std.Io.Writer`s (`Sinks`), each read straight into its writer's buffer, and how the run ended (`Ended`) returned; `exchange` is this into growing writers. A writer over storage wiped when let go keeps a secret the child prints out of any other memory. Each writer takes at most `max_bytes` and is flushed at the end; one that fails is not written again, its stream is still read to the end, and `error.WriteFailed` follows the run. |
 | `child.wait(io)` | Blocks on the child's exit handle, then reaps when signalling has let go of its identity. |
 | `child.result()` | The synchronized result without reaping: `null` before publication, the term afterwards, or `ReapedElsewhere` if the status was taken outside conduit. |
 | `child.tryWait(io)` | Never blocks. `null` while the child runs. |
@@ -659,7 +661,7 @@ for that CLI to read.
 ### `Expect` — a conversation with a child
 
 Its fields are private; create it with `init` and observe bytes through
-`pending`, `until`, `untilAny` and `bytes`. A lifetime permits one successful
+`pending`, `until`, `untilAny`, `untilMatch` and `bytes`. A lifetime permits one successful
 start; a start after `stop` is `AlreadyStarted`, even if no reader ran.
 
 | | |
@@ -668,6 +670,7 @@ start; a start after `stop` is `AlreadyStarted`, even if no reader ran.
 | `expect.start(io)`, `expect.stop(io)`, `expect.deinit(io)` | The one reading task, which runs between calls. `stop` ends it for good and can be called again; `deinit` stops and leaves the value undefined. A second `start` is `error.AlreadyStarted`. |
 | `expect.until(io, pattern, timeout)` | Waits for a literal byte pattern and consumes through it: `Match.before` and `Match.found`. |
 | `expect.untilAny(io, patterns, timeout)` | Waits for any of several. The earliest match wins, whatever order they were listed in; `Match.index` says which, and the ones that lost stay pending. |
+| `expect.untilMatch(io, matcher, timeout)` | Waits for a caller's `Matcher` (a regex, a glob, a prompt with a counter in it) to find its match, and consumes through it: the wait `until` and `untilAny` run on. The matcher is asked for the earliest match each time more arrives, told when the stream has ended, and with a `window` shown only that much of the tail. |
 | `expect.bytes(io, count, timeout)` | Waits for a count of bytes and consumes them. |
 | `expect.send(io, reply)` | Writes the reply, as if it had been typed at the child's terminal. |
 | `expect.pending(io)`, `expect.discard(io)` | What has arrived and no pattern has matched; and forgetting it. |
@@ -859,7 +862,7 @@ library; `conduit` itself imports it.
 - **No terminal emulation.** `Proxy` moves bytes; nothing here parses an escape sequence or keeps a screen.
 - **No command splitting.** `argv` is a list, and turning one string into several is a shell's grammar.
 - **No job control.** `foregroundGroup` answers the question; `tcsetpgrp` is the caller's call to make with the group id saved from `child.processId()` for a detached child.
-- **No pattern language.** `Expect` matches byte strings.
+- **No pattern language of its own.** `Expect` matches byte strings, and a caller's language comes in as a `Matcher` to `untilMatch`.
 - **No pre-exec callback.** Only async-signal-safe calls are legal there, so the uses people reach for one for are named options instead.
 - **No `.bat` or `.cmd`.** `spawn` returns `error.UnsupportedBatchFile`, because the command interpreter re-parses their command line with rules no serialisation survives.
 

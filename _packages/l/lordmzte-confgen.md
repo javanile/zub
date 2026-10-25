@@ -8,9 +8,9 @@ repository: https://github.com/LordMZTE/confgen
 keywords:
   - lua
   - template-engine
-date: 2026-10-22
-updated_at: 2026-10-22T15:16:17+00:00
-last_sync: 2026-10-22T15:16:17Z
+date: 2026-10-23
+updated_at: 2026-10-23T12:00:18+00:00
+last_sync: 2026-10-23T12:00:18Z
 package_kind: hybrid
 has_library: true
 has_binary: true

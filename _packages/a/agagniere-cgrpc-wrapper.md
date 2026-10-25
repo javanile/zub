@@ -6,9 +6,9 @@ author: agagniere
 author_github: agagniere
 repository: https://github.com/agagniere/cgrpc_wrapper
 keywords:
-date: 2026-10-18
-updated_at: 2026-10-18T21:32:21+00:00
-last_sync: 2026-10-18T21:32:21Z
+date: 2026-10-23
+updated_at: 2026-10-23T15:58:40+00:00
+last_sync: 2026-10-23T15:58:40Z
 package_kind: library
 has_library: true
 has_binary: false

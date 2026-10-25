@@ -21,10 +21,10 @@ keywords:
   - wav
   - waveform
   - waveform-generator
-date: 2026-08-08
+date: 2026-10-23
 category: systems
-updated_at: 2026-08-08T12:26:15+00:00
-last_sync: 2026-08-08T12:26:15Z
+updated_at: 2026-10-23T11:37:45+00:00
+last_sync: 2026-10-23T11:37:45Z
 package_kind: binary
 has_library: false
 has_binary: true
@@ -107,7 +107,7 @@ permalink: /packages/orhun/linuxwave/
 
 #### Prerequisites
 
-- [Zig](https://ziglang.org/download/) (`0.16`)
+- [Zig](https://ziglang.org/download/) (`0.17`)
 
 #### Instructions
 

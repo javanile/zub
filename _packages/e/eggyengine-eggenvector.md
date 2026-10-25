@@ -6,9 +6,9 @@ author: eggyengine
 author_github: eggyengine
 repository: https://github.com/eggyengine/eggenvector
 keywords:
-date: 2026-09-29
-updated_at: 2026-09-29T11:15:47+00:00
-last_sync: 2026-09-29T11:15:47Z
+date: 2026-10-23
+updated_at: 2026-10-23T12:33:56+00:00
+last_sync: 2026-10-23T12:33:56Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -48,7 +48,7 @@ requires zig `0.16.0` (have not tested for other zig versions, however likely wo
 
 to use this with the zig build system, import as so:
 ```bash
-zig fetch --save git+https://github.com/eggyengine/eggenvector
+zig fetch --save git+https://github.com/eggyengine/eggenvector#0.16.0
 ```
 
 and then in `build.zig`:

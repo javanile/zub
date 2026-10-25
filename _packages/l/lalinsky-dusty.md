@@ -13,10 +13,10 @@ keywords:
   - websocket
   - websocket-client
   - websocket-server
-date: 2026-10-20
+date: 2026-10-25
 category: networking
-updated_at: 2026-10-20T14:51:16+00:00
-last_sync: 2026-10-20T14:51:16Z
+updated_at: 2026-10-25T14:24:47+00:00
+last_sync: 2026-10-25T14:24:47Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -127,7 +127,10 @@ can serve HTTPS on 443 and plain HTTP on 80 with the same router:
 
 ```zig
 .listeners = &.{
-    .{ .address = addr443, .tls = .{ .cert_path = "server.pem", .key_path = "server.key" } },
+    .{ .address = addr443, .tls = .{ .certificate = .{ .file = .{
+        .cert_path = "server.pem",
+        .key_path = "server.key",
+    } } } },
     .{ .address = addr80 },
 },
 ```
@@ -301,15 +304,17 @@ overrides that, and adds a client certificate for servers that require mutual TL
 ```zig
 var client = http.Client.init(init.gpa, init.io, .{
     .tls = .{
-        // .system (default), .{ .file = ... }, .{ .dir = ... }, or .none
+        // .system (default), .{ .file = ... }, .{ .dir = ... }, .{ .bytes = ... }, or .none
         .ca = .{ .file = .{ .path = "ca.pem" } },
         // Presented when the server asks the client to authenticate itself.
-        .client_certificate = .{ .cert_path = "client.pem", .key_path = "client.key" },
+        .client_certificate = .{ .file = .{ .cert_path = "client.pem", .key_path = "client.key" } },
     },
 });
 ```
 
 The key must be an unencrypted PKCS#8 (`BEGIN PRIVATE KEY`) or SEC1 (`BEGIN EC PRIVATE KEY`) PEM file.
+A certificate and key already in memory, such as from a secret store, go in as
+`.{ .bytes = .{ .cert = cert_pem, .key = key_pem } }`, here and on a listener.
 
 These settings apply to every connection a client makes; connections are pooled and reused
 across requests, so they cannot be varied per request. Use a separate `Client` per identity.
@@ -321,8 +326,7 @@ makes it ask connecting clients for a certificate:
 .listeners = &.{.{
     .address = addr,
     .tls = .{
-        .cert_path = "server.pem",
-        .key_path = "server.key",
+        .certificate = .{ .file = .{ .cert_path = "server.pem", .key_path = "server.key" } },
         .client_auth = .{
             .ca = .{ .file = .{ .path = "client-ca.pem" } },
             // .require (default) rejects a client that sends no certificate;
@@ -352,7 +356,7 @@ release their connection slots:
 - `timeout.request` defaults to 30 seconds. It covers an entire request,
   including handler work and writing the response; a TLS handshake gets its own
   deadline of the same length.
-- `timeout.keepalive` defaults to 60 seconds between requests on a persistent
+- `timeout.keepalive` defaults to 30 seconds between requests on a persistent
   connection.
 - `timeout.shutdown` defaults to 30 seconds for a graceful shutdown drain.
 

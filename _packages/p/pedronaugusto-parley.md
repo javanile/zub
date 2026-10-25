@@ -8,9 +8,9 @@ repository: https://github.com/pedronaugusto/parley
 keywords:
   - mcp
   - model-context-protocol
-date: 2026-10-17
-updated_at: 2026-10-17T13:10:07+00:00
-last_sync: 2026-10-17T13:10:07Z
+date: 2026-10-25
+updated_at: 2026-10-25T12:40:26+00:00
+last_sync: 2026-10-25T12:40:26Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -33,8 +33,8 @@ which Codex and Claude Code speak today) are served above the core, from the
 same handlers. Transports: stdio, and Streamable HTTP on
 [uplink](https://github.com/pedronaugusto/uplink).
 
-Work in progress toward the public cut: the server, the client and the tasks
-extension are built; authorization is not yet.
+Work in progress toward the public cut: the server, the client, the tasks
+extension and authorization are built.
 
 ## Install
 
@@ -46,7 +46,9 @@ std-only library of checked types); `parley.http` adds uplink, which is fetched
 only when it is built: a server that speaks stdio alone passes `.http = false`
 to `b.dependency` and fetches no uplink. `parley.process`, a client launching a
 server as a child process, adds [conduit](https://github.com/pedronaugusto/conduit)
-the same way (`.process = false` leaves it out).
+the same way (`.process = false` leaves it out), and `parley.oauth`,
+authorization over HTTP, adds [clearance](https://github.com/pedronaugusto/clearance)
+(`.oauth = false` leaves it out).
 
 ## Usage
 
@@ -153,7 +155,7 @@ const uplink = @import("uplink");
 // `connect` learns which revision it speaks.
 var web: uplink.Client = .init(gpa, .{});
 defer web.deinit(io);
-var remote: http.Transport = .init(gpa, &web, url);
+var remote: http.Transport = .init(gpa, &web, url, .{});
 defer remote.deinit();
 defer remote.close(io);
 var client: parley.Client = .init(gpa, remote.transport(), .{ .info = .{ .name = "weather-app", .version = "1.0.0" } });
@@ -239,10 +241,17 @@ it, and to every session's stream. A change never queues: each stream keeps a
 flag per list and a bit per watched resource, so a slow reader costs the same
 however many changes it misses.
 
+**Limits.** One message limit, `Server.Options.limits.message` (16 MiB by
+default; `Client.Options.limits.message` on the client), bounds every message
+either way: what a transport reads (a longer line or body is refused unread),
+every read of a value within it (strand's limits grow with it, so a raised
+limit is never undercut by a default inside it), and every answer written (one
+past it is answered as an internal error instead).
+
 **stdio.** One message a line. Each request is a task of its own: a long tool
 holds up nothing behind it, and `notifications/cancelled` cancels its task,
-after which nothing more is written for it. A line past `max_message` is
-refused and the next one read. At the end of input the requests read are
+after which nothing more is written for it. A line past the message limit
+is refused and the next one read. At the end of input the requests read are
 answered and the streams ended.
 
 **Streamable HTTP.** One endpoint, POST. A request's `Host` and `Origin` must
@@ -253,8 +262,12 @@ is JSON, or an event stream once the request has something to say before its
 result; a `subscriptions/listen` stream is kept open by a comment every
 `keep_alive`. A client that closes its stream cancels the request at once:
 its handler runs beside a wait for the client to leave, and sees
-`error.Canceled`. A session's GET stream and DELETE are served for the
-session revisions, where a disconnect is not a cancellation.
+`error.Canceled`. A stream ends by an explicit act, never by canceling its
+task: a `subscriptions/listen` stream when its client cancels it or leaves, or
+stdio's input ends; a session's stream when the session is deleted or its
+input ends; every stream when the server closes, answered `complete`. A
+session's GET stream and DELETE are served for the session revisions, where a
+disconnect is not a cancellation.
 
 **The client.** `Client.connect` asks `server/discover` at 2026-07-28 (or the
 versions `Options.revisions` names): an answer, or an error that names the
@@ -274,6 +287,29 @@ to no request, and a session stream the server closes is reopened with
 is polled to its end, its input given as it asks, and returned as if answered
 at once (`Options.tasks`).
 
+**Authorization.** `parley.oauth.Authorizer` is a client's side, given to
+the HTTP transport as its `authorization`. The first request goes without a
+token; a 401 (or a 403 asking for more scope) starts what MCP lays out: the
+resource's metadata from the challenge's `resource_metadata` or its
+well-known locations (its `resource` held to the server's URL), its
+authorization server's metadata, the client as that server knows it
+(registered beforehand, a client ID metadata document's URL where the server
+takes one, else registered now as a native or web application), the scope
+(what the challenge names, else what the resource lists, what was granted
+before kept, `offline_access` where the server lists it), then tokens: kept
+ones, a refresh, or a sign-in with PKCE naming the resource, the application
+opening the URL. Without a user at the keyboard: the client's own
+credentials; MCP's enterprise-managed authorization, the user's token at the
+enterprise's identity provider exchanged there for an ID-JAG that the
+authorization server redeems; or a workload's identity token from its
+platform as the grant. The request is sent again, once. A server that changes is a
+new start: nothing the old one issued goes to it. `parley.oauth.Guard` is a
+server's side, an endpoint's `access`: every request held to a bearer token
+for this resource (a JWT checked against the authorization server's keys, or
+introspection) with the scopes it needs, a 401 or 403 naming where the
+resource's metadata is, which `ResourceMetadata` serves. The OAuth itself is
+clearance's.
+
 ## Scope
 
 MCP as the specification has it, in the revisions in use: 2026-07-28, and
@@ -288,6 +324,8 @@ dereferencing a schema's `$ref` over the network.
   Schemas of Zig types.
 - [aegis](https://github.com/pedronaugusto/aegis): checked types.
 - [uplink](https://github.com/pedronaugusto/uplink) (`parley.http`): HTTP.
+- [clearance](https://github.com/pedronaugusto/clearance) (`parley.oauth`):
+  OAuth 2.1 and JOSE.
 - [shakedown](https://github.com/pedronaugusto/shakedown) (tests only):
   properties, fuzzing and benchmarks.
 - [preflight](https://github.com/pedronaugusto/preflight) (development only):
@@ -295,7 +333,8 @@ dereferencing a schema's `$ref` over the network.
 
 ## Testing
 
-`bay test` runs both modules' suites, the example and each benchmark once;
+`bay test` runs the modules' suites (authorization end to end against an
+authorization server in the test), the example and each benchmark once;
 `bay properties` the properties alone (any bytes a client sends over stdio,
 every sealed state changed), which the fuzzer runs. The suite reads what
 Claude Code 2.1.302 and Codex 0.160.0 send to a stdio server, captured from
@@ -314,8 +353,8 @@ over HTTP, by hand (`bay conformance-server -- --port 3000`, then `npx
 |---|---|---|---|
 | 2025-11-25 | server | 30 | 30 |
 | 2026-07-28 | server | 37 | 37, and the 10 tasks scenarios (not scored) |
-| 2025-11-25 | client | 18 | the 4 without authorization; the 14 `auth/*` wait on OAuth |
-| 2026-07-28 | client | 32 | the 7 without authorization; the 25 `auth/*` wait on OAuth |
+| 2025-11-25 | client | 18 | 18, and the client credentials, enterprise-managed authorization and workload identity scenarios (not scored) |
+| 2026-07-28 | client | 32 | 32, and the client credentials, enterprise-managed authorization and workload identity scenarios (not scored) |
 
 ## Licence
 

@@ -6,9 +6,9 @@ author: pedronaugusto
 author_github: pedronaugusto
 repository: https://github.com/pedronaugusto/morse
 keywords:
-date: 2026-10-12
-updated_at: 2026-10-12T19:39:47+00:00
-last_sync: 2026-10-12T19:39:47Z
+date: 2026-10-25
+updated_at: 2026-10-25T12:46:32+00:00
+last_sync: 2026-10-25T12:46:32Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -26,7 +26,7 @@ permalink: /packages/pedronaugusto/morse/
 
 morse writes terminal control sequences and decodes terminal input in Zig. Typed writers
 and parsers cover screen commands, keys, mouse reports and query replies, including
-input split across reads. The Zig 0.17 changes are work in progress and unreleased.
+input split across reads.
 
 ## Install
 
@@ -182,8 +182,11 @@ migration use the old tab-separated output and cannot be compared by that comman
 the Debug suite on `ubuntu-latest`; the merge tier, on the candidate for `main`, adds
 the Debug suite on `macos-latest` and `windows-latest`; the release tier, before a cut,
 runs tests and examples in Debug and ReleaseSafe on all three, plus ReleaseFast on Ubuntu,
-and compiles ReleaseSmall on Ubuntu. Source jobs check formatting, cast reasons and
-the clock policy. There is no ThreadSanitizer job.
+compiles ReleaseSmall on Ubuntu, and runs the hardened profile: `bay hardened` (the suite
+with safety on and `std.testing.allocator` on shakedown's quarantine), `bay hardened-fuzz`
+(the properties under Zig's fuzzer) and, on x86_64 or aarch64 Linux, `bay hardened-tsan`
+(the suite under ThreadSanitizer). Source jobs check formatting, cast reasons and the clock
+policy.
 
 Compile-only jobs cover `x86_64-linux-gnu`, `aarch64-linux-gnu`, `x86_64-windows-gnu`,
 `aarch64-windows-gnu`, `x86_64-macos` and `aarch64-macos`. Separate Ubuntu and macOS

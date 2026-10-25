@@ -6,9 +6,9 @@ author: eggyengine
 author_github: eggyengine
 repository: https://github.com/eggyengine/humpty
 keywords:
-date: 2026-10-15
-updated_at: 2026-10-15T05:56:10+00:00
-last_sync: 2026-10-15T05:56:10Z
+date: 2026-10-25
+updated_at: 2026-10-25T13:57:31+00:00
+last_sync: 2026-10-25T13:57:31Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -27,7 +27,7 @@ permalink: /packages/eggyengine/humpty/
 *humpty* is a physics library written in Zig and for the eggy engine project. 
 
 ## add to project
-requires zig `0.16.0` (have not tested for other zig versions, however likely works fine. please open a PR to reduce down the minimum version). 
+requires zig `0.17.0`. 
 
 to use this with the zig build system, import as so:
 ```bash

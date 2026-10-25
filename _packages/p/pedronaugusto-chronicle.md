@@ -6,9 +6,9 @@ author: pedronaugusto
 author_github: pedronaugusto
 repository: https://github.com/pedronaugusto/chronicle
 keywords:
-date: 2026-10-12
-updated_at: 2026-10-12T19:42:33+00:00
-last_sync: 2026-10-12T19:42:33Z
+date: 2026-10-25
+updated_at: 2026-10-25T14:20:21+00:00
+last_sync: 2026-10-25T14:20:21Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -53,7 +53,7 @@ var last: chronicle.Seq = chronicle.beginning;
 
     try ledger.subscribe(io, balances.sink());
 
-    const now = std.Io.Clock.real.now(io).toMilliseconds();
+    const now = try chronicle.Time.fromTimestamp(std.Io.Clock.real.now(io), .down);
     _ = try ledger.append(io, now, .{ .account_opened = .{ .id = 1, .owner = "ada" } });
 
     const follower = try ledger.replayAt(io, .after(chronicle.beginning));
@@ -103,9 +103,9 @@ replays and tailers before the journal. `finish` makes the active segment durabl
 reports what failed, leaving the journal open; `deinit` releases it, writing the same as
 best it can.
 
-`append` takes the timestamp from the caller. With the default `sync = .always`, it
-syncs the record before publishing it or returning its sequence number; `appendAll`
-shares a record sync across a batch. A `.group` batch cut by a crash leaves a prefix; an
+`append` takes the time from the caller, a `chronicle.Time` (milliseconds since the
+Unix epoch). With the default `sync = .always`, it syncs the record before publishing it
+or returning its sequence number; `appendAll` shares a record sync across a batch. A `.group` batch cut by a crash leaves a prefix; an
 `.atomic` batch names its first and last records in each of its records, stays in one
 segment, and is dropped whole by an open that finds the log ending inside it. Readers
 beside the writer read an atomic batch only once it is whole. `appendIf` and
@@ -120,9 +120,10 @@ on macOS, `fsync` on Linux and `NtFlushBuffersFile` on Windows, with the data-on
 (`fdatasync`, `NtFlushBuffersFileEx(DATA_SYNC_ONLY)` on NTFS) for writes into reserved
 space. A filesystem that declines the call gets the strongest one it takes, and
 `status().flushed` says what the records reached (`chronicle.flush` where nothing
-declined). A new segment, a compaction, a snapshot and a cursor are each made durable
-under their name, the directory included, on every platform: Windows flushes the
-directory too. A snapshot, a cursor and a compacted segment are written under a
+declined). A new journal's directory, a new segment, a compaction, a snapshot and a
+cursor are each made durable under their name, the directory included, on every
+platform: Windows flushes the directory too. Segments are removed one at a time, each
+removal durable before the next, so a crash never leaves a hole in the log. A snapshot, a cursor and a compacted segment are written under a
 temporary name drawn at random and renamed into place; a writer's open removes the
 temporaries a crash left once they are an hour old. A backup makes its copies durable
 together, a writeout of each and one flush of the device on macOS and Windows.
@@ -188,7 +189,12 @@ Development runs through bay.
 
 `bay test` runs the unit suite, writer-lock helper and examples in Debug by
 default. Tests cover crash prefixes, checksum and chain failures, recovery, replay,
-snapshots, retention, concurrency and allocation cleanup. `bay examples` runs the
+snapshots, retention, concurrency and allocation cleanup. Appends, a group commit, a
+compaction and a truncation also run inside a [shakedown](https://github.com/pedronaugusto/shakedown)
+simulation, airlock's calls routed onto its simulated disk, through `everyCrash`: a
+power loss at every step and every state the disk could come back in, each reopened by
+a writer and checked whole, a prefix of what was appended, holding every append that
+returned. `bay examples` runs the
 examples separately; `bay check` compiles the suite, helper and examples without
 running them. CI also runs `bay docs -- usage --check`, and
 `bay check-consumer` builds a project that depends on chronicle with only aegis,
@@ -197,8 +203,11 @@ strand, airlock and warp fetched.
 [CI](.github/workflows/ci.yml) has three tiers. The fast tier runs the source checks and
 the Debug suite with the examples on `ubuntu-latest`. The merge tier also runs the Debug
 suite on `macos-latest` and `windows-latest`. The release tier runs Debug and ReleaseSafe
-on all three hosts, ReleaseFast on Ubuntu, ReleaseSmall compile-only, every cross target
-and ThreadSanitizer. The merge and release tiers also run the Debug suite on Ubuntu with
+on all three hosts, ReleaseFast on Ubuntu, ReleaseSmall compile-only, every cross target,
+and the hardened profile: `bay hardened` (the suite with safety on and
+`std.testing.allocator` on shakedown's quarantine), `bay hardened-fuzz` (the properties
+under Zig's fuzzer) and, on x86_64 or aarch64 Linux, `bay hardened-tsan` (the suite under
+ThreadSanitizer). The merge and release tiers also run the Debug suite on Ubuntu with
 Zig master, a job that reports and never blocks.
 
 `bay bench` builds the benchmarks in [bench/](bench/) in ReleaseFast under
