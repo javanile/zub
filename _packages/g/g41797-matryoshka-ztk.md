@@ -12,15 +12,15 @@ keywords:
   - multitasking
   - std-io
   - toolkit
-date: 2026-09-20
-updated_at: 2026-09-20T21:27:24+00:00
-last_sync: 2026-09-20T21:27:24Z
-package_kind: library
+date: 2026-10-26
+updated_at: 2026-10-26T16:07:43+00:00
+last_sync: 2026-10-26T16:07:43Z
+package_kind: hybrid
 has_library: true
-has_binary: false
-has_distributable_binary: false
-binary_count: 0
-distributable_binary_count: 0
+has_binary: true
+has_distributable_binary: true
+binary_count: 1
+distributable_binary_count: 1
 multiple_binaries: false
 is_sponsor: false
 sync_priority: normal
@@ -28,23 +28,15 @@ sync_source: zigistry
 permalink: /packages/g41797/matryoshka-ztk/
 ---
 
-![](kitchen/_logo/matryoshka-ztk-logo.png)
-
----
+![](kitchen/docs/assets/matryoshka-ztk-logo.png)
 
 # Toolkit for Building Background Processes
-
----
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Linux](https://github.com/g41797/matryoshka-ztk/actions/workflows/linux.yml/badge.svg)](https://github.com/g41797/matryoshka-ztk/actions/workflows/linux.yml)
 [![Windows](https://github.com/g41797/matryoshka-ztk/actions/workflows/windows.yml/badge.svg)](https://github.com/g41797/matryoshka-ztk/actions/workflows/windows.yml)
 [![macOS](https://github.com/g41797/matryoshka-ztk/actions/workflows/mac.yml/badge.svg)](https://github.com/g41797/matryoshka-ztk/actions/workflows/mac.yml)
 [![Deploy Documentation](https://github.com/g41797/matryoshka-ztk/actions/workflows/docs.yml/badge.svg)](https://github.com/g41797/matryoshka-ztk/actions/workflows/docs.yml)
-
-
----
-
 
 Software has two worlds.
 
@@ -53,57 +45,87 @@ Software has two worlds.
 
 Matryoshka-Ztk is a _toolkit_ for the second world.
 
+The whole toolkit is about 800 lines of Zig. A script counts them.
 
----
+## What you get
 
-## What Matryoshka-Ztk Is For
+- **A mailbox.** Your threads send work to each other through it.
+  - Nothing is allocated when a message is sent.
+  - One mailbox carries any mix of your structs.
+  - Many senders, many receivers, with timeouts.
+  - `close` gives back whatever is still queued.
+- **A pool.** Used structs come back and go out again.
+  - Your hooks decide what reuse means.
+- **A queue.** A first in, first out chain of your structs.
+  - It allocates nothing and locks nothing.
+- **A helper.** One line per struct type.
+  - It creates your struct, checks its type and releases it.
 
----
+Take only what you need. The mailbox works without the pool.
 
-Matryoshka-Ztk provides
+## A pipeline
 
-- tools for the code that runs
-  - **after** data enters the system
-  - **before** data leaves the system
-  - **within** long-running _tasks_
+Three threads, two mailboxes.
 
-Typical example of such system - Image processing pipeline.
+```text
+ producer ──Event──► transformer_mbx ──► transformer
+                                             │ Event → Sensor
+                                             ▼
+ consumer ◄──Sensor── consumer_mbx ◄── transformer
 
-Goal of Matryoshka:
+ ShutdownCommand goes down the same way and stops each thread.
+```
 
-- to let developers think in terms of
-  - processing
-  - inter-tasks communication
-  - reusing
-  - workflows
-- instead of low-level details
+The transformer, the middle thread:
 
----
+```zig
+fn transformerFn(ctx: *TransformerCtx) anyerror!void {
+    while (true) {
+        var slot: Slot = null;
+        defer parents.destroySlot(&slot, ctx.alloc, ctx.io);
+        ctx.in_mbx.receive(&slot, null) catch return;
+        const anchor: *Anchor = slot.?;
 
-## NAQ (Never Asked Questions)
+        if (parents.Event.EventHelper.fromAnchor(anchor)) |ev| {
+            const value: f64 = @floatFromInt(ev.code);
+            parents.destroySlot(&slot, ctx.alloc, ctx.io);
+            parents.Sensor.SensorHelper.create(ctx.alloc, ctx.io, &slot) catch continue;
+            parents.Sensor.SensorHelper.mustFromSlot(&slot).value = value;
+            ctx.out_mbx.send(&slot) catch {};
+            std.log.info("transformer: Event→Sensor value={d}", .{value});
+        } else if (parents.ShutdownCommand.ShutdownCommandHelper.fromAnchor(anchor)) |_| {
+            ctx.out_mbx.send(&slot) catch {};
+            std.log.info("transformer: forwarded ShutdownCommand, done", .{});
+            return;
+        }
+    }
+}
+```
 
----
+What to look at:
 
+- A `Slot` is where a struct sits while it is yours. Empty means it is not.
+- `receive` fills the Slot. `send` empties it.
+- An Anchor is the part of your struct the mailbox sees.
+- `fromAnchor` tells you which struct arrived. One mailbox, three types.
+- `defer` releases whatever is left in the Slot. Nothing leaks.
 
-<details>  
-<summary>On the landing page, I saw the Matryoshka LOC count. How do you calculate it?</summary>
+The whole file:
+[020-pipeline_masters.zig](https://github.com/g41797/matryoshka-ztk/blob/main/examples/layer4/020-pipeline_masters.zig).
 
-- Only src/*.zig files
-- Comments, imports and empty lines are excluded 
+## Install
 
-Today (11 Aug 2026) - **722** LOC
+To come.
 
-</details>
+## Built on Paternitas
 
----
+Under the toolkit sits Paternitas, a small library of its own.
 
+- It puts the Anchor into your struct, and finds your struct again from it.
+- These pages and the site cover all you need. You need not read it.
+- If you are curious: [Paternitas](https://g41797.github.io/paternitas/).
 
+## Learn more
 
-## Want to understand it?
-
----
-
-
-Read this <a href="https://g41797.github.io/matryoshka-ztk/" target="_blank" rel="noopener noreferrer">beautiful documentation</a>
-
----
+The site has the tools, the patterns and the examples:
+[Matryoshka-Ztk](https://g41797.github.io/matryoshka-ztk/).

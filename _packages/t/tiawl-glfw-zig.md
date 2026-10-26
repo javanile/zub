@@ -8,9 +8,9 @@ repository: https://github.com/tiawl/glfw.zig
 keywords:
   - binding
   - glfw3
-date: 2026-09-26
-updated_at: 2026-09-26T11:34:12+00:00
-last_sync: 2026-09-26T11:34:12Z
+date: 2026-10-26
+updated_at: 2026-10-26T15:35:19+00:00
+last_sync: 2026-10-26T15:35:19Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -46,7 +46,7 @@ The goal of this repository is not to provide a [Zig][3] binding for [glfw/glfw]
 
 ## Dependencies
 
-The [Zig][3] part of this package requires the latest (0.16.0) or the master (0.17.0-dev) [Zig][3] release.
+The [Zig][3] part of this package requires the latest (0.17.0) or the master (0.18.0-dev) [Zig][3] release.
 
 For other dependencies see [the build.zig.zon](https://github.com/tiawl/glfw.zig/blob/stable/build.zig.zon)
 

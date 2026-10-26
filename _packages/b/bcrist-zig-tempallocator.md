@@ -9,10 +9,10 @@ keywords:
   - allocator
   - utilities
   - utility-library
-date: 2026-04-17
+date: 2026-10-22
 category: systems
-updated_at: 2026-04-17T16:00:00+00:00
-last_sync: 2026-04-17T16:00:00Z
+updated_at: 2026-10-22T18:26:34+00:00
+last_sync: 2026-10-22T18:26:34Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -50,14 +50,22 @@ pub fn main() void {
 
     var n: usize = 0;
     while (!app.shouldExit()) {
-        temp.reset();
+        temp.reset(.{});
         n += 1;
 
-        var temp: []u8 = std.fmt.allocPrint(temp.allocator(), "number {} is {s}", .{ n, "Something" });
+        var temp: []u8 = temp.allocator().print("number {} is {s}", .{ n, "Something" });
         app.doSomethingWithAString(temp);
     }
 }
 ```
+
+## Branches
+| Zig Version  | Recommended Branch |
+|--------------|--------------------|
+| 0.18.0-dev.* | zig-master         |
+| 0.17.0       | main               |
+| 0.16.0       | zig-0.16           |
+| 0.15.2       | zig-0.15           |
 
 ## Implementation Notes
 

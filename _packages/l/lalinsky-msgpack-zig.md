@@ -6,9 +6,9 @@ author: lalinsky
 author_github: lalinsky
 repository: https://github.com/lalinsky/msgpack.zig
 keywords:
-date: 2026-10-16
-updated_at: 2026-10-16T20:35:44+00:00
-last_sync: 2026-10-16T20:35:44Z
+date: 2026-10-26
+updated_at: 2026-10-26T15:18:48+00:00
+last_sync: 2026-10-26T15:18:48Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -39,7 +39,7 @@ Requires Zig 0.16 or 0.17.
 1) Add msgpack.zig as a dependency in your `build.zig.zon`:
 
 ```bash
-zig fetch --save "git+https://github.com/lalinsky/msgpack.zig?ref=v0.9.0"
+zig fetch --save "git+https://github.com/lalinsky/msgpack.zig?ref=v0.10.0"
 ```
 
 2) In your `build.zig`, add the `msgpack` module as a dependency you your program:

@@ -19,10 +19,10 @@ keywords:
   - tls
   - web-server
   - zero-copy
-date: 2026-10-08
+date: 2026-10-22
 category: networking
-updated_at: 2026-10-08T07:40:47+00:00
-last_sync: 2026-10-08T07:40:47Z
+updated_at: 2026-10-22T21:18:57+00:00
+last_sync: 2026-10-22T21:18:57Z
 package_kind: hybrid
 has_library: true
 has_binary: true

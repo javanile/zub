@@ -9,12 +9,13 @@ keywords:
   - jinja
   - jinja2
   - jinja2-template
+  - template-engine
   - vin
   - zig-jinja
   - zig-vin
-date: 2026-10-21
-updated_at: 2026-10-21T15:04:53+00:00
-last_sync: 2026-10-21T15:04:53Z
+date: 2026-10-22
+updated_at: 2026-10-22T18:21:08+00:00
+last_sync: 2026-10-22T18:21:08Z
 package_kind: library
 has_library: true
 has_binary: false
