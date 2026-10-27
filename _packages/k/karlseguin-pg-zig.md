@@ -7,9 +7,9 @@ author_github: karlseguin
 repository: https://github.com/karlseguin/pg.zig
 keywords:
   - postgresql-client
-date: 2026-10-14
-updated_at: 2026-10-14T12:48:28+00:00
-last_sync: 2026-10-14T12:48:28Z
+date: 2026-10-24
+updated_at: 2026-10-24T13:10:28+00:00
+last_sync: 2026-10-24T13:10:28Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -154,6 +154,8 @@ Authentications the request. Prefer creating connections through the pool. Auth 
 * `timeout` : Defaults to `10_000` (milliseconds)
 * `application_name`: Defaults to `null`
 * `params`: Defaults to `null`. An `std.StringHashMap([]const u8)`
+* `auth_methods`: The authentication methods the client will go along with: `none` (the server doesn't ask for a password, e.g. `trust`), `password` (cleartext), `md5` and `scram_sha_256`. The server picks the method, so unless the server's certificate is verified (`tls = .verify_full`), a man-in-the-middle can ask for the password in cleartext. If the server asks for a method that isn't allowed, `auth` returns `error.AuthMethodNotAllowed` without sending anything. `.scram_only` allows only SCRAM-SHA-256. Defaults to all methods allowed.
+* `max_scram_iterations`: The most PBKDF2 iterations SCRAM will run. The server sets the count, so this limits how long a hostile server can keep the client busy. Beyond it, `auth` returns `error.TooManySCRAMIterations`. PostgreSQL defaults to `4096`. Defaults to `1_000_000`.
 
 ### release(conn: \*Conn) void
 Releases the connection back to the pool. The pool might decide to close the connection and open a new one.

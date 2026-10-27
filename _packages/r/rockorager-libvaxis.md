@@ -7,10 +7,10 @@ author_github: rockorager
 repository: https://github.com/rockorager/libvaxis
 keywords:
   - tui
-date: 2026-09-23
+date: 2026-10-27
 category: tooling
-updated_at: 2026-09-23T08:15:21+00:00
-last_sync: 2026-09-23T08:15:21Z
+updated_at: 2026-10-27T14:53:21+00:00
+last_sync: 2026-10-27T14:53:21Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -35,7 +35,7 @@ It begins with them, but ends with me. Their son, Vaxis
 Libvaxis _does not use terminfo_. Support for vt features is detected through
 terminal queries.
 
-Vaxis uses zig `0.16.0`.
+Vaxis uses zig `0.17.0`.
 
 ## Features
 
@@ -51,6 +51,7 @@ Unix-likes.
 - System Clipboard (OSC 52)
 - System Notifications (OSC 9)
 - System Notifications (OSC 777)
+- [Program Status](https://www.superlogical.com/rex/docs/build/program-status) (OSC 7501)
 - Synchronized Output (Mode 2026)
 - [Unicode Core](https://github.com/contour-terminal/terminal-unicode-core) (Mode 2027)
 - Color Mode Updates (Mode 2031)

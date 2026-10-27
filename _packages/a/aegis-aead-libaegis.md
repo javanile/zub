@@ -15,9 +15,9 @@ keywords:
   - cipher
   - cryptography
   - libaegis
-date: 2026-10-06
-updated_at: 2026-10-06T16:03:22+00:00
-last_sync: 2026-10-06T16:03:22Z
+date: 2026-10-27
+updated_at: 2026-10-27T14:36:31+00:00
+last_sync: 2026-10-27T14:36:31Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -37,12 +37,12 @@ Portable C implementations of the [AEGIS](https://www.rfc-editor.org/rfc/rfc1003
 
 ## Features
 
-- AEGIS-128L with 16 and 32 bytes tags (software, AES-NI, ARM Crypto, Altivec)
-- AEGIS-128X2 with 16 and 32 bytes tags (software, VAES + AVX2, AES-NI, ARM Crypto, Altivec)
-- AEGIS-128X4 with 16 and 32 bytes tags (software, AVX512, VAES + AVX2, AES-NI, ARM Crypto, Altivec)
-- AEGIS-256 with 16 and 32 bytes tags (software, AES-NI, ARM Crypto, Altivec)
-- AEGIS-256X2 with 16 and 32 bytes tags (software, VAES + AVX2, AES-NI, ARM Crypto, Altivec)
-- AEGIS-256X4 with 16 and 32 bytes tags (software, AVX512, VAES + AVX2, AES-NI, ARM Crypto, Altivec)
+- AEGIS-128L with 16- and 32-byte tags (software, AES-NI, ARM Crypto, Altivec)
+- AEGIS-128X2 with 16- and 32-byte tags (software, VAES + AVX2, AES-NI, ARM Crypto, Altivec)
+- AEGIS-128X4 with 16- and 32-byte tags (software, AVX512, VAES + AVX2, AES-NI, ARM Crypto, Altivec)
+- AEGIS-256 with 16- and 32-byte tags (software, AES-NI, ARM Crypto, Altivec)
+- AEGIS-256X2 with 16- and 32-byte tags (software, VAES + AVX2, AES-NI, ARM Crypto, Altivec)
+- AEGIS-256X4 with 16- and 32-byte tags (software, AVX512, VAES + AVX2, AES-NI, ARM Crypto, Altivec)
 - All variants of AEGIS-MAC, supporting incremental updates.
 - Encryption and decryption with attached and detached tags
 - Incremental encryption and decryption.

@@ -9,10 +9,10 @@ keywords:
   - argument-parser
   - cli
   - command-line
-date: 2026-08-30
+date: 2026-10-26
 category: tooling
-updated_at: 2026-08-30T11:39:35+00:00
-last_sync: 2026-08-30T11:39:35Z
+updated_at: 2026-10-26T20:56:19+00:00
+last_sync: 2026-10-26T20:56:19Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -101,11 +101,11 @@ fn run() !void {
 **1. Fetch the package:**
 
 ```sh
-# For zig master and zig 0.16
+# For zig master
 zig fetch --save git+https://github.com/sam701/zig-cli
 
-# For zig 0.15
-zig fetch --save git+https://github.com/sam701/zig-cli#zig-0.15
+# For zig 0.17
+zig fetch --save git+https://github.com/sam701/zig-cli#zig-0.17
 ```
 
 **2. Wire it up in `build.zig`:**
