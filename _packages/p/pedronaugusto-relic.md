@@ -7,9 +7,9 @@ author_github: pedronaugusto
 repository: https://github.com/pedronaugusto/relic
 keywords:
   - git
-date: 2026-10-24
-updated_at: 2026-10-24T13:36:55+00:00
-last_sync: 2026-10-24T13:36:55Z
+date: 2026-10-28
+updated_at: 2026-10-28T16:26:27+00:00
+last_sync: 2026-10-28T16:26:27Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -113,7 +113,7 @@ std.debug.assert(staged.added == 3);
 // it. The index goes through `index.lock`; a lock another writer holds
 // is `error.LockHeld` and is never broken.
 const tree = try relic.worktree.writeTree(gpa, io, &index, repo.objectDatabase());
-try index.write(io, repo.gitDirectory(), "index", .{});
+try index.write(io, repo.gitDirectory().get(), "index", .{});
 
 // A commit object, with no ref moved: moving one is a transaction.
 const commit = try repo.writeCommit(io, .{

@@ -11,10 +11,10 @@ keywords:
   - linter
   - memory-safety
   - static-analysis
-date: 2026-10-27
+date: 2026-10-28
 category: tooling
-updated_at: 2026-10-27T14:49:43+00:00
-last_sync: 2026-10-27T14:49:43Z
+updated_at: 2026-10-28T16:15:34+00:00
+last_sync: 2026-10-28T16:15:34Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -1070,10 +1070,10 @@ zigvet --version
 ```
 
 A file is checked whatever its extension. A directory is walked for `.zig`
-files, skipping hidden directories, `zig-out` and `zig-pkg`. Paths print
-cleaned (`./src/a.zig` as `src/a.zig`), and a file reached more than one
-way is checked once. A file that does not parse is reported with the error
-`zig ast-check` gives for it.
+files, skipping hidden files and directories, `zig-out` and `zig-pkg`.
+Paths print cleaned (`./src/a.zig` as `src/a.zig`), and a file reached
+more than one way is checked once. A file that does not parse is reported
+with the error `zig ast-check` gives for it.
 
 `--exclude <path>` skips a file or directory, and may be given more than
 once. It is matched against paths as zigvet prints them, so name it
@@ -1156,7 +1156,7 @@ excuse whatever is written there next.
 ## Use it in a build
 
 Add zigvet to `build.zig.zon`, pinned to a release tag, with `zig fetch
---save git+https://github.com/kmoneil/zigvet#v0.12.0`, then give `build.zig`
+--save git+https://github.com/kmoneil/zigvet#v0.12.1`, then give `build.zig`
 a lint step, the way `zig fmt --check` is used:
 
 ```zig

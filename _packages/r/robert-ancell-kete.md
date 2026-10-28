@@ -1,0 +1,139 @@
+---
+title: kete
+description: ""
+license: MIT
+author: robert-ancell
+author_github: robert-ancell
+repository: https://github.com/robert-ancell/kete
+keywords:
+  - gui
+date: 2026-10-24
+updated_at: 2026-10-24T04:56:05+00:00
+last_sync: 2026-10-24T04:56:05Z
+package_kind: hybrid
+has_library: true
+has_binary: true
+has_distributable_binary: true
+binary_count: 5
+distributable_binary_count: 5
+multiple_binaries: true
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
+permalink: /packages/robert-ancell/kete/
+---
+
+# Kete
+
+**Kete** (KEH-teh) is a fast, efficient, and beautiful declarative UI toolkit for Zig.
+
+It makes building modern desktop applications simple: describe your interface in clean Zig code and get a responsive, native Material 3 look and feel out of the box.
+
+- [API Documentation](https://robert-ancell.github.io/kete/docs/)
+
+![Kete Showcase](screenshot.png)
+
+## Features
+
+- **Material 3 Design:** Rich set of widgets including layout containers, buttons, selection controls, text fields, code editor, dialogs, menus, tooltips, images, interactive maps, QR codes, and 3D views, with automatic light and dark themes.
+- **Cross-Platform:** Runs natively on Linux, macOS, and Windows with HiDPI scaling, multiple windows, clipboard support, keyboard navigation, and accessibility.
+- **Hardware Accelerated:** Renders smoothly using Vulkan, OpenGL, Metal, or Direct3D 11, with a built-in software renderer fallback.
+- **Ready to Use:** Ships with bundled fonts, color emoji, and Material Icons so applications work immediately with no extra setup.
+
+## Example
+
+Add Kete to your project:
+
+```sh
+zig fetch --save git+https://github.com/robert-ancell/kete
+```
+
+Import the `kete` module in your `build.zig`:
+
+```zig
+const kete_dep = b.dependency("kete", .{ .target = target, .optimize = optimize });
+exe.root_module.addImport("kete", kete_dep.module("kete"));
+```
+
+Then build your UI in `src/main.zig`:
+
+```zig
+const std = @import("std");
+const kete = @import("kete");
+
+pub const Counter = struct {
+    pub const State = struct {
+        count: i32 = 0,
+
+        pub fn increment(s: *State) void {
+            s.count += 1;
+        }
+
+        pub fn decrement(s: *State) void {
+            s.count -= 1;
+        }
+    };
+
+    pub fn build(_: *const Counter, cx: *kete.BuildContext, state: *State) kete.Widget {
+        return cx.make(kete.Align.center(cx.make(kete.Column{
+            .fill = false,
+            .cross_axis_alignment = .center,
+            .spacing = 16,
+            .children = cx.makeAll(.{
+                kete.Text{
+                    .text = "Hello, Kete!",
+                },
+                kete.Text{
+                    .text = cx.fmt("Count: {d}", .{state.count}),
+                },
+                kete.Row{
+                    .fill = false,
+                    .spacing = 12,
+                    .children = cx.makeAll(.{
+                        kete.OutlinedButton{
+                            .icon = .remove,
+                            .on_press = .of(state, State.decrement),
+                        },
+                        kete.FilledButton{
+                            .icon = .add,
+                            .on_press = .of(state, State.increment),
+                        },
+                    }),
+                },
+            }),
+        })));
+    }
+};
+
+pub fn main(init: std.process.Init) !void {
+    const app = try kete.App.init(init.gpa, init.io, init.minimal.environ, .{
+        .on_quit_request = .quit,
+        .on_last_window_closed = .quit,
+    });
+    defer app.deinit();
+
+    const root: Counter = .{};
+    _ = try app.openWindow(.{
+        .title = "Hello Kete",
+        .root = .of(&root),
+        .size = .{ 480, 320 },
+        .on_close_request = .close,
+    });
+    try app.run();
+}
+```
+
+## Showcase
+
+Run the interactive widget showcase from the repository root:
+
+```sh
+zig build run-showcase
+```
+
+## Special Thanks ❤️
+
+Kete is built on the foundations of these great projects:
+
+- [Zig](https://ziglang.org/)
+- [Material Design](https://m3.material.io/)

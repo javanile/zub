@@ -7,10 +7,10 @@ author_github: rockorager
 repository: https://github.com/rockorager/libvaxis
 keywords:
   - tui
-date: 2026-10-27
+date: 2026-10-28
 category: tooling
-updated_at: 2026-10-27T14:53:21+00:00
-last_sync: 2026-10-27T14:53:21Z
+updated_at: 2026-10-28T16:02:45+00:00
+last_sync: 2026-10-28T16:02:45Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -35,7 +35,8 @@ It begins with them, but ends with me. Their son, Vaxis
 Libvaxis _does not use terminfo_. Support for vt features is detected through
 terminal queries.
 
-Vaxis uses zig `0.17.0`.
+Vaxis uses zig `0.17.0`. Support for zig master (`0.18.0-dev`) is tracked on
+the [`zig-0.18`](https://github.com/rockorager/libvaxis/tree/zig-0.18) branch.
 
 ## Features
 

@@ -17,9 +17,9 @@ keywords:
   - web
   - web-assembly
   - web-framework
-date: 2026-10-26
-updated_at: 2026-10-26T15:15:37+00:00
-last_sync: 2026-10-26T15:15:37Z
+date: 2026-10-28
+updated_at: 2026-10-28T16:22:09+00:00
+last_sync: 2026-10-28T16:22:09Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -67,13 +67,13 @@ powershell -c "irm ziex.dev/install.ps1 | iex"
 ```powershell
 zx init
 # or
-npm init ziex
+npm create ziex
 # or
 git clone https://github.com/ziex-dev/template-starter my-app
 cd my-app && zig build dev
 ```
 
-You will need [compatible](#versions) Zig version when using zx CLI or you can use the `Node` template from `npm init ziex`
+You will need [compatible](#versions) Zig version when using the Ziex CLI (`zx`), or you can use the `Node` template from `npm create ziex`
 
 Read [Getting Started →](https://ziex.dev/learn) for more details.
 

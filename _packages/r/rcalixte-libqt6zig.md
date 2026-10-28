@@ -16,10 +16,10 @@ keywords:
   - qt-widgets
   - qt6
   - qt6-widgets
-date: 2026-10-01
+date: 2026-10-27
 category: systems
-updated_at: 2026-10-01T17:00:30+00:00
-last_sync: 2026-10-01T17:00:30Z
+updated_at: 2026-10-27T23:43:22+00:00
+last_sync: 2026-10-27T23:43:22Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -41,7 +41,7 @@ unsafe_reason: "contains a URL pointing to a .zip file"
 <img alt="libqt6zig" src="assets/libqt6zig.png" height="128px;" />
 
 [![MIT License](https://img.shields.io/badge/License-MIT-blue)](https://github.com/rcalixte/libqt6zig/blob/master/LICENSE)
-[![Static Badge](https://img.shields.io/badge/v0.16%20(stable)-fdc009?logo=zig&logoColor=f7a41d&label=Zig)](https://ziglang.org/download/)
+[![Static Badge](https://img.shields.io/badge/v0.17%20(stable)-fdc009?logo=zig&logoColor=f7a41d&label=Zig)](https://ziglang.org/download/)
 
 [![Documentation](https://github.com/rcalixte/libqt6zig/actions/workflows/docs.yml/badge.svg?branch=master)](https://github.com/rcalixte/libqt6zig/actions/workflows/docs.yml)
 </div>
@@ -56,7 +56,7 @@ For previous libqt6zig versions supporting Qt 6.4+, there are branches correspon
 
 This library is designed to be used as a dependency in a larger application and not as a standalone library. The versioning scheme used by this library is based on the Qt version used as a base to generate the bindings with an additional nod to the library revision number. Any breaking changes to the library will be reflected in the changelog.
 
-These bindings are based on the [MIQT bindings for Go](https://github.com/mappu/miqt) that were released in August 2024. This library features support for Qt Core, GUI, Widgets, and Network as well as [additional Qt modules](https://doc.qt.io/qt-6/qt-additional-modules.html) such as Multimedia, Print Support, Spatial Audio, SQL, SVG, WebChannel, WebEngine, and more. In addition to Qt modules, this library also features support for third-party libraries such as [QCustomPlot](https://www.qcustomplot.com), [QScintilla](https://riverbankcomputing.com/software/qscintilla), various [KDE Frameworks](https://develop.kde.org/products/frameworks/), and others. This library has support for slots/signals, subclassing, custom widgets, async via Qt, etc. In addition, there is library tooling that provides native support for Qt Creator/Designer forms and [the Qt Resource System](https://doc.qt.io/qt-6/resources.html). With improper handling, it is possible to encounter segmentation faults or errors but developing in the Debug build mode affords significant advantages that aid the developer experience. Q3 of the [FAQ](#faq) is a decent entry point for newcomers in addition to the [examples](https://github.com/rcalixte/libqt6zig-examples) and the [demo application](https://github.com/rcalixte/libqt6zig-demo). Please try out the library and start a [discussion](https://github.com/rcalixte/libqt6zig/discussions) if you have any questions or issues directly relevant to this library.
+These bindings are based on the [MIQT bindings for Go](https://github.com/mappu/miqt) that were released in August 2024. This library features support for Qt Core, GUI, Widgets, and Network as well as [additional Qt modules](https://doc.qt.io/qt-6/qt-additional-modules.html) such as Multimedia, Print Support, Spatial Audio, SQL, SVG, WebChannel, WebEngine, and more. In addition to Qt modules, this library also features support for third-party libraries such as [QCustomPlot](https://www.qcustomplot.com), [QScintilla](https://riverbankcomputing.com/software/qscintilla), various [KDE Frameworks](https://develop.kde.org/products/frameworks/), and others. This library has support for slots/signals, subclassing, custom widgets, async via Qt, etc. In addition, there is library tooling that provides native support for Qt Creator/Designer forms and [the Qt Resource System](https://doc.qt.io/qt-6/resources.html). With improper handling, it is possible to encounter segmentation faults or errors but developing in the debug build mode affords significant advantages that aid the developer experience. Q3 of the [FAQ](#faq) is a decent entry point for newcomers in addition to the [Widget-based examples](https://github.com/rcalixte/libqt6zig-examples), the [QML-based examples](https://github.com/rcalixte/libqt6zig-examples-qml), and the [demo application](https://github.com/rcalixte/libqt6zig-demo). Please try out the library and start a [discussion](https://github.com/rcalixte/libqt6zig/discussions) if you have any questions or issues directly relevant to this library.
 
 ---
 
@@ -125,7 +125,7 @@ Some libraries have restrictions, either due to limited platform support, less-p
 | posix-restricted-  | non-Windows<sup>1</sup>   | Restrictive |
 | restricted-extras- | all platforms<sup>1</sup> | Restrictive |
 
-<sup>1</sup>While macOS and Windows are supported upstream by some of these libraries, library installation for these platforms may be non-trivial. Therefore, these libraries are disabled by default and must be explicitly enabled with the appropriate build option.
+<sup>1</sup>While macOS and Windows are supported upstream by some of these libraries, library installation for these platforms may be non-trivial. Therefore, these libraries are disabled by default and must be explicitly enabled with the appropriate build option. The exception is `extras-qtprivate` which is disabled by default on all platforms. Instructions for usage are available [here](https://github.com/rcalixte/libqt6zig/tree/master/src/extras-qtprivate/README.md).
 
 License
 -------
@@ -180,11 +180,11 @@ pub fn main(init: std.process.Init) !void {
 
 fn onClicked(self: QPushButton) callconv(.c) void {
     counter +%= 1;
-    const formatted = std.fmt.bufPrint(
+    const formatted = std.mem.print(
         &buffer,
         "You have clicked the button {d} time(s)",
         .{counter},
-    ) catch @panic("Failed to bufPrint");
+    ) catch @panic("Failed to print");
     self.setText(formatted);
 }
 ```
@@ -242,7 +242,7 @@ The following are instructions for building this __full__ library and the exampl
 For dynamic linking with the Qt 6 system libraries:
 
 ```bash
-sudo pkg install qt6-base qt6-charts qt6-connectivity qt6-declarative qt6-location qt6-multimedia qt6-pdf qt6-positioning qt6-quick3d qt6-scxml qt6-speech qt6-svg qt6-tools qt6-virtualkeyboard qt6-webchannel qt6-webengine qt6-websockets kColorPicker-qt6 kf6-attica kf6-karchive kf6-kbookmarks kf6-kcodecs kf6-kcolorscheme kf6-kcompletion kf6-kconfig kf6-kconfigwidgets kf6-kcoreaddons kf6-kcrash kf6-kfilemetadata kf6-kglobalaccel kf6-kguiaddons kf6-ki18n kf6-kiconthemes kf6-kidletime kf6-kio kf6-kirigami kf6-kitemmodels kf6-kitemviews kf6-kjobwidgets kf6-knewstuff kf6-knotifications kf6-kparts kf6-kplotting kf6-kservice kf6-solid kf6-sonnet kf6-kstatusnotifieritem kf6-ksvg kf6-syntax-highlighting kf6-ktexteditor kf6-ktextwidgets kf6-kunitconversion kf6-kwidgetsaddons kf6-kwindowsystem kf6-kxmlgui kImageAnnotator-qt6 kirigami-addons-qt6 ktextaddons libaccounts-qt6 plasma6-layer-shell-qt qcustomplot-qt6 qscintilla2-qt6 qtermwidget qtkeychain-qt6 PackageKit-Qt6 poppler-qt6 signon-qt6
+sudo pkg install qt6-base qt6-charts qt6-connectivity qt6-datavis3d qt6-declarative qt6-location qt6-multimedia qt6-pdf qt6-positioning qt6-quick3d qt6-scxml qt6-speech qt6-svg qt6-tools qt6-virtualkeyboard qt6-webchannel qt6-webengine qt6-websockets kColorPicker-qt6 kf6-attica kf6-karchive kf6-kbookmarks kf6-kcodecs kf6-kcolorscheme kf6-kcompletion kf6-kconfig kf6-kconfigwidgets kf6-kcoreaddons kf6-kcrash kf6-kfilemetadata kf6-kglobalaccel kf6-kguiaddons kf6-ki18n kf6-kiconthemes kf6-kidletime kf6-kio kf6-kirigami kf6-kitemmodels kf6-kitemviews kf6-kjobwidgets kf6-knewstuff kf6-knotifications kf6-kparts kf6-kplotting kf6-kservice kf6-solid kf6-sonnet kf6-kstatusnotifieritem kf6-ksvg kf6-syntax-highlighting kf6-ktexteditor kf6-ktextwidgets kf6-kunitconversion kf6-kwidgetsaddons kf6-kwindowsystem kf6-kxmlgui kImageAnnotator-qt6 kirigami-addons-qt6 ktextaddons libaccounts-qt6 plasma6-layer-shell-qt qcustomplot-qt6 qscintilla2-qt6 qtermwidget qtkeychain-qt6 PackageKit-Qt6 poppler-qt6 signon-qt6 kf6-qqc2-desktop-style
 ```
 
 > [!NOTE]
@@ -257,7 +257,7 @@ For dynamic linking with the Qt 6 system libraries:
 #### Debian-based distributions
 
 ```bash
-sudo apt install gcc libstdc++-14-dev qt6-base-dev qt6-base-private-dev qt6-charts-dev qt6-connectivity-dev qt6-declarative-dev qt6-location-dev qt6-multimedia-dev qt6-pdf-dev qt6-positioning-dev qt6-quick3d-dev qt6-scxml-dev qt6-speech-dev qt6-svg-dev qt6-webchannel-dev qt6-webengine-dev qt6-websockets-dev qt6-tools-dev qt6-virtualkeyboard-dev libaccounts-qt6-dev libkcolorpicker-qt6-dev libkf6archive-dev libkf6attica-dev libkf6bookmarks-dev libkf6codecs-dev libkf6colorscheme-dev libkf6completion-dev libkf6config-dev libkf6configwidgets-dev libkf6coreaddons-dev libkf6crash-dev libkf6filemetadata-dev libkf6globalaccel-dev libkf6guiaddons-dev libkf6i18n-dev libkf6iconthemes-dev libkf6idletime-dev libkf6kio-dev libkf6itemmodels-dev libkf6itemviews-dev libkf6jobwidgets-dev libkf6newstuff-dev libkf6notifications-dev libkf6parts-dev libkf6plotting-dev libkf6service-dev libkf6solid-dev libkf6sonnet-dev libkf6statusnotifieritem-dev libkf6svg-dev libkf6syntaxhighlighting-dev libkf6texteditor-dev libkf6textwidgets-dev libkf6unitconversion-dev libkf6widgetsaddons-dev libkf6windowsystem-dev libkf6xmlgui-dev libkimageannotator-qt6-dev libkirigami-dev libktextaddons-dev liblayershellqtinterface-dev libpackagekitqt6-dev libpoppler-qt6-dev libqcustomplot-dev libqscintilla2-qt6-dev libqtermwidget-dev libsignon-qt6-dev qtkeychain-qt6-dev kirigami-addons-dev qt6-speech-flite-plugin qt6-svg-plugins qt6-virtualkeyboard-plugin sonnet6-plugins
+sudo apt install gcc libstdc++-14-dev qt6-base-dev qt6-base-private-dev qt6-charts-dev qt6-connectivity-dev qt6-datavis3d-dev qt6-declarative-dev qt6-location-dev qt6-multimedia-dev qt6-pdf-dev qt6-positioning-dev qt6-quick3d-dev qt6-scxml-dev qt6-speech-dev qt6-svg-dev qt6-webchannel-dev qt6-webengine-dev qt6-websockets-dev qt6-tools-dev qt6-virtualkeyboard-dev libaccounts-qt6-dev libkcolorpicker-qt6-dev libkf6archive-dev libkf6attica-dev libkf6bookmarks-dev libkf6codecs-dev libkf6colorscheme-dev libkf6completion-dev libkf6config-dev libkf6configwidgets-dev libkf6coreaddons-dev libkf6crash-dev libkf6filemetadata-dev libkf6globalaccel-dev libkf6guiaddons-dev libkf6i18n-dev libkf6iconthemes-dev libkf6idletime-dev libkf6kio-dev libkf6itemmodels-dev libkf6itemviews-dev libkf6jobwidgets-dev libkf6newstuff-dev libkf6notifications-dev libkf6parts-dev libkf6plotting-dev libkf6service-dev libkf6solid-dev libkf6sonnet-dev libkf6statusnotifieritem-dev libkf6svg-dev libkf6syntaxhighlighting-dev libkf6texteditor-dev libkf6textwidgets-dev libkf6unitconversion-dev libkf6widgetsaddons-dev libkf6windowsystem-dev libkf6xmlgui-dev libkimageannotator-qt6-dev libkirigami-dev libktextaddons-dev liblayershellqtinterface-dev libpackagekitqt6-dev libpoppler-qt6-dev libqcustomplot-dev libqscintilla2-qt6-dev libqtermwidget-dev libsignon-qt6-dev qtkeychain-qt6-dev kirigami-addons-dev qt6-speech-flite-plugin qt6-svg-plugins qt6-virtualkeyboard-plugin sonnet6-plugins
 ```
 
 > [!NOTE]
@@ -266,7 +266,7 @@ sudo apt install gcc libstdc++-14-dev qt6-base-dev qt6-base-private-dev qt6-char
 #### Fedora-based distributions
 
 ```bash
-sudo dnf install gcc libstdc++-devel qt6-qtbase-devel qt6-qtcharts-devel qt6-qtconnectivity-devel qt6-qtdeclarative-devel qt6-qtlocation-devel qt6-qtmultimedia-devel qt6-qtpdf-devel qt6-qtpositioning-devel qt6-qtquick3d-devel qt6-qtscxml-devel qt6-qtspeech-devel qt6-qtsvg-devel qt6-qttools-devel qt6-qtvirtualkeyboard-devel qt6-qtwebchannel-devel qt6-qtwebengine-devel qt6-qtwebsockets-devel kcolorpicker-qt6-devel kf6-attica-devel kf6-karchive-devel kf6-kbookmarks-devel kf6-kcodecs-devel kf6-kcolorscheme-devel kf6-kcompletion-devel kf6-kconfig-devel kf6-kconfigwidgets-devel kf6-kcoreaddons-devel kf6-kcrash-devel kf6-kfilemetadata-devel kf6-kglobalaccel-devel kf6-kguiaddons-devel kf6-ki18n-devel kf6-kiconthemes-devel kf6-kidletime-devel kf6-kio-devel kf6-kirigami-addons-devel kf6-kirigami-devel kf6-kitemmodels-devel kf6-kitemviews-devel kf6-kjobwidgets-devel kf6-knewstuff-devel kf6-knotifications-devel kf6-kparts-devel kf6-kplotting-devel kf6-kservice-devel kf6-kstatusnotifieritem-devel kf6-ksvg-devel kf6-ktexteditor-devel kf6-ktextwidgets-devel kf6-kunitconversion-devel kf6-kwidgetsaddons-devel kf6-kwindowsystem-devel kf6-kxmlgui-devel kf6-solid-devel kf6-sonnet-devel kf6-syntax-highlighting-devel kimageannotator-qt6-devel ktextaddons-qt6-devel layer-shell-qt-devel libaccounts-qt6-devel qcustomplot-qt6-devel qscintilla-qt6-devel qtermwidget-devel qtkeychain-qt6-devel kf6-sonnet-aspell PackageKit-Qt6-devel poppler-qt6-devel signon-qt6-devel
+sudo dnf install gcc libstdc++-devel qt6-qtbase-devel qt6-qtcharts-devel qt6-qtconnectivity-devel qt6-qtdatavis3d-devel qt6-qtdeclarative-devel qt6-qtlocation-devel qt6-qtmultimedia-devel qt6-qtpdf-devel qt6-qtpositioning-devel qt6-qtquick3d-devel qt6-qtscxml-devel qt6-qtspeech-devel qt6-qtsvg-devel qt6-qttools-devel qt6-qtvirtualkeyboard-devel qt6-qtwebchannel-devel qt6-qtwebengine-devel qt6-qtwebsockets-devel kcolorpicker-qt6-devel kf6-attica-devel kf6-karchive-devel kf6-kbookmarks-devel kf6-kcodecs-devel kf6-kcolorscheme-devel kf6-kcompletion-devel kf6-kconfig-devel kf6-kconfigwidgets-devel kf6-kcoreaddons-devel kf6-kcrash-devel kf6-kfilemetadata-devel kf6-kglobalaccel-devel kf6-kguiaddons-devel kf6-ki18n-devel kf6-kiconthemes-devel kf6-kidletime-devel kf6-kio-devel kf6-kirigami-addons-devel kf6-kirigami-devel kf6-kitemmodels-devel kf6-kitemviews-devel kf6-kjobwidgets-devel kf6-knewstuff-devel kf6-knotifications-devel kf6-kparts-devel kf6-kplotting-devel kf6-kservice-devel kf6-kstatusnotifieritem-devel kf6-ksvg-devel kf6-ktexteditor-devel kf6-ktextwidgets-devel kf6-kunitconversion-devel kf6-kwidgetsaddons-devel kf6-kwindowsystem-devel kf6-kxmlgui-devel kf6-solid-devel kf6-sonnet-devel kf6-syntax-highlighting-devel kimageannotator-qt6-devel ktextaddons-qt6-devel layer-shell-qt-devel libaccounts-qt6-devel qcustomplot-qt6-devel qscintilla-qt6-devel qtermwidget-devel qtkeychain-qt6-devel kf6-sonnet-aspell PackageKit-Qt6-devel poppler-qt6-devel signon-qt6-devel
 ```
 
 > [!NOTE]
@@ -275,7 +275,7 @@ sudo dnf install gcc libstdc++-devel qt6-qtbase-devel qt6-qtcharts-devel qt6-qtc
 #### Arch-based distributions
 
 ```bash
-sudo pacman -S gcc qt6-base qt6-charts qt6-connectivity qt6-declarative qt6-location qt6-multimedia qt6-positioning qt6-quick3d qt6-scxml qt6-speech qt6-svg qt6-virtualkeyboard qt6-webchannel qt6-webengine qt6-websockets qt6-tools attica karchive kbookmarks kcodecs kcolorpicker kcolorscheme kcompletion kconfig kconfigwidgets kcoreaddons kcrash kfilemetadata kglobalaccel kguiaddons ki18n kiconthemes kidletime kimageannotator kio kirigami kirigami-addons kitemmodels kitemviews kjobwidgets knewstuff knotifications kparts kplotting kservice kstatusnotifieritem ksvg ktextaddons ktexteditor ktextwidgets kunitconversion kwidgetsaddons kwindowsystem kxmlgui layer-shell-qt libaccounts-qt packagekit-qt6 poppler-qt6 qscintilla-qt6 qtermwidget qtkeychain-qt6 signond solid sonnet syntax-highlighting
+sudo pacman -S gcc qt6-base qt6-charts qt6-connectivity qt6-datavis3d qt6-declarative qt6-location qt6-multimedia qt6-positioning qt6-quick3d qt6-scxml qt6-speech qt6-svg qt6-virtualkeyboard qt6-webchannel qt6-webengine qt6-websockets qt6-tools attica karchive kbookmarks kcodecs kcolorpicker kcolorscheme kcompletion kconfig kconfigwidgets kcoreaddons kcrash kfilemetadata kglobalaccel kguiaddons ki18n kiconthemes kidletime kimageannotator kio kirigami kirigami-addons kitemmodels kitemviews kjobwidgets knewstuff knotifications kparts kplotting kservice kstatusnotifieritem ksvg ktextaddons ktexteditor ktextwidgets kunitconversion kwidgetsaddons kwindowsystem kxmlgui layer-shell-qt libaccounts-qt packagekit-qt6 poppler-qt6 qscintilla-qt6 qtermwidget qtkeychain-qt6 signond solid sonnet syntax-highlighting
 ```
 
 Users of Arch-based distributions need to __make sure that all packages are up-to-date__.
@@ -286,7 +286,7 @@ Users of Arch-based distributions need to __make sure that all packages are up-t
 #### openSUSE-based distributions
 
 ```bash
-sudo zypper install qt6-base-devel qt6-charts-devel qt6-connectivity-devel qt6-declarative-devel qt6-designer-devel qt6-location-devel qt6-multimediawidgets-devel qt6-pdfwidgets-devel qt6-positioning-devel qt6-quick3d-devel qt6-spatialaudio-devel qt6-statemachine-devel qt6-svg-devel qt6-texttospeech-devel qt6-tools-devel qt6-uitools-devel qt6-virtualkeyboard-devel qt6-webchannel-devel qt6-webenginewidgets-devel qt6-websockets-devel kColorPicker-Qt6-devel kf6-attica-devel kf6-karchive-devel kf6-kbookmarks-devel kf6-kcodecs-devel kf6-kcolorscheme-devel kf6-kcompletion-devel kf6-kconfig-devel kf6-kconfigwidgets-devel kf6-kcoreaddons-devel kf6-kcrash-devel kf6-kfilemetadata-devel kf6-kglobalaccel-devel kf6-kguiaddons-devel kf6-ki18n-devel kf6-kiconthemes-devel kf6-kidletime-devel kf6-kio-devel kf6-kirigami-devel kf6-kitemmodels-devel kf6-kitemviews-devel kf6-kjobwidgets-devel kf6-knewstuff-devel kf6-knotifications-devel kf6-kparts-devel kf6-kplotting-devel kf6-kservice-devel kf6-kstatusnotifieritem-devel kf6-ksvg-devel kf6-ktexteditor-devel kf6-ktextwidgets-devel kf6-kunitconversion-devel kf6-kwidgetsaddons-devel kf6-kwindowsystem-devel kf6-kxmlgui-devel kf6-solid-devel kf6-sonnet-devel kf6-syntax-highlighting-devel kImageAnnotator-Qt6-devel kirigami-addons6-devel ktextaddons-devel layer-shell-qt6-devel libaccounts-qt6-devel libpoppler-qt6-devel libsignon-qt6-devel qcustomplot-qt6-devel qscintilla-qt6-devel qtermwidget-devel qtkeychain-qt6-devel packagekitqt6-devel
+sudo zypper install qt6-base-devel qt6-charts-devel qt6-connectivity-devel qt6-datavisualization-devel qt6-declarative-devel qt6-designer-devel qt6-location-devel qt6-multimediawidgets-devel qt6-pdfwidgets-devel qt6-positioning-devel qt6-quick3d-devel qt6-spatialaudio-devel qt6-statemachine-devel qt6-svg-devel qt6-texttospeech-devel qt6-tools-devel qt6-uitools-devel qt6-virtualkeyboard-devel qt6-webchannel-devel qt6-webenginewidgets-devel qt6-websockets-devel kColorPicker-Qt6-devel kf6-attica-devel kf6-karchive-devel kf6-kbookmarks-devel kf6-kcodecs-devel kf6-kcolorscheme-devel kf6-kcompletion-devel kf6-kconfig-devel kf6-kconfigwidgets-devel kf6-kcoreaddons-devel kf6-kcrash-devel kf6-kfilemetadata-devel kf6-kglobalaccel-devel kf6-kguiaddons-devel kf6-ki18n-devel kf6-kiconthemes-devel kf6-kidletime-devel kf6-kio-devel kf6-kirigami-devel kf6-kitemmodels-devel kf6-kitemviews-devel kf6-kjobwidgets-devel kf6-knewstuff-devel kf6-knotifications-devel kf6-kparts-devel kf6-kplotting-devel kf6-kservice-devel kf6-kstatusnotifieritem-devel kf6-ksvg-devel kf6-ktexteditor-devel kf6-ktextwidgets-devel kf6-kunitconversion-devel kf6-kwidgetsaddons-devel kf6-kwindowsystem-devel kf6-kxmlgui-devel kf6-solid-devel kf6-sonnet-devel kf6-syntax-highlighting-devel kImageAnnotator-Qt6-devel kirigami-addons6-devel ktextaddons-devel layer-shell-qt6-devel libaccounts-qt6-devel libpoppler-qt6-devel libsignon-qt6-devel qcustomplot-qt6-devel qscintilla-qt6-devel qtermwidget-devel qtkeychain-qt6-devel packagekitqt6-devel
 ```
 
 Users of openSUSE-based distributions need to __make sure that all packages are up-to-date__.
@@ -511,7 +511,7 @@ zig fetch --save https://github.com/rcalixte/libqt6zig/archive/<commit>.zip
 ```zig
 const qt6zig = b.dependency("libqt6zig", .{
     .target = target,
-    .optimize = .ReleaseFast,
+    .optimize = .fast,
 });
 
 // After defining the executable, add the module from the library
@@ -574,6 +574,8 @@ The developer experience is largely idiomatic Zig but some of the code is not id
 - [Qt's property system](https://doc.qt.io/qt-6/properties.html)
 - [Qt's Meta-Object system](https://doc.qt.io/qt-6/metaobjects.html)
 - [Qt widgets](https://doc.qt.io/qt-6/examples-widgets.html)
+
+For consumers interested in QML-based development, [the QML Reference](https://doc.qt.io/qt-6/qmlreference.html) should be consulted.
 
 The `QAnyStringView`, `QByteArray`, `QByteArrayView`, `QLatin1String`, `QLatin1StringView`, `QString`, `QStringView`, `QList<T>`, `QSpan<T>`, `QVector<T>`, `QSet<T>`, `QHash<K,V>`, `QMap<K,V>`, `QMultiHash<K,V>`, and `QMultiMap<K,V>` types are projected as plain Zig types: `[]T`, `array_hash_map.Auto[K]V`, `AutoHashMapUnmanaged[K]V`, `array_hash_map.String[K]V`, and `StringHashMapUnmanaged[V]`. Therefore, it is not possible to call any of the Qt type's methods and some Zig equivalent method must be used instead. The raw C ABI pointer types for the Qt C++ API are available for use where needed by default in the `C` namespace of the top level of the library. In the same `C` namespace, the C ABI container types `libqt_list`, `libqt_map`, `libqt_pair`, and `libqt_string` are available for use, mainly for callback functions that must use the C calling convention. An example where this would be needed is when overriding a function that returns a map type. There is also a namespace added for convenience named `types` that contains the data structure types used throughout the library. This library was constructed with the goal of enabling single-language application development. Anything beyond that boundary is up to the developer to implement.
 
@@ -652,10 +654,10 @@ const alignment = qnamespace_enums.AlignmentFlag.AlignLeft | qt.AlignmentFlag.Al
 
 ### Q4. What build modes are supported by the library?
 
-Currently, `Debug`, `ReleaseFast`, `ReleaseSafe`, and `ReleaseSmall` are supported. The default build mode is `Debug`. To change the build mode:
+Currently, `debug`, `fast`, `safe`, and `small` are supported. The default build mode is `debug`. To change the build mode:
 
 ```bash
-zig build -Doptimize=ReleaseSafe
+zig build -Doptimize=safe
 ```
 
 or

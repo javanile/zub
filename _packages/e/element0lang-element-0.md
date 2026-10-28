@@ -13,9 +13,9 @@ keywords:
   - r5rs
   - r7rs-small
   - scheme
-date: 2026-10-20
-updated_at: 2026-10-20T22:35:16+00:00
-last_sync: 2026-10-20T22:35:16Z
+date: 2026-10-23
+updated_at: 2026-10-23T20:24:39+00:00
+last_sync: 2026-10-23T20:24:39Z
 package_kind: hybrid
 has_library: true
 has_binary: true

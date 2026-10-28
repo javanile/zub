@@ -9,10 +9,10 @@ keywords:
   - c
   - crypto
   - cryptography
-date: 2026-10-27
+date: 2026-10-28
 category: systems
-updated_at: 2026-10-27T14:41:58+00:00
-last_sync: 2026-10-27T14:41:58Z
+updated_at: 2026-10-28T16:37:08+00:00
+last_sync: 2026-10-28T16:37:08Z
 package_kind: hybrid
 has_library: true
 has_binary: true
