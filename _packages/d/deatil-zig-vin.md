@@ -13,9 +13,9 @@ keywords:
   - vin
   - zig-jinja
   - zig-vin
-date: 2026-10-28
-updated_at: 2026-10-28T15:38:50+00:00
-last_sync: 2026-10-28T15:38:50Z
+date: 2026-10-29
+updated_at: 2026-10-29T15:38:35+00:00
+last_sync: 2026-10-29T15:38:35Z
 package_kind: library
 has_library: true
 has_binary: false

@@ -9,10 +9,10 @@ keywords:
   - ansi
   - ansi-escape-codes
   - terminal
-date: 2026-04-17
+date: 2026-10-29
 category: tooling
-updated_at: 2026-04-17T14:24:00+00:00
-last_sync: 2026-04-17T14:24:00Z
+updated_at: 2026-10-29T15:51:43+00:00
+last_sync: 2026-10-29T15:51:43Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -34,7 +34,7 @@ permalink: /packages/hendriknielaender/ansi-escape.zig/
 <div align="center">
    
 [![MIT license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/hendriknielaender/ansi-escape.zig/blob/HEAD/LICENSE)
-![Zig Version](https://img.shields.io/badge/zig-0.16.0-orange.svg)
+![Zig Version](https://img.shields.io/badge/zig-0.17.0-orange.svg)
 ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/hendriknielaender/ansi-escape.zig)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/hendriknielaender/ansi-escape.zig/blob/HEAD/CONTRIBUTING.md)
 </div>
