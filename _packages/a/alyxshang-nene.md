@@ -12,10 +12,10 @@ keywords:
   - interpreter
   - new-language
   - zig-language
-date: 2026-10-23
+date: 2026-10-30
 category: systems
-updated_at: 2026-10-23T21:20:58+00:00
-last_sync: 2026-10-23T21:20:58Z
+updated_at: 2026-10-30T15:43:23+00:00
+last_sync: 2026-10-30T15:43:23Z
 package_kind: library
 has_library: true
 has_binary: false

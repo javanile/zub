@@ -16,9 +16,9 @@ keywords:
   - brotli-zig
   - brotli-zig-compression
   - brotli-zig-library
-date: 2026-10-26
-updated_at: 2026-10-26T15:25:55+00:00
-last_sync: 2026-10-26T15:25:55Z
+date: 2026-10-30
+updated_at: 2026-10-30T15:45:58+00:00
+last_sync: 2026-10-30T15:45:58Z
 package_kind: hybrid
 has_library: true
 has_binary: true

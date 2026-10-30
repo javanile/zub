@@ -17,10 +17,10 @@ keywords:
   - https
   - httpx
   - httpx-zig
-date: 2026-10-27
+date: 2026-10-30
 category: networking
-updated_at: 2026-10-27T15:27:22+00:00
-last_sync: 2026-10-27T15:27:22Z
+updated_at: 2026-10-30T15:46:21+00:00
+last_sync: 2026-10-30T15:46:21Z
 package_kind: hybrid
 has_library: true
 has_binary: true

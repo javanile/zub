@@ -23,10 +23,10 @@ keywords:
   - wireguard
   - zero-dependency
   - zstd
-date: 2026-10-29
+date: 2026-10-30
 category: systems
-updated_at: 2026-10-29T14:43:40+00:00
-last_sync: 2026-10-29T14:43:40Z
+updated_at: 2026-10-30T16:14:45+00:00
+last_sync: 2026-10-30T16:14:45Z
 package_kind: hybrid
 has_library: true
 has_binary: true

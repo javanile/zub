@@ -13,10 +13,10 @@ keywords:
   - command-line-parser
   - command-line-parsing
   - zig-index
-date: 2026-10-22
+date: 2026-10-27
 category: tooling
-updated_at: 2026-10-22T20:22:47+00:00
-last_sync: 2026-10-22T20:22:47Z
+updated_at: 2026-10-27T21:12:14+00:00
+last_sync: 2026-10-27T21:12:14Z
 package_kind: library
 has_library: false
 has_binary: false
