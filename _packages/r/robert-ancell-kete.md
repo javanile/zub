@@ -7,9 +7,9 @@ author_github: robert-ancell
 repository: https://github.com/robert-ancell/kete
 keywords:
   - gui
-date: 2026-10-24
-updated_at: 2026-10-24T04:56:05+00:00
-last_sync: 2026-10-24T04:56:05Z
+date: 2026-10-31
+updated_at: 2026-10-31T15:18:32+00:00
+last_sync: 2026-10-31T15:18:32Z
 package_kind: hybrid
 has_library: true
 has_binary: true

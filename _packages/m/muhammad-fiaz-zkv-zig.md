@@ -17,10 +17,10 @@ keywords:
   - zig-database
   - zkv
   - zkv-database
-date: 2026-08-13
+date: 2026-10-31
 category: data-formats
-updated_at: 2026-08-13T20:52:25+00:00
-last_sync: 2026-08-13T20:52:25Z
+updated_at: 2026-10-31T14:22:06+00:00
+last_sync: 2026-10-31T14:22:06Z
 package_kind: hybrid
 has_library: true
 has_binary: true

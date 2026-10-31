@@ -7,9 +7,9 @@ author_github: karlseguin
 repository: https://github.com/karlseguin/pg.zig
 keywords:
   - postgresql-client
-date: 2026-10-24
-updated_at: 2026-10-24T13:10:28+00:00
-last_sync: 2026-10-24T13:10:28Z
+date: 2026-10-28
+updated_at: 2026-10-28T23:51:58+00:00
+last_sync: 2026-10-28T23:51:58Z
 package_kind: library
 has_library: true
 has_binary: false

@@ -14,10 +14,10 @@ keywords:
   - zig-language
   - zigantic
   - zigantic-zig
-date: 2026-05-27
+date: 2026-10-31
 category: data-formats
-updated_at: 2026-05-27T23:25:34+00:00
-last_sync: 2026-05-27T23:25:34Z
+updated_at: 2026-10-31T14:22:00+00:00
+last_sync: 2026-10-31T14:22:00Z
 package_kind: hybrid
 has_library: true
 has_binary: true

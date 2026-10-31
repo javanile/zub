@@ -8,9 +8,9 @@ repository: https://github.com/mstdokumaci/zsort
 keywords:
   - import-organizer
   - zig-application
-date: 2026-10-01
-updated_at: 2026-10-01T03:33:57+00:00
-last_sync: 2026-10-01T03:33:57Z
+date: 2026-10-21
+updated_at: 2026-10-21T18:58:03+00:00
+last_sync: 2026-10-21T18:58:03Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -33,7 +33,7 @@ declarations, similar to [isort](https://pycqa.github.io/isort/) for Python or
 ## Installation
 
 > [!NOTE]
-> Requires Zig 0.15.2 or newer (including 0.16) on Linux or macOS.
+> Requires Zig 0.15.2 or newer (including 0.16 and 0.17) on Linux or macOS.
 > On Windows, use [WSL2](https://learn.microsoft.com/windows/wsl/).
 
 ### Homebrew
@@ -54,7 +54,7 @@ Add to `build.zig.zon`:
 
 ```zig
 .zsort = .{
-    .url = "https://github.com/mstdokumaci/zsort/archive/refs/tags/v0.8.0.tar.gz",
+    .url = "https://github.com/mstdokumaci/zsort/archive/refs/tags/v0.9.0.tar.gz",
     // .hash
     .lazy = true,
 },
@@ -198,7 +198,7 @@ Add to `.pre-commit-config.yaml`:
 ```yaml
 repos:
   - repo: https://github.com/mstdokumaci/zsort
-    rev: v0.8.0
+    rev: v0.9.0
     hooks:
       - id: zsort        # check mode (fail on unsorted)
       # - id: zsort-fix  # fix mode (rewrite in place)
