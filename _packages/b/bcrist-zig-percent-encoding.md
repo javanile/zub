@@ -9,9 +9,9 @@ keywords:
   - encoding
   - percent-encoding
   - urlencode
-date: 2026-04-17
-updated_at: 2026-04-17T16:00:36+00:00
-last_sync: 2026-04-17T16:00:36Z
+date: 2026-10-21
+updated_at: 2026-10-21T18:43:09+00:00
+last_sync: 2026-10-21T18:43:09Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -79,3 +79,11 @@ Here are the results from my machine:
 | -------------------------------- | --------- | ----------- | ----------- |
 | percent_encoding.decode_in_place | 8.7 ns/B  | 0.82 ns/B   | 0.80 ns/B   |
 | std.Uri.percentDecodeInPlace     | 9.2 ns/B  | 1.0 ns/B    | 0.96 ns/B   |
+
+## Branches
+| Zig Version  | Recommended Branch |
+|--------------|--------------------|
+| 0.18.0-dev.* | zig-master         |
+| 0.17.0       | main               |
+| 0.16.0       | zig-0.16           |
+| 0.15.2       | zig-0.15           |

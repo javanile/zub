@@ -10,9 +10,9 @@ keywords:
   - s-expression
   - s-expressions
   - sexp
-date: 2026-04-17
-updated_at: 2026-04-17T16:03:15+00:00
-last_sync: 2026-04-17T16:03:15Z
+date: 2026-10-21
+updated_at: 2026-10-21T18:40:14+00:00
+last_sync: 2026-10-21T18:40:14Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -135,3 +135,11 @@ Then you can reference it in `build.zig` with:
 ```zig
 b.dependency("sx", .{}).module("sx")
 ```
+
+## Branches
+| Zig Version  | Recommended Branch |
+|--------------|--------------------|
+| 0.18.0-dev.* | zig-master         |
+| 0.17.0       | main               |
+| 0.16.0       | zig-0.16           |
+| 0.15.2       | zig-0.15           |

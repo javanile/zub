@@ -11,10 +11,10 @@ keywords:
   - game-development
   - gamedev
   - raylib
-date: 2026-10-21
+date: 2026-10-31
 category: systems
-updated_at: 2026-10-21T15:08:25+00:00
-last_sync: 2026-10-21T15:08:25Z
+updated_at: 2026-10-31T18:38:58+00:00
+last_sync: 2026-10-31T18:38:58Z
 package_kind: hybrid
 has_library: true
 has_binary: true

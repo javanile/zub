@@ -6,9 +6,9 @@ author: nektro
 author_github: nektro
 repository: https://github.com/nektro/zig-intrusive-parser
 keywords:
-date: 2026-08-24
-updated_at: 2026-08-24T19:28:43+00:00
-last_sync: 2026-08-24T19:28:43Z
+date: 2026-10-21
+updated_at: 2026-10-21T06:48:04+00:00
+last_sync: 2026-10-21T06:48:04Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -27,7 +27,7 @@ permalink: /packages/nektro/zig-intrusive-parser/
 ![loc](https://sloc.xyz/github/nektro/zig-intrusive-parser)
 [![license](https://img.shields.io/github/license/nektro/zig-intrusive-parser.svg)](https://github.com/nektro/zig-intrusive-parser/blob/master/LICENSE)
 [![nektro @ github sponsors](https://img.shields.io/badge/sponsors-nektro-purple?logo=github)](https://github.com/sponsors/nektro)
-[![Zig](https://img.shields.io/badge/Zig-0.16-f7a41d)](https://ziglang.org/)
+[![Zig](https://img.shields.io/badge/Zig-0.17-f7a41d)](https://ziglang.org/)
 [![Zigmod](https://img.shields.io/badge/Zigmod-latest-f7a41d)](https://github.com/nektro/zigmod)
 
 Core plumbing to make text or binary document parsers with Data Oriented Design

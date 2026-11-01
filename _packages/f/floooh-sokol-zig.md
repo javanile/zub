@@ -8,10 +8,10 @@ repository: https://github.com/floooh/sokol-zig
 keywords:
   - crossplatform
   - sokol
-date: 2026-10-24
+date: 2026-11-01
 category: game-development
-updated_at: 2026-10-24T11:02:36+00:00
-last_sync: 2026-10-24T11:02:36Z
+updated_at: 2026-11-01T16:10:15+00:00
+last_sync: 2026-11-01T16:10:15Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -43,7 +43,7 @@ Related projects:
 On Linux you'll need to install a couple of dev-packages. For instance with Ubuntu:
 
 ```
-sudo apt install xorg-dev libasound-dev
+sudo apt install xorg-dev libpulse-dev
 ```
 
 Additionally when using EGL instead of GLX:
@@ -67,8 +67,8 @@ All other platforms should build 'out of the box'.
 
 Supported platforms are: Windows, macOS, Linux (with X11) and web
 
-On Linux install the following packages: libglu1-mesa-dev, mesa-common-dev, xorg-dev, libasound-dev
-(or generally: the dev packages required for X11, GL and ALSA development)
+On Linux install the following packages: libglu1-mesa-dev, mesa-common-dev, xorg-dev, libpulse-dev
+(or generally: the dev packages required for X11, GL and PulseAudio development)
 
 To build the platform-native samples:
 

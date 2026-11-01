@@ -16,10 +16,10 @@ keywords:
   - networking
   - no-malloc
   - shared-nothing
-date: 2026-10-29
+date: 2026-11-01
 category: systems
-updated_at: 2026-10-29T15:24:53+00:00
-last_sync: 2026-10-29T15:24:53Z
+updated_at: 2026-11-01T15:54:35+00:00
+last_sync: 2026-11-01T15:54:35Z
 package_kind: binary
 has_library: false
 has_binary: true
