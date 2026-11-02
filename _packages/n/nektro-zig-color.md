@@ -6,9 +6,9 @@ author: nektro
 author_github: nektro
 repository: https://github.com/nektro/zig-color
 keywords:
-date: 2026-05-22
-updated_at: 2026-05-22T10:27:03+00:00
-last_sync: 2026-05-22T10:27:03Z
+date: 2026-10-21
+updated_at: 2026-10-21T06:47:56+00:00
+last_sync: 2026-10-21T06:47:56Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -27,7 +27,7 @@ permalink: /packages/nektro/zig-color/
 ![loc](https://sloc.xyz/github/nektro/zig-color)
 [![license](https://img.shields.io/github/license/nektro/zig-color.svg)](https://github.com/nektro/zig-color/blob/master/LICENSE)
 [![nektro @ github sponsors](https://img.shields.io/badge/sponsors-nektro-purple?logo=github)](https://github.com/sponsors/nektro)
-[![Zig](https://img.shields.io/badge/Zig-0.14-f7a41d)](https://ziglang.org/)
+[![Zig](https://img.shields.io/badge/Zig-0.17-f7a41d)](https://ziglang.org/)
 [![Zigmod](https://img.shields.io/badge/Zigmod-latest-f7a41d)](https://github.com/nektro/zigmod)
 
 A pure-Zig library for parsing and manipulating colors in and between multiple spaces.

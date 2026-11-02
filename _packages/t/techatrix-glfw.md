@@ -6,9 +6,9 @@ author: techatrix
 author_github: techatrix
 repository: https://github.com/techatrix/glfw
 keywords:
-date: 2026-10-14
-updated_at: 2026-10-14T20:23:32+00:00
-last_sync: 2026-10-14T20:23:32Z
+date: 2026-11-02
+updated_at: 2026-11-02T19:20:13+00:00
+last_sync: 2026-11-02T19:20:13Z
 package_kind: library
 has_library: true
 has_binary: false

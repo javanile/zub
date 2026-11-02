@@ -1,0 +1,104 @@
+---
+title: http
+description: "Pure HTTP field-value parsers: content negotiation, ranges, entity tags, dates, and media types."
+license: MIT
+author: baskingspot
+author_github: baskingspot
+repository: https://github.com/baskingspot/http
+keywords:
+  - http
+  - parsers
+date: 2026-11-02
+category: networking
+updated_at: 2026-11-02T17:28:40+00:00
+last_sync: 2026-11-02T17:28:40Z
+package_kind: library
+has_library: true
+has_binary: false
+has_distributable_binary: false
+binary_count: 0
+distributable_binary_count: 0
+multiple_binaries: false
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
+permalink: /packages/baskingspot/http/
+---
+
+# http
+
+Pure HTTP field-value parsers: content negotiation, ranges, entity tags, dates, and media types.
+
+No server. These are functions over bytes: parse a header value, negotiate a
+content coding, compare validators. They take borrowed slices and fill
+caller-owned storage, so there is no `std.Io` and no allocator in the API.
+
+This project is incubating. It is unstable, its API will change, and it is not
+ready to depend on.
+
+## What is in it
+
+- `encoding`: `Accept-Encoding` negotiation. `negotiate(header, supported)`
+  returns a token borrowed from `supported` in server-preference order,
+  `"identity"`, or `null` when the client accepts nothing else.
+  `negotiateFields` takes every `Accept-Encoding` line, because the lines
+  combine as one ordered list. The caller maps the token to its codec: `gzip`,
+  `br`, `zstd`, or `deflate` for a zlib codec.
+- `token_list`: comma-separated token lists (`Connection`, `Upgrade`, `Vary`).
+  `contains(field, token)` tests membership without allocating; `iterator`
+  yields trimmed elements. Empty elements are ignored, and the comparison
+  folds ASCII case.
+- `Method`: `std.http.Method`, the conventional nine, with `method.token(.GET)`
+  as `"GET"` and `method.parse("GET")` exact and case-sensitive. The parser
+  still returns the token; this is the caller-facing vocabulary, not the
+  registry.
+- `StatusCode`: the status codes as an exhaustive enum, built from
+  `std.http.Status`'s named fields. `status.code(.ok)` is the wire number,
+  `status.parse(200)` is `.ok`, and a code the enum does not name returns
+  null. The parser still returns the `u16` from the wire.
+- `Header` / `Headers`: `Header` is `std.http.Header`; `Headers` is an
+  ordered, case-insensitive view over a field section. `get` returns the first
+  value for singleton fields, `values` yields every line separately
+  (`Set-Cookie` needs that), and `containsToken` tests list membership across
+  all lines. Lookups trim OWS; the raw spans stay in `Headers.items`.
+- `h1`: sans-I/O HTTP/1.1 head parsing into shared `Headers`.
+  `parseRequest` and `parseResponse` return `error.Incomplete` until a whole
+  head arrives, and take `last_len` so a client trickling bytes cannot force a
+  rescan. Strict where RFC 9112 allows leniency: bare LF, obs-fold, whitespace
+  before the colon, and lenient start-line whitespace are rejected.
+- `content_length`: `Content-Length` parsing and combination. Repeated values
+  must agree, a comma list of identical values is accepted, and non-digits,
+  conflicts, and overflow are errors. `null` means the field was absent. The
+  caller owns the rule that `Transfer-Encoding` and `Content-Length` cannot
+  both frame a request.
+
+Ranges, entity tags, dates, media types, and form decoding are next. No server,
+no middleware, and no request or response types: those depend on an I/O
+runtime, and this package stops at the field value.
+
+## Usage
+
+```zig
+const http = @import("http");
+
+const coding = http.encoding.negotiate("gzip;q=0.5, br;q=1", &.{ "br", "gzip" });
+// "br"
+```
+
+The token is borrowed from `supported`; `"identity"` is a static string. The
+tests carry the q-value, wildcard, and identity rules.
+
+```zig
+const persistent = !http.token_list.contains("keep-alive, Upgrade", "close");
+const length = try http.content_length.parse(&.{ "42", "42" }); // 42
+```
+
+## Work on it
+
+`nix develop` provides the toolchain. `just ci` runs what CI runs, `just bench`
+runs the benchmarks, and `just fuzz` drives the fuzz targets with the built-in
+runner.
+
+## License
+
+MIT. See `LICENSE`.
