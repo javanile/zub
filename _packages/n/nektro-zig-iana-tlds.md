@@ -6,9 +6,9 @@ author: nektro
 author_github: nektro
 repository: https://github.com/nektro/zig-iana-tlds
 keywords:
-date: 2026-07-21
-updated_at: 2026-07-21T11:27:43+00:00
-last_sync: 2026-07-21T11:27:43Z
+date: 2026-10-21
+updated_at: 2026-10-21T06:47:37+00:00
+last_sync: 2026-10-21T06:47:37Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -27,7 +27,7 @@ permalink: /packages/nektro/zig-iana-tlds/
 ![loc](https://sloc.xyz/github/nektro/zig-iana-tlds)
 [![license](https://img.shields.io/github/license/nektro/zig-iana-tlds.svg)](https://github.com/nektro/zig-iana-tlds/blob/master/LICENSE)
 [![nektro @ github sponsors](https://img.shields.io/badge/sponsors-nektro-purple?logo=github)](https://github.com/sponsors/nektro)
-[![Zig](https://img.shields.io/badge/Zig-0.14-f7a41d)](https://ziglang.org/)
+[![Zig](https://img.shields.io/badge/Zig-0.17-f7a41d)](https://ziglang.org/)
 [![Zigmod](https://img.shields.io/badge/Zigmod-latest-f7a41d)](https://github.com/nektro/zigmod)
 
 list of official IANA Top Level Domain Names.

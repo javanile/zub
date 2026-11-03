@@ -6,9 +6,9 @@ author: Hentioe
 author_github: Hentioe
 repository: https://github.com/Hentioe/zsup
 keywords:
-date: 2026-11-01
-updated_at: 2026-11-01T15:20:40+00:00
-last_sync: 2026-11-01T15:20:40Z
+date: 2026-11-03
+updated_at: 2026-11-03T17:30:18+00:00
+last_sync: 2026-11-03T17:30:18Z
 package_kind: hybrid
 has_library: true
 has_binary: true

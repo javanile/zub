@@ -1,0 +1,649 @@
+---
+title: warp
+description: "Compression for Zig: DEFLATE, zlib, gzip, zstd, Brotli, LZ4, xz and LZMA, bzip2, Snappy and GDeflate, both ways where the format has two"
+license: MIT
+author: pedronaugusto
+author_github: pedronaugusto
+repository: https://github.com/pedronaugusto/warp
+keywords:
+  - brotli
+  - compression
+  - deflate
+  - zstd
+date: 2026-11-03
+category: systems
+updated_at: 2026-11-03T15:57:21+00:00
+last_sync: 2026-11-03T15:57:21Z
+package_kind: hybrid
+has_library: true
+has_binary: true
+has_distributable_binary: true
+binary_count: 6
+distributable_binary_count: 6
+multiple_binaries: true
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
+permalink: /packages/pedronaugusto/warp/
+---
+
+# warp
+
+warp compresses and decompresses DEFLATE in Zig, raw or in RFC 1950 and gzip
+wrappers, Zstandard frames through `warp.zstd` and LZ4 blocks and frames
+through `warp.lz4`, Snappy and S2 blocks and streams through `warp.snappy`, Brotli
+streams through `warp.brotli`, and decodes bzip2
+through `warp.bzip2` and xz and LZMA through `warp.xz` and `warp.lzma`. It
+computes CRC-32, CRC-32C, Adler-32, bzip2's CRC-32 and xz's CRC-64. Whole-buffer and streaming calls use caller memory
+and allocate nothing after initialization, except Brotli encoding, which allocates
+as the reference does for a stream other than one its encoder wrote before, and from
+quality 4 the block splitter's working sets in each meta-block. Checksum dispatch selects
+a kernel supported by the CPU.
+
+W5 performance work remains in progress. Correctness and deterministic
+corpus sizes are checked in CI; measurements are reported separately.
+
+## Install
+
+Requires Zig 0.17.0. Fetch with `zig fetch --save
+git+https://github.com/pedronaugusto/warp`, then obtain the `warp` module through
+`b.dependency` and add it to your executable's imports. warp has no dependencies.
+It is one module: what a program does not call is not compiled, so a program that
+only checksums carries no codec.
+The codecs build for every target, wasm32-freestanding included. CPU detection
+reads the instructions available; parallel calls take `std.Io` for their workers.
+
+## Usage
+
+A gzip member, compressed and decompressed:
+
+<!-- BEGIN GENERATED zig build docs -- usage -->
+```zig
+const warp = @import("warp");
+
+// Tables sized once; every call after `init` allocates nothing.
+var compressor: warp.Compressor = try .init(gpa, .{ .level = 6 });
+defer compressor.deinit();
+const frame: warp.Compressor.Frame = .{ .container = .gzip, .gzip = .{ .name = "fox.txt" } };
+// An output of `bound` bytes holds the longest stream compress writes.
+const stream = try gpa.alloc(u8, warp.Compressor.bound(data.len, frame));
+defer gpa.free(stream);
+const n = try compressor.compress(data, stream, frame);
+
+// About 12 KiB of tables and no stream state: one serves any number of
+// calls. Room for `inflate_margin` more bytes lets the fast loop run to
+// the end; the exact size works too.
+var decompressor: warp.Decompressor = .init;
+const out = try gpa.alloc(u8, data.len + warp.inflate_margin);
+defer gpa.free(out);
+const result = try decompressor.inflate(stream[0..n], out, .{ .accept = .gzip });
+std.debug.assert(std.mem.eql(u8, out[0..result.out_len], data));
+```
+<!-- END GENERATED -->
+
+A gzip stream read from a `std.Io.Reader`:
+
+<!-- BEGIN GENERATED zig build docs -- reader -->
+```zig
+const warp = @import("warp");
+
+// From a std.Io.Reader: what follows the stream stays in the reader.
+var input: std.Io.Reader = .fixed(stream);
+var decompressor: warp.Decompressor = .init;
+const out = try gpa.alloc(u8, data.len);
+defer gpa.free(out);
+var diagnostic: warp.Diagnostic = undefined;
+const result = decompressor.inflateReader(&input, out, .{ .accept = .gzip, .diagnostic = &diagnostic }) catch |err| {
+    std.log.err("{t} at bit {d}: {t}", .{ err, diagnostic.bit_offset.raw(), diagnostic.reason });
+    return err;
+};
+std.debug.assert(result.finished);
+std.debug.assert(result.out_len == data.len);
+```
+<!-- END GENERATED -->
+
+The checksums, alone:
+
+<!-- BEGIN GENERATED zig build docs -- checksums -->
+```zig
+const warp = @import("warp");
+
+// Continued over pieces, or joined from the pieces' values.
+const half = data.len / 2;
+var crc: warp.Crc32 = .init;
+crc.update(data[0..half]);
+crc.update(data[half..]);
+std.debug.assert(crc.final() == warp.crc32Combine(warp.Crc32.hash(data[0..half]), warp.Crc32.hash(data[half..]), data.len - half));
+std.debug.assert(warp.Crc32c.hash("123456789") == 0xe3069283);
+std.debug.assert(warp.adler32(1, data) == warp.Adler32.hash(data));
+```
+<!-- END GENERATED -->
+
+## Design
+
+[Architecture, ownership and invariants](docs/design.md).
+
+**Decoding.** A `Decompressor` is the decoding tables of the current block,
+11,824 bytes on a 64-bit target, and nothing else: it holds no stream, so one per thread serves every
+call and every container. The output buffer is the history. Each table entry is
+one `u32` holding a literal, a length or distance base with its extra bits, or a
+pointer to a subtable, and the count of bits it consumes, so a symbol is one load
+and one shift. The main table indexes as many bits as the block's longest code
+needs, up to 11 for literals and lengths and 8 for distances; the fixed code's
+tables are built at compile time.
+
+The fast loop decodes three literals per refill of a 64-bit bit buffer, preloads
+the next entry before it finishes the current one, and copies matches 16 bytes
+at a time, writing up to 16 bytes past a match's end. It runs while the input
+has 16 bytes left and the output `inflate_margin` (274: the longest match and one
+more store); a careful loop with every bound checked takes the rest, so an output
+of exactly the decoded size works, and `inflate_margin` more bytes only lets the
+fast loop run to the end.
+Near the end of the input the bit buffer is filled with zero bytes that are not
+there; a stream that consumes one of them is `error.Truncated`, the same answer
+for every cut of a valid stream.
+
+The decoder validates incomplete and oversubscribed codes, single-symbol
+codes, code-length repeats, wrapper headers, dictionary IDs and trailers. Every refusal names its reason and the bit where decoding
+stopped, through `Options.diagnostic`.
+
+**Encoding.** A `Compressor` takes its memory once, sized for the level and the
+largest input it will see, and each call clears only the part its input uses.
+Level 1 keeps the two latest positions per hash of four bytes, and finds no
+match of three. Levels 2 to 9 use hash
+chains over a 32 KiB window, positions stored as 16-bit offsets that move with
+the window; 2 and 3 take the longest match found, 4 to 9 look one position ahead
+and take a literal when the match there is better by length and distance. Each
+level has a bounded search budget; deterministic tests check total compressed
+sizes at each level over the captured input groups. After 128 literals in a row
+without a match, levels 1 to 9 search every second position, then every third, to
+every eighth, and take the positions between as literals; a match ends it. Data
+that does not compress is passed at several times the speed, and data that does
+costs under 0.04% of its output.
+
+Levels 10-12 use binary trees and iterate a minimum-cost path over cached
+matches, updating symbol costs from each chosen path. Additional passes trade
+time for size without another match search.
+
+Level 1 ends a block every 64 KiB or 8,192 matches; the other levels end one
+where the symbol statistics change, tested every 512 symbols. Each block is
+written as whichever of stored, fixed-code or dynamic-code costs the fewest bits,
+counted exactly; dynamic codes are built length-limited from the
+block's counts, and the writer packs a literal or a match with its extra bits in
+one table load and one add to the bit buffer. The same input, options and
+dictionary always give the same bytes.
+
+**Checksums.** Each checksum has kernels for the instructions it can use and picks
+one per process, on first use, from what the CPU reports (`warp.kernels()` says
+which). CRC-32 and CRC-32C fold 16-byte lanes forward with carry-less multiplies,
+twelve lanes at a time with PMULL on AArch64 (joined with EOR3 where the CPU has
+SHA3) and with PCLMULQDQ or VPCLMULQDQ on x86-64, then finish with the CRC32
+instructions or slicing-by-8. Adler-32 sums 32 bytes a step with UDOT on AArch64
+or AVX2 on x86-64, and on the target's vectors otherwise. Zig sets CPU features
+per module, so each kernel is a module of its own built with its instructions,
+and a build for the baseline CPU still reaches them. `crc32Combine`,
+`crc32cCombine` and `adler32Combine` join two checksums in time logarithmic in
+the second length.
+
+## API
+
+| Call | Does |
+|---|---|
+| `Decompressor.inflate(in, out, options)` | Decodes one raw DEFLATE, RFC 1950 or gzip stream (or every gzip member) into `out` |
+| `Decompressor.inflateReader(reader, out, options)` | The same from a `std.Io.Reader`, refilling it; what follows the stream stays in the reader |
+| `Options.accept` | Raw DEFLATE, RFC 1950 or gzip; optional detection of wrapped versus raw input, or either wrapper |
+| `Options.partial` | Stops when `out` is full instead of failing; `Result.finished` says which |
+| `Options.dictionary` | History before the output: what a raw stream refers into, or the bytes an RFC 1950 stream identifies by Adler-32 |
+| `Compressor.init(gpa, options)`, `initBuffer(buffer, options)` | A compressor for a level (0 stored, 1-9, 10-12 near-optimal) and strategy, in allocated or given memory (`error.BufferTooSmall` when shorter than `memory`) |
+| `Compressor.memory(options)` | The bytes `initBuffer` needs |
+| `compressor.compress(in, out, frame)` | One complete stream of `in`; `frame` picks the container, dictionary and gzip header |
+| `Compressor.bound(len, frame)` | The longest stream `compress` writes for `len` bytes: an `out` this long never fails |
+| `Strategy` | `default`, `filtered`, `huffman_only`, `rle`, `fixed` |
+| `Crc32`, `Crc32c`, `Adler32` | Running checksums: `update`, `final`, `hash` |
+| `crc32`, `crc32c`, `adler32` | A checksum continued over bytes |
+| `crc32Combine`, `crc32cCombine`, `adler32Combine` | The checksum of two pieces from theirs |
+| `kernels()` | The kernel each checksum runs on this CPU |
+| `gzip.parseHeader(in)`, `gzip.writeHeader(writer, header)` | A gzip member header, every field |
+
+Errors are named sets: `InvalidStream`, `ChecksumMismatch`, `DictionaryMismatch`,
+`Truncated` and `OutputTooSmall` for decoding, `OutputTooSmall` for encoding, and
+`ReadFailed` from a reader.
+
+Sizes and limits in options are [aegis](https://github.com/pedronaugusto/aegis)
+sizes, written as text where they are constants (`.chunk_len = .literal("256KiB")`,
+`.max_window = .literal("64MiB")`), and a `Diagnostic` says where a stream was refused
+as an aegis count of bits (DEFLATE) or bytes (zstd).
+
+### Streaming and parallel calls
+
+`Inflate.decode` and `Deflate.write`, `flush`, and `finish` resume at any input
+or output byte. `Inflate.Reader` and `Deflate.Writer` adapt them to `std.Io`.
+Window sizes are 8-15 bits; resets may keep history for context takeover.
+`Deflate.Options.max_level = 12` reserves the storage needed to change from a
+lower level to a near-optimal one. `Compressor.Options.passes` and
+`Deflate.Options.passes` set the cost-model pass budget at levels 10-12.
+
+`parallel.Compressor.compress(io, input, writer)` and `compressReader` write one
+standard stream. `parallel.Options` chooses the container, level, 128 KiB chunk
+size, worker count, and whether chunks refer to the preceding 32 KiB. The bytes
+are identical for every worker count. `memory` and `initBuffer` support caller
+storage for the parallel codecs and BGZF writer. Every `initBuffer` in warp
+refuses a buffer shorter than its `memory` with `error.BufferTooSmall`.
+
+
+`gzip.Index.build(gpa, input, accept, spacing)` validates a compressed stream
+and saves block boundaries, checksums, and history. `write` and `read` persist
+it in a versioned little-endian format; `find` locates a restart point.
+`Inflate.checkpoint` and `@"resume"` expose those points directly.
+`Inflate.Reader.seek(point)` restores the decoder after the caller repositions
+its compressed reader to `point.in_offset`. `parallel.Decompressor.decompress`
+uses an index to decode disjoint output regions concurrently. Building the
+index is a separate sequential pass.
+
+For streams without an index, reserve marker buffers with
+`parallel.Decompressor.init(gpa, .{ .concurrency = 8, .speculative = .{} })`, then
+call `inflate(io, input, output, .{ .accept = .gzip })`. This searches bit offsets
+and decodes blocks concurrently before their history is known. The coordinator
+accepts only boundaries reached from the real header, resolves unknown-window
+references, and validates the original wrapper checksums. Raw DEFLATE, the RFC 1950 wrapper,
+dictionaries and concatenated gzip members use the same call. No index pass is
+required. The default search partition is 256 KiB compressed, with 4 MiB of
+decoded marker capacity per worker (about 8 MiB of workspace).
+`speculative.chunk_len`, `search_len`, `max_blocks` and `work_limit`
+bound retained output, search partitions, descriptors and failed-candidate work.
+Large single blocks, exhausted searches and partial requests use the native
+engine. `speculative = null` keeps the compact indexed allocation; `inflate`
+then uses the native decoder. All worker storage is reserved at initialization,
+and cancellation or an error joins workers before returning.
+
+`gzip.Bgzf` writes members with the BC extra field, bounds both compressed and
+decoded blocks to 64 KiB, and finishes with the canonical empty EOF member.
+`virtualOffset` gives the member offset and buffered decoded offset.
+`deflate64.Decompressor` decodes raw zip method 9 with a 64 KiB window;
+`Inflate` and `Inflate.Reader` with `.format = .deflate64` decode it streamed,
+with a window and buffer of `options.windowLen()` (64 KiB, and 4 KiB more for
+the reader).
+
+### C and build integration
+
+`zig build -Dc-abi=true` also builds `libz.a`. The stream ABI supports raw,
+RFC 1950, gzip and automatic decoding, caller allocation callbacks, dictionaries,
+flushes, level changes, resets, state copies, gzip headers, full-flush recovery,
+convenience calls, state introspection, retained-history resets and checksums. C callers supply the stream ABI declarations; this package
+does not ship a C header. File APIs,
+callback decoding, bit priming and fine-grained tuning are outside this surface.
+
+A consumer build can call `@import("warp").addCompressedAsset(b, dependency,
+.{ .source = b.path("asset.txt"), .name = "asset.gz" })`. The returned `LazyPath`
+is generated by a host executable and can be embedded or installed even when the
+consumer targets another architecture. `container` selects raw DEFLATE, RFC 1950 or gzip;
+`level` defaults to 12. `bay cli -- [-d] [-l level] [-j workers] input output`
+runs the gzip example; command options also select raw DEFLATE or the RFC 1950 wrapper.
+
+### Zstandard
+
+`warp.zstd.Compressor` writes a complete frame per call at levels −131072
+through 22. Level 0 selects the default, 3. `init` takes its tables once;
+`initBuffer` uses aligned caller storage of `memory(options)` bytes. Set
+`max_input` to size the tables for a workload; larger calls still work with
+those tables. `Compressor.bound(len)` reserves enough output for every frame.
+`Frame` selects checksums, content sizes and standard or magicless framing.
+`Tuning` overrides the level's search strategy and parameters; logs and minimum
+match lengths outside the supported range are clamped.
+
+`warp.zstd.Decompressor.decompress` and `decompressReader` decode concatenated
+frames, skippable frames and dictionary frames. Dictionary bytes are borrowed
+by `Dictionary.parse` or `Dictionary.raw`, and dictionaries can be shared
+between decoders and encoders. `Options.dictionary` binds one to a compressor;
+its match index is built at initialization and reused without allocation.
+`Frame.dictionary_id = false` suppresses its ID for an agreed reference prefix.
+`zstd.train.train` selects content with hashed or exact coverage and searches
+segment parameters; `zstd.train.finalize` adds entropy tables, repeat offsets
+and a stable ID to supplied content. Both write into caller-provided output.
+Checksums are verified by default; `partial` returns the
+output prefix, and `frames = .one` leaves the next frame unread. `max_window`
+defaults to 128 MiB. `Diagnostic` records the refusal's byte offset and reason.
+
+`frameHeader`, `frameLength`, `contentSize` and `decompressBound` inspect frames
+without decompressing them. `writeSkippable` writes an application payload.
+`Compress.write`, `flush` and `finish` accept arbitrary input and output
+chunks. `pledged_size` writes and checks a known content size; a mismatch is
+`SizeMismatch`. `Compress.Writer` wraps an existing compressor and output
+writer. `Decompress.decode` is resumable at every input and output byte;
+its window holds the declared history plus one decoded block. Call
+`Decompress.finish` at end of input to check truncation. `Decompress.Reader`
+uses the same decoder, reserving 4 KiB of its buffer for reader buffering.
+
+`Tuning.long_distance` adds sparse matching over a larger retained window
+(128 MiB by default); `window_log` sets its limit. Whole-buffer and streaming
+encoders share the same long-distance state and block engines.
+
+`zstd.seekable.Writer` writes independent frames and their seek table through
+an output writer. `Index` validates the table and records frame offsets;
+`Reader` decodes a frame directly or copies a range with caller-provided frame
+storage. Frame and table checksums are verified by default. The writer's
+`frame_len` and `max_frames` bound staging and table storage at initialization.
+
+`zstd.parallel.Compressor` writes ordered jobs into one frame, with overlap
+priming and optional `rsyncable` cuts. `compress` and `compressReader` take
+`Io` per call; concurrency does not change the encoded bytes. Job and overlap
+storage are reserved at initialization. Default jobs are capped at 1 GiB
+(512 MiB on 32-bit targets); invalid explicit job sizes are `InvalidOptions`.
+`writeSeekable` and `writeSeekableReader` reuse the workers for independent
+frames followed by a seek table; caller records bound the table's storage.
+`zstd.parallel.Decompressor` decodes block entropy in workers while executing
+matches and verifying checksums in order. It reserves worker storage at
+initialization and takes `Io` per call; short inputs and partial output use
+the core decoder directly.
+`Compress.Options.target_block_size` partitions parsed superblocks by estimated
+compressed cost for latency. Targets are best effort and clamped to 1340..128 KiB;
+raw blocks fit the target, and entropy tables carry across compressed partitions.
+
+A streaming command example is built without installation:
+
+```sh
+bay zstd-cli -Doptimize=ReleaseFast -- compress 3 < input > output.zst
+bay zstd-cli -Doptimize=ReleaseFast -- decompress < output.zst > restored
+```
+
+The optional argument to `decompress` is the maximum window log (27 by default).
+
+### LZ4
+
+`warp.lz4.Compressor` writes LZ4 blocks and frames at lz4's levels, on
+lz4frame's scale: 1 and below the fast parser (acceleration `1 - level` below
+0), 2 LZ4MID, 3-9 hash chains (pattern analysis at 9), 10-12 optimal parsing,
+above 12 meaning 12. The parsers are lz4 1.10's, so a block without history
+comes out byte for byte as `LZ4_compress_fast` or `LZ4_compress_HC` writes it,
+on every target. `init` takes the state of `max_level`'s band once (32 KiB for
+the fast levels to about 320 KiB at 10-12); `initBuffer` uses caller memory of
+`memory(options)` bytes; calls allocate and clear nothing.
+
+`compressBlock(in, out, .{ .history = h })` writes one block; `h` is `.none`,
+`.dictionary` (the one given at `init`, indexed once), `.previous` (the last
+block, still in place: lz4's `_continue`, as one prefix when it lies just
+before `in`) or `.bytes` (any bytes before the block). `blockBound(len)`
+reserves enough output. `compressBlockDestSize` fills a budget instead and
+says how much input it took. `compress(in, out, frame)` writes a frame:
+`Frame` selects 64 KiB to 4 MiB blocks, linked or independent, block and
+content checksums, the content size, a dictionary ID, or the legacy format
+`lz4 -l` writes; `bound(len, frame)` reserves its output. The defaults are
+the `lz4` command's: 4 MiB independent blocks and a content checksum.
+
+`warp.lz4.decompressBlock(in, out, .{ .history = h })` and
+`warp.lz4.decompress(in, out, options)` decode with no state at all: the
+output is the history. `decompress` reads concatenated, skippable and legacy
+frames, checks every checksum and the content size, refuses a frame naming
+a dictionary it was not given, and with `partial` returns the output's
+prefix. A block is refused only where the format leaves no decoding: an
+offset of zero (lz4 fills zeros), an offset before the history, an input cut
+inside a sequence, an output too small. Blocks that break the encoder's
+end-of-block rules decode, which the format allows; what is refused never
+depends on spare output, and `decompress_margin` more bytes only let the fast
+loop run to the end. `Diagnostic` records the refusal's byte and reason.
+
+`Compress` and `Decompress` resume at any input and output byte, with
+`Compress.Writer` and `Decompress.Reader` over `std.Io`; streamed
+compression writes the bytes `compress` does however the input arrives.
+`Decompress.memory(max_block_size)` is its window: 64 KiB of history, one
+block and one stored block; 8 MiB admits legacy frames.
+
+### Brotli
+
+`warp.brotli.Decompressor.decompress` decodes RFC 7932 streams straight into
+the caller's output; a `Decompressor` holds the prefix-code tables and context
+maps a meta-block can need (about 1.3 MiB, touched only as a stream uses them)
+and allocates nothing. `Options.dictionary` gives a raw prefix dictionary, the
+bytes distances reach before the output (RFC 9842's dictionary-compressed
+Brotli); `large_window` accepts the reference's large-window streams (windows
+past 2^24, not RFC 7932), refused otherwise. `streams = .all` decodes
+concatenated streams, as `brotli -d` reads them, and `.one` leaves what follows
+the first unread. `Diagnostic` records the refusal's bit offset and reason.
+
+`Decompress.decode` is resumable at every input and output byte; its window is
+the caller's, `windowLength(bits)` bytes for streams of up to 2^bits (a
+larger stream is `WindowTooLarge`). Call `Decompress.finish` at end of input
+to check truncation. `Decompress.Reader` uses the same decoder, reserving 4
+KiB of its buffer for reader buffering.
+
+What the reference decoder (google/brotli 1.2.1) accepts, warp accepts, and
+what it refuses, warp refuses for the same reason; a captured corpus of its
+streams and verdicts checks it.
+
+`Compressor.compress(in, out)` writes a stream at the reference's qualities 0-11
+(11, the densest, by default), window 10-24 bits (to 30 with `large_window`),
+`mode` (generic, text, font), `block_bits`, `size_hint` and an optional
+`PreparedDictionary` (a raw prefix dictionary, prepared once); `bound(len)`
+reserves the output. `Compress` is the same encoder resumable, with `write`,
+`flush`, `finish` and metadata meta-blocks, and a `Writer` adapter. For the same
+input and parameters warp writes the reference's (google/brotli 1.2.1) stream
+byte for byte, at every quality, whole and streamed: its parsers, match finders,
+block splitting and clustering are the reference's, and its static-dictionary
+lookup the reference's table. Encoding allocates its window and tables from the
+allocator `init` takes, and keeps them: a `Compressor` keeps its encoder between
+calls, and `Compress.reset` starts a new stream on the one it has, so a stream
+the size of one before allocates nothing at qualities 0-3, and from quality 4
+only the block splitter's working sets, which it takes in each meta-block as
+the reference does. `deinit` frees them. A stream
+written on kept buffers is the same stream a fresh encoder writes.
+
+### GDeflate
+
+`warp.gdeflate` writes and reads GDeflate, the DEFLATE variant DirectStorage
+1.1+ and nvCOMP decode on the GPU: DEFLATE's blocks over Deflate64's alphabet,
+their bits dealt across 32 lanes so 32 symbols decode at once. A page holds at
+most 64 KiB and is its own window; DirectStorage's tile stream holds a page a
+64 KiB tile, with the tiles' offsets.
+
+`Compressor.compress(in, out)` writes a tile stream at DEFLATE's levels (0
+stored, 1-9 zlib's scale, 10-12 the most compression); `compressPage` writes
+one page, as nvCOMP's batched API takes them. The engine and its parsers are
+DEFLATE's, over the page's whole 64 KiB, so a match reaches anywhere back in
+its page (Deflate64's distance codes 30 and 31), and runs of matches at one
+distance are written as one Deflate64 match of up to 65,538 bytes. `bound(len)` and `pageBound(len)` reserve the
+output. `init` takes the level's match state once, `initBuffer` caller memory
+of `memory(options)` bytes.
+
+`Decompressor.decompress(in, out, .{})` decodes a tile stream into at least the
+size `inspect(in)` gives; every tile must decode to its size.
+`decompressPage` decodes one page. A `Decompressor` holds one page's tables
+(about 12 KiB). `Diagnostic` records the tile, the byte and the reason of a
+refusal. Microsoft's reference codec (DirectStorage's GDeflate, Apache-2.0)
+decodes what warp writes at every level, warp decodes what it writes, and
+warp's lane writer, given the blocks and symbols of the reference's pages,
+writes them byte for byte: a captured corpus of its tile streams checks all
+three.
+
+### bzip2
+
+`warp.bzip2` decodes bzip2 (decoding only: nothing writes new bzip2, and old
+files and archive entries are what is read). `Decompressor.decompress(in, out,
+.{})` decodes straight into the caller's output; a `Decompressor` holds the
+largest block's BWT vector (3.5 MiB, `memory`) and its code tables, taken once
+(`init`) or in caller memory (`initBuffer`), and allocates nothing.
+`streams = .all` decodes concatenated streams as `bzip2 -d` does, stopping
+before anything that is not a stream header; `.one` leaves what follows the
+first unread. `Diagnostic` records the refusal's bit offset and reason.
+
+`Decompress.decode` is resumable at every input and output byte, in the
+caller's `memory` bytes; it reads the input in place and takes only the bytes
+it read, so the streams' end is exact however the input is cut. At the end
+of input, up to three bytes that may begin another stream's header are
+given back (`need_input` with `in_len` short of the input), to give again
+with what follows; call `finish` at end of input to check truncation.
+`Decompress.Reader` uses the same decoder, reserving 4 KiB of its buffer for
+reader buffering, and leaves what follows the streams in its source.
+
+`parallel.Decompressor` decodes blocks in workers: blocks are found by their
+48-bit magic, each decoded on its own, and joined in order on the caller's
+thread where the one before ended, so its output, errors and diagnostics are
+the whole-buffer decoder's. Each worker holds a BWT vector and `block_out`
+bytes of output (4 MiB by default; a longer block finishes on the caller's
+thread).
+
+What libbz2 1.0.8 decodes, warp decodes, and what it refuses, warp refuses
+for the same reason, randomised blocks and its 18,002-selector limit
+included; where 1.0.8's answer depends on memory it never wrote (a code that
+names a symbol past the alphabet), warp refuses. A captured corpus of its
+streams and verdicts checks it. `bzip2-bench` measures the three decoders.
+
+### xz and LZMA
+
+`warp.xz.Decompressor.decompress(in, out, .{})` decodes `.xz` streams straight
+into the caller's output: blocks of LZMA2 with Delta and the branch converters
+(x86, PowerPC, IA-64, ARM, ARM-Thumb, SPARC, ARM64, RISC-V) before it, CRC-32,
+CRC-64 and SHA-256 checks, indexes, stream padding and concatenated streams
+(`streams = .one` leaves what follows the first unread). `warp.lzma` decodes
+raw LZMA with its properties given apart (`decompressLzma1`: a known size with
+or without an end marker, or the marker alone, as 7z and zip store it), raw
+LZMA2 (`decompressLzma2`) and `.lzma` files (`decompressAlone`). A whole-buffer
+decoder holds one coder's probabilities (about 30 KiB) and allocates nothing;
+`Diagnostic` records the refusal's offset and reason.
+
+`xz.Decompress` and `lzma.Decompress` are resumable at every input and output
+byte; the window is the caller's, `windowLength(dictionary)` bytes. An `.lzma`
+or raw stream naming a larger dictionary is `WindowTooLarge`. An `.xz` stream
+names its dictionary in each block's header, so `xz.Decompress` stops there
+when the window is too small (`need_window`) and takes a larger one
+(`setWindow`) or refuses it (`refuseWindow`); a block whose header declares
+its size needs no window larger than it. Its `Reader` allocates the
+window so, up to a limit, for a stream whose dictionary is known only from
+its blocks (xz in zip). They read input in place and stage only a symbol or
+header cut short, so a stream's end is exact. Each has a `Reader`. `xz.parallel.Decompressor` decodes the blocks whose headers carry
+their sizes (as `xz -T` writes them) in workers, each straight into its range
+of the output, and answers anything else as the whole-buffer decoder does.
+
+What liblzma 5.8.4 decodes, warp decodes, and what it refuses, warp refuses
+for the same reason; a captured corpus of its streams and verdicts checks it.
+
+`xz.Compressor.compress(in, out)` writes a `.xz` stream: LZMA2 at liblzma's
+presets (`lzma = .preset(6, false)`, 0-9 and `-e`, or every setting apart),
+the filters before it applied forward, any check, and blocks of `block_size`
+(one by default). Every block header names both sizes, so the parallel
+decoders split what warp writes. `lzma.Compressor` writes raw LZMA (with or
+without an end marker), raw LZMA2 and `.lzma` files. The encoder is warp's own
+on warp's matchfinders, with liblzma's parsers, hashes and presets: its
+streams are liblzma 5.8.4's byte for byte, every single stream of a captured
+corpus checked. Tables are taken once, sized by the dictionary or a
+`max_input` (one under 64 KiB takes a smaller hash table than liblzma's, and
+its streams may differ by a few bytes).
+
+`lzma.Compress` and `xz.Compress` (each with a `Writer`) encode input that
+comes in pieces, writing the whole-buffer encoder's bytes however it arrives.
+`xz.Compress` writes one block whose header names no sizes, as `xz` does, or,
+with `block_size`, staged blocks that name them. `xz.parallel.Compressor`
+encodes blocks of three dictionaries in workers, as `xz -T` cuts them,
+writing the whole-buffer encoder's stream for the same block size.
+`xz-bench` measures the decoders and encoders.
+
+### Snappy and S2
+
+`warp.snappy.Compressor` writes Snappy and S2 blocks. `format` is `.snappy`
+(google's elements, which S2 also reads) or `.s2` (S2's repeats and 4-byte
+offsets as well); `level` picks the parser: `snappy_1` and `snappy_2`,
+google/snappy 1.3.1's levels, or `fast`, `better` and `best`,
+klauspost/compress s2 v1.20.3's modes, in either format. Each writes the
+reference's block byte for byte: google's level 1 as its portable build
+hashes (an SSE4.2 or ARM CRC build hashes with CRC32C and parses
+differently), S2's as its assembly encoders write on amd64 and arm64, each
+block size class included. With an S2 dictionary (`dictionary`, S2's
+parsers and format) blocks also copy from it, indexed once at `init`.
+`init` takes the parser's tables once (`memory(options)`, about 4.5 MiB for
+`best`); `initBuffer` uses caller memory; calls allocate nothing.
+`compressBlock(in, out)` writes one block into `blockBound(in.len)` bytes.
+
+`warp.snappy.decompressBlock(in, out, .{ .format = f })` decodes a whole
+block into `decodedLen(in)` bytes of output, with no state. What google's
+decoder (for `.snappy`) or S2's (for `.s2`) accepts, warp accepts, and what
+they refuse, warp refuses; `Diagnostic` records the refusal's byte and
+reason. `Dict.parse` reads a serialized S2 dictionary, `Dict.make` builds
+one as S2's `MakeDict` does, and `concatBlocks` joins blocks as S2's
+`ConcatBlocks` does.
+
+Streams are the framing format: chunks behind an `sNaPpY` (Snappy, blocks
+of 64 KiB at most) or `S2sTwO` (S2, up to 4 MiB) identifier, each block
+with a masked CRC-32C. `Compressor.compress(in, out, stream)` writes one
+into `streamBound` bytes; `Stream` sets the block size (S2's defaults: 1
+MiB, or 64 KiB less 8 for Snappy), padding to a multiple with a chunk of
+zeros, S2's seek index (appended or apart) and storing uncompressed. The
+stream is S2's writer's byte for byte, index and padding included (S2 pads
+with random bytes, warp with zeros). `Compress` writes the same stream from
+input in pieces, with flushes and skippable chunks, and a `Writer`;
+`parallel.Compressor` encodes blocks in workers, writing the same bytes.
+
+`warp.snappy.decompress(in, out, .{})` decodes a stream of either
+identifier as S2's reader does: its blocks by S2's rules, `max_block_size`
+bounding them, checksums checked, padding, the index and skippable chunks
+read past, unskippable reserved chunks refused. `Decompress` is resumable at
+every byte, with a `Reader`; `parallel.Decompressor` decodes blocks in
+workers straight into their output ranges, answering as the whole-buffer
+decoder. `Index.load` and `Index.loadFromEnd` read an index and `find`
+answers where to start for an offset: start a `Decompress` there with
+`from_chunk`, and `skip` the rest of the way. `indexStream` indexes an
+existing stream, as S2's `IndexStream`. `snappy-bench` measures blocks,
+streams, workers and seeks.
+
+## Scope
+
+Raw DEFLATE, the RFC 1950 wrapper, gzip, Zstandard and LZ4 compression and decompression;
+Snappy and S2 blocks and streams, compression and decompression;
+Brotli compression and decompression; GDeflate compression and decompression on the CPU;
+bzip2 decompression; xz, `.lzma` and raw LZMA/LZMA2 compression and decompression;
+checksums, streaming adapters, dictionaries, indexes, parallel codecs, BGZF,
+Deflate64 decoding, a C stream ABI and build-time compressed assets. RFC 1950
+specifies a DEFLATE payload with a header, optional preset dictionary ID and
+Adler-32 trailer. Archive containers, HTTP negotiation, other codecs and legacy
+Zstandard formats are outside this package.
+
+## Platforms
+
+Every target Zig supports. The CRC and Adler-32 kernels run on AArch64 (macOS,
+Linux and Windows) and x86-64; elsewhere, and where the CPU lacks them, the
+portable kernels give the same values. Big-endian and 32-bit targets build and
+behave the same.
+
+## Built with
+
+- [Zig](https://ziglang.org) 0.17.0 and its standard library; nothing is linked.
+- [aegis](https://github.com/pedronaugusto/aegis): the sizes and offsets the API takes
+  and gives.
+- [bay](https://github.com/pedronaugusto/bay) runs warp's development.
+  [preflight](https://github.com/pedronaugusto/preflight) (the source checks, the
+  tests and CI) and [shakedown](https://github.com/pedronaugusto/shakedown) (the
+  property and fuzz cases) are dev dependencies through bay, which a project that
+  depends on warp never sees.
+
+## Testing
+
+`bay test` runs the suite and the usage example. The test data is a corpus
+of captured streams from seeded inputs: every one decodes to its input. Invalid
+streams carry the expected error and reason. Prefix tests check truncation;
+partial decoding returns output prefixes. The standard library provides an
+independent format oracle. Levels, strategies, containers, dictionaries,
+streaming boundaries and worker counts have round-trip and determinism tests.
+Every checksum kernel the CPU has is checked against a
+bitwise reference at every length to 4 KiB and every alignment, and combining to
+2^33 bytes. Fuzzing feeds arbitrary bytes to every decoder entry and arbitrary
+inputs through every level; compression allocates nothing after `init`, and
+`init` survives every allocation failure. The release tier runs the hardened
+profile: `bay hardened` (the suite with safety on and `std.testing.allocator`
+on shakedown's quarantine), `bay hardened-fuzz` (the properties under Zig's
+fuzzer) and, on x86_64 or aarch64 Linux, `bay hardened-tsan` (the suite under
+ThreadSanitizer).
+
+`bay check-sizes` verifies the fixed standard input snapshots and checks
+all levels against the captured size limits, summed separately for each corpus.
+The gate has no single-input bound; for the captured inputs it also prints, per
+level, the median, 99th percentile and worst of each input's size over the size
+recorded for it.
+
+`bay bench` times every row in ReleaseFast through shakedown, one JSONL line per row (`family/workload/variant`):
+decode, the three checksums, compress, setup, stream-decode, stream-compress, websocket, parallel and speculative in
+`bench`, and zstd in `zstd-bench`. Run `zig-out/bench/bench --row decode/text` to select rows, or add `--smoke` or
+`--corpus <dir>`; `zstd-bench --help` lists its modes. `bay bench-ab -- --base <commit> --program bench --row decode/text`
+compares a candidate with an earlier commit. The `speculative` rows include discovery and marker resolution for whole
+streams, alongside native decoding. CI compiles the benchmarks and never times them.
+
+## Licence
+
+MIT. See [LICENSE](LICENSE).

@@ -22,10 +22,10 @@ keywords:
   - webassembly-language
   - webassembly-runtime
   - window-manager
-date: 2026-11-02
+date: 2026-11-03
 category: systems
-updated_at: 2026-11-02T18:55:25+00:00
-last_sync: 2026-11-02T18:55:25Z
+updated_at: 2026-11-03T17:55:24+00:00
+last_sync: 2026-11-03T17:55:24Z
 package_kind: binary
 has_library: false
 has_binary: true
@@ -95,12 +95,26 @@ River 0.3 のセッションでも、シェル部分(ドロワー・壁紙・ラ
   - 電池の残量が少ないとき、充電器の抜き差し(満充電まであと何分・何時ごろ)、USB 機器・USB メモリ・SD カードの抜き差し(名前・容量・ラベル)も通知
 - **録画**(ユーティリティの録画ボタン): wf-recorder で `~/Videos` に保存。**PC で鳴っている音も一緒に**録る(PipeWire は既定の出力、PulseAudio は `<出力>.monitor`)
 - **スクリーンショット**: grim / slurp / wl-copy を使わず ame-shell が自分で撮る(ext-image-copy-capture、PNG は自前のエンコーダ、クリップボードは ext-data-control)
+- **AirPods の頭の動き**(ユーティリティの「AirPods 操作」・`ame-ctl airpods toggle`・設定 `airpods { enabled on }`。Linux のみ): 頭を左右に振って戻すとワークスペース、上を向いて戻すとランチャー、下を向いて戻すとダッシュボード。AirPods 本来の操作もそのまま使える。AirPods が頭の向きを送るには Bluetooth の DeviceID を Apple(`bluetooth:004C:0000:0000`)にする必要がある
+- **ハンド操作**(ユーティリティの「ハンド操作」ボタン・`ame-ctl hand toggle`・設定 `hand { enabled on }`。既定はオフ): カメラに映った手の動きでカーソルと窓を操作します
+  - 指さすとカーソルが指先に付いて動き、窓のフォーカスも移る / **つまむ**と短くでクリック、つまんだまま動かすと窓をつかんで移動、**持ったまま手を近づける・遠ざけるとズーム** /
+    **手を払う**と隣のワークスペース / **指の本数**を示して止めるとその番号へ / **開いた手を止める**と手のメニュー(ランチャー・ダッシュボード・全画面・浮かせる・大きく・小さく・スクショ・閉じる・ワークスペース 1〜9)/ **握りこぶし**で閉じる。操作のたびに水の波紋、カーソルの後ろには船の航跡のような V 字の波
+  - 手の認識は MediaPipe の手のモデル(Apache-2.0、約 8MB。初めてオンにしたときに `~/.local/share/ame-shell/models` へ取ってくる)を、**Zig で書いた推論エンジン**(別のリポジトリ [ame-hand](https://github.com/TatsuyaM2667/ame-hand)。ame-shell 側は River の操作につなぐ `src/hand/hand.zig`)で動かします。C++・Python・OpenCV は使いません
+  - カメラは V4L2 を直接(FreeBSD は webcamd)。オンの間だけ CPU を 1 コアの 10〜20% ほど使い、オフにするとカメラ・スレッド・モデルのメモリを全部返します
+  - ame-shell が WM を兼ねるセッション(River 0.5。FreeBSD は常にこれ)では窓そのものをつかんで動かし・ズームします。River 0.3 のセッション(Chimera・Arch で内蔵 WM を使わないとき)では、ワークスペース・閉じる・全画面・浮かせる・大きく/小さく を riverctl と同じ命令で行い、つまんで動かすのは左ボタンのドラッグになります
+- **充電のアニメーション**: 充電器をつなぐと、iPhone の MagSafe のように画面全体に光の輪と残り % のリングを出す(ロック中も。`shell { charge-animation off }` で出さない)
+- **ホーム画面の曲のウィジェット**: ロック画面と同じ曲のカードを、デスクトップの四隅のどこかに置く(同期歌詞つき)。ジャケットを押すと、ロック画面と同じく「再生中」を画面いっぱいに広げる(窓の下。ドラッグで近い隅へ動かせ、覚える。`ame-ctl widget music <隅>`、`music-widget { corner … }`)
 - **ロック画面**(Super+L、ext-session-lock + PAM。iOS / iPadOS のロック画面のような作り、`src/lockui.zig`):
   - 眺める画面: くっきりした壁紙(オーロラ・雨はロック中も動き続ける)の上に日付・特大の時計・電池、
-    再生中の曲(右下の小さなカード: 回るレコードと液体のビジュアライザー、進み具合、前・再生・次のボタン。歌詞はダッシュボードと同じ見せ方で上に浮かぶ)、
+    再生中の曲(右下の小さなカード。ジャケットを押すと、iPhone / iPad のように真ん中の大きなジャケットとその色の背景に広がる: 回るレコードと液体のビジュアライザー、進み具合(クリック・ドラッグで移動)、前・再生・次のボタン、音量のつまみ(ドラッグ・ホイール、スピーカーで消音)。音量・曲送りのキーもそのまま効く。歌詞はダッシュボードと同じ見せ方で上に浮かぶ)、
     ロック中に来た通知(新しい順に重なり、押すと広がる)、光が流れる「解除するには…」とホームバー
   - キーかクリックで入力画面へ: 背景がぼけて時計が小さく上へ、写真・名前・ガラスの入力欄。Esc か 12 秒で戻る
   - 解除すると**水の波紋**が中心から広がり、波が通り過ぎた所からデスクトップが透けて見える(ロック画面の最後の絵を写したオーバーレイを出してからロックを外す)
+  - **顔認証**(ランチャーの「顔を登録」か `ame-ctl face enroll` で、パスワードで本人を確かめてから登録): ロック画面を触った時だけ(パスワードと同じ)カメラで顔を確かめてロックを外す。ログイン画面(greetd)でも使える(自作の PAM モジュール `pam_ame_face.so`。Linux と FreeBSD)。パスワードはいつでも使える
+    - 照合は厳しめ: 赤外線カメラのみ(`require_ir`)、登録した顔の近い 2 つとの平均が cos ≥ 0.6 で 3 コマ続けて一致、続けて 3 回失敗したらパスワードで外すまで使わない
+    - 赤外線カメラ(GREY を出すもの)でだけ登録・照合する(スマホの画面は赤外線では真っ暗に写る)。赤外線では顔が照明で十分明るいことも確かめる
+    - 顔の検出は MediaPipe の BlazeFace、顔の特徴は OpenCV Zoo の SFace(どちらも Apache-2.0。初めて登録するときに取ってきて SHA-256 を確かめる)。ONNX を読むところも推論も**自作**(別のリポジトリ [ame-face](https://github.com/TatsuyaM2667/ame-face)、手の認識と同じエンジン)。C++・Python・OpenCV は使わない
+    - 登録した特徴は `~/.local/share/ame-shell/face.bin`(本人だけが読める)。画像は残さない。顔認証はパスワードより弱い(赤外線で印刷した写真・双子)ので、要らなければ `face { enabled off }`
 - WASM ウィジェット(保存すると状態を保ったままホットリロード)
 - `ame-ctl` でシェルを操作(キーバインドやスクリプトから)
 
@@ -343,6 +357,10 @@ ame-ctl accent '#ff88aa'|reset           ame-ctl notify <テキスト>
 ame-ctl workspace <1-9>                  ame-ctl window close|fullscreen|float|focus-next|…(River 0.5)
 ame-ctl screenshot region|full|clip      ame-ctl avatar pick
 ame-ctl media play-pause|next|previous    ame-ctl net wifi|saved|radio|ssid|bt|bt-devices
+ame-ctl hand on|off|toggle|status        (ハンド操作)
+ame-ctl airpods on|off|toggle|status     (AirPods の頭の動きで操作)
+ame-ctl face enroll|clear|status        (顔認証: 顔を登録・消す)
+ame-ctl widget music <隅|on|off>       (ホーム画面の曲のウィジェット: top-left / top-right / bottom-left / bottom-right)
 ame-ctl lock | reload | widgets reload | stats | restart | quit
 ```
 

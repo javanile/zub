@@ -6,9 +6,9 @@ author: baskingspot
 author_github: baskingspot
 repository: https://github.com/baskingspot/image
 keywords:
-date: 2026-11-02
-updated_at: 2026-11-02T20:15:21+00:00
-last_sync: 2026-11-02T20:15:21Z
+date: 2026-11-03
+updated_at: 2026-11-03T16:52:21+00:00
+last_sync: 2026-11-03T16:52:21Z
 package_kind: hybrid
 has_library: true
 has_binary: true

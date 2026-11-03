@@ -6,9 +6,9 @@ author: nektro
 author_github: nektro
 repository: https://github.com/nektro/zig-flag
 keywords:
-date: 2026-08-24
-updated_at: 2026-08-24T19:29:25+00:00
-last_sync: 2026-08-24T19:29:25Z
+date: 2026-10-21
+updated_at: 2026-10-21T06:47:47+00:00
+last_sync: 2026-10-21T06:47:47Z
 package_kind: binary
 has_library: false
 has_binary: true
@@ -27,7 +27,7 @@ permalink: /packages/nektro/zig-flag/
 ![loc](https://sloc.xyz/github/nektro/zig-flag)
 [![license](https://img.shields.io/github/license/nektro/zig-flag.svg)](https://github.com/nektro/zig-flag/blob/master/LICENSE)
 [![nektro @ github sponsors](https://img.shields.io/badge/sponsors-nektro-purple?logo=github)](https://github.com/sponsors/nektro)
-[![Zig](https://img.shields.io/badge/Zig-0.16-f7a41d)](https://ziglang.org/)
+[![Zig](https://img.shields.io/badge/Zig-0.17-f7a41d)](https://ziglang.org/)
 [![Zigmod](https://img.shields.io/badge/Zigmod-latest-f7a41d)](https://github.com/nektro/zigmod)
 
 Config management for Zig.
