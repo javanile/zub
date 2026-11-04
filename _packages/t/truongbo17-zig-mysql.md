@@ -7,16 +7,16 @@ author_github: truongbo17
 repository: https://github.com/truongbo17/zig-mysql
 keywords:
   - mysql
-date: 2026-10-11
+date: 2026-10-31
 category: data-formats
-updated_at: 2026-10-11T13:40:00+00:00
-last_sync: 2026-10-11T13:40:00Z
+updated_at: 2026-10-31T18:56:10+00:00
+last_sync: 2026-10-31T18:56:10Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 2
-distributable_binary_count: 2
+binary_count: 6
+distributable_binary_count: 6
 multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
@@ -70,6 +70,12 @@ Compatibility is established by a real server test, rather than inferred from a 
 | TLS handshake/query/stream deadlines | Nonblocking OpenSSL support; acceptance requires live TLS CI |
 
 Unencrypted TCP does **not** send a cleartext password for full SHA2 authentication. Such a server request returns `error.SecureTransportRequired`. `LOCAL INFILE` is disabled. TLS uses nonblocking OpenSSL sockets with cancelable `std.Io` waits (`SSL_ERROR_WANT_READ`/`WANT_WRITE`); currently Linux/macOS only, with 1 ms retry granularity. This is not yet event-loop-native TLS readiness polling.
+
+## Sprint E — Compatibility delivered (2026-10-16)
+
+Sprint E is **complete as an independent compatibility milestone**: E1 #32 ([PR #120](https://github.com/truongbo17/zig-mysql/pull/120)), E2 #33 ([PR #121](https://github.com/truongbo17/zig-mysql/pull/121)), and E3 #34 ([PR #122](https://github.com/truongbo17/zig-mysql/pull/122)) are merged and closed. Exact-head acceptance uses Zig 0.16/0.17 on real MySQL/MariaDB and functional TLS; E3 is an **evaluation** and does not certify Windows. Sprint D3 #30 and D4 #31 remain deferred and **blocked by native TLS heap-corruption #65**. Production epic #13 remains OPEN. See [Sprint E acceptance report](docs/SPRINT_E_STATUS.md).
+
+The optional `Config.collation` field selects a typed UTF8MB4 collation at the MySQL HandshakeResponse41 stage; the default remains `.general_ci` (ID 45). Other opt-in options are `.bin` (46), `.unicode_ci` (224), and `.mysql_0900_ai_ci` (255, MySQL-specific). Nondefault collation choices are checked against `@@collation_connection` after authentication; an unsupported/remapped value fails closed with `error.CollationMismatch` (or the server's error). Choose a server-supported value. SQL modes and session time zones are server session state, and should be applied explicitly by the application using constant, trusted SQL; never build SQL by concatenating user input. Use bound prepared parameters under `ANSI_QUOTES` / `NO_BACKSLASH_ESCAPES`.
 
 ## Requirements
 
@@ -322,6 +328,88 @@ soak smoke matrix is `bash integration/run.sh`. GitHub Actions results are
 commit-specific and do not replace the production release 24-hour soak
 or realistic p95/p99, throughput, memory/CPU/FD and HA/security validation
 (OPS #13).
+
+## Opt-in command telemetry (Sprint D1, issue #28)
+
+`mysql.CommandMetrics.Recorder` counts outcomes and microsecond latency
+histograms with fixed, low-cardinality command/outcome labels. It does not
+capture SQL text, parameter bytes, passwords or server messages. The
+`formatPrometheus(allocator)` export is caller-owned and emits cumulative
+histogram buckets. This instrumentation is disabled unless explicitly attached.
+
+```zig
+var telemetry: mysql.CommandMetrics.Recorder = .{};
+conn.setCommandMetrics(&telemetry);
+defer conn.setCommandMetrics(null);
+var rows = try conn.query(io, "SELECT 1");
+rows.deinit();
+const exported = try telemetry.formatPrometheus(allocator);
+defer allocator.free(exported);
+```
+
+A recorder belongs to one connection borrower; pooled release detaches it.
+`SharedRecorder` provides synchronized `record`, `merge` and `snapshot`
+methods for aggregating independent recorders across threads. Buffered queries,
+prepared setup/execution, ping, control transactions and session reset/schema
+selection are covered. Timed wrappers record one terminal result rather than
+double counting their inner command. Streaming result consumption is not
+covered by the buffered latency histogram; see
+[scope and limitations](docs/SPRINT_D1_METRICS.md). Benchmarks comparing
+enabled and disabled hooks use `zig build -Doptimize=ReleaseFast metrics-bench`.
+
+## Bounded prepared DML batches (Sprint D2, issue #29)
+
+`mysql.Batch.execute(&conn, io, statement, rows, &progress, .{})` is an
+opt-in sequential batch for one prepared DML statement. It prevalidates
+the **entire batch** before sending its first packet: number of rows
+(default limit 1,000), parameter counts and types, and the encoded
+`COM_STMT_EXECUTE` payload size (default limit 1 MiB per row). It
+does not use `LOCAL INFILE`, synthesize SQL, retry writes, or implicitly
+BEGIN/COMMIT/ROLLBACK. Calls remain one network round trip per row.
+
+```zig
+const values = [_][]const mysql.Param{
+    &.{ .{ .int = 1 }, .{ .text = "Hà Nội" } },
+    &.{ .{ .int = 2 }, .{ .text = "Đà Nẵng" } },
+};
+var progress: mysql.Batch.Progress = .{};
+try conn.begin(io);
+mysql.Batch.execute(&conn, io, stmt, &values, &progress, .{}) catch |err| {
+    conn.rollback(io) catch {};
+    return err; // reconcile uncertain outcomes after transport failures
+};
+try conn.commit(io);
+```
+
+`progress.completed` counts *acknowledged* executions only. A later
+database constraint error may leave earlier rows applied unless an explicit
+transaction is rolled back; transport interruption can leave additional
+unacknowledged writes of uncertain outcome. See
+[batch safety contract](docs/SPRINT_D2_BATCH.md).
+
+The real-server `zig build -Doptimize=ReleaseFast batch-bench` compares
+256 individual prepared `execute` calls against 256 batch executions. CI
+runner diagnostics varied: Zig 0.16 batch/single throughput ratio **1.101**;
+Zig 0.17 **0.945**. This helper does **not** promise better throughput
+than single executes; it primarily adds validation and failure visibility.
+
+## High-concurrency TCP/TLS diagnostics (Sprint D4, issue #31)
+
+The opt-in `high-ccu-bench` and `high-ccu-tls-bench` build targets
+exercise **1, 8, 32, 64, 128** concurrent borrowers with a **32-connection
+pool**, against disposable MySQL 8.0 TCP and MySQL 8.4 verified TLS
+respectively. Each scenario issues 32 `SELECT 1` requests per worker,
+including pool checkout and session reset. The Linux test runner records
+per-run p50/p95/p99, requests/s, process CPU time, peak RSS and FD count,
+pool waits and timeouts; missing RSS/FD samples fail the profiling step.
+
+In verified CI [run #38190973035](https://github.com/truongbo17/zig-mysql/actions/runs/38190973035),
+Zig 0.17 with 128 borrowers measured **5,251.6 req/s, p99 76.667 ms**
+over TCP and **4,451.0 req/s, p99 89.097 ms** over verified TLS. Zig
+0.16 measured **3,022.7 / 2,519.6 req/s**, with p99 **138.609 /
+148.689 ms** respectively. These brief shared CI measurements are
+diagnostic only; they are **not** staging SLAs or 24-hour production
+certification. See [Sprint D4 methodology](docs/SPRINT_D4_CCU.md).
 
 ## Connection pooling
 
@@ -804,18 +892,18 @@ path on the GitHub runner; do not use these values as production SLAs.
 
 | Order | Small issue | Dependency | Status |
 | --- | --- | --- | --- |
-| D1 | [#28 Per-command metrics and latency hooks](https://github.com/truongbo17/zig-mysql/issues/28) | Existing Pool Stats | Planned |
-| D2 | [#29 Safe batch prepared execute/bulk insert](https://github.com/truongbo17/zig-mysql/issues/29) | Sprint A prepared types | Planned |
-| D3 | [#30 Native TLS readiness waits](https://github.com/truongbo17/zig-mysql/issues/30) | Cancellation safety | Planned |
-| D4 | [#31 1–128 worker TLS/CCU benchmarks](https://github.com/truongbo17/zig-mysql/issues/31) | #28, #30 | Planned |
+| D1 | [#28 Per-command metrics and latency hooks](https://github.com/truongbo17/zig-mysql/issues/28) | Existing Pool Stats | DONE — [PR #60](https://github.com/truongbo17/zig-mysql/pull/60) merged, issue closed |
+| D2 | [#29 Safe batch prepared execute/bulk insert](https://github.com/truongbo17/zig-mysql/issues/29) | Sprint A prepared types | DONE — [PR #61](https://github.com/truongbo17/zig-mysql/pull/61), [#106](https://github.com/truongbo17/zig-mysql/pull/106) merged, issue closed |
+| D3 | [#30 Native TLS readiness waits](https://github.com/truongbo17/zig-mysql/issues/30) | Cancellation safety | DEFERRED / BLOCKED by [#65](https://github.com/truongbo17/zig-mysql/issues/65), do not ship diagnostic timeout bypasses |
+| D4 | [#31 1–128 worker TLS/CCU benchmarks](https://github.com/truongbo17/zig-mysql/issues/31) | #28, #30 | DEFERRED / BLOCKED by [#65](https://github.com/truongbo17/zig-mysql/issues/65); profiler [PR #115](https://github.com/truongbo17/zig-mysql/pull/115) merged, full CCU NOT accepted |
 
 ### Sprint E — Compatibility and protocol robustness (P3)
 
 | Order | Small issue | Dependency | Status |
 | --- | --- | --- | --- |
-| E1 | [#32 Charset, collation and SQL-mode matrix](https://github.com/truongbo17/zig-mysql/issues/32) | Sprint A | Planned |
-| E2 | [#33 Protocol fuzzing and >16 MiB prepared payloads](https://github.com/truongbo17/zig-mysql/issues/33) | Protocol/test fixtures | Planned |
-| E3 | [#34 IPv6 and Windows portability evaluation](https://github.com/truongbo17/zig-mysql/issues/34) | Platform CI | Planned |
+| E1 | [#32 Charset, collation and SQL-mode matrix](https://github.com/truongbo17/zig-mysql/issues/32) | Sprint A | DONE — [PR #120](https://github.com/truongbo17/zig-mysql/pull/120), [CI #38831694065](https://github.com/truongbo17/zig-mysql/actions/runs/38831694065), issue closed |
+| E2 | [#33 Protocol fuzzing and >16 MiB prepared payloads](https://github.com/truongbo17/zig-mysql/issues/33) | Protocol/test fixtures | DONE — [PR #121](https://github.com/truongbo17/zig-mysql/pull/121), [CI #38830961959](https://github.com/truongbo17/zig-mysql/actions/runs/38830961959), issue closed |
+| E3 | [#34 IPv6 and Windows portability evaluation](https://github.com/truongbo17/zig-mysql/issues/34) | Platform CI | DONE (evaluation) — [PR #122](https://github.com/truongbo17/zig-mysql/pull/122), [CI #38832510637](https://github.com/truongbo17/zig-mysql/actions/runs/38832510637); Windows unsupported, issue closed |
 
 ### Parallel production acceptance — NOT yet passed
 
@@ -862,3 +950,11 @@ measurements in GitHub Actions logs (not fixed performance guarantees).
 ## License
 
 MIT. See [LICENSE](LICENSE).
+
+
+## Protocol fuzzing and large prepared payloads (Sprint E2, #33)
+
+Deterministic fixed-seed corpus tests cursor/handshake errors, hostile lengths and MySQL classic 24-bit packet-fragment boundaries. MySQL 8/9 and MariaDB 10/11 fixtures test prepared BLOB parameters and results larger than 16 MiB, comparing binary bytes exactly with 64 MiB disposable server packet limits. This proves selected framing paths, not production stability, high-CCU TLS safety or a completed security audit. See [Sprint E2 details](docs/SPRINT_E2_PROTOCOL.md); P0 TLS #65 and OPS production gate #13 remain unresolved.
+## Platform compatibility (Sprint E3, issue #34)
+
+Linux IPv6 loopback has an integration test through an AF_INET6 listener forwarding to the disposable MySQL IPv4 fixture. That is not evidence of an IPv6-enabled Docker host or remote server. Windows is **not supported** because the TLS backend still uses POSIX socket APIs; a native Windows compatibility probe is informational only. See [E3 platform matrix](docs/SPRINT_E3_PLATFORM.md). D3/D4 TLS heap blocker #65 and OPS production release gate #13 remain open.

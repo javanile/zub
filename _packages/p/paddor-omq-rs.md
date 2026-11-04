@@ -12,9 +12,9 @@ keywords:
   - polyglot
   - rust
   - zeromq
-date: 2026-11-03
-updated_at: 2026-11-03T16:10:01+00:00
-last_sync: 2026-11-03T16:10:01Z
+date: 2026-11-04
+updated_at: 2026-11-04T17:29:46+00:00
+last_sync: 2026-11-04T17:29:46Z
 package_kind: library
 has_library: false
 has_binary: false

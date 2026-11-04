@@ -8,10 +8,10 @@ repository: https://github.com/a-marigold/zbus
 keywords:
   - dbus
   - linux
-date: 2026-11-03
+date: 2026-11-04
 category: systems
-updated_at: 2026-11-03T16:49:48+00:00
-last_sync: 2026-11-03T16:49:48Z
+updated_at: 2026-11-04T16:05:05+00:00
+last_sync: 2026-11-04T16:05:05Z
 package_kind: library
 has_library: true
 has_binary: false
