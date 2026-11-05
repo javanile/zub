@@ -6,9 +6,9 @@ author: baskingspot
 author_github: baskingspot
 repository: https://github.com/baskingspot/image
 keywords:
-date: 2026-11-04
-updated_at: 2026-11-04T17:58:02+00:00
-last_sync: 2026-11-04T17:58:02Z
+date: 2026-11-05
+updated_at: 2026-11-05T17:07:21+00:00
+last_sync: 2026-11-05T17:07:21Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -64,13 +64,12 @@ Releases are tagged, from v0.1.0. Before 1.0 a minor release can change the API;
 | `wbmp`    | WBMP                    | type 0                                                                                                                                  | type 0                                                                  |
 | `qoi`     | QOI                     | the specification                                                                                                                       | the specification, byte for byte as qoi.h                               |
 
-`image.detect` names any of these formats from its first 18 bytes, `image.Decoder` decodes any of them behind one interface, and `image.convert` converts between every pair of pixel formats. Metadata is reported and never applied: ICC, EXIF, and XMP bytes go to your `BlobSink`, and `Config.metadata` has the orientation, transfer function, primaries, and density.
+`image.detect` names any of these formats from its first 18 bytes, `image.Decoder` decodes any of them behind one interface, `image.convert` converts between every pair of pixel formats, and `image.resize` scales from any size and pixel format to any other, with the usual filters from nearest neighbor to Lanczos. Metadata is reported and never applied: ICC, EXIF, and XMP bytes go to your `BlobSink`, and `Config.metadata` has the orientation, transfer function, primaries, and density; `image.resize.orient` turns an image upright by its orientation when you ask.
 
 Not implemented:
 
 - AVIF and HEIC: `image.Format` has no tag for them.
 - Color management: `Metadata.icc` is the profile's bytes, and pixels are never converted with it.
-- Resizing: only JPEG decodes smaller, through `jpeg.Decoder.Options.scale`.
 - Lossy JPEG XL encoding: `jxl.encode` writes lossless Modular images only.
 - Animated WebP and JPEG XL encoding: `webp.encode`, `webp.lossy.encode`, and `jxl.encode` write one image.
 - Hierarchical JPEG and lossless arithmetic-coded JPEG: `error.Unsupported`, as in libjpeg-turbo.

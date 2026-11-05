@@ -22,15 +22,15 @@ keywords:
   - rest-client
   - secret-manager
   - workload-identity-federation
-date: 2026-11-03
-updated_at: 2026-11-03T17:51:34+00:00
-last_sync: 2026-11-03T17:51:34Z
+date: 2026-11-05
+updated_at: 2026-11-05T18:00:38+00:00
+last_sync: 2026-11-05T18:00:38Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 2
-distributable_binary_count: 2
+binary_count: 3
+distributable_binary_count: 3
 multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
@@ -49,7 +49,7 @@ Pub/Sub, Cloud Storage, Secret Manager and Firestore, with credentials that find
 
 [![CI](https://github.com/kmoneil/gcp.zig/actions/workflows/ci.yml/badge.svg?branch=main&event=push)](https://github.com/kmoneil/gcp.zig/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/kmoneil/gcp.zig?sort=semver&color=4285F4)](https://github.com/kmoneil/gcp.zig/releases)
-[![Zig 0.17.0](https://img.shields.io/badge/zig-0.17.0-F7A41D?logo=zig&logoColor=white)](https://ziglang.org/download/)
+[![Zig 0.17.1](https://img.shields.io/badge/zig-0.17.1-F7A41D?logo=zig&logoColor=white)](https://ziglang.org/download/)
 [![Dependencies: none](https://img.shields.io/badge/dependencies-none-34A853)](build.zig.zon)
 [![License: MIT](https://img.shields.io/badge/license-MIT-34A853)](LICENSE)
 
@@ -90,7 +90,7 @@ Pub/Sub, Cloud Storage, Secret Manager and Firestore, with credentials that find
 | | Module | Covers | Status |
 | :-: | --- | --- | --- |
 | 📨 | [`pubsub`](docs/pubsub/README.md) | Pub/Sub v1: publish one call at a time or batched from many tasks; pull, a worker loop that manages leases, and exactly-once delivery; delivery by push, to BigQuery or to Cloud Storage; topics, subscriptions, snapshots and schemas, with their IAM policies; message transforms, import topics and tags; replaying and purging by seeking, and detaching; an in-memory Pub/Sub for your own tests | beta |
-| 🪣 | [`storage`](docs/storage/README.md) | Cloud Storage: objects of any size, streamed, parallel, resumable and checksummed both ways; preconditions, compose and server-side copies; buckets, versions, soft delete, retention and holds, IAM; folders, tree renames and managed folders; access control lists; signed URLs and POST policies, signed by a service account or an HMAC key; HMAC keys; encryption keys; Pub/Sub notifications | beta |
+| 🪣 | [`storage`](docs/storage/README.md) | Cloud Storage: objects of any size, streamed, parallel, resumable and checksummed both ways; preconditions, compose and server-side copies; buckets, versions, soft delete, retention and holds, IAM; folders, tree renames and managed folders; access control lists; signed URLs and POST policies, signed by a service account or an HMAC key; HMAC keys; encryption keys; Pub/Sub notifications; an in-memory Cloud Storage for your own tests | beta |
 | 🔥 | [`firestore`](docs/firestore/README.md) | Cloud Firestore: documents read and written under preconditions, commits with field transforms, batched reads, queries and aggregations over collections and collection groups, large answers read one document at a time as they arrive, transactions run again on contention; the default database or a named one | beta |
 | 🔑 | [`secret_manager`](docs/secret-manager/README.md) | Secret Manager v1: a secret's bytes, verified and wiped after use; versions; secrets global or regional, their settings, notifications, rotation, encryption keys and IAM policies | beta |
 | 📜 | [`logging`](docs/logging/README.md) | Cloud Logging v2, the read side: entries a page at a time under the read quota, a tail by polling, log names, buckets and views for a picker; an in-memory Cloud Logging for your own tests | beta |
@@ -103,15 +103,17 @@ Pub/Sub, Cloud Storage, Secret Manager and Firestore, with credentials that find
 | 🌊 | [`dataflow`](docs/dataflow/README.md) | Dataflow v1b3: every region's jobs in one call or one region at a time, with their states, stage states and error messages; `Job.terminal` and `Job.failing` for a pipelines widget; regions that did not answer named rather than silent; cancel a job or drain a streaming one, each with its exact request built first; an in-memory Dataflow for your own tests | experimental |
 | 🔎 | [`bigquery`](docs/bigquery/README.md) | BigQuery v2: datasets, tables with their schemas, and the job history, from any project (the public datasets included); queries dry-run for what they would bill, run under a bytes limit with a request id that makes them safe to retry, waited for and read a page at a time, every type decoded exactly (int64s, exact decimals, timestamps to the microsecond, intervals, ranges, arrays and records); cancels, each with its exact request built first; errors by reason and the editor's error position; an in-memory BigQuery for your own tests | experimental |
 | 🔁 | [`datatransfer`](docs/datatransfer/README.md) | BigQuery Data Transfer v1: scheduled queries and other transfer configs in every location, with their schedules, typed query and latest state; their runs and each run's messages; run a config now, its exact request built first and sent once; an in-memory Data Transfer for your own tests | experimental |
+| 🖥️ | [`compute`](docs/compute/README.md) | Compute Engine v1: VMs in one zone or every zone, with their status, scheduling (spot or standard, run limits), disks, network, labels, metadata and fingerprints; serial consoles and guest attributes; zones, machine types and images; creating VMs (typed, raw or from a template) and starting, stopping, suspending, resuming, resetting and deleting them; changing their labels, metadata, tags, machine type, scheduling, deletion protection and disks under fingerprints; instance templates and zonal managed groups, waited on until their VMs are up; each write previewable and carrying a request id; operations listed and waited on, with what ended a VM (a preemption, a run limit, its guest); an in-memory Compute Engine for your own tests | experimental |
+| 🧾 | [`billing`](docs/billing/README.md) | Cloud Billing Catalog v1, read only: the services Google bills for, and a service's SKUs with their list prices, the latest or every one in force over a range of time, in USD or another currency, each amount exact; Compute Engine's vCPU and memory prices, on demand and spot; an in-memory Cloud Billing Catalog for your own tests | experimental |
 | 🪪 | [`auth`](docs/auth.md) | Credentials for the other modules: the metadata server, gcloud's login, service account keys, workload identity federation and impersonation; signing on this machine or through IAM | beta |
 | ⚙️ | [`core`](docs/essentials.md) | What the service modules share: the HTTP transport, retries, `Diagnostics`, CRC-32C at the CPU's speed, IAM policies, the `TokenProvider` and `Signer` seams, and test fakes. Each service re-exports what its callers need. | beta |
 
 ```mermaid
 flowchart LR
-    app(["your program"]) --> pubsub & storage & secret_manager & firestore & logging & resource_manager & error_reporting & monitoring & kms & scheduler & run & dataflow & bigquery & datatransfer
+    app(["your program"]) --> pubsub & storage & secret_manager & firestore & logging & resource_manager & error_reporting & monitoring & kms & scheduler & run & dataflow & bigquery & datatransfer & compute & billing
     app --> auth
-    auth -. credentials .-> pubsub & storage & secret_manager & firestore & logging & resource_manager & error_reporting & monitoring & kms & scheduler & run & dataflow & bigquery & datatransfer
-    pubsub & storage & secret_manager & firestore & logging & resource_manager & error_reporting & monitoring & kms & scheduler & run & dataflow & bigquery & datatransfer & auth --> core
+    auth -. credentials .-> pubsub & storage & secret_manager & firestore & logging & resource_manager & error_reporting & monitoring & kms & scheduler & run & dataflow & bigquery & datatransfer & compute & billing
+    pubsub & storage & secret_manager & firestore & logging & resource_manager & error_reporting & monitoring & kms & scheduler & run & dataflow & bigquery & datatransfer & compute & billing & auth --> core
 ```
 
 The service modules never import one another, or `auth`: credentials
@@ -120,11 +122,12 @@ that brings its own tokens needs no `auth` at all.
 
 ## Install
 
-Zig **0.17.0** (`minimum_zig_version` enforces it). For Zig 0.16.0, use
+Zig **0.17.1**, the version `minimum_zig_version` names and the only one
+CI tests (Zig does not check that field itself). For Zig 0.16.0, use
 v0.30.0, the last release that builds with it.
 
 ```sh
-zig fetch --save git+https://github.com/kmoneil/gcp.zig#v0.62.1
+zig fetch --save git+https://github.com/kmoneil/gcp.zig#v0.65.0
 ```
 
 ```zig

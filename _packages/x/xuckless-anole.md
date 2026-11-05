@@ -1,6 +1,6 @@
 ---
 title: anole
-description: "Anole is a Zig library for building backends: one server core that will serve REST, WebSockets, WebTransport and gRPC (over HTTP/1.1, HTTP/2 and HTTP/3), with TLS and auth built in. I have plans to wrap this into a Python and Node library too."
+description: "Anole is a Zig Framework for building backends: one server core that will serve REST, WebSockets, WebTransport and gRPC (over HTTP/1.1, HTTP/2 and HTTP/3), with TLS and auth built in. I have plans to wrap this into a Python and Node library too."
 license: MIT
 author: xuckless
 author_github: xuckless
@@ -17,16 +17,16 @@ keywords:
   - tls
   - websocket
   - webtransport
-date: 2026-10-22
+date: 2026-11-05
 category: systems
-updated_at: 2026-10-22T14:14:23+00:00
-last_sync: 2026-10-22T14:14:23Z
+updated_at: 2026-11-05T17:15:32+00:00
+last_sync: 2026-11-05T17:15:32Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 20
-distributable_binary_count: 20
+binary_count: 29
+distributable_binary_count: 29
 multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
@@ -38,23 +38,26 @@ permalink: /packages/xuckless/anole/
   <img src="assets/banner.png" alt="Anole: a Zig backend server" width="720">
 </p>
 
+<h3 align="center">Anole is a backend framework for Zig, and a native server engine for Node and Python.</h3>
+
 <p align="center">
-  <b>One Zig server for your whole backend.</b><br>
-  REST, WebSockets, gRPC and WebTransport over HTTP/1.1, HTTP/2 and HTTP/3. TLS, auth and observability are built in, on one listener and one router.
+  <a href="#requirements"><img alt="Linux" src="https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black"></a>
+  <a href="#requirements"><img alt="macOS" src="https://img.shields.io/badge/macOS-000000?style=for-the-badge&logo=apple&logoColor=white"></a>
+  <a href="#requirements"><img alt="Windows (development)" src="https://img.shields.io/badge/Windows%20(dev)-0078D4?style=for-the-badge&logo=windows11&logoColor=white"></a>
+  <a href="https://ziglang.org/download/"><img alt="Zig 0.17" src="https://img.shields.io/badge/Zig%200.17-F7A41D?style=for-the-badge&logo=zig&logoColor=white"></a>
 </p>
 
 <p align="center">
-  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/github/license/xuckless/anole?color=green"></a>
-  <a href="https://ziglang.org/download/"><img alt="Zig 0.17" src="https://img.shields.io/badge/Zig-0.17.0-F7A41D?logo=zig&logoColor=white"></a>
-  <img alt="Platforms: Linux, macOS, Windows (development)" src="https://img.shields.io/badge/platforms-Linux%20%7C%20macOS%20%7C%20Windows%20(dev)-lightgrey">
-  <img alt="Protocols: HTTP/1.1, HTTP/2, HTTP/3, gRPC, WebSocket" src="https://img.shields.io/badge/protocols-HTTP%2F1.1%20%C2%B7%20h2%20%C2%B7%20h3%20%C2%B7%20gRPC%20%C2%B7%20WS-blue">
-  <img alt="WebTransport" src="https://img.shields.io/badge/WebTransport-draft--02-8A4FFF">
-  <img alt="Auth: JWT, OIDC, sessions" src="https://img.shields.io/badge/auth-JWT%20%C2%B7%20OIDC%20%C2%B7%20sessions-D8407F">
-  <img alt="TLS: BoringSSL" src="https://img.shields.io/badge/TLS-BoringSSL-2E7D32">
-  <img alt="Observability: Prometheus, OpenTelemetry" src="https://img.shields.io/badge/observability-Prometheus%20%C2%B7%20OpenTelemetry-E6522C">
-  <img alt="Databases: PostgreSQL, SQLite, MongoDB, Redis" src="https://img.shields.io/badge/databases-PostgreSQL%20%C2%B7%20SQLite%20%C2%B7%20MongoDB%20%C2%B7%20Redis-336791">
-  <a href="https://xuckless.github.io/anole/"><img alt="Docs" src="https://img.shields.io/badge/docs-xuckless.github.io%2Fanole-0A7B4F"></a>
-  <a href="https://github.com/xuckless/anole/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/xuckless/anole?style=flat&logo=github"></a>
+  <img alt="Protocols: HTTP/1.1, HTTP/2, HTTP/3, gRPC, WebSocket" src="https://img.shields.io/badge/protocols-HTTP%2F1.1%20%C2%B7%20h2%20%C2%B7%20h3%20%C2%B7%20gRPC%20%C2%B7%20WS-2F80ED?style=flat-square">
+  <img alt="WebTransport" src="https://img.shields.io/badge/WebTransport-draft--02-8A4FFF?style=flat-square">
+  <img alt="Auth: JWT, OIDC, sessions" src="https://img.shields.io/badge/auth-JWT%20%C2%B7%20OIDC%20%C2%B7%20sessions-D8407F?style=flat-square&logo=jsonwebtokens&logoColor=white">
+  <img alt="TLS: BoringSSL" src="https://img.shields.io/badge/TLS-BoringSSL-2E7D32?style=flat-square&logo=letsencrypt&logoColor=white">
+  <img alt="Observability: Prometheus, OpenTelemetry" src="https://img.shields.io/badge/observability-Prometheus%20%C2%B7%20OpenTelemetry-E6522C?style=flat-square&logo=prometheus&logoColor=white">
+  <img alt="Databases: PostgreSQL, SQLite, MongoDB, Redis" src="https://img.shields.io/badge/databases-PostgreSQL%20%C2%B7%20SQLite%20%C2%B7%20MongoDB%20%C2%B7%20Redis-336791?style=flat-square&logo=postgresql&logoColor=white">
+  <a href="https://github.com/xuckless/anole/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/xuckless/anole?style=flat-square&color=0A7B4F"></a>
+  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/github/license/xuckless/anole?style=flat-square&color=4C4C4C"></a>
+  <a href="https://xuckless.github.io/anole/"><img alt="Docs" src="https://img.shields.io/badge/docs-xuckless.github.io%2Fanole-0A7B4F?style=flat-square"></a>
+  <a href="https://github.com/xuckless/anole/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/xuckless/anole?style=flat-square&logo=github"></a>
 </p>
 
 <p align="center">
@@ -67,14 +70,31 @@ permalink: /packages/xuckless/anole/
 </p>
 
 
-An anole is a small lizard that changes colour to fit wherever it lands, and
-that's the idea: one server core that speaks whatever protocol the client
-showed up with. (Zig's mascot is a lizard too.)
+## What Anole offers
+
+1. **REST:** HTTP/1.1, HTTP/2 and HTTP/3, one router for all three ([routing](https://xuckless.github.io/anole/routing/), [server](https://xuckless.github.io/anole/server/)).
+2. **WebSockets:** over HTTP/1.1, HTTP/2 and HTTP/3, with rooms and topics ([docs](https://xuckless.github.io/anole/websocket/)).
+3. **gRPC:** server and client over HTTP/2, HTTP/3 and Unix sockets, plus gRPC-Web, Connect and JSON transcoding ([docs](https://xuckless.github.io/anole/grpc/)).
+4. **WebTransport:** over HTTP/3 (draft-02), streams and datagrams ([docs](https://xuckless.github.io/anole/webtransport/)).
+5. **Server-sent events:** topics published once to every subscriber, replay after a reconnect, and `watch` to stream database changes into SSE and WebSocket topics ([docs](https://xuckless.github.io/anole/realtime/)).
+6. **Raw TCP and UDP:** custom protocols on the same runtime, with TLS and the PROXY protocol ([docs](https://xuckless.github.io/anole/net/)).
+7. **Background work:** durable jobs with retries and delays, cron, and webhooks out (signed, retried) and in (Stripe, GitHub, Slack) ([jobs](https://xuckless.github.io/anole/jobs/), [cron](https://xuckless.github.io/anole/cron/), [webhooks](https://xuckless.github.io/anole/webhooks/)).
+8. **Auth:** JWT and JWKS, OIDC sign-in, sessions, CSRF, API keys, RBAC and rate limits ([docs](https://xuckless.github.io/anole/auth/)).
+9. **Databases:** PostgreSQL, SQLite, MongoDB and Redis/Valkey, with request deadlines and transactions; MySQL/MariaDB is planned ([docs](https://xuckless.github.io/anole/database/)).
+10. **Messaging and connectors:** NATS and Kafka, S3-compatible object storage and SMTP email ([messaging](https://xuckless.github.io/anole/messaging/), [storage](https://xuckless.github.io/anole/storage/), [email](https://xuckless.github.io/anole/email/)).
+11. **Caching built in:** request coalescing, a TTL result cache and an HTTP response cache ([docs](https://xuckless.github.io/anole/database/)).
+12. **TLS everywhere:** BoringSSL with mutual TLS, hot certificate reload and 0-RTT on HTTP/3 ([server](https://xuckless.github.io/anole/server/)).
+13. **Developer tools:** typed config and `.env` files, validation, OpenAPI, in-memory tests, `anole new` and a live console ([config](https://xuckless.github.io/anole/config/), [validation](https://xuckless.github.io/anole/validation/), [console](https://xuckless.github.io/anole/console/)).
+14. **Observability:** structured logs, Prometheus metrics, OpenTelemetry tracing and health checks ([docs](https://xuckless.github.io/anole/observability/)).
+15. **Outbound clients:** HTTP/1.1, HTTP/2 and HTTP/3 clients on the same TLS stack, with retries and circuit breakers ([docs](https://xuckless.github.io/anole/clients/)).
+16. **Operations:** graceful drain, zero-downtime restarts, systemd socket activation, the PROXY protocol, and the same app on AWS Lambda ([server](https://xuckless.github.io/anole/server/), [Lambda](https://xuckless.github.io/anole/lambda/)).
+17. **Node and Python:** a C ABI that lets Node and Python apps run on Anole's engine; the bindings, anole-node and anole-py, are on the way ([docs](https://xuckless.github.io/anole/c-abi/)).
 
 Anole doesn't reinvent the hard parts. It stands on libraries that have
 already survived the internet:
 - [zio](https://github.com/lalinsky/zio) for async I/O;
 - [dusty](https://github.com/lalinsky/dusty) for HTTP, adapted into Anole as its HTTP core;
+- [zig-protobuf](https://github.com/Arwalk/zig-protobuf) for protobuf generation;
 - nghttp2 for HTTP/2;
 - BoringSSL for TLS;
 - ngtcp2 and nghttp3 for HTTP/3.
@@ -87,6 +107,13 @@ auth and observability already in the box.
 Zig compiles every C dependency, so you install nothing but Zig. Each one
 sits behind a build flag, and whatever you switch off is never downloaded or
 compiled.
+
+## Start from a template
+
+`anole new my-api` makes a project (a JSON API, a PostgreSQL API, a chat, a gRPC
+service, or most of Anole in one app) with tests, an OpenAPI page at `/docs`
+and a ready `.env`; see [docs/templates.md](docs/templates.md) for the
+download. The sections below build the same thing by hand.
 
 ## Hello, World
 
@@ -109,7 +136,7 @@ pub fn main(init: std.process.Init) !void {
 That's the whole server. To try it:
 
 1. In a project made with `zig init`, run
-   `zig fetch --save git+https://github.com/xuckless/anole#v0.1.2`
+   `zig fetch --save git+https://github.com/xuckless/anole#v0.5.3`
    (or a later tag, or a commit).
 2. Make `build.zig` one call:
    `@import("anole").addApp(b, .{ .name = "api", .root_source_file = b.path("src/main.zig") })`.
@@ -123,6 +150,11 @@ app.grpc(pb.Greeter, .{ .SayHello = sayHello });          // gRPC, gRPC-Web, Con
 app.webtransport("/wt", session);                         // WebTransport
 try app.staticDir("/", "public", .{});                    // static files, ranges, ETags
 const db = try app.postgres(.{});                         // PostgreSQL from DATABASE_URL (also sqlite, mongodb, redis)
+const live = try app.sseTopics(.{});                      // server-sent events: publish once, replay on reconnect
+app.sse("/live", live, .{ .topics = &.{"news"} });
+const jobs = try app.jobs(.{ .store = .{ .postgres = db } }); // durable background jobs, cron and webhooks on top
+const files = try app.s3(.{});                            // S3, R2, MinIO (and app.smtp for email)
+try app.tcp(":7000", Echo, .{});                          // raw TCP (and app.udp) beside HTTP
 app.metrics(.{}); app.health(.{}); app.tracing(.{});      // Prometheus, health checks, OpenTelemetry
 try app.listenTls(":443", .fromFiles("cert.pem", "key.pem")); // HTTPS + HTTP/2 + HTTP/3
 ```
@@ -144,11 +176,23 @@ Where to go next:
 Anole is built to be fast and small: per-core event loops on io_uring or
 epoll, requests that arrive whole run without a task of their own, batched
 writes on every protocol, and idle connections that hold almost no memory.
-Rather than quote our own numbers, we're entering Anole in
-[HttpArena](https://github.com/MDA2AV/HttpArena), an independent benchmark
-that runs every framework on the same hardware with the same rules; its
-results will be linked here once they're published. Our own harness and raw
-results live in `bench/` on the
+Rather than quote my own numbers, I entered Anole in
+[HttpArena](https://www.http-arena.com/), an independent benchmark that runs
+every framework on the same hardware with the same rules. Its composite
+scores for v0.5.0, among all its flagship, emerging and experimental entries
+(the run saved in [HttpArena PR #1692](https://github.com/MDA2AV/HttpArena/pull/1692);
+the board shows it once the PR is merged):
+
+<p align="center">
+  <a href="https://www.http-arena.com/#scope=grpc"><img alt="HttpArena gRPC: 3rd of 12" src="https://img.shields.io/badge/HttpArena%20gRPC-3rd%20of%2012-8a5a12?style=flat-square&logo=zig&logoColor=white"></a>
+  <a href="https://www.http-arena.com/#scope=gw"><img alt="HttpArena Gateway: 3rd of 10" src="https://img.shields.io/badge/HttpArena%20Gateway-3rd%20of%2010-8a5a12?style=flat-square&logo=zig&logoColor=white"></a>
+  <a href="https://www.http-arena.com/#scope=h3"><img alt="HttpArena HTTP/3: 4th of 22" src="https://img.shields.io/badge/HttpArena%20HTTP%2F3-4th%20of%2022-8a5a12?style=flat-square&logo=zig&logoColor=white"></a>
+  <a href="https://www.http-arena.com/#scope=h2"><img alt="HttpArena HTTP/2: 7th of 38" src="https://img.shields.io/badge/HttpArena%20HTTP%2F2-7th%20of%2038-8a5a12?style=flat-square&logo=zig&logoColor=white"></a>
+  <a href="https://www.http-arena.com/#scope=ws"><img alt="HttpArena WebSocket: 7th of 42" src="https://img.shields.io/badge/HttpArena%20WebSocket-7th%20of%2042-8a5a12?style=flat-square&logo=zig&logoColor=white"></a>
+  <a href="https://www.http-arena.com/#scope=h1"><img alt="HttpArena HTTP/1.1: 9th of 102" src="https://img.shields.io/badge/HttpArena%20HTTP%2F1.1-9th%20of%20102-8a5a12?style=flat-square&logo=zig&logoColor=white"></a>
+</p>
+
+My own harness and raw results live in `bench/` on the
 [`bench/suite`](https://github.com/xuckless/anole/tree/bench/suite/bench)
 branch.
 
@@ -177,14 +221,16 @@ Everything below builds and passes its tests on macOS (arm64) and Linux
 - **TLS on BoringSSL:**
   - TLS 1.3 and 1.2, ALPN, mutual TLS (over HTTP/3 too), session tickets;
   - hot certificate reload on SIGHUP.
-- **WebSockets:** over HTTP/1.1, HTTP/2 (RFC 8441) and HTTP/3 (RFC 9220),
-  with permessage-deflate and a rooms helper for broadcast. It passes all
+- **WebSockets:** over HTTP/1.1, HTTP/2 (RFC 8441, opt-in) and HTTP/3
+  (RFC 9220), with permessage-deflate and a rooms helper for broadcast. It passes all
   517 Autobahn cases.
 - **WebTransport (draft-02):** streams both ways, datagrams, close codes and
   drain, on the same router, plus a client. It's checked against aioquic and
   in the interop runner.
 - **gRPC:**
-  - server and client, all four call modes;
+  - server and client, all four call modes, over HTTP/2 and HTTP/3 (checked
+    against grpc-dotnet both ways), and over Unix sockets between processes
+    on one host;
   - gRPC-Web, Buf's Connect protocol, JSON transcoding from
     `google.api.http`, and `grpc.health.v1`.
 
@@ -196,15 +242,21 @@ Everything below builds and passes its tests on macOS (arm64) and Linux
   - sessions (memory, Redis or sealed cookies), CSRF, Argon2id, API keys,
     RBAC and rate limiting.
 - **Observability:** Prometheus `/metrics`, OpenTelemetry traces, structured
-  access logs, `/healthz` and `/readyz`.
+  access logs, `/healthz` and `/readyz`; JSON Lines logs by default in
+  production, `req.log()` with request and trace ids, and readable startup
+  errors.
+- **Input and tests:** validation with 422 `application/problem+json` that
+  names every field, typed handlers (`anole.In`) checked at compile time,
+  and in-memory tests (`anole.testing`) with no socket.
 - **Operations:**
   - graceful drain;
   - zero-downtime restart on SIGUSR2, where the new process inherits every
     socket, QUIC included;
   - systemd socket activation and `Type=notify`;
   - the PROXY protocol and `X-Forwarded-*`.
-- **Clients:** HTTP/1.1, HTTP/2 and HTTP/3 clients, plus Redis/Valkey, all
-  on the same TLS stack.
+- **Clients:** HTTP/1.1, HTTP/2 and HTTP/3 clients (HTTP/2 by default where
+  the server offers it, one shared connection per origin and core), plus
+  Redis/Valkey, all on the same TLS stack.
 - **Databases:** built-in connectors, so a handler can query without a
   third-party driver and without blocking its core:
   - PostgreSQL, on a fork of pg.zig moved to `std.Io`, over the same
@@ -221,11 +273,37 @@ Everything below builds and passes its tests on macOS (arm64) and Linux
   - opt-in request coalescing and short-lived result caches, off unless
     asked for;
   - behind `-Dpostgres`, `-Dsqlite`, `-Dmongodb` and `-Dredis`.
+- **Messaging:** NATS (publish, request/reply, handlers, JetStream) and
+  Kafka (producer and consumer groups), Anole's own clients
+  ([messaging](docs/messaging.md)).
+- **Config and tooling:** typed settings from the environment and `.env`
+  files, deployment modes (standalone, behind a proxy, a platform such as
+  Cloud Run, AWS Lambda), OpenAPI 3.1 documents with a `/docs` page, the
+  `anole` command line with project templates, and a live console that
+  attaches to a running app ([config](docs/config.md),
+  [console](docs/console.md)).
+- **Object storage:** an S3 client for AWS S3, R2, MinIO, B2 and Supabase
+  Storage, with presigned URLs and multipart uploads ([storage](docs/storage.md)).
+- **Email:** SMTP with STARTTLS or TLS, HTML, attachments and a pool per
+  core ([email](docs/email.md)).
+- **Server-sent events:** topics published once to every subscriber, replay
+  after a reconnect, and `anole.watch` for database changes ([realtime](docs/realtime.md)).
+- **Background jobs:** queues with retries, backoff, delays and workers, in
+  memory or SQLite ([jobs](docs/jobs.md)).
+- **Cron:** schedules on the job queue, one job per tick across instances
+  ([cron](docs/cron.md)).
+- **Webhooks:** signed and retried delivery out, verification presets for
+  Stripe, GitHub and Slack in ([webhooks](docs/webhooks.md)).
+- **TCP and UDP servers:** raw protocols on the same runtime and listeners,
+  with TLS and the PROXY protocol ([net](docs/net.md)).
+- **AWS Lambda:** the same app served from the Lambda Runtime API with
+  `deployment = .lambda` ([lambda](docs/lambda.md)).
 
-**Status: pre-1.0; the latest release is 0.1.2** ([CHANGELOG.md](CHANGELOG.md)).
+**Status: pre-1.0; the latest release is 0.5.3** ([CHANGELOG.md](CHANGELOG.md)).
 The API may still change before 1.0. Known issues and limitations are tracked in
-[Issues](https://github.com/xuckless/anole/issues). Next: a C ABI, then
-bindings for Python (ASGI) and Node (TypeScript).
+[Issues](https://github.com/xuckless/anole/issues). Next: the Node and
+Python bindings, anole-node (TypeScript) and anole-py (ASGI and WSGI), on the
+C ABI that ships today.
 
 ## Requirements
 
@@ -251,6 +329,15 @@ zig build run-io        # handlers waiting on timers, files and outbound request
 zig build docs          # the API reference (Zig autodoc) in zig-out/docs
 ```
 
+A passing test's log lines stay hidden; a test that fails, leaks, logs an
+error or crashes (a panic, SIGSEGV, SIGBUS, SIGILL, SIGFPE or SIGABRT) shows
+them. CI runs the tests with `--test-timeout 120s`: a test still running at
+110 s, its teardown included, is taken for a hang, and the test runner prints
+its name and every thread's backtrace (gdb on Linux, lldb or `sample` on
+macOS) before the limit ends it. `zig build hang-probe --test-timeout 20s`
+with `ANOLE_TEST_DUMP_AFTER=5` shows what that looks like; `zig build
+crash-probe` checks that a crashing test's lines are printed.
+
 `examples/full` speaks HTTP/1.1 and HTTP/2 on both ports and HTTP/3 on 8443
 over UDP:
 - `curl --http2-prior-knowledge localhost:8080/` and `curl -k --http2 https://localhost:8443/` both return `hello`;
@@ -271,6 +358,7 @@ memory, so `-k` it. Pass other ports with `zig build run-full -- 9000 9443`.
 | `-Dhttp3=bool` | false | false | true | ngtcp2, nghttp3, WebTransport |
 | `-Dcompression=bool` | false | true | true | zlib-ng, zstd |
 | `-Dbrotli=bool` | false | true | true | Brotli responses (google/brotli); needs `-Dcompression` |
+| `-Dlibdeflate=bool` | false | true | true | libdeflate for buffered gzip responses; needs `-Dcompression` |
 | `-Dgrpc=bool` | false | false | true | gRPC, zig-protobuf (and protoc for codegen) |
 | `-Dwebsocket=bool` | false | true | true | WebSocket |
 | `-Dauth=bool` | false | true | true | JWT, OIDC, CSRF, passwords, API keys, RBAC |
@@ -279,12 +367,30 @@ memory, so `-k` it. Pass other ports with `zig build run-full -- 9000 9443`.
 | `-Dpostgres=bool` | false | true | true | PostgreSQL client (pg.zig fork) |
 | `-Dsqlite=bool` | false | true | true | SQLite (amalgamation, zig-sqlite fork) |
 | `-Dmongodb=bool` | false | false | true | MongoDB client and BSON |
+| `-Dopenapi=bool` | false | true | true | OpenAPI 3.1 documents and the docs page (pure Zig) |
+| `-Dnats=bool` | false | false | true | NATS client (pure Zig) |
+| `-Dkafka=bool` | false | false | true | Kafka client, lz4; needs `-Dcompression` |
+| `-Dconsole=bool` | false | true | true | the live console (control socket and terminal UI) |
+| `-Dnet=bool` | false | true | true | raw TCP and UDP servers (pure Zig) |
+| `-Djobs=bool` | false | true | true | durable jobs and cron (pure Zig) |
+| `-Dwebhooks=bool` | false | true | true | webhooks out and the verify middleware; needs `-Djobs` |
+| `-Ds3=bool` | false | true | true | S3-compatible object storage client (pure Zig) |
+| `-Dsmtp=bool` | false | true | true | SMTP client for sending mail (pure Zig) |
+| `-Dlambda=bool` | true | true | true | the AWS Lambda adapter (pure Zig) |
 
 Constraints:
 - gRPC needs HTTP/2, so `-Dhttp2=false` turns gRPC off. Asking for both
   `-Dhttp2=false` and `-Dgrpc=true` is an error.
 - HTTP/3 needs TLS, so `-Dtls=none` turns HTTP/3 off. Asking for both
   `-Dtls=none` and `-Dhttp3=true` is an error.
+- Brotli, libdeflate and Kafka need `-Dcompression`, and webhooks need `-Djobs`, in the
+  same way: switching the first off switches them off, and asking for both
+  is an error.
+
+`-Ddefault-deployment` sets the deployment a build falls back on when neither
+the options nor `ANOLE_DEPLOYMENT` name one (`zig build lambda` builds with
+`lambda`). With `addApp`, `.features = .{ .kafka = false }` turns single
+features on or off over the preset.
 
 In code, the chosen flags are `anole.features`. A minimal build of
 Hello, World is about 1.3 MB; everything on is about 6 MB.
@@ -292,7 +398,7 @@ Hello, World is about 1.3 MB; everything on is about 6 MB.
 ## Using Anole as a dependency
 
 ```sh
-zig fetch --save git+https://github.com/xuckless/anole#v0.1.2
+zig fetch --save git+https://github.com/xuckless/anole#v0.5.3
 ```
 
 Any later tag (see the [releases](https://github.com/xuckless/anole/releases))
@@ -332,15 +438,24 @@ set up this way, and CI builds it from an empty cache on every push.
   generated from the source's doc comments. The same guides are in
   [`docs/`](docs/) and on the [wiki](https://github.com/xuckless/anole/wiki).
 - Guides: [getting started](docs/getting-started.md),
-  [routing](docs/routing.md), [the server](docs/server.md),
+  [routing](docs/routing.md), [validation](docs/validation.md), [the
+  server](docs/server.md), [config](docs/config.md),
   [WebSocket](docs/websocket.md), [WebTransport](docs/webtransport.md),
   [gRPC](docs/grpc.md), [clients](docs/clients.md),
-  [databases](docs/database.md), [auth](docs/auth.md),
-  [observability](docs/observability.md), [from Fiber](docs/from-fiber.md).
+  [databases](docs/database.md), [messaging](docs/messaging.md),
+  [storage](docs/storage.md), [email](docs/email.md), [server-sent
+  events](docs/realtime.md), [jobs](docs/jobs.md), [cron](docs/cron.md),
+  [webhooks](docs/webhooks.md), [TCP and UDP](docs/net.md),
+  [resilience](docs/resilience.md), [auth](docs/auth.md),
+  [observability](docs/observability.md), [logging](docs/logging.md), [the
+  console](docs/console.md), [testing](docs/testing.md),
+  [OpenAPI](docs/openapi.md), [templates](docs/templates.md), [AWS
+  Lambda](docs/lambda.md), [from Fiber](docs/from-fiber.md),
+  [migrating](docs/migrating.md) and [the C ABI](docs/c-abi.md).
 - Examples, each runnable with `zig build run-<name>`: `hello`, `rest`,
-  `websocket`, `grpc`, `auth`, `clients`, `observe`, `io`, `postgres`,
-  `sqlite`, `mongodb`, `redis`, and `full` (every listener and option
-  spelled out).
+  `websocket`, `net`, `grpc`, `auth`, `clients`, `observe`, `io`,
+  `postgres`, `sqlite`, `mongodb`, `redis`, `lambda`, and `full` (every
+  listener and option spelled out).
 - [CHANGELOG.md](CHANGELOG.md) and [MAINTAINING.md](MAINTAINING.md): pins,
   forks, the Zig version policy, releases.
 

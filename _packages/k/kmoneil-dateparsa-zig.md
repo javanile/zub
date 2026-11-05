@@ -1,26 +1,37 @@
 ---
 title: dateparsa.zig
-description: Date parsing for Zig. Detect the format once, parse millions of rows with zero allocation. A port of dateparsa (Go).
+description: "Date parsing for input whose format you do not control, in Zig and from C. Detects 32 formats, Unix timestamps and natural language (\"3 days ago\") in 20 locales, reports ambiguity instead of guessing, and returns a layout that parses the rest of a column with no detection and no allocation. A port of dateparsa (Go)."
 license: Apache-2.0
 author: kmoneil
 author_github: kmoneil
 repository: https://github.com/kmoneil/dateparsa.zig
 keywords:
+  - c-library
   - date
+  - date-parser
+  - date-parsing
   - dateparse
   - dateparser
+  - datetime
+  - ffi
+  - i18n
+  - iso8601
+  - json
+  - natural-language
   - parser
-  - parsing
-date: 2026-10-28
-category: data-formats
-updated_at: 2026-10-28T16:20:26+00:00
-last_sync: 2026-10-28T16:20:26Z
+  - rfc3339
+  - timestamp
+  - zero-allocation
+date: 2026-11-05
+category: systems
+updated_at: 2026-11-05T17:49:55+00:00
+last_sync: 2026-11-05T17:49:55Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 4
-distributable_binary_count: 4
+binary_count: 7
+distributable_binary_count: 7
 multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
@@ -39,7 +50,7 @@ the format, parses the value, and hands you a compiled layout that reads the
 rest of the column with no detection and no allocation.
 
 [![CI](https://github.com/kmoneil/dateparsa.zig/actions/workflows/ci.yml/badge.svg?branch=main&event=push)](https://github.com/kmoneil/dateparsa.zig/actions/workflows/ci.yml)
-[![Zig 0.17.0](https://img.shields.io/badge/Zig-0.17.0-f7a41d?logo=zig&logoColor=white)](https://ziglang.org/download/)
+[![Zig 0.17.1](https://img.shields.io/badge/Zig-0.17.1-f7a41d?logo=zig&logoColor=white)](https://ziglang.org/download/)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 [![Allocations: none](https://img.shields.io/badge/allocations-none-2ea44f)](#design)
 [![Locales: 20](https://img.shields.io/badge/locales-20-8a2be2)](#locales)
@@ -83,7 +94,7 @@ does something differently, it is on purpose and [listed below](#differences-fro
 ## Install
 
 ```sh
-zig fetch --save git+https://github.com/kmoneil/dateparsa.zig#v0.1.0
+zig fetch --save git+https://github.com/kmoneil/dateparsa.zig#v0.5.1
 ```
 
 Then in `build.zig`:
@@ -97,7 +108,7 @@ const dateparsa = b.dependency("dateparsa", .{
 exe.root_module.addImport("dateparsa", dateparsa.module("dateparsa"));
 ```
 
-Requires Zig 0.17.0. What changed in each release is in
+Requires Zig 0.17.1. What changed in each release is in
 [CHANGELOG.md](CHANGELOG.md).
 
 ## How it works
@@ -199,6 +210,83 @@ name beside a bare number asks the same kind of question: `March 15` is the
 15th or March 2015, and `01MAY10` is 1 May 2010 or 10 May 2001. Strict mode
 offers every reading that is a real date, the preferred one first.
 
+### Settle a column's order
+
+One value often cannot say which part is the month: `01/02/2024` reads either
+way, and `parse` takes the preferences' guess. A column usually can. One
+`13/02/2024` anywhere in it means day first for all of it.
+
+```zig
+const column = [_][]const u8{ "01/02/2024", "05/06/2024", "13/02/2024", "03/04/2024" };
+const report = dateparsa.detectColumn(&column, .{});
+// report.order        .day_first
+// report.settled_by   2, the index of "13/02/2024"
+// report.conflicts    0
+
+var p = dateparsa.Parser.init(report.options); // prefer_day_first is set
+const first = try p.parse(column[0]); // the 1st of February
+```
+
+When nothing in the column settles it, `report.order` is null and
+`report.fits` says which orders are left. When values contradict each other
+(`13/02/2024` beside `02/13/2024`), it is the order the fewest contradict, and
+`conflicts` and `first_conflict` say how many and where. Two-digit years narrow
+it together: `13/02/03` is day first or year first, `05/06/31` month first or
+day first, and the two leave only day first. ISO dates, month names, timestamps
+and words have no say. `Column` does the same one value at a time, for a column
+you stream, keeping only counts.
+
+### Hand the format to another tool
+
+A detected layout can be spelled as the format string another tool takes:
+strftime (C, Python, pandas, Ruby), Go's reference time, or Java's
+`DateTimeFormatter` (Java, Kotlin, Spark). Detect once, then pass the format to
+whatever reads the column next.
+
+```zig
+const sample = "13/02/2024 10:30";
+const r = try dateparsa.parse(sample);
+var buf: [128]u8 = undefined;
+var w: std.Io.Writer = .fixed(&buf);
+try r.layout.formatString(.strftime, sample, &w); // %d/%m/%Y %H:%M
+// .go gives 02/01/2006 15:04, .java gives dd/MM/yyyy HH:mm
+```
+
+Pass a value the layout reads, such as the one it was detected from: a layout
+keeps no input bytes, and the string spells that value's separators and words.
+A field a dialect cannot spell is `error.Unsupported`, never a string that
+reads something else: an ordinal suffix (`23rd`) in any dialect, an ISO week
+date outside strftime, a fraction past microseconds or a zone name other than
+UTC or GMT in strftime. `tools/format_check.sh` parses every example in the
+format table with the string each dialect gets, in Python, Go and Java, and
+checks they read what dateparsa read.
+
+### When the format is already known
+
+A schema, a config file or another tool may already say how a column is
+written. `Layout.fromFormatString` reads that format string, in any of the
+three dialects, into a layout, so no value is detected:
+
+```zig
+const l = try dateparsa.Layout.fromFormatString(.strftime, "%d/%m/%Y %H:%M", .{});
+const t = try l.parse("01/02/2024 9:05"); // the 1st of February, 09:05
+// l.reusable() is true: the format says the order, where a layout
+// detected from "13/02/2024" is decided per value.
+```
+
+Each dialect reads as its own parser does, within what a layout holds:
+strftime's `%m`, `%d`, `%H` and `%I`, Go's `1`, `2`, `15` and `3`, and Java's
+`M`, `d`, `H` and `h` take one digit or two (two when another number touches
+them, as in `%Y%m%d`); `%f` takes one to nine digits and `%z` takes `Z`,
+`+05:30` or `+0530`; a month or weekday name, wide or abbreviated, reads any
+month or weekday in English and the locales in the options. Text between fields
+is held byte for byte. A field no layout reads (`%U`, Go's `4`, Java's `w`) is
+`error.Unsupported`, and so is a `%f` with a number right after it (`%f%j`),
+which cannot say where the fraction stops; a string that is no date format (`%d %Y`, `%I:%M` with no
+`%p`, a field twice) is `error.InvalidFormat`, and a format with no year needs
+`base_time`. What `formatString` writes, `fromFormatString` reads back to the
+same time, and a fuzz target holds the two to it.
+
 ### Natural language
 
 ```zig
@@ -287,13 +375,107 @@ values from a database row or anything else already typed, and
 `FlexTime.fromValueWith(&parser, value)` reads strings with your `Options`,
 strict mode included.
 
+### From the command line
+
+`dateparsa detect` says how a column is written, and `dateparsa normalize`
+writes it back as RFC 3339:
+
+```console
+$ cat orders.csv
+id,ordered_at,total
+1,03/02/2024 09:15,12.50
+2,14/02/2024 17:40,8.00
+3,,3.20
+4,TBD,4.75
+
+$ dateparsa detect orders.csv --col ordered_at
+values     3, and 1 empty
+read       2
+not read   1
+           line 5: "TBD"
+order      day first, settled by line 3: "14/02/2024 17:40"
+ambiguous  1, read day first as the column settles
+
+values  example           strftime        go                java
+     2  03/02/2024 09:15  %d/%m/%Y %H:%M  02/01/2006 15:04  dd/MM/yyyy HH:mm
+
+$ dateparsa normalize orders.csv --col ordered_at
+id,ordered_at,total
+1,2024-02-03T09:15:00Z,12.50
+2,2024-02-14T17:40:00Z,8.00
+3,,3.20
+4,TBD,4.75
+dateparsa: 1 value not read, left as it was:
+  line 5: "TBD"
+```
+
+`--col` takes a column's number, from 1, or its name in the header. A file is
+read as CSV when `--col` is given (quoted fields, line breaks inside quotes,
+`-d ';'` or `-d tab` for other separators) and as one value a line when it is
+not. With no file, standard input is read. `normalize` changes only the
+column's bytes: every other field, the quoting, the line endings and the byte
+order mark are written back as they were read, and a value it cannot read is
+left as it was and listed on standard error.
+
+The date order is settled from the whole column before the first value is
+written, so `03/02/2024` on line 2 is read day first because of line 3. That
+means two passes: a file is read twice, and standard input is held in memory.
+Where nothing in the column settles the order, `normalize` refuses to guess
+and asks for `--order day-first` (or `month-first`, `year-first`), which also
+lets it stream standard input in one pass. `detect --json` writes the report
+for a script, and both exit 0 when every value was read, 1 when some were not
+or the order is not settled, and 2 on a usage or input error.
+
+`--base now` (or any date and time) reads relative dates and dates with no
+year, `--tz +05:30` is the offset of values that write no zone, `--utc` writes
+every time in UTC, and `--locale fr,de` reads month names in more languages.
+`dateparsa --help` lists it all.
+
+Each [release](https://github.com/kmoneil/dateparsa.zig/releases) archive
+holds the command in `bin/` (`dateparsa.exe` on Windows), a single static
+executable on Linux. To build it yourself, `zig build -Doptimize=ReleaseSafe`
+puts it in `zig-out/bin`.
+
+### From Python
+
+```sh
+pip install dateparsa
+```
+
+```python
+import dateparsa
+
+r = dateparsa.parse("13/02/2024 10:30")
+r.datetime                    # datetime(2024, 2, 13, 10, 30, tzinfo=timezone.utc)
+r.layout.format_string()      # '%d/%m/%Y %H:%M', for pandas
+dateparsa.Layout.from_format("%d/%m/%Y").parse("01/02/2024")   # February 1st: no detection
+dateparsa.detect_column(["01/02/2024", "13/02/2024"]).order   # 'day_first'
+
+col = dateparsa.parse_column(df["when"])   # a whole column in one call
+col.failed                                 # the rows that did not parse
+df["when"] = col.datetime64()              # NaT for those, if numpy is there
+```
+
+Wheels for Linux (glibc and musl), macOS 13 and later, and Windows, on x86_64
+and arm64, for Python 3.9 and later: the release libraries below behind a
+`ctypes` binding, so nothing compiles on install. Every release installs each
+wheel on its own platform and runs the Python tests against it first.
+[python/README.md](python/README.md) has the rest.
+
 ### From C and other languages
 
-`zig build lib` builds `libdateparsa` (static, or shared with
-`-Dlinkage=dynamic`) into `zig-out/lib` and its header,
-[`include/dateparsa.h`](include/dateparsa.h), into `zig-out/include`. Anything
-that can call C can use it: Python through `ctypes`, Rust, Go through cgo,
-Swift, C#.
+Each [release](https://github.com/kmoneil/dateparsa.zig/releases) attaches
+`libdateparsa` for Linux, macOS (13 and later) and Windows, on x86_64 and
+arm64: one archive per platform holding the static and the shared library, the
+header [`include/dateparsa.h`](include/dateparsa.h), the `dateparsa` command
+and the licences, with
+`SHA256SUMS` and build provenance (`gh attestation verify <archive> --repo
+kmoneil/dateparsa.zig`). On Windows the DLL's import library is
+`dateparsa.lib` and the static library `dateparsa_static.lib`. To build it
+yourself, `zig build lib` puts the library (static, or shared with
+`-Dlinkage=dynamic`) in `zig-out/lib` and the header in `zig-out/include`.
+Anything that can call C can use it: Python through `ctypes`, Rust, Go through
+cgo, Swift, C#.
 
 ```c
 #include "dateparsa.h"
@@ -310,14 +492,19 @@ if (dateparsa_parse("2024-03-15 10:30:00", 19, NULL, &r) == DATEPARSA_OK) {
 It is the same library and keeps the same promises: nothing allocates, every
 struct is yours, and a zeroed `dateparsa_options` is the default. Strings go in
 as pointer and length; the labels and messages that come back are static and
-not NUL-terminated. `dateparsa_parser` is the column cache, and
-`dateparsa_layout`, the reusable format, copies like any struct. What a C
+not NUL-terminated. `dateparsa_parser` is the column cache,
+`dateparsa_column` settles a column's order, `dateparsa_parse_column` parses
+a whole column in one call (for a language where a call costs more than a
+parse, as from Python), `dateparsa_format_string` spells a
+layout for strftime, Go or Java and `dateparsa_layout_from_format` reads one
+back, and `dateparsa_layout`, the reusable format, copies like any struct.
+What a C
 caller passes in is checked rather than trusted: a base time that is no date,
 an offset of a day or more, a locale bit the build left out, a `NULL` where a
 pointer is needed, or a layout the library never filled in is
-`DATEPARSA_INVALID_ARGUMENT`, and `diagnostics.message` says which. Build with
-`-Doptimize=ReleaseFast` for speed and `-Dtarget` for the oldest system you ship
-to, such as `-Dtarget=aarch64-macos.13.0`.
+`DATEPARSA_INVALID_ARGUMENT`, and `diagnostics.message` says which. Building
+it yourself, use `-Doptimize=ReleaseFast` for speed and `-Dtarget` for the
+oldest system you ship to, such as `-Dtarget=aarch64-macos.13.0`.
 
 ## Formats
 
@@ -374,38 +561,66 @@ Each is deliberate.
 
 | Check | What it covers |
 |---|---|
-| `zig build test` | The full suite, including every row of the Go library's golden corpus (`testdata/golden.txt`, 1,377 inputs) and every example in this README, format table included |
+| `zig build test` | The full suite, including every row of the Go library's golden corpus (`testdata/golden.txt`, 1,377 inputs) and every example in this README, format table included. It runs [zigvet](https://github.com/kmoneil/zigvet) too, for code the compiler accepts that is almost certainly wrong, and [gnarl](https://github.com/kmoneil/gnarl), which fails a function newly over its complexity limit or more complex than `complexity.baseline` holds it |
 | `tools/oracle.sh` | Runs the Go library and this port side by side: 33,186 public-API answers under nine option sets, including a first row's layout reused on 3,522 other rows, and 124,068 natural-language answers across every locale. All identical. |
-| `tools/fuzz.sh` | Zig's fuzzer on seven properties: any bytes parse without tripping a safety check, to a time that round-trips through RFC 3339 and that the result's layout re-reads; a layout reused on another input refuses it or agrees with detection; a primed `Parser` agrees with `parseWith`; the fast path agrees with the interpreter; any JSON `FlexTime` reads is a valid time whose RFC 3339 reads back to it; `FlexTime`'s caches agree with cold ones; and the C API refuses exactly the options it must, whatever a C struct holds, and otherwise answers as `parseWith` does. `zig build test` replays their seeds: the Go library's fuzz seeds and crashers, the golden corpus and every format's example |
-| CI | Every pull request runs formatting, zigvet and `zig build test` on Linux, macOS and Windows, in every optimize mode, and with only `en` or only `fr,de` compiled in. The fuzzer runs 50K times a target after each merge and 10M a night, from a corpus kept between runs; a find opens an issue |
-| C API | `zig build test` also checks `include/dateparsa.h` against the exports field by field, calls through the header on every golden row under five option sets and down the corpus with a parser, runs `test/c_api.c` against the static library on every platform CI covers, and compiles the header as C++ |
+| `tools/fuzz.sh` | Zig's fuzzer on twelve properties: any bytes parse without tripping a safety check, to a time that round-trips through RFC 3339 and that the result's layout re-reads, and whose format string in every dialect is spelled or refused; a layout reused on another input refuses it or agrees with detection; a primed `Parser` agrees with `parseWith`; the fast path agrees with the interpreter; any JSON `FlexTime` reads is a valid time whose RFC 3339 reads back to it; `FlexTime`'s caches agree with cold ones; each field order a column's values are said to fit is the order their preferences read, and a column's options read every value that fits its order in it; the C API refuses exactly the options it must, whatever a C struct holds, and otherwise answers as `parseWith` does; the C column call, on any bytes split at any separator, answers for each value what a `Parser` answers; an email or HTTP date read by its shape is read as the textual detector reads it; a layout's format string, read back, reads the value it was spelled from to the same time and agrees with the layout wherever both read; and a layout read from any format string spells formats that read back to the same time. `zig build test` replays their seeds: the Go library's fuzz seeds and crashers, the golden corpus and every format's example |
+| CI | Every pull request runs formatting, zigvet, gnarl and `zig build test` on Linux, macOS and Windows, in every optimize mode, and with only `en` or only `fr,de` compiled in. The fuzzer runs 50K times a target after each merge and 10M a night, from a corpus kept between runs; a find opens an issue |
+| C API | `zig build test` also checks `include/dateparsa.h` against the exports field by field, calls through the header on every golden row under five option sets, down the corpus with a parser, and as one column call under four, runs `test/c_api.c` against the static library on every platform CI covers, and compiles the header as C++ |
+| The command | `zig build test` runs the `dateparsa` command on CSV and line input, through every message it writes, and runs the built binary on a file and on standard input; each release runs its own prebuilt binary on Linux, macOS and Windows before publishing |
+| `tools/format_check.sh` | Every example in the format table, and variants of it, parsed with the format string each dialect gets, by Python's `strptime`, Go's `time.Parse` and Java's `DateTimeFormatter`: 155 format strings, each reading the fields it sets as dateparsa does |
 | Unicode tables | Lowercasing and word boundaries match Go's `unicode` package on all 1,114,112 code points |
 | Deliberate breaks | Each feature's tests were run against seeded bugs, and every bug that could change an answer was caught |
 
 ## Performance
 
 Measured against the Go library on one machine, by the Go library's own
-benchmarks: reusing a layout takes 0.6 to 0.8 of Go's time, natural language
-0.3 to 0.5, a miss 0.2 to 0.8 and a textual date 0.5 to 0.6, and the first
-parse of the other structured formats is at or near Go's.
-[docs/PERF.md](docs/PERF.md) has the table, how it is measured, and why a
-number from it means nothing on another machine.
+benchmarks: the first parse of a structured format takes 0.4 to 0.7 of Go's
+time, reusing a layout 0.6 to 0.8, a textual date 0.5 to 0.6, natural
+language 0.3 to 0.5 and a miss 0.2 to 0.8.
+
+Against other parsers on the same machine: a reused layout reads ISO 8601
+and RFC 3339 in 0.6 to 0.8 of zeit's time, and through the C interface
+Rust's fastest parsers, told the format, take 0.4 to 0.9 of a layout's time.
+Working the format out, dateparsa is faster than Rust's dateparser on all but
+RFC 3339, RFC 2822 and a non-date. From Python it is 6 to 13 times as fast as
+dateutil's `parse`, 140 to 730 times as fast as dateparser, and faster than
+`strptime` is when told the format, though the binding still costs about ten
+times what the parse does. A whole column from Python, through
+`parse_column`, goes into numpy in 0.3 to 0.4 of the time pandas takes to
+work out its format.
+
+[docs/PERF.md](docs/PERF.md) has the tables, how they are measured, and why
+a number from them means nothing on another machine.
 
 ## Development
 
 ```sh
-zig build test          # unit, golden corpus and README tests
+zig build test          # unit, golden corpus and README tests, zigvet and gnarl
 zig build fmt-check     # formatting
-zig build vet           # zigvet, github.com/kmoneil/zigvet
+zig build vet           # zigvet alone, github.com/kmoneil/zigvet (on the PATH)
+zig build complexity    # gnarl alone, github.com/kmoneil/gnarl (on the PATH)
 zig build docs          # API documentation into zig-out/docs
+zig build run -- detect FILE --col N   # the dateparsa command, built and run
 zig build lib           # libdateparsa and its C header into zig-out (-Dlinkage=dynamic)
+tools/dist.sh           # every release platform's library, archived into zig-out/dist
+tools/format_check.sh   # format strings, parsed by Python, Go and Java (needs all three)
+python3 -I tools/python_wheels.py   # after tools/dist.sh: the wheels, into zig-out/wheels
 zig build fuzz          # replay the fuzz seeds alone
 zig build bench         # the benchmarks (-- -bench NAME -count N -benchtime MS)
 tools/bench.sh          # against the Go library, on this machine (needs go)
+tools/bench_others.sh   # against parsers in Zig, Rust and Python (needs cargo and uv)
 tools/fuzz.sh [LIMIT]   # fuzz them, LIMIT runs each (default 1M), failing on a find
 zig build locales       # regenerate src/locale/ from the Go repository's tables
 zig build unicode       # regenerate src/unicode_data.zig (needs go)
 tools/oracle.sh         # diff against the Go library (needs go and a Go checkout)
+```
+
+The Python tests run against an installed wheel, or against a library you
+built:
+
+```sh
+zig build lib -Dlinkage=dynamic
+DATEPARSA_LIB=zig-out/lib/libdateparsa.dylib PYTHONPATH=python/src python3 -m unittest discover -s python/tests
 ```
 
 ## License

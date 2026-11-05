@@ -9,10 +9,10 @@ keywords:
   - binary-data
   - serialization
   - serialization-library
-date: 2026-05-06
+date: 2026-10-30
 category: data-formats
-updated_at: 2026-05-06T13:30:18+00:00
-last_sync: 2026-05-06T13:30:18Z
+updated_at: 2026-10-30T15:02:17+00:00
+last_sync: 2026-10-30T15:02:17Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -47,6 +47,7 @@ A Zig binary serialization format and library.
 - Opaque types
 - Function pointers
 - Frames
+- SPIR-V
 
 ## API
 

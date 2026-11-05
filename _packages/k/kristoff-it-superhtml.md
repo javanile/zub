@@ -13,9 +13,9 @@ keywords:
   - lsp-server
   - templating-engine
   - validator
-date: 2026-10-29
-updated_at: 2026-10-29T14:45:59+00:00
-last_sync: 2026-10-29T14:45:59Z
+date: 2026-11-05
+updated_at: 2026-11-05T06:20:47+00:00
+last_sync: 2026-11-05T06:20:47Z
 package_kind: hybrid
 has_library: true
 has_binary: true

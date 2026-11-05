@@ -6,9 +6,9 @@ author: eggyengine
 author_github: eggyengine
 repository: https://github.com/eggyengine/humpty
 keywords:
-date: 2026-10-25
-updated_at: 2026-10-25T13:57:31+00:00
-last_sync: 2026-10-25T13:57:31Z
+date: 2026-10-31
+updated_at: 2026-10-31T11:48:56+00:00
+last_sync: 2026-10-31T11:48:56Z
 package_kind: library
 has_library: true
 has_binary: false
