@@ -8,10 +8,10 @@ repository: https://github.com/leo-gan/gld-avro-zig
 keywords:
   - avro
   - serializer
-date: 2026-10-14
+date: 2026-11-04
 category: data-formats
-updated_at: 2026-10-14T19:53:37+00:00
-last_sync: 2026-10-14T19:53:37Z
+updated_at: 2026-11-04T21:13:34+00:00
+last_sync: 2026-11-04T21:13:34Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -26,6 +26,8 @@ permalink: /packages/leo-gan/gld-avro-zig/
 ---
 
 # gld-avro-zig
+
+[Serialization](https://leo-gan.github.io/serialization/) is the hub for the theory, the history, and the benchmarks.
 
 A from-scratch [Apache Avro](https://avro.apache.org/docs/1.11.1/specification/)
 library for [Zig](https://ziglang.org/) 0.16. The import is `avro`. The code

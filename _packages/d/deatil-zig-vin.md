@@ -13,9 +13,9 @@ keywords:
   - vin
   - zig-jinja
   - zig-vin
-date: 2026-10-29
-updated_at: 2026-10-29T15:38:35+00:00
-last_sync: 2026-10-29T15:38:35Z
+date: 2026-11-05
+updated_at: 2026-11-05T04:42:25+00:00
+last_sync: 2026-11-05T04:42:25Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -31,7 +31,7 @@ permalink: /packages/deatil/zig-vin/
 
 ## Zig-vin 
 
-A template library like jinja for zig.
+A template render library like jinja2 for zig.
 
 
 ### Env

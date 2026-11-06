@@ -22,9 +22,9 @@ keywords:
   - rest-client
   - secret-manager
   - workload-identity-federation
-date: 2026-11-05
-updated_at: 2026-11-05T18:00:38+00:00
-last_sync: 2026-11-05T18:00:38Z
+date: 2026-11-06
+updated_at: 2026-11-06T17:11:48+00:00
+last_sync: 2026-11-06T17:11:48Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -95,7 +95,7 @@ Pub/Sub, Cloud Storage, Secret Manager and Firestore, with credentials that find
 | 🔑 | [`secret_manager`](docs/secret-manager/README.md) | Secret Manager v1: a secret's bytes, verified and wiped after use; versions; secrets global or regional, their settings, notifications, rotation, encryption keys and IAM policies | beta |
 | 📜 | [`logging`](docs/logging/README.md) | Cloud Logging v2, the read side: entries a page at a time under the read quota, a tail by polling, log names, buckets and views for a picker; an in-memory Cloud Logging for your own tests | beta |
 | 🗂️ | [`resource_manager`](docs/resource_manager/README.md) | Cloud Resource Manager v3: every project a credential can see, in one list for a project switcher; one project as it is now; the folders and organizations above them, by name; an in-memory Resource Manager for your own tests | beta |
-| 🚨 | [`error_reporting`](docs/error_reporting/README.md) | Cloud Error Reporting, the read side: what each error group came to over a period, in buckets for a trend chart; a group's errors with their stack traces; resolving, acknowledging and muting a group; the per-user quota counted; an in-memory Error Reporting for your own tests | beta |
+| 🚨 | [`error_reporting`](docs/error_reporting/README.md) | Cloud Error Reporting, the read side: what each error group came to over a period, in buckets for a trend chart; a group's errors with their stack traces; resolving, acknowledging and muting a group, and linking it to a tracker's issues; the per-user quota counted; an in-memory Error Reporting for your own tests | beta |
 | 📈 | [`monitoring`](docs/monitoring/README.md) | Cloud Monitoring v3, for a program's own metrics: points written with what the server stored and refused; series read filtered, aligned and reduced; descriptors; the alerts open in the project, their policies, enabling or disabling one, and snoozes; a recorder of counters, gauges, histograms and observers written every interval; an in-memory Cloud Monitoring for your own tests | beta |
 | 🔐 | [`kms`](docs/kms/README.md) | Cloud KMS v1: encrypt, decrypt, sign and MAC with keys the server holds, every answer checked against its checksums and decrypted bytes wiped; signatures checked on this machine (ECDSA, RSA, Ed25519, ML-DSA); key rings, keys and versions from creation to deletion, with rotation and IAM; an in-memory Cloud KMS for your own tests | beta |
 | ⏰ | [`scheduler`](docs/scheduler/README.md) | Cloud Scheduler v1: the jobs a project schedules, with their state, target and last attempt; `Job.failing` for a health view; run now, pause and resume, each with its exact request built first for a confirmation; an in-memory Cloud Scheduler for your own tests | beta |
@@ -105,15 +105,16 @@ Pub/Sub, Cloud Storage, Secret Manager and Firestore, with credentials that find
 | 🔁 | [`datatransfer`](docs/datatransfer/README.md) | BigQuery Data Transfer v1: scheduled queries and other transfer configs in every location, with their schedules, typed query and latest state; their runs and each run's messages; run a config now, its exact request built first and sent once; an in-memory Data Transfer for your own tests | experimental |
 | 🖥️ | [`compute`](docs/compute/README.md) | Compute Engine v1: VMs in one zone or every zone, with their status, scheduling (spot or standard, run limits), disks, network, labels, metadata and fingerprints; serial consoles and guest attributes; zones, machine types and images; creating VMs (typed, raw or from a template) and starting, stopping, suspending, resuming, resetting and deleting them; changing their labels, metadata, tags, machine type, scheduling, deletion protection and disks under fingerprints; instance templates and zonal managed groups, waited on until their VMs are up; each write previewable and carrying a request id; operations listed and waited on, with what ended a VM (a preemption, a run limit, its guest); an in-memory Compute Engine for your own tests | experimental |
 | 🧾 | [`billing`](docs/billing/README.md) | Cloud Billing Catalog v1, read only: the services Google bills for, and a service's SKUs with their list prices, the latest or every one in force over a range of time, in USD or another currency, each amount exact; Compute Engine's vCPU and memory prices, on demand and spot; an in-memory Cloud Billing Catalog for your own tests | experimental |
+| 🔌 | [`service_usage`](docs/service_usage/README.md) | Service Usage v1, read only: which APIs a project has enabled, every one at once or a page at a time, and whether one or up to 30 named are, as a panel that says an API is off asks; names checked before sending; an in-memory Service Usage for your own tests | experimental |
 | 🪪 | [`auth`](docs/auth.md) | Credentials for the other modules: the metadata server, gcloud's login, service account keys, workload identity federation and impersonation; signing on this machine or through IAM | beta |
 | ⚙️ | [`core`](docs/essentials.md) | What the service modules share: the HTTP transport, retries, `Diagnostics`, CRC-32C at the CPU's speed, IAM policies, the `TokenProvider` and `Signer` seams, and test fakes. Each service re-exports what its callers need. | beta |
 
 ```mermaid
 flowchart LR
-    app(["your program"]) --> pubsub & storage & secret_manager & firestore & logging & resource_manager & error_reporting & monitoring & kms & scheduler & run & dataflow & bigquery & datatransfer & compute & billing
+    app(["your program"]) --> pubsub & storage & secret_manager & firestore & logging & resource_manager & error_reporting & monitoring & kms & scheduler & run & dataflow & bigquery & datatransfer & compute & billing & service_usage
     app --> auth
-    auth -. credentials .-> pubsub & storage & secret_manager & firestore & logging & resource_manager & error_reporting & monitoring & kms & scheduler & run & dataflow & bigquery & datatransfer & compute & billing
-    pubsub & storage & secret_manager & firestore & logging & resource_manager & error_reporting & monitoring & kms & scheduler & run & dataflow & bigquery & datatransfer & compute & billing & auth --> core
+    auth -. credentials .-> pubsub & storage & secret_manager & firestore & logging & resource_manager & error_reporting & monitoring & kms & scheduler & run & dataflow & bigquery & datatransfer & compute & billing & service_usage
+    pubsub & storage & secret_manager & firestore & logging & resource_manager & error_reporting & monitoring & kms & scheduler & run & dataflow & bigquery & datatransfer & compute & billing & service_usage & auth --> core
 ```
 
 The service modules never import one another, or `auth`: credentials
@@ -127,7 +128,7 @@ CI tests (Zig does not check that field itself). For Zig 0.16.0, use
 v0.30.0, the last release that builds with it.
 
 ```sh
-zig fetch --save git+https://github.com/kmoneil/gcp.zig#v0.65.0
+zig fetch --save git+https://github.com/kmoneil/gcp.zig#v0.68.0
 ```
 
 ```zig

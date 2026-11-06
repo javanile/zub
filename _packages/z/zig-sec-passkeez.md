@@ -16,10 +16,10 @@ keywords:
   - passkey
   - passkeys
   - webauthn
-date: 2026-10-18
+date: 2026-11-04
 category: systems
-updated_at: 2026-10-18T13:42:16+00:00
-last_sync: 2026-10-18T13:42:16Z
+updated_at: 2026-11-04T22:33:58+00:00
+last_sync: 2026-11-04T22:33:58Z
 package_kind: binary
 has_library: false
 has_binary: true
@@ -35,7 +35,8 @@ permalink: /packages/Zig-Sec/PassKeeZ/
 
 ![Screenshot from 2025-04-15 11-16-56](https://github.com/user-attachments/assets/2ed6b32a-92d9-4fca-88ce-56f1e7b521ff)
 
-<a href="https://liberapay.com/r4gus/donate"><img alt="Donate using Liberapay" src="https://liberapay.com/assets/widgets/donate.svg"></a>
+| <a href="https://liberapay.com/r4gus/donate"><img alt="Donate using Liberapay" src="https://liberapay.com/assets/widgets/donate.svg"></a> | [![](https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&color=%23fe8e86)](https://github.com/sponsors/r4gus) | [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/I2I72PG94) |
+|:---:|:---:|:---:|
 
 PassKeeZ is a Passkey (FIDO2) compatible authenticator for Linux based on [keylib](https://codeberg.org/r4gus/keylib).
 
@@ -97,7 +98,7 @@ sudo apt install passkeez
 | Version | Command |
 |:--------|:--------|
 | 0.6.3   | `sudo bash -c "$(curl -fsSL https://codeberg.org/r4gus/PassKeeZ/raw/branch/master/script/install-linux.sh)" install-linux.sh --vpasskeez 0.6.3 --vzig 0.15.2 --vzigenity 0.7.1`|
-| 0.7.4   | `sudo bash -c "$(curl -fsSL https://codeberg.org/r4gus/PassKeeZ/raw/branch/master/script/install-linux.sh)"` |
+| 0.8.0   | `sudo bash -c "$(curl -fsSL https://codeberg.org/r4gus/PassKeeZ/raw/branch/master/script/install-linux.sh)"` |
 
 You can find more info in the [Wiki](https://codeberg.org/r4gus/PassKeeZ/wiki).
 
@@ -119,6 +120,7 @@ You can find more info in the [Wiki](https://codeberg.org/r4gus/PassKeeZ/wiki).
 * Store your Passkeys (just a private key + related data) in a local, encrypted database.
 * Compatible with other KeePass applications, including [KeePassXC](https://keepassxc.org) and [KeePassDX](https://www.keepassdx.com)
 * Constant sign-counter, i.e. you can safely sync your credentials/passkeys between devices.
+* WebAuthn PRF extension support (test it [here](https://webauthn-passkeys-prf-demo.explore.corbado.com))
 
 > [!IMPORTANT]
 > With the release of version 0.5.0, PassKeeZ uses the KDBX format for storing credentials. The advantage of using KDBX is that you can manage your passkeys using KeePass or KeePassXC (PassKeeZ uses the same format for storing passkeys as KeePassXC). If you run into issues please open an issue.
@@ -130,16 +132,23 @@ You can find more info in the [Wiki](https://codeberg.org/r4gus/PassKeeZ/wiki).
 
 To get started please visit the [wiki](https://codeberg.org/r4gus/PassKeeZ/wiki/Installing-PassKeeZ).  
 
+On first startup, PassKeeZ creates `~/.passkeez/config.json` with the database
+path set to `~/.passkeez/db.kdbx`. When you first register or use a passkey, it
+offers to create that database and prompts you to choose a password. No manual
+configuration or database generation is required. Existing configurations with
+an empty `db_path` are updated to use this default; nonempty paths are preserved.
+
 ### Database Management
 
 - KDBX: You can manage your `.kdbx` database with [KeePassXC](https://keepassxc.org/) or KeePass.
+    - Use KDBX4 with Argon2d or Argon2id key derivation. KDBX3 and AES-KDF are not supported.
     - _We recommend making regular backups of your KDBX database._
 
 ### Configuring PassKeeZ
 
 PassKeeZ can be configured via `~/.passkeez/config.json` using the following options:
 
-- `"db_path"`: path to the .kdbx database. If the file doesn't exist, a new file will be created.
+- `"db_path"` (default: `"~/.passkeez/db.kdbx"`): path to the .kdbx database. If the file doesn't exist, PassKeeZ offers to create it on first use.
 - `"lang"`: the language of the application (currently supports `"english"` and `"german"`).
 - `"mlock"` (default: `false`): lock the memory using mlock. This will most likely require raising the limits in `/etc/security/limits.conf` to something like:
 ```

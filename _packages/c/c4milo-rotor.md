@@ -16,10 +16,10 @@ keywords:
   - networking
   - no-malloc
   - shared-nothing
-date: 2026-11-01
+date: 2026-11-06
 category: systems
-updated_at: 2026-11-01T15:54:35+00:00
-last_sync: 2026-11-01T15:54:35Z
+updated_at: 2026-11-06T17:33:43+00:00
+last_sync: 2026-11-06T17:33:43Z
 package_kind: binary
 has_library: false
 has_binary: true
@@ -55,7 +55,7 @@ Linux, kqueue on macOS, and epoll on Linux where io_uring is not available.
 | Threads | One loop per thread, with no locks. Loops post messages to each other, across threads or processes. |
 | Safety | Assertions stay on in release builds. Misuse stops the program at a named check. |
 | Dependencies | None. Zig 0.16.0 and its standard library. |
-| Version | 0.7.0 |
+| Version | 0.9.0 |
 | License | Apache-2.0 |
 
 ## Why rotor
@@ -84,7 +84,7 @@ Linux, kqueue on macOS, and epoll on Linux where io_uring is not available.
 
 ## Status
 
-rotor is at version 0.7.0. Everything planned for version one is built: TCP, UDP with ECN on
+rotor is at version 0.9.0. Everything planned for version one is built: TCP, UDP with ECN on
 both kernels and segmentation offload on Linux, files, timers, deadlines and cancellation, and
 messages between loops, in one process or several. One conformance suite, written against the
 public API, passes on all three backends, and CI runs it on every push.
@@ -113,7 +113,7 @@ public API, passes on all three backends, and CI runs it on every push.
 Add rotor to a project:
 
 ```bash
-zig fetch --save git+https://github.com/c4milo/rotor#v0.7.0
+zig fetch --save git+https://github.com/c4milo/rotor#v0.9.0
 ```
 
 In `build.zig`:
@@ -264,6 +264,7 @@ and the commands to take every number again.
 | [21](docs/decisions/0021-loops-in-several-processes.md) | loops in several processes | accepted |
 | [22](docs/decisions/0022-a-std-io-adapter.md) | a `std.Io` adapter | accepted, deferred |
 | [23](docs/decisions/0023-a-host-that-owns-the-wait.md) | a host that owns the wait | accepted |
+| [24](docs/decisions/0024-a-simulated-surface.md) | a simulated surface, and a search over its orders | proposed |
 
 A proposed record describes something not yet built. A declined record describes something rotor
 will not build, and why.

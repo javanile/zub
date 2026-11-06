@@ -8,10 +8,10 @@ repository: https://github.com/impeller-interop/impeller-zig
 keywords:
   - bindings
   - graphics
-date: 2026-10-28
+date: 2026-11-05
 category: systems
-updated_at: 2026-10-28T16:22:37+00:00
-last_sync: 2026-10-28T16:22:37Z
+updated_at: 2026-11-05T04:43:11+00:00
+last_sync: 2026-11-05T04:43:11Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -57,26 +57,22 @@ Standalone SDK artifacts are packaged in [`impeller-sdk`](https://github.com/imp
 
 ## Zig support
 
-[![Zig version support](https://zig-support.dkx215417.workers.dev/0.17.0/0.16.0/0.15.2/0.15.1/badge.svg)](https://ziglang.org/download/)
+Requires Zig `0.17.1` or newer, including Zig `master`.
+
+[![Zig version support](https://zig-support.dkx215417.workers.dev/master/0.17.1/badge.svg)](https://ziglang.org/download/)
 
 ## Install
 
-Tracks this project's latest branch:
+Pin the current release:
+
+```bash
+zig fetch --save git+https://github.com/impeller-interop/impeller-zig#v0.4.0
+```
+
+Or track `main`, which follows the latest Impeller SDK pin:
 
 ```bash
 zig fetch --save git+https://github.com/impeller-interop/impeller-zig#main
-```
-
-To pin the Zig `0.17.0` release instead of `main`:
-
-```bash
-zig fetch --save git+https://github.com/impeller-interop/impeller-zig#v0.2.2
-```
-
-To use the stable Zig `0.16.0` toolchain, install the `v0.1.2` release instead:
-
-```bash
-zig fetch --save git+https://github.com/impeller-interop/impeller-zig#v0.1.2
 ```
 
 Add the dependency in `build.zig`:
@@ -103,8 +99,7 @@ const exe = b.addExecutable(.{
     .root_module = exe_mod,
 });
 
-// Link libimpeller and copy it beside the executable.
-impeller_pkg.linkRuntime(exe, impeller_dep);
+// Copy libimpeller beside the executable.
 b.getInstallStep().dependOn(impeller_pkg.installRuntime(.{
     .compile_step = exe,
     .dependency = impeller_dep,
@@ -140,7 +135,8 @@ defer fill.deinit();
 
 Use the `impeller.c` namespace only when you need raw C functions that are not wrapped yet.
 
-The runtime link step is explicit so projects that only import the package without using Impeller do not load `libimpeller`.
+The `impeller` module carries its SDK link input automatically. Applications
+still need `installRuntime()` and a matching runtime search path for deployment.
 
 For custom runtime install layouts and rpath setup, see [BUILD.md](docs/BUILD.md).
 

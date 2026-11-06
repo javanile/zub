@@ -1,0 +1,146 @@
+---
+title: Bifrost
+description: A next-generation Minecraft Bedrock asynchronous reverse proxy built in Zig for maximum performance and scalability.
+license: AGPL-3.0
+author: TrixNEW
+author_github: TrixNEW
+repository: https://github.com/TrixNEW/Bifrost
+keywords:
+  - async
+  - asyncio
+  - minecraft
+  - minecraft-bedrock
+  - minecraft-serverside
+  - proxy
+  - proxy-server
+  - reverse-proxy
+date: 2026-11-05
+category: networking
+updated_at: 2026-11-05T01:54:19+00:00
+last_sync: 2026-11-05T01:54:19Z
+package_kind: hybrid
+has_library: true
+has_binary: true
+has_distributable_binary: true
+binary_count: 3
+distributable_binary_count: 3
+multiple_binaries: true
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
+permalink: /packages/TrixNEW/Bifrost/
+---
+
+# Bifrost
+
+A high-performance Minecraft: Bedrock Edition proxy written in Zig, designed for efficiency, extensibility, and low-latency networking.
+
+Bifrost speaks NetherNet, the WebRTC transport Bedrock uses for direct connections, on both sides: players join it
+like any server, and it reaches its backends the same way. It is built on
+[nethernet-zig](https://github.com/Bedrock-Phanatics/nethernet-zig) and [bedwire](https://github.com/Bedrock-Phanatics/bedwire).
+
+Built with **Zig 0.17.0**.
+
+## Features
+
+- **High Performance** -> Event-driven workers, no thread per player, zero-copy relaying where the session allows it.
+- **Multi-Backend Support** -> Connect players to multiple backend servers.
+- **Seamless Transfers** -> Move players between backends without reconnecting.
+- **Session Modes** -> Accessible session handling.
+- **Native Plugins** -> Extend functionality using Zig, C, or C++.
+- **Packet Handling** -> Intercept, modify, and filter packets.
+- **Configurable** -> Simple configuration.
+
+## Getting Started
+
+### Requirements
+
+- Zig 0.17.0
+- Git, CMake and a C/C++ toolchain, to build libdatachannel once
+- Linux or Windows, x86_64
+
+### Build
+
+```bash
+git clone https://github.com/Bedrock-Phanatics/Bifrost.git
+cd Bifrost
+sh tools/setup-native.sh                                          # Linux
+powershell -ExecutionPolicy Bypass -File tools/setup-native.ps1   # Windows
+zig build -Doptimize=ReleaseSafe
+```
+
+The setup script builds nethernet-zig's patched libdatachannel into `.deps/native`. Pass `-Dnative-prefix=<path>`
+to use one built elsewhere. On Windows `libdatachannel.dll` is installed next to `bifrost.exe`; on Linux point
+`LD_LIBRARY_PATH` at `.deps/native/lib` or install the library system-wide.
+
+### Run
+
+```bash
+./zig-out/bin/bifrost
+```
+
+Configure the proxy through [`config/bifrost.toml`](config/bifrost.toml). [Resource limits](docs/limits.md)
+explains the timeouts, budgets and rate limits. Set `metrics = "127.0.0.1:9100"` under `[server]` to serve
+Prometheus metrics at `/metrics`.
+
+### Pterodactyl
+
+To host Bifrost using Pterodactyl, import the [Bifrost egg](https://github.com/Bedrock-Phanatics/pterodactyl-eggs/blob/main/bifrost-pterodactyl-egg.json) from the [Bedrock-Phanatics Pterodactyl Eggs](https://github.com/Bedrock-Phanatics/pterodactyl-eggs) repository.
+
+See the [setup guide](https://github.com/Bedrock-Phanatics/pterodactyl-eggs#bifrost-egg) for installation, configuration, and known limitations.
+
+### Networking
+
+| Port | Protocol | Purpose |
+| --- | --- | --- |
+| `[server] bind`, 19132 by default | TCP | HTTP signaling, what "Add Server" points at |
+| `[nethernet] port_min` to `port_max`, any when unset | UDP | WebRTC for players and backends |
+
+Players confirm the proxy's key (`[nethernet] identity_file`) the first time they join, so keep that file. Behind
+NAT, add a STUN server to `ice_servers` so the proxy can offer its public address.
+
+## Session Modes
+
+| Mode | Description |
+|------|-------------|
+| `passthrough` | Relays the player's own session with minimal overhead, checking only the Login. |
+| `managed` | Terminates the session, enabling packet processing, backend transfers, and advanced plugin functionality. |
+
+NetherNet has no Minecraft-level encryption, DTLS covers the transport instead. With `[auth] mode = "verify"`
+Bifrost checks that each Login is signed by the key the player proved during the WebRTC handshake, which is what
+stops a captured Login being replayed.
+
+### Backends
+
+Backends must accept NetherNet over HTTP signaling, as vanilla servers and Quark v6 do. The player's identity
+can't be carried across a proxy hop, so a backend has to trust Bifrost for it:
+
+- **managed** dials and logs in to the backend with the proxy key, re-signing the Login. The backend must trust
+  that key.
+- **passthrough** forwards the player's own Login, which no longer matches the key Bifrost proves to the backend.
+  The backend must skip that check for Bifrost's connection.
+
+Bifrost logs the key to trust at startup. Quark v6 trusts it through `network.trusted-proxy-keys`. Start with
+the [setup guide](docs/setup.md); [Backend support](docs/backends.md) has the details.
+
+What's still open or unverified is listed in [Known issues](docs/known-issues.md).
+
+## Plugin Development
+
+Bifrost supports compiled native plugins through a stable C ABI.
+
+Plugins are distributed as shared libraries (`.so`, `.dll`, or `.dylib`) with embedded `plugin.toml` metadata.
+
+- [Plugin Development](docs/plugins.md)
+- [Plugin ABI Reference](docs/plugin-abi.md)
+- [Example Plugins](examples/)
+
+## Development
+
+```bash
+zig build test
+zig build bench -Doptimize=ReleaseFast
+```
+
+`-Dtracy=true` builds with [Tracy](https://github.com/wolfpld/tracy) v0.13 profiler zones. Leave it off for
+production; disabled zones compile to nothing and Tracy isn't fetched.

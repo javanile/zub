@@ -10,10 +10,10 @@ keywords:
   - kiln
   - serialization
   - serializer
-date: 2026-11-01
+date: 2026-11-04
 category: data-formats
-updated_at: 2026-11-01T07:11:59+00:00
-last_sync: 2026-11-01T07:11:59Z
+updated_at: 2026-11-04T21:16:24+00:00
+last_sync: 2026-11-04T21:16:24Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -28,6 +28,8 @@ permalink: /packages/leo-gan/gld-kiln-zig/
 ---
 
 # gld-kiln-zig
+
+[Serialization](https://leo-gan.github.io/serialization/) is the hub for the theory, the history, and the benchmarks.
 
 A from-scratch Kiln codec for Zig. The runtime and the code generator are Zig. They do not wrap, link, or vendor a C, C++, or Rust Kiln library.
 

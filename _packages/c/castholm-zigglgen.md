@@ -8,10 +8,10 @@ repository: https://github.com/castholm/zigglgen
 keywords:
   - bindings
   - opengl
-date: 2026-10-17
+date: 2026-11-04
 category: systems
-updated_at: 2026-10-17T14:28:26+00:00
-last_sync: 2026-10-17T14:28:26Z
+updated_at: 2026-11-04T23:42:57+00:00
+last_sync: 2026-11-04T23:42:57Z
 package_kind: binary
 has_library: false
 has_binary: true
@@ -38,8 +38,8 @@ The only Zig OpenGL binding generator you need.
 
 zigglgen currently supports the following versions of the Zig compiler:
 
-- `0.16.0`
-- `0.17.0-dev` (master)
+- `0.17.0`
+- `0.18.0-dev` (master)
 
 Older or more recent versions of the compiler are not guaranteed to be compatible.
 
