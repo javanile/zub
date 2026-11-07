@@ -8,10 +8,10 @@ repository: https://github.com/pedronaugusto/ztreesitter
 keywords:
   - parser
   - tree-sitter
-date: 2026-11-01
+date: 2026-11-07
 category: data-formats
-updated_at: 2026-11-01T16:37:27+00:00
-last_sync: 2026-11-01T16:37:27Z
+updated_at: 2026-11-07T16:11:24+00:00
+last_sync: 2026-11-07T16:11:24Z
 package_kind: hybrid
 has_library: true
 has_binary: true

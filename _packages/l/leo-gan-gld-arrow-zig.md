@@ -8,9 +8,9 @@ repository: https://github.com/leo-gan/gld-arrow-zig
 keywords:
   - arrow
   - serializer
-date: 2026-10-14
-updated_at: 2026-10-14T19:53:32+00:00
-last_sync: 2026-10-14T19:53:32Z
+date: 2026-11-04
+updated_at: 2026-11-04T21:13:06+00:00
+last_sync: 2026-11-04T21:13:06Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -25,6 +25,8 @@ permalink: /packages/leo-gan/gld-arrow-zig/
 ---
 
 # gld-arrow-zig
+
+[Serialization](https://leo-gan.github.io/serialization/) is the hub for the theory, the history, and the benchmarks.
 
 A from-scratch [Apache Arrow](https://arrow.apache.org/docs/format/Columnar.html)
 library for [Zig](https://ziglang.org/) 0.16. The import is `arrow`. The code

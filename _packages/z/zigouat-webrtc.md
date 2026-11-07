@@ -10,10 +10,10 @@ keywords:
   - media
   - video
   - webrtc
-date: 2026-10-24
+date: 2026-11-07
 category: game-development
-updated_at: 2026-10-24T11:00:54+00:00
-last_sync: 2026-10-24T11:00:54Z
+updated_at: 2026-11-07T16:20:07+00:00
+last_sync: 2026-11-07T16:20:07Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -78,7 +78,7 @@ exe.root_module.addImport("webrtc", webrtc.module("webrtc"));
 Check the [examples](./examples) folder.
 
 ### Note For Windows Users
-Currently the examples are not working on Windows because `std.Io.net.Socket.receiveTimeout` is not implemented. You can still run 
+Some of the examples may not work on Windows because `std.Io.net.Socket.receiveTimeout` is not implemented. You can still run 
 the examples by depending on third party package like [zio](https://github.com/lalinsky/zio).
 
 ## Other related projects

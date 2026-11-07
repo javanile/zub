@@ -10,10 +10,10 @@ keywords:
   - compression
   - deflate
   - zstd
-date: 2026-11-03
+date: 2026-11-07
 category: systems
-updated_at: 2026-11-03T15:57:21+00:00
-last_sync: 2026-11-03T15:57:21Z
+updated_at: 2026-11-07T16:11:13+00:00
+last_sync: 2026-11-07T16:11:13Z
 package_kind: hybrid
 has_library: true
 has_binary: true

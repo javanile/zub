@@ -9,10 +9,10 @@ keywords:
   - binding
   - cimgui
   - imgui
-date: 2026-10-26
+date: 2026-11-07
 category: game-development
-updated_at: 2026-10-26T15:48:33+00:00
-last_sync: 2026-10-26T15:48:33Z
+updated_at: 2026-11-07T04:34:02+00:00
+last_sync: 2026-11-07T04:34:02Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -127,7 +127,7 @@ The backends are separated in two categories: the platforms (handling windows, e
 
 ## Dependencies
 
-The [Zig][2] part of this package requires the latest (0.17.0) or the master (0.18.0-dev) [Zig][2] release.
+This repository tries to stay up-to-date with the Zig master branch.
 
 For other dependencies see [the build.zig.zon](https://github.com/tiawl/cimgui.zig/blob/stable/build.zig.zon)
 

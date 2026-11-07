@@ -22,10 +22,10 @@ keywords:
   - webassembly-language
   - webassembly-runtime
   - window-manager
-date: 2026-11-03
+date: 2026-11-04
 category: systems
-updated_at: 2026-11-03T17:55:24+00:00
-last_sync: 2026-11-03T17:55:24Z
+updated_at: 2026-11-04T15:07:20+00:00
+last_sync: 2026-11-04T15:07:20Z
 package_kind: binary
 has_library: false
 has_binary: true
@@ -68,6 +68,7 @@ Chimera Linux(musl + dinit)向け。SDDM から選べるセッションつき。
   - ワークスペース: 1〜9 と、それぞれで**開いているアプリのアイコンと名前**
 - **下: ランチャー** — Super 単独・Super+D。ファジー検索、よく使う順、お気に入りの固定、全アイコンテーマ + SVG。`>` でアクション、`>壁紙` で壁紙
 - **右: 音量・明るさ(OSD)/ 通知 / ユーティリティ / セッション / 通知センター**
+- **右: AI チャット**(Super+C)— 通知センターと同じ場所から生えるパネルで、OpenAI・Claude・Gemini・Mistral・DeepSeek・OpenCode Zen・OpenRouter・Kimi・xAI・Groq・Qwen・GLM・Perplexity・Together・Cerebras・Ollama・OpenAI 互換のサーバと API で会話。返事は届いた分から表示、日本語入力(fcitx5)対応。API キーはパネルから保存(`~/.config/ame-shell/ai-keys`、0600)か環境変数。**Claude Code などのコーディング CLI** も選べ、作業の様子(返事・ツールの実行・結果)をチャットに映す(作業フォルダを選び、Claude Code は過去の会話を読み込んで続きから)。**MCP サーバ**を選んで使える(`~/.config/ame-shell/mcp.json` と Claude Code の登録)。開いたままでも他の窓をクリックすればそちらに入力できる
 - **縦バー** — タグ(液体のように伸びるインジケータ)・時計・音量・ネット・Bluetooth・電池。乗せると右にポップアウト
   - 音量のポップアウトで **出力先・入力先を切り替え**(再生中の音も移る)
   - ネット / Bluetooth をクリックすると **Wi-Fi・Bluetooth の設定パネル**(接続・切断・パスワード・スキャン・ごみ箱のボタンで Bluetooth の登録の削除(2 回押し)。外側をクリックで閉じる)。イヤホンは接続すると自動で音の出力先になる
@@ -95,14 +96,16 @@ River 0.3 のセッションでも、シェル部分(ドロワー・壁紙・ラ
   - 電池の残量が少ないとき、充電器の抜き差し(満充電まであと何分・何時ごろ)、USB 機器・USB メモリ・SD カードの抜き差し(名前・容量・ラベル)も通知
 - **録画**(ユーティリティの録画ボタン): wf-recorder で `~/Videos` に保存。**PC で鳴っている音も一緒に**録る(PipeWire は既定の出力、PulseAudio は `<出力>.monitor`)
 - **スクリーンショット**: grim / slurp / wl-copy を使わず ame-shell が自分で撮る(ext-image-copy-capture、PNG は自前のエンコーダ、クリップボードは ext-data-control)
+- **スリープのあとに AirPods をつなぎ直す**: スリープの前につながっていたイヤホン・スピーカーを、戻るとすぐつなぎ直して音の出力先にも戻す(`airpods { reconnect-after-sleep off }` で止める)
+- **AirPods をつないだときのカード**: iPhone / iPad のように画面の下からカードが上がり、左右とケースの電池の残りを見せる(`airpods { popup off }` で通知に戻す)
 - **AirPods の頭の動き**(ユーティリティの「AirPods 操作」・`ame-ctl airpods toggle`・設定 `airpods { enabled on }`。Linux のみ): 頭を左右に振って戻すとワークスペース、上を向いて戻すとランチャー、下を向いて戻すとダッシュボード。AirPods 本来の操作もそのまま使える。AirPods が頭の向きを送るには Bluetooth の DeviceID を Apple(`bluetooth:004C:0000:0000`)にする必要がある
-- **ハンド操作**(ユーティリティの「ハンド操作」ボタン・`ame-ctl hand toggle`・設定 `hand { enabled on }`。既定はオフ): カメラに映った手の動きでカーソルと窓を操作します
+- **ハンド操作**(ユーティリティの「ハンド操作」ボタン・`ame-ctl hand toggle`・設定 `hand { enabled on }`。既定はオフ): カメラに映った手の動きでカーソルと窓を操作します。クリック・ダブルクリック・右クリック・ドラッグ・スクロールまで手だけでできる。片手・両手のポーズをアプリの起動や操作に割り当てる設定画面つき(ランチャーの「ハンドのポーズ」)。自分で作ったポーズ(手の形そのもの)も登録できる。カーソルを使わず「ポーズでアプリ起動」だけにする「窓の操作」(クリックせず、つまんで窓を動かす・ワークスペース・メニュー)と「アプリ起動だけ」(ポーズでアプリを起動するだけ)の動き方もある(`hand { mode poses }`)
   - 指さすとカーソルが指先に付いて動き、窓のフォーカスも移る / **つまむ**と短くでクリック、つまんだまま動かすと窓をつかんで移動、**持ったまま手を近づける・遠ざけるとズーム** /
     **手を払う**と隣のワークスペース / **指の本数**を示して止めるとその番号へ / **開いた手を止める**と手のメニュー(ランチャー・ダッシュボード・全画面・浮かせる・大きく・小さく・スクショ・閉じる・ワークスペース 1〜9)/ **握りこぶし**で閉じる。操作のたびに水の波紋、カーソルの後ろには船の航跡のような V 字の波
   - 手の認識は MediaPipe の手のモデル(Apache-2.0、約 8MB。初めてオンにしたときに `~/.local/share/ame-shell/models` へ取ってくる)を、**Zig で書いた推論エンジン**(別のリポジトリ [ame-hand](https://github.com/TatsuyaM2667/ame-hand)。ame-shell 側は River の操作につなぐ `src/hand/hand.zig`)で動かします。C++・Python・OpenCV は使いません
   - カメラは V4L2 を直接(FreeBSD は webcamd)。オンの間だけ CPU を 1 コアの 10〜20% ほど使い、オフにするとカメラ・スレッド・モデルのメモリを全部返します
   - ame-shell が WM を兼ねるセッション(River 0.5。FreeBSD は常にこれ)では窓そのものをつかんで動かし・ズームします。River 0.3 のセッション(Chimera・Arch で内蔵 WM を使わないとき)では、ワークスペース・閉じる・全画面・浮かせる・大きく/小さく を riverctl と同じ命令で行い、つまんで動かすのは左ボタンのドラッグになります
-- **充電のアニメーション**: 充電器をつなぐと、iPhone の MagSafe のように画面全体に光の輪と残り % のリングを出す(ロック中も。`shell { charge-animation off }` で出さない)
+- **充電のアニメーション**: 充電器をつなぐと、iPhone の MagSafe のように画面全体に光の輪と残り % のリングを出す。外したときは光の輪が吸い込まれ、リングの色が抜ける。このときは抜き差しの通知は出さない(ロック中も。`shell { charge-animation off }` で出さない)
 - **ホーム画面の曲のウィジェット**: ロック画面と同じ曲のカードを、デスクトップの四隅のどこかに置く(同期歌詞つき)。ジャケットを押すと、ロック画面と同じく「再生中」を画面いっぱいに広げる(窓の下。ドラッグで近い隅へ動かせ、覚える。`ame-ctl widget music <隅>`、`music-widget { corner … }`)
 - **ロック画面**(Super+L、ext-session-lock + PAM。iOS / iPadOS のロック画面のような作り、`src/lockui.zig`):
   - 眺める画面: くっきりした壁紙(オーロラ・雨はロック中も動き続ける)の上に日付・特大の時計・電池、
@@ -277,6 +280,7 @@ PATH=$PWD/zig-out/bin:$PATH AME_SESSION_NESTED=1 session/ame-session --river5
 | Super(単独で押して離す)/ Super+D | ランチャー |
 | Super+Return / Super+T | 端末(ghostty。無ければ foot)|
 | Super+A / Super+N / Super+U | ダッシュボード / 通知センター / ユーティリティ |
+| Super+C | AI チャット(右から生えるパネル) |
 | Super+Escape | セッション(ロック・ログアウト・再起動・電源オフ。危険な操作は 2 回押し)|
 | Super+L | ロック |
 | Super+Shift+W | 壁紙ピッカー |
@@ -288,6 +292,7 @@ PATH=$PWD/zig-out/bin:$PATH AME_SESSION_NESTED=1 session/ame-session --river5
 | Super+Ctrl+1〜9 | ワークスペースの表示を足す |
 | Super+P / Super+Shift+P | スクラッチパッド |
 | Super+ドラッグ(左 / 右)/ Super+中クリック | 移動 / 大きさ変更 / フロート |
+| Super+Alt+ドラッグ | タイルのまま移動(重ねたタイルと入れ替え・別の画面へ) |
 | タイトルバーをドラッグ | 窓をタイルから外して浮かせる(ひと回り小さくなる)。浮いた窓は、つかんで動かすと紙のようにたわみ、離すとすーっと元の形に戻る(AME_WOBBLE=0 で無効)。浮いた窓は縁をドラッグで大きさを変更。縁(窓のすぐ外側)かタイトルバーのダブルクリック・画面の上の端へドラッグ・Super+Space でタイルに戻す |
 | Print / Shift+Print / Super+Print | 範囲 / 全画面のスクリーンショット(~/Pictures/Screenshots + クリップボード)/ 全画面をクリップボードだけ。ame-shell が自前で撮る(止めた画面の上でドラッグ、Enter で全体、Esc でやめる)。ext-image-copy-capture の無い River 0.3 などでは grim・slurp・wl-copy を使う |
 | 音量・明るさ・メディアキー | OSD つき |

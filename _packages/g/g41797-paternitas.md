@@ -9,9 +9,9 @@ keywords:
   - intrusive-containers
   - runtime-typeid
   - type-erasure
-date: 2026-10-26
-updated_at: 2026-10-26T16:22:00+00:00
-last_sync: 2026-10-26T16:22:00Z
+date: 2026-11-04
+updated_at: 2026-11-04T07:18:52+00:00
+last_sync: 2026-11-04T07:18:52Z
 package_kind: hybrid
 has_library: true
 has_binary: true

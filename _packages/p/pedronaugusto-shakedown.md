@@ -8,10 +8,10 @@ repository: https://github.com/pedronaugusto/shakedown
 keywords:
   - simulation
   - testing
-date: 2026-11-04
+date: 2026-11-07
 category: tooling
-updated_at: 2026-11-04T17:20:31+00:00
-last_sync: 2026-11-04T17:20:31Z
+updated_at: 2026-11-07T16:11:32+00:00
+last_sync: 2026-11-07T16:11:32Z
 package_kind: hybrid
 has_library: true
 has_binary: true

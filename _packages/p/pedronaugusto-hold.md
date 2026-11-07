@@ -9,9 +9,9 @@ keywords:
   - archive
   - tar
   - zip
-date: 2026-11-05
-updated_at: 2026-11-05T17:09:48+00:00
-last_sync: 2026-11-05T17:09:48Z
+date: 2026-11-07
+updated_at: 2026-11-07T16:21:20+00:00
+last_sync: 2026-11-07T16:21:20Z
 package_kind: binary
 has_library: false
 has_binary: true
@@ -87,20 +87,22 @@ hostile-input rules.
   and NTFS times; entries whose data overlap are refused. WinZip AES (128-
   and 256-bit) is read; ZipCrypto, PKWARE's strong encryption and AES-192 are
   refused by name, and nothing is written encrypted. Methods: stored,
-  DEFLATE and zstd both ways; Deflate64, bzip2 and LZMA read. xz and PPMd
-  are refused by name. A name without the UTF-8 flag is UTF-8 when it is
+  DEFLATE and zstd both ways; Deflate64, bzip2, LZMA and xz read. PPMd is
+  refused by name. A name without the UTF-8 flag is UTF-8 when it is
   well formed, code page 437 decoded when an MS-DOS host wrote it, and its
   bytes otherwise.
 - **7z**: read: encoded headers, solid folders of chained coders, empty
   streams and files, anti items, times and attributes, CRCs; 7z AES read
   with a password. Coders: copy, LZMA, LZMA2, DEFLATE, Deflate64, bzip2,
   zstd, Delta and the BCJ filters (x86, PowerPC, IA-64, ARM, ARM Thumb,
-  SPARC, ARM64, RISC-V). PPMd, BCJ2 and self-extracting archives are
-  refused.
+  SPARC, ARM64, RISC-V) and BCJ2, its four streams read side by side.
+  PPMd and self-extracting archives are refused.
 - **Extraction**: `hold.extract` writes any of them into a directory with
   the hostile-input rules on: names checked, no write through a link,
   links last and only inside, specials refused, permissions as Python's
-  `data` filter, a total bound, files through airlock.
+  `data` filter, a total bound, files through airlock: published by
+  rename, or in place at `level = .none` (the fast mode, as libarchive
+  writes).
 
 ## Built with
 
