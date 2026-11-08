@@ -7,10 +7,10 @@ author_github: vrischmann
 repository: https://github.com/vrischmann/zig-sqlite
 keywords:
   - sqlite
-date: 2026-11-06
+date: 2026-11-07
 category: data-formats
-updated_at: 2026-11-06T16:15:32+00:00
-last_sync: 2026-11-06T16:15:32Z
+updated_at: 2026-11-07T01:30:43+00:00
+last_sync: 2026-11-07T01:30:43Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -41,7 +41,7 @@ If you use this library, expect to have to make changes when you update the code
 
 `zig-sqlite` follows Zig's release structure:
 - [master](https://github.com/vrischmann/zig-sqlite) tracks Zig master
-- [zig-0.15.1](https://github.com/vrischmann/zig-sqlite/tree/zig-0.15.1) tracks Zig 0.15.1
+- [zig-0.16](https://github.com/vrischmann/zig-sqlite/tree/zig-0.16) tracks Zig 0.16
 
 The plan is to support releases once Zig 1.0 is released but this can still change.
 

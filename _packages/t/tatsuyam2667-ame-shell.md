@@ -22,15 +22,15 @@ keywords:
   - webassembly-language
   - webassembly-runtime
   - window-manager
-date: 2026-11-04
+date: 2026-11-08
 category: systems
-updated_at: 2026-11-04T15:07:20+00:00
-last_sync: 2026-11-04T15:07:20Z
+updated_at: 2026-11-08T15:26:05+00:00
+last_sync: 2026-11-08T15:26:05Z
 package_kind: binary
 has_library: false
 has_binary: true
 has_distributable_binary: true
-binary_count: 9
+binary_count: 10
 distributable_binary_count: 1
 multiple_binaries: true
 is_sponsor: false
@@ -68,6 +68,7 @@ Chimera Linux(musl + dinit)向け。SDDM から選べるセッションつき。
   - ワークスペース: 1〜9 と、それぞれで**開いているアプリのアイコンと名前**
 - **下: ランチャー** — Super 単独・Super+D。ファジー検索、よく使う順、お気に入りの固定、全アイコンテーマ + SVG。`>` でアクション、`>壁紙` で壁紙
 - **右: 音量・明るさ(OSD)/ 通知 / ユーティリティ / セッション / 通知センター**
+- **上の中央: ダイナミックアイランド** — AI の目が常駐し、再生中の曲(乗せると操作)・通知・AI の作業中・録画中に合わせて伸び縮みする(`shell { island off }` で消せる)
 - **右: AI チャット**(Super+C)— 通知センターと同じ場所から生えるパネルで、OpenAI・Claude・Gemini・Mistral・DeepSeek・OpenCode Zen・OpenRouter・Kimi・xAI・Groq・Qwen・GLM・Perplexity・Together・Cerebras・Ollama・OpenAI 互換のサーバと API で会話。返事は届いた分から表示、日本語入力(fcitx5)対応。API キーはパネルから保存(`~/.config/ame-shell/ai-keys`、0600)か環境変数。**Claude Code などのコーディング CLI** も選べ、作業の様子(返事・ツールの実行・結果)をチャットに映す(作業フォルダを選び、Claude Code は過去の会話を読み込んで続きから)。**MCP サーバ**を選んで使える(`~/.config/ame-shell/mcp.json` と Claude Code の登録)。開いたままでも他の窓をクリックすればそちらに入力できる
 - **縦バー** — タグ(液体のように伸びるインジケータ)・時計・音量・ネット・Bluetooth・電池。乗せると右にポップアウト
   - 音量のポップアウトで **出力先・入力先を切り替え**(再生中の音も移る)
@@ -84,7 +85,7 @@ River 0.5 は「描画は River、配置はウィンドウマネージャ」と�
 River 0.3 のセッションでも、シェル部分(ドロワー・壁紙・ランチャーなど)はそのまま使えます。
 
 ### 壁紙と配色
-- **ライブ壁紙**: シェーダで描くオーロラ / 雨、**GIF・MP4 などの動画**、画像。動画は libmpv(実行時に読み込み、ハードウェア復号)で再生し、libmpv が無い・再生できない・5 秒たっても映らないときは ffmpeg で再生します(VA-API で復号・縮小、使えなければ CPU。横 1280・30fps)。それでもだめなときは理由を通知します。`AME_VIDEO_BACKEND=ffmpeg` で ffmpeg に固定
+- **ライブ壁紙**: シェーダで描くオーロラ / 雨、**GIF・MP4 などの動画**、画像。動画は libmpv(実行時に読み込み、ハードウェア復号)で再生し、libmpv が無い・再生できない・5 秒たっても映らないときは ffmpeg で再生します(VA-API で復号・縮小、使えなければ CPU。横 1280・30fps)。それでもだめなときは理由を通知します。`AME_VIDEO_BACKEND=ffmpeg` で ffmpeg に固定。タイル・全画面の窓で覆われている間は、動画もオーロラも止めて GPU を窓に回します
 - **壁紙ピッカー**(Super+Shift+W): 斜めのカードが並び、決定するとカードの位置から円・斜めワイプ・短冊で切り替わる
 - **壁紙の置き場**: `~/Pictures/wallpapers`・`~/.config/ame-shell/wallpapers`・`~/.local/share/ame-shell/wallpapers`・`<prefix>/share/ame-shell/wallpapers`(同じ名前は 1 つにまとめる)。ame-update は、追加の壁紙を非公開リポジトリ(`AME_WALLPAPERS_REPO` で変更、空で無効)から取ってきます。GitHub にログインしていない場合は案内を出すだけです(`gh auth login && gh auth setup-git`)
 - **配色は壁紙から自動**: 壁紙の一番鮮やかな色からアクセント、ガラス・文字色も合わせてなめらかに遷移。再生中はアルバムアートの色に。くすんだ緑や、エラーと紛らわしい赤は避ける
@@ -107,10 +108,10 @@ River 0.3 のセッションでも、シェル部分(ドロワー・壁紙・ラ
   - ame-shell が WM を兼ねるセッション(River 0.5。FreeBSD は常にこれ)では窓そのものをつかんで動かし・ズームします。River 0.3 のセッション(Chimera・Arch で内蔵 WM を使わないとき)では、ワークスペース・閉じる・全画面・浮かせる・大きく/小さく を riverctl と同じ命令で行い、つまんで動かすのは左ボタンのドラッグになります
 - **充電のアニメーション**: 充電器をつなぐと、iPhone の MagSafe のように画面全体に光の輪と残り % のリングを出す。外したときは光の輪が吸い込まれ、リングの色が抜ける。このときは抜き差しの通知は出さない(ロック中も。`shell { charge-animation off }` で出さない)
 - **ホーム画面の曲のウィジェット**: ロック画面と同じ曲のカードを、デスクトップの四隅のどこかに置く(同期歌詞つき)。ジャケットを押すと、ロック画面と同じく「再生中」を画面いっぱいに広げる(窓の下。ドラッグで近い隅へ動かせ、覚える。`ame-ctl widget music <隅>`、`music-widget { corner … }`)
-- **ロック画面**(Super+L、ext-session-lock + PAM。iOS / iPadOS のロック画面のような作り、`src/lockui.zig`):
+- **ロック画面**(Super+L、ext-session-lock + PAM。iOS / iPadOS のロック画面のような作り、`src/lock/lockui.zig`):
   - 眺める画面: くっきりした壁紙(オーロラ・雨はロック中も動き続ける)の上に日付・特大の時計・電池、
     再生中の曲(右下の小さなカード。ジャケットを押すと、iPhone / iPad のように真ん中の大きなジャケットとその色の背景に広がる: 回るレコードと液体のビジュアライザー、進み具合(クリック・ドラッグで移動)、前・再生・次のボタン、音量のつまみ(ドラッグ・ホイール、スピーカーで消音)。音量・曲送りのキーもそのまま効く。歌詞はダッシュボードと同じ見せ方で上に浮かぶ)、
-    ロック中に来た通知(新しい順に重なり、押すと広がる)、光が流れる「解除するには…」とホームバー
+    通知(通知センターと同じ履歴。新しい順に重なり、押すと広がる)、光が流れる「解除するには…」とホームバー
   - キーかクリックで入力画面へ: 背景がぼけて時計が小さく上へ、写真・名前・ガラスの入力欄。Esc か 12 秒で戻る
   - 解除すると**水の波紋**が中心から広がり、波が通り過ぎた所からデスクトップが透けて見える(ロック画面の最後の絵を写したオーバーレイを出してからロックを外す)
   - **顔認証**(ランチャーの「顔を登録」か `ame-ctl face enroll` で、パスワードで本人を確かめてから登録): ロック画面を触った時だけ(パスワードと同じ)カメラで顔を確かめてロックを外す。ログイン画面(greetd)でも使える(自作の PAM モジュール `pam_ame_face.so`。Linux と FreeBSD)。パスワードはいつでも使える
@@ -184,7 +185,7 @@ Bluetooth のイヤホンの音には `pipewire-audio`、バーのアイコン�
   FreeBSD はインストーラが I2C(ig4・iichid・hmt)と PS/2(psm の Synaptics / Elantech)のドライバを設定します。後からは `doas sh scripts/freebsd-touchpad.sh`(再起動後に有効)、状態の確認は `sh scripts/freebsd-touchpad.sh --check`。
 - **Bluetooth(FreeBSD)**: インストーラと ame-update が、内蔵アダプタのファームウェア(Realtek: rtlbt-firmware / Intel: iwmbt-firmware)・ng_ubt・hcsecd / sdpd / bthidd を設定します。後からは `doas sh scripts/freebsd-bluetooth.sh`、確認は `--check`。機器のペアリングは今のところ端末で `doas bluetooth-config scan`(マウス・キーボード)。
 - **無線のブロック解除**: Linux ではセッションの開始時に `rfkill unblock all`(と `bluetoothctl power on`)。ログイン直後は `/dev/rfkill` の権限がまだ付いていないことがあるので、裏で数秒おきに試します。Bluetooth の電源を設定パネル・サイドバーから入れるときも、先にブロックを外します。
-- **ログイン画面**: ame-shell 自身が描く(greetd + `ame-greeter`、`src/greeter.zig`)。**ロック画面と同じ見た目と動き**で、SDDM は要りません。
+- **ログイン画面**: ame-shell 自身が描く(greetd + `ame-greeter`、`src/lock/greeter.zig`)。**ロック画面と同じ見た目と動き**で、SDDM は要りません。
   - greetd が greeter 用のユーザー(Chimera: `_greetd`)で River 0.5 + ame-shell をログイン画面のモードで起動し、パスワードが合うと greetd がセッション(既定は「Ame Shell」)を始めます
   - 写真の左右の ‹ › でユーザー、左下でセッションを切り替え、右下に再起動・電源オフ。最後にログインした人が最初に出ます
   - 背景と写真は、ユーザーごとの置き場 `/var/lib/ame-shell/greeter/<ユーザー>`(FreeBSD は `/var/db/…`)から。ame-shell が起動したとき・壁紙を変えたとき・ロックしたときに、壁紙(画像なら絵、オーロラ・雨なら種類だけ)・ぼかした背景・写真・アクセント色をそこへ書きます(root は要りません。この置き場は誰でも読めます)
@@ -381,8 +382,24 @@ ame-ctl lock | reload | widgets reload | stats | restart | quit
 - River 0.3 では、ワークスペースごとのアプリ名は推測(River 0.3 は窓とタグの対応を外に出さない)。
 - ランチャーの日本語入力(IME)とトレイは未対応。
 - FreeBSD: Bluetooth の機器の追加は端末(`doas bluetooth-config scan`)。ログイン画面は SDDM。
-- 動画壁紙は再生中に CPU 約 5%(720p)・メモリ +130MB 程度を使う。
+- 動画壁紙は再生中に CPU 約 5%(720p)・メモリ +130MB 程度を使う(透明な窓から見えるよう、窓を開いていても動き続ける。止まるのは全画面の窓があるときだけ)。
 - 詳細は `docs/blockers.md`、計測値は `docs/perf.md`。
+
+## 小さな道具(端末からも使える)
+
+画面の要らない仕事は、1 つのことをする小さなコマンドに分けてあります。ame-shell もこれを動かして出力を読むだけなので、端末やスクリプトから同じように使えます(標準入出力・テキスト / 1 行 1 つの JSON)。
+
+```sh
+ame-lyrics 'YOASOBI' 'アイドル' > idol.lrc               # 歌詞を探す(0 見つかった / 1 無い / 2 一時的な失敗)
+echo 'Zig の comptime を一言で' | ame-ai -p anthropic       # AI に聞く(会社とモデルは省くとチャットで最後に選んだもの)
+ame-ai models -p openai                                     # モデルの一覧
+claude -p '直して' --output-format stream-json --verbose | ame-agent -C "$PWD"   # コーディング CLI の出力を共通の出来事に
+ame-agent sessions ~/projects/foo                          # Claude Code の会話の一覧
+ame-config check                                          # 設定ファイルを確かめる(間違いは「ファイル:行:」で出る)
+ame-weather Sapporo                                       # 今の天気(--json で JSON)
+```
+
+構成とソースの置き場は `docs/architecture.md` にあります。
 
 ## ドキュメントサイト
 

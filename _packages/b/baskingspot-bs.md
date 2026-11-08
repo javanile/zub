@@ -7,9 +7,9 @@ author_github: baskingspot
 repository: https://github.com/baskingspot/bs
 keywords:
   - compiler
-date: 2026-11-06
-updated_at: 2026-11-06T17:00:52+00:00
-last_sync: 2026-11-06T17:00:52Z
+date: 2026-11-08
+updated_at: 2026-11-08T16:29:38+00:00
+last_sync: 2026-11-08T16:29:38Z
 package_kind: binary
 has_library: false
 has_binary: true

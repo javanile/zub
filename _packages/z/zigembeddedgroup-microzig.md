@@ -8,10 +8,10 @@ repository: https://github.com/ZigEmbeddedGroup/microzig
 keywords:
   - embedded
   - hal
-date: 2026-10-18
+date: 2026-11-08
 category: embedded
-updated_at: 2026-10-18T13:58:59+00:00
-last_sync: 2026-10-18T13:58:59Z
+updated_at: 2026-11-08T15:57:53+00:00
+last_sync: 2026-11-08T15:57:53Z
 package_kind: binary
 has_library: false
 has_binary: true
@@ -31,8 +31,15 @@ permalink: /packages/ZigEmbeddedGroup/microzig/
 
 ## What version of Zig to use
 
-`0.17.0`
+`0.17.1`
 
 ## Getting Started With MicroZig
 
 Go to [microzig.tech](https://microzig.tech)!
+
+## Contributing
+
+Please see:
+
+- [ARCHITECTURE.md](./ARCHITECTURE.md) for a layout of the project.
+- [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md) for the CoC.
