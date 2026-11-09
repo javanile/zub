@@ -7,9 +7,9 @@ author_github: karlseguin
 repository: https://github.com/karlseguin/pg.zig
 keywords:
   - postgresql-client
-date: 2026-10-28
-updated_at: 2026-10-28T23:51:58+00:00
-last_sync: 2026-10-28T23:51:58Z
+date: 2026-11-06
+updated_at: 2026-11-06T06:57:02+00:00
+last_sync: 2026-11-06T06:57:02Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -185,6 +185,9 @@ Creates a [Stmt](#stmt). It is generally better to use `query`, `row` or `exec`.
 
 ### prepareOpts(sql: []const u8, opts: Conn.QueryOpts) !Stmt
 Same as `prepare` but takes the same options as `queryOpts`.
+
+### describe(allocator: Allocator, sql: []const u8) !QueryDescription
+Sends `Parse` + `Describe` + `Sync` and returns the parameter types and result columns of the statement, without executing it.
 
 ### begin() !void
 Calls `_ = try execOpts("begin", .{}, .{})`

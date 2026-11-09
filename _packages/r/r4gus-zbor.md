@@ -10,17 +10,17 @@ keywords:
   - encoder-decoder
   - parsing
   - rfc-8949
-date: 2026-10-06
+date: 2026-11-05
 category: data-formats
-updated_at: 2026-10-06T16:29:01+00:00
-last_sync: 2026-10-06T16:29:01Z
+updated_at: 2026-11-05T23:28:13+00:00
+last_sync: 2026-11-05T23:28:13Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 1
-distributable_binary_count: 1
-multiple_binaries: false
+binary_count: 2
+distributable_binary_count: 2
+multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
 sync_source: zigistry
@@ -29,7 +29,8 @@ permalink: /packages/r4gus/zbor/
 
 # zbor - Zig CBOR
 
-<a href="https://liberapay.com/r4gus/donate"><img alt="Donate using Liberapay" src="https://liberapay.com/assets/widgets/donate.svg"></a>
+| <a href="https://liberapay.com/r4gus/donate"><img alt="Donate using Liberapay" src="https://liberapay.com/assets/widgets/donate.svg"></a> | [![](https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub&color=%23fe8e86)](https://github.com/sponsors/r4gus) | [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/I2I72PG94) |
+|:---:|:---:|:---:|
 
 The Concise Binary Object Representation (CBOR) is a data format whose design 
 goals include the possibility of extremely small code size, fairly small 
@@ -52,13 +53,14 @@ Versions
 | 0.14.x      | 0.16.x, 0.17.x, 0.18.x | |
 | 0.15.x      | 0.19.0, 0.20.0 | |
 | 0.16.x      | 0.21.x | `zig fetch --save https://codeberg.org/r4gus/zbor/archive/0.21.0.tar.gz` |
+| 0.17.0      | 0.22.0, 0.23.0 | `zig fetch --save https://codeberg.org/r4gus/zbor/archive/0.23.0.tar.gz` |
 
 First add this library as a dependency to your `build.zig.zon` file:
 
 ```bash
 # Replace <VERSION TAG> with the version you want to use
 zig fetch --save https://codeberg.org/r4gus/zbor/archive/<VERSION TAG>.tar.gz
-# e.g. zig fetch --save https://codeberg.org/r4gus/zbor/archive/0.20.1.tar.gz
+# e.g. zig fetch --save https://codeberg.org/r4gus/zbor/archive/0.23.0.tar.gz
 ```
 
 then within you `build.zig` add the following code:
@@ -380,6 +382,68 @@ pub fn cborStringify(self: *const @This(), options: cbor.StringifyOptions, out: 
 When using `parse` make sure you pass a allocator to the function. The passed allocator will be assigned
 to the field of type `std.mem.Allocator`.
 
+#### Map Key Overloading
+
+Sometimes it might be necessary to overload CBOR map keys, e.g., two or more fields of
+a struct serialize to the same integer. Of course this only works if only one of those
+fields is active at a time (e.g., the others are set to `null`). While serialization is
+not an issue, the parser needs to know how to map a CBOR key-value pair to one of 
+the struct fields.
+
+To help the parser with this decision, one can define a function with the following header
+and assign the function to the optional `is_valid_key` field of the `Options`:
+
+```zig
+fn is_valid_key(
+    ctx: *const anyopaque,
+    key: []const u8,
+    fields: []const bool,
+    seen: *const fn ([]const u8, []const bool) bool,
+) bool {
+    //...
+}
+``` 
+
+The context `ctx` is a opaque pointer to an instance of the struct type you passed to
+`parse`. If a CBOR key potentially maps to a struct field and if the `is_valid_key`
+callback is set within the options, `parse` will invoke the callback and pass
+the context and the current field name `key` as the first two arguments.
+
+You can use the `seen` function to "ask" the calling `parse` function if a specific
+field has already been initialized.
+
+The below example is from `src/cose.zig` and shows how this could be used.
+
+```zig
+fn is_valid_key(
+    ctx: *const anyopaque,
+    key: []const u8,
+    fields: []const bool,
+    seen: *const fn ([]const u8, []const bool) bool,
+) bool {
+    if (!seen("kty", fields)) return true;
+
+    const self: *const @This() = @ptrCast(@alignCast(ctx));
+
+    if (std.mem.eql(u8, key, "crv") or std.mem.eql(u8, key, "x") or std.mem.eql(u8, key, "y") or std.mem.eql(u8, key, "d")) {
+        return self.kty == .Ec2;
+    } else if (std.mem.eql(u8, key, "pub") or std.mem.eql(u8, key, "priv")) {
+        return self.kty == .AKP;
+    } else {
+        return true;
+    }
+}
+``` 
+
+To prevent the function from accessing a uninitialized field, we place a guard at
+the beginning. The field we base our decision on is `kty` so we need to make sure
+it has already been initialized.
+
+Depending on the field name `key` we then either return `true` if the given field
+should be considered or `false` otherwise.
+
+> Note that this is experimental and also has performance implications.
+
 #### Indefinite-length Data Items
 
 CBOR supports the serialization of many container types in two formats, definite and indefinite. For definite-length data items, the length is directly encoded into the data-items header. In contrast, indefinite-length data items are terminated by a break-byte `0xff`.
@@ -462,3 +526,70 @@ test "ArrayBackedSlice test" {
     try std.testing.expectEqualSlices(u8, "\x01\x02\x03\x04", y.get());
 }
 ```
+
+### COSE
+
+`zbor` also has limited [COSE](https://www.iana.org/assignments/cose/cose.xhtml) support.
+
+#### COSE Key
+
+`zbor` supports the creation of COSE Keys for the following algorithms:
+
+- Es256 (ECDSA w/ SHA-256)
+- ML-DSA-(87|65|44)
+
+> If you'd like to see support for additional algorithms, please open a pull request.
+
+##### Key Generation
+
+Keys can be generated by using the `zbor.cose.Key.generate` function.
+
+The code below assumes a `allocator` instance of type `std.mem.Allocator` as well as
+a `io` instance of type `std.Io`. It generates a new (random) key for the
+[`ML-DSA-87`](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.204.pdf) algorithm.
+
+```zig
+const kp = try Key.generate(
+    .@"ML-DSA-87",
+    std.testing.allocator,
+    std.testing.io,
+);
+defer kp.deinit(std.testing.allocator);
+```
+
+To accommodate for different key sizes, the `cose.Key` struct dynamically  allocates 
+the different key components. This means, you have to call `deinit` on a instance
+of `cose.Key` to free its memory. Furthermore, `deinit` will also zero all fields, i.e.,
+it probably makes sense to call `deinit` even if you're using a arena allocator.
+
+> When using `generate` the `cose.Key` will include both the public and the private
+> part of the key. 
+
+##### Signing
+
+To sign (a sequence of) data, you can call the `sign` method on a `cose.Key`.
+
+```zig
+const sig = try kp.sign(&.{"zig is awesome!"}, allocator);
+defer allocator.free(sig);
+```
+
+The `sign` method takes a slice of `u8` slices and generates a signature over the
+given sequence. The example above creates a signature over the string
+`"zig is awesome!"`. The returned signature is a `u8` slice owned by the caller, i.e.,
+you're responsible for freeing the slice.
+
+> To create a signature, the key must contain the private part of the key.
+
+##### Signature Verification
+
+A signature can be verified by calling the `verify` method on a `cose.Key`.
+
+```zig
+_ = try kp.verify(sig, &.{"zig is awesome!"});
+```
+
+The method will return either `true` or `false` depending on if the signature
+could be verified or not.
+
+> To verify a signature, the key must contain the public key components.

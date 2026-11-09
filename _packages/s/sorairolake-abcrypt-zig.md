@@ -18,9 +18,9 @@ keywords:
   - poly1305
   - xchacha20
   - xchacha20-poly1305
-date: 2026-10-23
-updated_at: 2026-10-23T22:19:21+00:00
-last_sync: 2026-10-23T22:19:21Z
+date: 2026-11-06
+updated_at: 2026-11-06T11:57:23+00:00
+last_sync: 2026-11-06T11:57:23Z
 package_kind: library
 has_library: true
 has_binary: false

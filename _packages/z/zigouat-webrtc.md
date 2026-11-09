@@ -10,10 +10,10 @@ keywords:
   - media
   - video
   - webrtc
-date: 2026-11-08
+date: 2026-11-09
 category: game-development
-updated_at: 2026-11-08T15:25:30+00:00
-last_sync: 2026-11-08T15:25:30Z
+updated_at: 2026-11-09T19:49:38+00:00
+last_sync: 2026-11-09T19:49:38Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -37,7 +37,7 @@ The project is under active development. The API and even the whole architecture
 The current implementation is not yet production-ready.
 
 ## Supported Zig/Platforms
-Supported Zig version: `0.16.0`.
+Supported Zig version: `0.17.1`.
 
 Tested platforms:
 * Linux x86_64/aarch64

@@ -12,9 +12,9 @@ keywords:
   - media-format
   - mp4
   - muxer
-date: 2026-08-26
-updated_at: 2026-08-26T05:52:06+00:00
-last_sync: 2026-08-26T05:52:06Z
+date: 2026-11-09
+updated_at: 2026-11-09T19:02:20+00:00
+last_sync: 2026-11-09T19:02:20Z
 package_kind: hybrid
 has_library: true
 has_binary: true

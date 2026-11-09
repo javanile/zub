@@ -16,9 +16,9 @@ keywords:
   - srtp
   - stun
   - turn
-date: 2026-11-01
-updated_at: 2026-11-01T16:39:41+00:00
-last_sync: 2026-11-01T16:39:41Z
+date: 2026-11-09
+updated_at: 2026-11-09T19:42:03+00:00
+last_sync: 2026-11-09T19:42:03Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -59,7 +59,7 @@ This repo is under active development, and the implementations are not yet compl
 Add `media_protocols` as a dependency in your `build.zig.zon` file:
 
 ```bash
-zig fetch --save git+https://github.com/zigouat/media-protocols.git#v0.1.0
+zig fetch --save git+https://github.com/zigouat/media-protocols.git#v0.3.0
 ```
 
 Then, in your `build.zig` file, add the following:

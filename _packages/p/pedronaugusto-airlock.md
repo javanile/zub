@@ -1,0 +1,390 @@
+---
+title: airlock
+description: "Durable files for Zig: crash-safe writes and syncs, per platform"
+license: MIT
+author: pedronaugusto
+author_github: pedronaugusto
+repository: https://github.com/pedronaugusto/airlock
+keywords:
+  - durability
+  - filesystem
+date: 2026-11-09
+category: systems
+updated_at: 2026-11-09T20:38:42+00:00
+last_sync: 2026-11-09T20:38:42Z
+package_kind: binary
+has_library: false
+has_binary: true
+has_distributable_binary: true
+binary_count: 1
+distributable_binary_count: 1
+multiple_binaries: false
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
+permalink: /packages/pedronaugusto/airlock/
+---
+
+# airlock
+
+airlock makes files durable in Zig. It syncs a file, a directory or a range
+written through a file's mapping at a level you choose and tells you what was
+reached, publishes a file atomically (replace,
+create or keep) and a symbolic link too, creates directories durably, puts many
+files under the fewest barriers, removes the temps a crash left behind,
+tells files apart by identity rather than by path, stats a path whole and says
+what volume a directory is on.
+
+## Install
+
+Requires Zig 0.17.0. Fetch with `zig fetch --save
+git+https://github.com/pedronaugusto/airlock` and add the `airlock` module to
+your module's imports. It depends on `std` and on
+[aegis](https://github.com/pedronaugusto/aegis), of which it uses the `id`,
+`handle` and `assert` namespaces; the dependency brings it, and nothing is
+wired by hand.
+
+## Usage
+
+[examples/usage.zig](examples/usage.zig) replaces a file durably, creates a
+directory durably, streams an object into a temp and publishes it only if the
+name is free, and compares two paths by identity.
+
+<!-- BEGIN GENERATED zig build docs -- usage -->
+```zig
+const airlock = @import("airlock");
+
+const io = init.io;
+
+// Replace a file: readers see the old contents or the new ones, and
+// once this returns the new ones survive a power cut.
+const config = try airlock.writeFile(io, dir, "config.json", "{\"v\":2}\n", .{});
+std.debug.assert(config.reached.atLeast(.data));
+
+// Create the directories an object goes into, each new one's entry
+// synced in the directory that received it.
+_ = try airlock.makePath(io, dir, "objects/ab", .{});
+
+// Stream into a temp next to the destination, and publish it only if
+// the name is free: an object that already exists is kept as it is.
+var object = try airlock.create(io, dir, "objects/ab/cdef", .{ .temp = .{ .random = "tmp_obj_" } });
+defer object.discard(io);
+var buffer: [4096]u8 = undefined;
+const w = object.writer(io, &buffer);
+try w.writeAll("blob 5\x00hello");
+
+// A batch syncs each file cheaply, flushes each volume once, renames
+// in the order the files were added, then syncs each directory once.
+var slots: [8]airlock.Batch.Slot = undefined;
+var batch: airlock.Batch = .init(&slots);
+defer batch.reset(io);
+batch.addPending(io, &object, .keep_existing);
+const reached = try batch.commit(io, .{ .level = .data });
+std.debug.assert(reached.atLeast(.data));
+
+// Identity, not spelling: two paths to one file are one file.
+const a = try airlock.FileId.ofPath(io, dir, "objects/ab/cdef", .{});
+const b = try airlock.FileId.ofPath(io, cwd, ".zig-cache/airlock-example/objects/ab/cdef", .{});
+std.debug.assert(a.eql(b));
+```
+<!-- END GENERATED -->
+
+## Design
+
+Every call takes a `Level`: `none`, `ordered` (after a power cut, the old file
+or the complete new one, never a torn one), `data` (contents, length and any
+name changed are durable) or `full` (all metadata too). Every call returns
+`Reached`, what actually happened, because filesystems refuse calls: `exFAT`
+and SMB on macOS refuse `F_FULLFSYNC`, ReFS and FAT refuse the data-only flush
+on Windows. airlock falls back to the strongest call the filesystem accepts
+and says so in `Reached`; `reached.atLeast(level)` tells a caller whether the
+promise was kept. A publish that must not happen below its level calls
+`commitOrRefuse` (or `writeFileOrRefuse`, `Batch.commitOrRefuse`,
+`symLinkOrRefuse`), which decides before the rename on macOS and Windows and
+returns `error.LevelUnavailable` instead of publishing; only these four can
+return that error. A fallback happens only on the codes that mean the
+filesystem cannot be asked. Any other error means the bytes did
+not get down: it is returned, never retried and never answered with a weaker
+call, since the kernel may already have dropped the pages and cleared the
+error. Only `EINTR` is retried, after a cancel check, and never for `close`.
+
+The calls per level and platform:
+
+| Level | Linux | macOS | Windows |
+|---|---|---|---|
+| `ordered`, file | `fdatasync` | `F_BARRIERFSYNC` | `NtFlushBuffersFileEx(DATA_SYNC_ONLY)` |
+| `data`, file | `fdatasync` | `F_FULLFSYNC` | `DATA_SYNC_ONLY` |
+| `full`, file | `fsync` | `F_FULLFSYNC` | `NtFlushBuffersFile` |
+| `data`, directory | `fsync` | `F_FULLFSYNC` | reopened with `FILE_ADD_FILE`, `NtFlushBuffersFile` |
+| `data`, mapped range | `msync(MS_SYNC)` | `msync(MS_SYNC)`, `F_FULLFSYNC` | `NtFlushVirtualMemory` (`FlushViewOfFile`), `DATA_SYNC_ONLY` |
+
+`syncMapped(io, map, bytes, options)` takes std's `Io.File.MemoryMap` and a
+range of its memory: the range's pages are written back to the file, then the
+file is synced at the level as `syncFile` syncs it. On Linux `msync(MS_SYNC)` is
+itself the data sync of the range; std's own `MemoryMap.write` syncs nothing of
+a real mapping.
+
+[src/platform.zig](src/platform.zig) holds the full table, the fallback
+chains and what each one reports. `Reached.expected(level)` gives what this
+platform reaches when no filesystem refuses, so a caller can pin its own
+documentation to it.
+
+`create` opens a temp next to the destination, never in a system temp
+directory: a random name (a prefix and 128 random bits in lowercase base32) or
+an exact one, such as a git `.lock` file. A nested destination has its
+directory opened once and held, so the create, the rename and the directory
+sync all work relative to one handle. Permissions are set on the open handle:
+by default the temp takes those of the file it replaces, so replacing a `0600`
+file never leaves it readable by others. A write through `writer` that fails
+poisons the pending, since what reached the file is unknown. `commit` syncs the
+temp through the handle that wrote it, publishes it, and syncs the directory
+that received the name. A replace costs two flushes on
+Linux and Windows, and one barrier and one flush on macOS, where the
+directory's `F_FULLFSYNC` persists everything handed to the device before it.
+A failed sync poisons the pending and removes the temp at once; its contents
+are unknown. A rename that fails and leaves the temp intact can be retried
+without a second sync, and the temp keeps what that first sync reached. A directory sync
+that fails after the rename is `error.PublishedNotDurable`, with the cause
+kept; `rename` and `remove` say the same for a failure after the name changed,
+with the cause in `Diagnostics`. On Windows the rename is made through the
+temp's own handle with POSIX semantics, retried with jittered backoff while a
+scanner holds the target, and a delete removes the name even while another
+process has the file open.
+
+A `Pending` is used in order, and a call out of turn stops the program in every
+build rather than reach a closed descriptor: `file` and `writer` only while the
+pending is `open`, `commit` only until it has ended, and `Batch.addPending`
+only a pending that is `open` or `synced`. After a sync the temp is closed on
+POSIX, and a descriptor number that is no longer ours may already belong to
+another file.
+
+`makePath` creates the missing directories of a path and syncs the directory
+each new one went into, so a file published into the deepest one is not lost
+with a parent nobody synced; when a directory vanishes under it (a concurrent
+prune), it starts again. `symLink` points a name at a target in one rename: a
+temp link next to it, made durable before it replaces the name. `pruneTemps`
+removes the random temps a crash or a kill left, by prefix and age, and nothing
+else: only names a random temp can have, last modified long enough ago that no
+other process is still writing them.
+
+`copyFile` copies a file durably: into a temp next to the destination, as a
+copy-on-write clone where the filesystem makes one (Linux `FICLONE`, Darwin
+`fclonefileat`), else through std's file writer, which copies in the kernel
+where it can; then committed, so nothing is under the name until the whole copy
+is. `Copied.by` says which it was, and `clone = .always` refuses a filesystem
+that cannot clone with nothing published. Copies made durable together are each
+a `create` and a `Pending.copyFrom`, added to one `Batch`; `copyFrom`'s `limit`
+copies a file's first bytes while a writer may still be appending to it.
+
+`Batch` takes files, pending publishes, directories and fences. It syncs each
+file through its writing handle (Linux data syncs and macOS writeouts run
+concurrently, bounded by `parallel`; Windows writes each one out), puts one
+barrier per volume before the renames, renames in the
+order the entries were added, syncs each distinct directory once, then flushes
+each volume once. A hundred files on macOS cost one barrier and one flush
+instead of a hundred flush calls. That does not promise a hundredfold speedup:
+APFS can coalesce write-all-then-sync workloads. `parallel = 1` runs sequentially;
+when the `Io` cannot provide concurrency, the writeouts run inline. A `fence`
+makes the renames after it reach the
+disk after those before it; a fence the filesystem cannot keep, because it
+refuses a directory's sync, leaves the batch `.written` at best. A publish that
+finds its name taken under `keep_existing` syncs the existing file and its
+directory inside the batch, so a batch that reports `.data` holds no file
+nobody synced; on Windows a read-only file (a loose object) has its attribute
+cleared for the open and put back. A pending a failed rename left synced joins
+a batch without a second sync. The slots are the caller's storage. Each pending
+holds its temp until its sync, the batch opens each distinct parent when it
+first renames into it, and `addPath` files are opened `parallel` at a time and
+closed after their sync, so a batch holds at most one descriptor per slot plus
+`parallel`, and a batch of 3,000 paths about `parallel`. After a failed commit
+`failure` names the slot by its `Batch.SlotIndex`, the place it was added at
+however the commit sorted the directories, and its error; `slot.get(entries)`
+turns it into the caller's own entry, or `error.OutOfBounds`.
+
+`FileId` is a volume and a 128-bit file number, from the handle or from a path
+without opening it. On Windows, two volumes cloned from one image keep both
+the serial and the file ids, so a batch tells volumes apart by the NT device
+name as well.
+
+`stat` is one platform stat of a path with what `std.Io.File.Stat` leaves
+out: the device, owner and group, the mode's bits and a creation time, and on
+Windows the attributes and a reparse point's tag. A path that is not there is
+`FileNotFound` and one through a file `NotDir`, apart (std's macOS stat
+reads both as `FileNotFound`). `Volume.of` says whether a directory's volume
+is another machine's and names its file system, for a program about to put
+something there that not every volume holds, such as a Unix socket.
+
+`scan(dir, buffer)` reads a directory's entries, each with the stat `stat`
+gives it, into a buffer the caller owns. On Darwin it reads them in batches
+(`getattrlistbulk`, a call per several hundred entries); a volume without
+that call, and every other platform, is a directory read and a stat per
+entry. A directory's size is zero on either arm.
+
+Every raw call goes through one file, `src/sys.zig`, behind a test seam: when
+the `Io` a call is given carries a test's hook, the hook decides the call
+first, and a hook over a simulated file system has the call made there
+instead of on the system. Production pays one function-pointer compare per
+call. The seam is a
+module of its own that only airlock and `airlock.testing` import, so neither
+exports it. Nothing allocates.
+
+An evented application supplies an optional `Blocking` executor. Set
+`SyncOptions.blocking` for file and directory syncs (including the nested
+`sync` options of name operations), `Pending.CommitOptions.blocking` for a
+publish, or `Batch.Options.blocking` for a batch. `writeFile` takes it under
+`commit.blocking`. A null hook runs inline and creates no executor, queue,
+thread or allocation; constant default options compile directly to the raw
+call. No hook is stored in a pending or batch.
+
+`Blocking` holds a borrowed `context` and
+`run(io, context, function, argument)`. The adapter schedules
+`function(argument)` on its sync executor and waits for completion. It may
+return `Canceled` only if the job never started. Once started, it must finish
+and return success even if cancellation arrives, so a completed sync's error
+is preserved. Function and argument are borrowed stack storage and cannot be
+retained. Concurrent batches may call the adapter concurrently. Cancellation
+checks, fault interception, retries and fallback decisions stay on the
+calling task; only the raw sync runs elsewhere, and errno is read on that
+thread. Renames, opens, closes and identity calls stay on their existing path.
+Linux's optional early writeback initiates I/O without waiting and stays inline.
+
+The runtime owns the adapter. On a reactor runtime it is `reactor.syncLane`
+(`.blocking = .{ .run = reactor.syncLane }`), which runs each raw sync on the
+runtime's `sync` lane; airlock imports only std and aegis and has no dependency
+on reactor. For another executor, implement this small callback contract; every
+selected raw sync, including directory flushes, batch writeouts, barriers,
+fallbacks and fences, goes through it.
+
+## Scope
+
+- One lock protocol, git's: `lock` takes `<path>.lock` exclusively, waits
+  with git's backoff, names its holder as `core.lockfilePid` does, and is
+  committed as the new file or released. A lock airlock did not take is
+  reported (`lockHolder`), never broken: pids are reused, and a lock on a
+  network filesystem may be another host's. No leases broken on a timer,
+  and advisory locks are `std.Io.File.Lock`'s.
+- No write-ahead log, group commit or record framing: airlock syncs, it does
+  not decide when.
+- No `O_TMPFILE`. A copy-on-write clone is made only as
+  the fast path of a durable copy (`copyFile`, `copyFrom`), never on its own: a clone
+  that is never synced and published is not durable. Windows copies; its
+  block cloning (ReFS, Dev Drive) is not asked for yet. A replace keeps
+  the permissions it replaces, not extended attributes, ACLs or ownership.
+- A replace or a link swap replaces the name, a symbolic link included; it
+  does not write through it.
+- No identity that survives a remount.
+- Scheduling is the application's choice: raw syncs run inline unless an
+  executor is supplied through the durability options.
+
+## Platforms
+
+Linux, macOS and Windows are tested in CI. The BSDs compile and use plain
+`fsync` for every level; their rows are not verified. On Windows `symLink`
+needs the right to create symbolic links (`error.PermissionDenied` without
+it), and makes a directory link where its target is a directory
+(`SymLinkOptions.target_kind`). On macOS, what APFS does
+with `F_BARRIERFSYNC` on a third-party drive without barrier support is not
+documented; `barrier = false` makes every replace two full flushes. macOS and
+Windows have no block-level crash replay, so their tables rest on the man
+pages and Microsoft's documentation, and on the crash model below.
+
+## Built with
+
+- [Zig](https://ziglang.org) 0.17.0 and its standard library; nothing is
+  linked into the module.
+- [aegis](https://github.com/pedronaugusto/aegis) supplies the distinct volume
+  and device ids, the typed batch slot index and the always-on contracts; the
+  module uses its `id`, `handle` and `assert` namespaces alone.
+- [bay](https://github.com/pedronaugusto/bay) runs airlock's development.
+  [preflight](https://github.com/pedronaugusto/preflight) (the source checks,
+  the tests and CI) is a dev dependency, which a project that depends on airlock
+  never sees.
+- [shakedown](https://github.com/pedronaugusto/shakedown) is the `FaultIo`,
+  clock and `everyFault` the tests and `airlock.testing` run on. It is a dev
+  dependency, which the benchmarks measure through too; a project's build that
+  asks for `airlock.testing` gives it its own.
+
+## Testing
+
+`bay test` runs the unit suite and the example. Every raw call is a step
+of a [shakedown](https://github.com/pedronaugusto/shakedown) `FaultIo`, so the
+tests assert the exact calls each level makes on each platform, which fixes
+the barrier counts above. They fault each call with each class of error: a
+refusal, `EIO`, `ENOSPC`, `EINTR`, a cancel and, on Windows, a sharing
+violation and a pending delete. shakedown's `everyFault` runs every one of those
+at every step of a sync, a replace in each publish mode, a rename, a remove,
+a link swap, a `makePath` and a batch with a fence, and checks that the
+destination is old or new and never torn, that no temp is left, that a failed
+sync is never followed by another sync of that file, that what was reported is
+no more than a crash model proves, and that no crash state shows a rename after
+a fence without those before it. The model replays a run's calls against each
+platform's documented persistence rules and enumerates every state a crash
+could leave; on macOS it runs with the barrier honoured and dropped, and shows
+the window `barrier = false` closes. The same operations then run inside a
+shakedown `Sim`, their calls routed onto its simulated disk, through
+`everyCrash`: a power loss at every step of each, and every state the disk
+could come back in, each checked old or new and never torn, new in every state
+once the operation returned at `data`, and the fence held. A batch's descriptors are counted at every
+raw call, so the budget above is measured at its peak, and the Windows retry
+deadlines run on shakedown's clock. `bay bench` times the benchmarks in
+ReleaseFast by hand: each level's sync cost, replaces and batches per level
+and size, the raw calls and barriers of each operation counted through the
+seam, and relic's durability code beside airlock on the same work. Run from
+`zig-out/bench`, `airlock-bench --dir <path>` puts the files on the disk to
+measure. `--smoke` exits after argument parsing: CI compiles all benchmark rows and
+records no timings. A separate manual Windows dispatch records indicative
+hosted-runner numbers, not a target check. [docs/design.md](docs/design.md)
+describes the rows, measurement method and manual hosted workflow.
+
+### Testing code that calls airlock
+
+airlock's syncs and renames are raw calls that go past the `Io` they are
+given, so an `Io` double of your own never sees them. `airlock.testing` is the
+`Io` that does: a `Seam` over shakedown's `FaultIo`, where each of airlock's
+calls is a traced step, counted by `count` and `syncs`, failed by a `Plan` of
+airlock calls (`fail`, `always`), and reached by shakedown's `everyFault`.
+Your build gets it from airlock's build.zig, on your shakedown. Under bay your tests
+link one shakedown and one aegis; without bay, pin the aegis release shakedown pins
+(shakedown's README says how):
+
+```zig
+const airlock_build = @import("airlock"); // airlock's build.zig, at the top of yours
+
+const airlock = b.dependency("airlock", .{ .target = target, .optimize = optimize });
+const shakedown = b.dependency("shakedown", .{ .target = target, .optimize = optimize });
+tests.root_module.addImport("airlock.testing", airlock_build.testing(airlock, shakedown.module("shakedown")));
+tests.root_module.addImport("shakedown", shakedown.module("shakedown"));
+```
+
+```zig
+const seam = @import("airlock.testing");
+
+const hooked = try seam.Seam.create(gpa, io, .{ .plan = &.{seam.fail(seam.data_sync, 2, seam.io_error)} });
+defer hooked.destroy();
+try log.write(hooked.io(), record); // the first sync succeeds
+try std.testing.expectError(error.SyncFailed, log.write(hooked.io(), record)); // the second fails
+try std.testing.expectEqual(2, hooked.syncs());
+```
+
+Over a shakedown `Sim`, a seam routes airlock's calls into the simulation:
+through its `Io`, and each sync onto its disk at the strength the platform's
+call has, so a crash keeps what that call would keep:
+
+```zig
+const hooked = try seam.Seam.create(gpa, sim.io(), .{});
+```
+
+A test that must race something against one step of a publish stands the task
+still there with `Options.gate`: the first call of a kind at a name that ends with
+a suffix sets one `Io.Event` and waits for another, so the test can run a garbage
+collector, or a second process, while a lock is about to be taken, and let it go.
+
+[CI](.github/workflows/ci.yml) runs the source checks and the Linux Debug suite
+on every push it is asked for, and before a merge the Debug suite on macOS and
+Windows as well. `bay check` compiles the local tests and example; CI cross-compiles for `x86_64-linux-gnu`,
+`aarch64-linux-gnu`, `x86_64-linux-musl`, `x86_64-windows-gnu`,
+`aarch64-windows-gnu`, `x86_64-macos` and `aarch64-macos`.
+
+## Licence
+
+MIT. See [LICENSE](LICENSE).

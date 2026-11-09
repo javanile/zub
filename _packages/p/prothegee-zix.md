@@ -22,10 +22,10 @@ keywords:
   - webrtc
   - webserver
   - websockets
-date: 2026-10-27
+date: 2026-11-06
 category: networking
-updated_at: 2026-10-27T15:54:41+00:00
-last_sync: 2026-10-27T15:54:41Z
+updated_at: 2026-11-06T13:04:21+00:00
+last_sync: 2026-11-06T13:04:21Z
 package_kind: hybrid
 has_library: true
 has_binary: true

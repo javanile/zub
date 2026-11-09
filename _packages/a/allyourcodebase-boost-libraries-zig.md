@@ -9,9 +9,9 @@ keywords:
   - boost-libraries
   - cpp
   - cpp-libraries
-date: 2026-08-02
-updated_at: 2026-08-02T20:32:17+00:00
-last_sync: 2026-08-02T20:32:17Z
+date: 2026-11-06
+updated_at: 2026-11-06T13:39:38+00:00
+last_sync: 2026-11-06T13:39:38Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -39,7 +39,7 @@ Replacing the [CMake](https://cmake.org/) and [B2](https://www.bfgroup.xyz/b2/) 
 
 ### Requirements
 
-- [zig](https://ziglang.org/download) v0.16.0 or master
+- [zig](https://ziglang.org/download) v0.17.0 or master
 
 ## How to use
 

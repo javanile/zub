@@ -6,9 +6,9 @@ author: allyourcodebase
 author_github: allyourcodebase
 repository: https://github.com/allyourcodebase/boringssl
 keywords:
-date: 2026-09-22
-updated_at: 2026-09-22T12:22:05+00:00
-last_sync: 2026-09-22T12:22:05Z
+date: 2026-11-09
+updated_at: 2026-11-09T20:31:02+00:00
+last_sync: 2026-11-09T20:31:02Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -33,7 +33,7 @@ First, update your `build.zig.zon`:
 ```
 # Initialize a `zig build` project if you haven't already
 zig init
-zig fetch --save git+https://github.com/lukaskastern/boringssl.git
+zig fetch --save git+https://github.com/allyourcodebase/boringssl.git
 ```
 
 You can then link `boringssl` in your `build.zig` with:
@@ -43,7 +43,6 @@ const boringssl_dependency = b.dependency("boringssl", .{
     .target = target,
     .optimize = optimize,
 });
-your_module.linkLibrary(boringssl_dependency.artifact("bcm"));
 your_module.linkLibrary(boringssl_dependency.artifact("ssl"));
 your_module.linkLibrary(boringssl_dependency.artifact("crypto"));
 ```
@@ -95,4 +94,4 @@ At the moment only x86_64-windows-gnu is functional. MSVC doesn't work!
 GNU doesn't seem an official target by boringssl for windows which is why we need the [patch](patches/p256_gnuc.patch).
 
 ### Zig Version
-The target zig version is 0.16.0
+The target zig version is 0.17.0

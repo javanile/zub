@@ -9,9 +9,9 @@ keywords:
   - archive
   - tar
   - zip
-date: 2026-11-07
-updated_at: 2026-11-07T16:21:20+00:00
-last_sync: 2026-11-07T16:21:20Z
+date: 2026-11-09
+updated_at: 2026-11-09T19:36:12+00:00
+last_sync: 2026-11-09T19:36:12Z
 package_kind: binary
 has_library: false
 has_binary: true
