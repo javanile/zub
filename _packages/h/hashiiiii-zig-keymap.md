@@ -6,9 +6,9 @@ author: hashiiiii
 author_github: hashiiiii
 repository: https://github.com/hashiiiii/zig-keymap
 keywords:
-date: 2026-10-11
-updated_at: 2026-10-11T15:11:38+00:00
-last_sync: 2026-10-11T15:11:38Z
+date: 2026-11-10
+updated_at: 2026-11-10T14:11:19+00:00
+last_sync: 2026-11-10T14:11:19Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -24,7 +24,7 @@ permalink: /packages/hashiiiii/zig-keymap/
 
 # zig-keymap
 
-[![Zig](https://img.shields.io/badge/zig-0.16.0-f7a41d.svg?logo=zig&logoColor=white)](https://ziglang.org)
+[![Zig](https://img.shields.io/badge/zig-0.17.0-f7a41d.svg?logo=zig&logoColor=white)](https://ziglang.org)
 [![License](https://img.shields.io/github/license/hashiiiii/zig-keymap)](LICENSE)
 [![Release](https://img.shields.io/github/v/release/hashiiiii/zig-keymap)](https://github.com/hashiiiii/zig-keymap/releases)
 [![CI](https://img.shields.io/github/actions/workflow/status/hashiiiii/zig-keymap/ci.yml?branch=main&label=CI)](https://github.com/hashiiiii/zig-keymap/actions/workflows/ci.yml)
@@ -34,10 +34,10 @@ Define typed contexts and actions, then receive single keys or sequences such as
 
 ## Installation
 
-Requires Zig `0.16.0`. The library has no external dependencies.
+Requires Zig `0.17.0`. The library has no external dependencies.
 
 ```sh
-zig fetch --save=zig_keymap "git+https://github.com/hashiiiii/zig-keymap#v0.5.1"
+zig fetch --save=zig_keymap "git+https://github.com/hashiiiii/zig-keymap#v0.6.1"
 ```
 
 Import `keymap` in `build.zig`:

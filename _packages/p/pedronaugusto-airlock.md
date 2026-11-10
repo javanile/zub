@@ -8,10 +8,10 @@ repository: https://github.com/pedronaugusto/airlock
 keywords:
   - durability
   - filesystem
-date: 2026-11-09
+date: 2026-11-10
 category: systems
-updated_at: 2026-11-09T20:38:42+00:00
-last_sync: 2026-11-09T20:38:42Z
+updated_at: 2026-11-10T16:38:46+00:00
+last_sync: 2026-11-10T16:38:46Z
 package_kind: binary
 has_library: false
 has_binary: true

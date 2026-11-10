@@ -9,17 +9,17 @@ keywords:
   - base64
   - simd
   - unicode
-date: 2026-11-02
+date: 2026-11-05
 category: systems
-updated_at: 2026-11-02T17:18:06+00:00
-last_sync: 2026-11-02T17:18:06Z
-package_kind: library
+updated_at: 2026-11-05T16:55:55+00:00
+last_sync: 2026-11-05T16:55:55Z
+package_kind: hybrid
 has_library: true
-has_binary: false
-has_distributable_binary: false
-binary_count: 0
-distributable_binary_count: 0
-multiple_binaries: false
+has_binary: true
+has_distributable_binary: true
+binary_count: 2
+distributable_binary_count: 2
+multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
 sync_source: zigistry
@@ -59,7 +59,7 @@ Releases are tagged, from v0.1.0. Before 1.0 a minor release can change the API;
 ## What is in it
 
 - [Validating text](https://baskingspot.dev/utf/#validating-text): `validate.utf8`, `validate.ascii`, `validate.utf16le`, `validate.utf16be`, and `validate.utf32` return a `bool`; the `WithErrors` forms return a `Result` with the error kind and its position.
-- [Transcoding](https://baskingspot.dev/utf/#transcoding): `convert` has a checked form that validates as it writes and a `valid` form for input already known to be well-formed, for every pair of UTF-8, UTF-16LE/BE, UTF-32, and Latin-1.
+- [Transcoding](https://baskingspot.dev/utf/#transcoding): `convert` has a checked form that validates as it writes and a `valid` form for input already known to be well-formed, for every pair of UTF-8, UTF-16LE/BE, UTF-32, and Latin-1; `utf8ToUtf32Replacing` writes U+FFFD for each ill-formed sequence; `bmpToUtf8` and `utf8ToBmp` convert UTF-16 that holds only characters below U+10000, for text staged through UTF-16.
 - [Counting and sizing](https://baskingspot.dev/utf/#counting-and-sizing): `length` gives the output size each conversion needs and the code points in an input, without writing anything.
 - [Base64](https://baskingspot.dev/utf/#base64): `base64.encode` and `decode` with the standard or URL alphabet, optional padding, three last-chunk rules, and ASCII whitespace skipped on decode.
 
@@ -75,7 +75,7 @@ Not implemented:
 ## Install
 
 ```sh
-zig fetch --save https://baskingspot.dev/utf/v0.1.0.tar.gz
+zig fetch --save https://baskingspot.dev/utf/v0.2.4.tar.gz
 ```
 
 Add the module in `build.zig`:

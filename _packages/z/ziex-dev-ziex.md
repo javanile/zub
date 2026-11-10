@@ -17,9 +17,9 @@ keywords:
   - web
   - web-assembly
   - web-framework
-date: 2026-10-28
-updated_at: 2026-10-28T16:22:09+00:00
-last_sync: 2026-10-28T16:22:09Z
+date: 2026-11-10
+updated_at: 2026-11-10T15:54:28+00:00
+last_sync: 2026-11-10T15:54:28Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -209,15 +209,13 @@ const zx = @import("zx");
 | Zig      | Ziex                                                                              | Branch     | Status      |
 | -------- | --------------------------------------------------------------------------------- | ---------- | ----------- |
 | `0.17.x` |                                                                                   | `main`     | Development |
-| `0.17.x` | [`0.1.0-rc.4`](https://github.com/ziex-dev/ziex/releases/tag/v0.1.0-rc.4)         |            | **Latest**  |
+| `0.17.x` | [`0.1.0`](https://github.com/ziex-dev/ziex/releases/tag/v0.1.0)         |            | **Latest**  |
 | `0.16.x` | [`0.1.0-dev.1259`](https://github.com/ziex-dev/ziex/releases/tag/v0.1.0-dev.1259) | `zig-0.16` | Outdated    |
 | `0.15.x` | [`0.1.0-dev-1050`](https://github.com/ziex-dev/ziex/releases/tag/v0.1.0-dev.1050) | `zig-0.15` | Outdated    |
 
 ## Roadmap
 
-[Ziex 0.1.0](https://github.com/ziex-dev/ziex/milestone/2) is planned for release after `Zig 0.17.0` is available. You can view the [roadmap](https://github.com/ziex-dev/ziex/milestones) to learn more.
-
-The [`0.1.0`](https://github.com/ziex-dev/ziex/milestone/2) release will indicate that Ziex is production-ready, with all major features fully implemented, and will receive patch releases for bug fixes.
+[`0.1.0`](https://github.com/ziex-dev/ziex/releases/tag/v0.1.0) is the first public release. Work is underway on [`0.2.0`](https://github.com/ziex-dev/ziex/milestones), targeting `Zig 0.18.0`, with a focus on batteries included. See the [roadmap](https://github.com/ziex-dev/ziex/milestones) for more.
 
 The [`1.0.0`](https://github.com/ziex-dev/ziex/milestone/6) release will signify long-term support for that major version, receiving bug fixes and minor updates.
 

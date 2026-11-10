@@ -1,6 +1,6 @@
 ---
 title: zymbol
-description: QR Code and Micro QR for Zig.
+description: QR Code and Micro QR for the web and beyond.
 license: NOASSERTION
 author: ekkolon
 author_github: ekkolon
@@ -9,9 +9,9 @@ keywords:
   - iso-iec-18004-2024
   - micro-q
   - qr-code
-date: 2026-10-08
-updated_at: 2026-10-08T16:34:41+00:00
-last_sync: 2026-10-08T16:34:41Z
+date: 2026-11-05
+updated_at: 2026-11-05T14:58:12+00:00
+last_sync: 2026-11-05T14:58:12Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -27,13 +27,30 @@ permalink: /packages/ekkolon/zymbol/
 
 # Zymbol
 
-[![CI][ci-badge]][ci]
-[![License][license-badge]][license]
+[![CI](https://github.com/ekkolon/zymbol/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/ekkolon/zymbol/actions/workflows/ci.yml)
+[![Zig release](https://img.shields.io/github/v/release/ekkolon/zymbol?label=Zig%20release)](https://github.com/ekkolon/zymbol/releases)
+[![npm package](https://img.shields.io/npm/v/%40zymbol%2Fqr?label=npm)](https://www.npmjs.com/package/@zymbol/qr)
+[![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue)](LICENSE)
 
-Zymbol encodes and decodes QR Code Model 2 and Micro QR symbols in Zig. It also
-renders PNG, SVG and raster images, without external dependencies.
+<a href="https://codesniper.greenhats.com">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://codesniper.greenhats.com/badges/codesniper-audited-compact-dark.png">
+    <img src="https://codesniper.greenhats.com/badges/codesniper-audited-compact-light.png" alt="Audited by Code:Sniper, a project by greenhats" width="220" height="61">
+  </picture>
+</a>
 
-## Getting started
+Zymbol encodes, decodes, and renders QR Code Model 2 and Micro QR symbols.
+Written in Zig, it is also available for JavaScript and TypeScript through
+WebAssembly.
+
+It supports QR Code versions 1–40 and Micro QR M1–M4, with PNG, SVG, and
+raster output. Decoding takes a sampled module grid, not a photograph.
+See the [ISO/IEC 18004:2024 conformance review](docs/testing/conformance.md)
+for scope and test evidence.
+
+[Try the browser generator](https://ekkolon.github.io/zymbol/create/)
+
+## Zig
 
 Requires Zig 0.17.0.
 
@@ -41,8 +58,8 @@ Requires Zig 0.17.0.
 zig fetch --save https://github.com/ekkolon/zymbol/archive/refs/tags/v1.0.2.tar.gz
 ```
 
-Add the `zymbol` module to your build ([example](tests/consumer/build.zig)),
-then create a PNG:
+Add the `zymbol` module to `build.zig` ([example](tests/consumer/build.zig)).
+To create a PNG:
 
 ```zig
 const zymbol = @import("zymbol");
@@ -51,16 +68,9 @@ var png = try zymbol.render.pngText(allocator, "https://example.com", .{});
 defer png.deinit();
 ```
 
-The PNG is in `png.bytes`. Use `encodeText` or `encodeBytes` to create
-symbols without rendering. `decodeAny` decodes QR Code and Micro QR from
-sampled module grids, not directly from image files.
+See the [Zig guide](docs/getting-started.md) for setup, encoding, and decoding.
 
-See [Getting started](docs/getting-started.md) for caller-owned buffers and
-decoding.
-
-## TypeScript and WebAssembly
-
-Install the published JavaScript/TypeScript package:
+## JavaScript and TypeScript
 
 ```sh
 npm install @zymbol/qr
@@ -69,70 +79,22 @@ npm install @zymbol/qr
 ```ts
 import { createZymbol } from '@zymbol/qr';
 
-const qr = await createZymbol();
-const svg = qr.svg('https://example.com');
+const zymbol = await createZymbol();
+const svg = zymbol.svg('https://example.com');
 ```
 
-Use [`@zymbol/qr`](https://www.npmjs.com/package/@zymbol/qr) in Node,
-browsers and workers. The JavaScript package uses the Zig implementation
-compiled to WebAssembly. See the [package README](packages/qr/README.md)
-and [website playground](site/).
+The package runs in browsers, Node.js, and workers.
+See the [package guide](packages/qr/README.md) for options and examples.
 
+## Resources
 
-## ISO/IEC 18004:2024
+- [Documentation](docs/README.md) for guides, API details, and testing.
+- [Examples](examples/) for Zig usage.
+- [Changelog](CHANGELOG.md) for release history.
+- [Contributing](CONTRIBUTING.md) for development and pull requests.
+- [Security](SECURITY.md) for vulnerability reports.
 
-Zymbol implements digital symbol encoding and sampled-grid decoding for QR Code
-Model 2 and Micro QR. The matrix covers valid version, mode and error-correction
-combinations. ✅ means implemented; 🚫 means not applicable.
-
-| Feature | QR Code | Micro QR |
-| --- | --- | --- |
-| Symbol versions and dimensions | ✅ Versions 1–40 | ✅ M1–M4 |
-| Finder, separator and timing patterns | ✅ | ✅ |
-| Alignment patterns | ✅ Versions 2–40 | 🚫 |
-| Default digital quiet zone | ✅ 4 modules | ✅ 2 modules |
-| Numeric encoding and decoding | ✅ | ✅ M1–M4 |
-| Alphanumeric encoding and decoding | ✅ | ✅ M2–M4 |
-| Byte encoding and decoding | ✅ | ✅ M3–M4 |
-| Kanji encoding, decoding and Shift-JIS byte validation | ✅ | ✅ M3–M4 |
-| Mixed-mode segments | ✅ | ✅ M2–M4 |
-| Count fields, terminators and data padding | ✅ | ✅ Including M1/M3 final four-bit data units |
-| ECI headers and decoded metadata | ✅ | 🚫 |
-| FNC1 first/second position and separator handling | ✅ | 🚫 |
-| Structured Append headers, parity and per-symbol metadata | ✅ | 🚫 |
-| Reed-Solomon codeword generation | ✅ | ✅ |
-| Reed-Solomon decoding within specified correction limits | ✅ | ✅ M2–M4; M1 detects errors only |
-| Final message construction and module placement | ✅ Including block interleaving and remainder bits | ✅ |
-| Data mask patterns | ✅ All 8 | ✅ All 4 |
-| Automatic mask evaluation and selection | ✅ N1–N4, including scaled N3 patterns | ✅ Micro QR edge scoring |
-| Format information generation and BCH recovery | ✅ | ✅ |
-| Version information generation and BCH recovery | ✅ Versions 7–40 | 🚫 |
-| Payload recovery from sampled module grids | ✅ | ✅ |
-| Mirror and reversed-reflectance normalization | ✅ | ✅ |
-| Symbology identifier metadata | ✅ | ✅ |
-
-See [conformance and test evidence](docs/testing/conformance.md) for the
-scope, test cases and limits. Image detection, physical printing and print
-quality grading are outside the library.
-
-## Documentation
-
-[Getting started](docs/getting-started.md) ·
-[API reference](docs/reference/api.md) ·
-[Examples](examples/) ·
-[Benchmarks](docs/testing/performance.md) ·
-[Documentation index](docs/README.md)
-
-[Changelog](CHANGELOG.md) · [Contributing](CONTRIBUTING.md) ·
-[Security](SECURITY.md)
-
-## License
-
-Licensed under [MIT](LICENSE-MIT) or [Apache 2.0](LICENSE-APACHE), at your option.
+Licensed under [MIT](LICENSE-MIT) or [Apache-2.0](LICENSE-APACHE), at your
+option.
 
 QR Code is a registered trademark of DENSO WAVE INCORPORATED.
-
-[ci]: https://github.com/ekkolon/zymbol/actions/workflows/ci.yml
-[ci-badge]: https://github.com/ekkolon/zymbol/actions/workflows/ci.yml/badge.svg?branch=main
-[license]: LICENSE
-[license-badge]: https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg

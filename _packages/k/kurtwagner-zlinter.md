@@ -9,10 +9,10 @@ keywords:
   - linter
   - linters
   - static-analysis
-date: 2026-08-20
+date: 2026-11-05
 category: tooling
-updated_at: 2026-08-20T07:12:25+00:00
-last_sync: 2026-08-20T07:12:25Z
+updated_at: 2026-11-05T20:02:01+00:00
+last_sync: 2026-11-05T20:02:01Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -32,7 +32,7 @@ permalink: /packages/KurtWagner/zlinter/
 
 # Zlinter - Linter for Zig
 
-[![Zig support](https://img.shields.io/badge/Zig-0.14.x%20%7C%200.15.x%20%7C%200.16.x%20%7C%20master-%23f3ab20?logo=zig&style=flat)](http://github.com/kurtwagner/what-the-zig)
+[![Zig support](https://img.shields.io/badge/Zig-0.14.x%20%7C%200.15.x%20%7C%200.16.x%20%7C%200.17.x%20%7C%20master-%23f3ab20?logo=zig&style=flat)](http://github.com/kurtwagner/what-the-zig)
 [![linux](https://img.shields.io/github/actions/workflow/status/KurtWagner/zlinter/linux.yml?branch=master&label=linux&style=flat)](https://github.com/KurtWagner/zlinter/actions/workflows/linux.yml)
 [![windows](https://img.shields.io/github/actions/workflow/status/KurtWagner/zlinter/windows.yml?branch=master&label=windows&style=flat)](https://github.com/KurtWagner/zlinter/actions/workflows/windows.yml)
 [![Coverage Status](https://img.shields.io/coveralls/github/KurtWagner/zlinter/master?style=flat)](https://coveralls.io/github/KurtWagner/zlinter?branch=master)
@@ -123,7 +123,13 @@ hook it up to a build step, like `zig build lint`:
    zig fetch --save git+https://github.com/kurtwagner/zlinter#0.16.x
    ```
 
-   For master (0.17.x-dev):
+   For 0.17.x:
+
+   ```shell
+   zig fetch --save git+https://github.com/kurtwagner/zlinter#0.17.x
+   ```
+
+   For master (0.18.x-dev):
 
    ```shell
    zig fetch --save git+https://github.com/kurtwagner/zlinter#master
@@ -211,7 +217,7 @@ It can sometimes require a multiple runs to completely resolve all fixable issue
 
 ## Custom rules
 
-Bespoke rules can be added to your project. For example, maybe you really don't like cats, and refuse to let any `cats` exist in any identifier. See example rule [`no_cats`](./integration_tests/src/no_cats.zig), which is then integrated like builtin rules in your `build.zig`:
+Bespoke rules can be added to your project. For example, maybe you really don't like cats, and refuse to let any `cats` exist in any identifier. See example rule [`no_cats`](./integration_tests/cli/src/no_cats.zig), which is then integrated like builtin rules in your `build.zig`:
 
 ```zig
 builder.addRule(.{
@@ -222,20 +228,37 @@ builder.addRule(.{
 }, .{});
 ```
 
+Rules whose source lives outside your project, such as a rule shipped in a
+dependency, can be added with `addCustomRule`, which accepts a
+`std.Build.LazyPath`:
+
+```zig
+builder.addCustomRule("no_cats", dep.path("rules/no_cats.zig"), .{});
+```
+
 Alternatively, take a look at <https://github.com/KurtWagner/zlinter-custom-rule-example>, which is a minimal custom rule example with accompanying zig project.
 
 ## Custom formatters
 
 Formatters control how lint results are printed out.
 
-At the moment, zlinter only ships with the built in
-[`DefaultFormatter`](./src/lib/formatters/DefaultFormatter.zig), so there is
-not yet a supported integration path for downstream projects to plug in custom
-formatters.
+zlinter has a built in:
 
-That said, there are plenty of reasons someone may want to add another
-formatter, for example JSON, ZON, or XML output for other tools to consume.
-If that is something you need, contributions in this area are very welcome.
+1. [`DefaultFormatter`](./src/lib/formatters/DefaultFormatter.zig) for human
+readable terminal output, and
+2. [`JsonFormatter`](./src/lib/formatters/JsonFormatter.zig) (`--format json`) + [`ZonFormatter`](./src/lib/formatters/ZonFormatter.zig) (`--format zon`) for tooling
+integrations.
+
+In ZON and JSON outputs, the `status` is `success` when there are no active warnings or errors,
+`warning` when warnings are present but the run passes, and `failure` when
+errors are present or `--max-warnings` is exceeded. Suppressed diagnostics
+do not affect the status. `--quiet` hides warnings without changing the status.
+
+Use `--exit-zero` (e.g., `zig build lint -- --format json --exit-zero`) to return process exit code `0`
+even when linting fails, while keeping the actual status in the JSON or ZON. This
+prevents `zig build` failure output from interfering with JSON consumers.
+
+Tool errors, argument parsing errors, and build failures still return nonzero exit codes.
 
 Formatter related code lives under [`zlinter.formatters`](./src/lib/formatters.zig).
 The core interface is [`Formatter`](./src/lib/formatters/Formatter.zig), which
@@ -244,7 +267,8 @@ the supplied writer.
 
 If you are interested in contributing a formatter, the existing
 [`DefaultFormatter`](./src/lib/formatters/DefaultFormatter.zig) is the best
-place to start.
+place to start for terminal output. For structured output, see `JsonFormatter`
+and `ZonFormatter`, which use Zig's JSON and ZON writers directly.
 
 ## Configuration
 
@@ -374,14 +398,16 @@ If you omit `zlinter-enable`, all lines until EOF will be disabled.
 ### Command-Line Arguments
 
 ```shell
-zig build lint -- [--include <path> ...] [--exclude <path> ...] [--filter <path> ...] [--rule <name> ...] [--fix] [--quiet] [--max-warnings <u32>]
+zig build lint -- [--include <path> ...] [--exclude <path> ...] [--filter <path> ...] [--rule <name> ...] [--format <default|json|zon>] [--fix] [--quiet] [--max-warnings <u32>] [--exit-zero]
 ```
 
 - `--include` run the linter on these paths ignoring the includes and excludes defined in the `build.zig`, forcing these paths to be resolved and linted (if they exist).
 - `--exclude` exclude these paths from linting. This argument will be used in conjunction with the excludes defined in the `build.zig` unless used with `--include`.
 - `--filter` used to filter the run to a specific set of already resolved paths. Unlike `--include`, this leaves the includes and excludes defined in the `build.zig` as is.
+- `--format` set output format. Supported values are `default`, `json`, and `zon`.
 - `--quiet` only report errors (not warnings).
 - `--max-warnings` fail if there are more than this number of warnings.
+- `--exit-zero` return process exit code `0` even when linting fails; JSON and ZON retain the actual lint status.
 - `--fix` used to automatically fix some issues (e.g., removal of unused container declarations) - **Only use this feature if you use source control as it can result in loss of code!**
 
 For example

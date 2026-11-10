@@ -11,10 +11,10 @@ keywords:
   - linter
   - memory-safety
   - static-analysis
-date: 2026-10-30
+date: 2026-11-06
 category: tooling
-updated_at: 2026-10-30T15:45:27+00:00
-last_sync: 2026-10-30T15:45:27Z
+updated_at: 2026-11-06T19:30:33+00:00
+last_sync: 2026-11-06T19:30:33Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -32,7 +32,7 @@ permalink: /packages/kmoneil/zigvet/
 
 [![ci](https://github.com/kmoneil/zigvet/actions/workflows/ci.yml/badge.svg)](https://github.com/kmoneil/zigvet/actions/workflows/ci.yml)
 [![release](https://img.shields.io/github/v/release/kmoneil/zigvet)](https://github.com/kmoneil/zigvet/releases/latest)
-[![zig](https://img.shields.io/badge/zig-0.17.0-f7a41d)](https://ziglang.org/download/)
+[![zig](https://img.shields.io/badge/zig-0.17.1-f7a41d)](https://ziglang.org/download/)
 [![docs](https://img.shields.io/badge/docs-kmoneil.github.io%2Fzigvet-blue)](https://kmoneil.github.io/zigvet/)
 [![license](https://img.shields.io/github/license/kmoneil/zigvet)](LICENSE)
 
@@ -46,7 +46,7 @@ a buffered writer never flushed, tests that never run. `go vet` is the
 closest analog: not style, which `zig fmt` and the existing linters cover,
 but silent wrongness.
 
-- **Twenty rules.** Sixteen have found real bugs: in Zig's own standard
+- **Twenty-two rules.** Eighteen have found real bugs: in Zig's own standard
   library and compiler, in well-known open-source Zig projects, and in
   application code.
 - **Syntax only.** No build, no configuration. It reads Zig's standard
@@ -82,7 +82,7 @@ stack slot. The fix is one word: `&.{comptime Scope.monitoring.url()}`.
 | macOS, Linux | `brew install kmoneil/tap/zigvet` |
 | Windows | `scoop bucket add kmoneil https://github.com/kmoneil/scoop-bucket` then `scoop install kmoneil/zigvet` |
 | Anywhere | a binary from the [latest release](https://github.com/kmoneil/zigvet/releases/latest) |
-| From source | `zig build -Doptimize=ReleaseSafe` with Zig 0.17.0, which leaves it in `zig-out/bin/` |
+| From source | `zig build -Doptimize=ReleaseSafe` with Zig 0.17.1, which leaves it in `zig-out/bin/` |
 
 Homebrew and Scoop move to each release by themselves, after checking every
 file's build provenance. Each release carries a binary for Linux, macOS and
@@ -106,13 +106,17 @@ chmod +x zigvet-darwin-arm64 && mv zigvet-darwin-arm64 /usr/local/bin/zigvet
 A binary downloaded with a browser on macOS is quarantined; clear it with
 `xattr -d com.apple.quarantine zigvet`. `curl` does not set the flag.
 
-From v0.2.1 on, releases are also reproducible: a tag built with Zig 0.17.0
-from ziglang.org gives the same bytes wherever it is built, so a release
-can be checked without trusting the workflow that made it. CI builds every
-change on Linux and on macOS and compares them. To check one yourself:
+From v0.2.1 on, releases are also reproducible: a tag built with the Zig
+its `build.zig.zon` names as `minimum_zig_version`, from ziglang.org, gives
+the same bytes wherever it is built, so a release can be checked without
+trusting the workflow that made it. That is the Zig its CI and release ran
+(0.17.0 up to v0.24.0, 0.17.1 after); another Zig gives other bytes. CI
+builds every change on Linux and on macOS and compares them. To check one
+yourself:
 
 ```sh
 git clone --depth 1 --branch <tag> https://github.com/kmoneil/zigvet && cd zigvet
+grep minimum_zig_version build.zig.zon   # the Zig to build it with
 zig build release && cd zig-out/release
 curl -fLO https://github.com/kmoneil/zigvet/releases/download/<tag>/SHA256SUMS
 shasum -a 256 --check SHA256SUMS
@@ -137,7 +141,8 @@ zigvet --format github src        # annotate a pull request in CI
 
 ```
 zigvet [--exclude <path>]... [--format <text|github|json>] [--summary] <path>...
-zigvet --version
+zigvet skill [<rule>... | --all | --install <dir>]
+zigvet --version | --help
 ```
 
 A file is checked whatever its extension. A directory is walked for `.zig`
@@ -201,7 +206,7 @@ found in real code.
 | Rule | Catches | What goes wrong |
 |---|---|---|
 | [escape](docs/rules/escape.md) | A pointer or slice into stack memory that leaves the function that made it | The caller reads memory the next call writes over |
-| [freed](docs/rules/freed.md) | A function that returns what its own `defer` frees | The caller reads freed memory |
+| [freed](docs/rules/freed.md) | A function that returns what its own `defer` frees, or a `std.json` value parsed out of it | The caller reads freed memory |
 | [grow](docs/rules/grow.md) | A pointer into a list's items, kept across a call that can move them | The pointer reads freed memory once the list grows |
 | [copy](docs/rules/copy.md) | A `std.Io.Writer` or `Reader` interface copied out of the struct it belongs to | The first flush reads whatever sits next to the copy as its parent, and crashes |
 
@@ -232,9 +237,16 @@ seldom take.
 
 | Rule | Catches | What goes wrong |
 |---|---|---|
-| [alias](docs/rules/alias.md) | An anonymous initializer assigned to a place one of its own later elements reads | `ext = .{ ext[1], ext[0] }` gives `{ ext[1], ext[1] }` |
+| [alias](docs/rules/alias.md) | An anonymous initializer assigned to a place that it reads after storing to it | `ext = .{ ext[1], ext[0] }` gives `{ ext[1], ext[1] }`, and `e = .{ .pair = f(e) }` hands `f` an `e` already tagged `.pair` |
 | [flush](docs/rules/flush.md) | A buffered file or stream writer, written to and never flushed | What is left in the buffer never arrives |
+| [positional](docs/rules/positional.md) | A writer on stdout or stderr, or a reader on stdin, made positional (`writer`, `File.Writer.init`, `reader`) | Redirected to a file it writes from byte 0, over what else is written there: `prog > log 2>&1` comes out garbled; a reader reads again what was read before it |
 | [wipe](docs/rules/wipe.md) | A local wiped with `@memset` as the last thing done with it | Release builds drop the store, and the secret stays in memory |
+
+### Data races
+
+| Rule | Catches | What goes wrong |
+|---|---|---|
+| [race](docs/rules/race.md) | A container-level optional tested by value (`g == null`, `if (g) \|v\|`) when what it holds has a lock or atomics in it | Debug copies all of it to read the tag, a plain read racing other threads' atomic writes, and ThreadSanitizer reports it |
 
 ### Builds and tests
 
@@ -266,7 +278,7 @@ excuse whatever is written there next.
 ## Use it in a build
 
 Add zigvet to `build.zig.zon`, pinned to a release tag, with `zig fetch
---save git+https://github.com/kmoneil/zigvet#v0.18.0`, then give `build.zig`
+--save git+https://github.com/kmoneil/zigvet#v0.27.0`, then give `build.zig`
 a lint step, the way `zig fmt --check` is used:
 
 ```zig
@@ -313,6 +325,27 @@ dependable only in a Debug build (the default for `zig build test`): an
 optimized build may turn a read of a dead frame into anything. The escape
 rule finds the shapes it knows in any function, so the two are worth
 having together.
+
+## For AI agents
+
+`zigvet skill` prints what an AI agent needs to work with zigvet: the
+loop, each rule in a line, how to add it to a build, and what to do with
+a finding that looks wrong. `zigvet skill <rule>` prints a rule's part:
+what it catches, the smallest code that trips it, and the fix. A finding
+names its rule, so an agent reads the parts it needs and not every one. It
+is built into the binary, and zigvet's tests run every example in it.
+
+```sh
+zigvet skill                       # the short guide
+zigvet skill escape twice          # those rules' parts
+zigvet skill --all                 # the whole guide
+zigvet skill --install ~/.skills   # write ~/.skills/zigvet/SKILL.md
+```
+
+What `--install` writes has the agent run `zigvet skill`, so it is never
+older than the zigvet installed.
+
+To check a directory named `skill`, name it `./skill`.
 
 ## What a rule has to be
 

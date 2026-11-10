@@ -7,10 +7,10 @@ author_github: Arwalk
 repository: https://github.com/Arwalk/zig-protobuf
 keywords:
   - protobuf
-date: 2026-11-08
+date: 2026-11-10
 category: data-formats
-updated_at: 2026-11-08T17:30:26+00:00
-last_sync: 2026-11-08T17:30:26Z
+updated_at: 2026-11-10T15:06:18+00:00
+last_sync: 2026-11-10T15:06:18Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -281,7 +281,9 @@ The `master` branch had these changes before version 6.0.0. They apply to you if
   * The encoder does not write a field with implicit presence that holds the zero value.
   * The well-known types have their special form: `Timestamp` and `Duration` are strings,
     wrappers are plain values, `Struct` and `Value` are plain JSON.
-  * An `Any` with a `type_url` needs `protobuf.wkt.any_json_resolver`.
+  * An `Any` with a `type_url` needs `protobuf.wkt.any_json_resolver`. Its `from_json` receives
+    `protobuf.DecodeOptions` (the extensions and the remaining recursion limit) to pass on to
+    `protobuf.json.decodeWithOptions`.
 * The well-known types of `google.protobuf` are declarations of `protobuf.wkt`. `Value` has no
   `_kind_case` declaration.
 * A message field with the type of a message that contains it is a pointer (`?*T`).

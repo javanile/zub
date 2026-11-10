@@ -10,10 +10,10 @@ keywords:
   - nostr-relay
   - self-hosted
   - websocket
-date: 2026-10-06
+date: 2026-11-10
 category: networking
-updated_at: 2026-10-06T16:03:53+00:00
-last_sync: 2026-10-06T16:03:53Z
+updated_at: 2026-11-10T14:39:05+00:00
+last_sync: 2026-11-10T14:39:05Z
 package_kind: binary
 has_library: false
 has_binary: true
