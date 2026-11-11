@@ -8,9 +8,9 @@ repository: https://github.com/pedronaugusto/parley
 keywords:
   - mcp
   - model-context-protocol
-date: 2026-11-07
-updated_at: 2026-11-07T16:19:53+00:00
-last_sync: 2026-11-07T16:19:53Z
+date: 2026-11-11
+updated_at: 2026-11-11T17:10:03+00:00
+last_sync: 2026-11-11T17:10:03Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -112,8 +112,13 @@ Over stdio, as a client launches a server:
 const parley = @import("parley");
 
 // A server a client launches: one message a line on stdin and stdout,
-// both eras, until the client closes stdin.
-try parley.stdio.serve(io, gpa, server, &in, &out.writer, .{});
+// both eras, until the client closes stdin. Each end is handed with
+// what says why a read or write on it failed: a cancel is `Canceled`.
+var in_buffer: [64 * 1024]u8 = undefined;
+var out_buffer: [64 * 1024]u8 = undefined;
+var stdin = Io.File.stdin().readerStreaming(io, &in_buffer);
+var stdout = Io.File.stdout().writerStreaming(io, &out_buffer);
+try parley.stdio.serve(io, gpa, server, .fromFile(&stdin), .fromFile(&stdout), .{});
 ```
 <!-- END GENERATED -->
 

@@ -16,10 +16,10 @@ keywords:
   - passkey
   - passkeys
   - webauthn
-date: 2026-11-04
+date: 2026-11-11
 category: systems
-updated_at: 2026-11-04T22:33:58+00:00
-last_sync: 2026-11-04T22:33:58Z
+updated_at: 2026-11-11T17:41:27+00:00
+last_sync: 2026-11-11T17:41:27Z
 package_kind: binary
 has_library: false
 has_binary: true
@@ -98,7 +98,7 @@ sudo apt install passkeez
 | Version | Command |
 |:--------|:--------|
 | 0.6.3   | `sudo bash -c "$(curl -fsSL https://codeberg.org/r4gus/PassKeeZ/raw/branch/master/script/install-linux.sh)" install-linux.sh --vpasskeez 0.6.3 --vzig 0.15.2 --vzigenity 0.7.1`|
-| 0.8.0   | `sudo bash -c "$(curl -fsSL https://codeberg.org/r4gus/PassKeeZ/raw/branch/master/script/install-linux.sh)"` |
+| 0.8.3   | `sudo bash -c "$(curl -fsSL https://codeberg.org/r4gus/PassKeeZ/raw/branch/master/script/install-linux.sh)"` |
 
 You can find more info in the [Wiki](https://codeberg.org/r4gus/PassKeeZ/wiki).
 
@@ -108,7 +108,7 @@ You can find more info in the [Wiki](https://codeberg.org/r4gus/PassKeeZ/wiki).
 |:-------:|:----------:|:-------------:|:-----:|
 | Cromium   | &#9989;    | 119.0.6045.159 (Official Build) Arch Linux (64-bit) | |
 | Brave | &#9989; | Version 1.62.153 Chromium: 121.0.6167.85 (Official Build) (64-bit) | |
-| Firefox | &#9989; | 122.0 (64-bit) |  |
+| Firefox/ Librewolf | &#9989; | 122.0 (64-bit) | Encountered issues with Firefox based browsers on version 159.0.1-1 on passkey.org and other test sites. Login etc. are aborted immediately. **This should be fixed in `0.8.3`**. If you still have problems after installing 0.8.3 please open an issue.  |
 | Opera | &#9989; | version: 105.0.4970.16 chromium: 119.0.6045.159 | |
 
 > [!IMPORTANT]

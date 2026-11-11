@@ -8,10 +8,10 @@ repository: https://github.com/JurMax/SDL_net_zig
 keywords:
   - sdl
   - sdl3
-date: 2026-09-05
+date: 2026-11-05
 category: game-development
-updated_at: 2026-09-05T06:59:15+00:00
-last_sync: 2026-09-05T06:59:15Z
+updated_at: 2026-11-05T09:40:15+00:00
+last_sync: 2026-11-05T09:40:15Z
 package_kind: hybrid
 has_library: true
 has_binary: true

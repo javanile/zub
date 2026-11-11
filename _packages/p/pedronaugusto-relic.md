@@ -1,21 +1,22 @@
 ---
 title: relic
-description: "relic reads and writes a git repository from Zig: objects, packs, refs, the index, the working tree and diffs."
+description: "Git for Zig: objects, packs, refs, the index, the working tree, diffs, merges, LFS and the network protocols, read and written as git does"
 license: MIT
 author: pedronaugusto
 author_github: pedronaugusto
 repository: https://github.com/pedronaugusto/relic
 keywords:
   - git
-date: 2026-10-29
-updated_at: 2026-10-29T16:17:51+00:00
-last_sync: 2026-10-29T16:17:51Z
+  - version-control
+date: 2026-11-11
+updated_at: 2026-11-11T17:49:17+00:00
+last_sync: 2026-11-11T17:49:17Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 15
-distributable_binary_count: 15
+binary_count: 16
+distributable_binary_count: 16
 multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
@@ -44,18 +45,32 @@ zig fetch --save git+https://github.com/pedronaugusto/relic
 ```zig
 const relic_dep = b.dependency("relic", .{ .target = target, .optimize = optimize });
 exe.root_module.addImport("relic", relic_dep.module("relic"));
+// Git LFS, where the program uses it:
+exe.root_module.addImport("relic_lfs", relic_dep.module("relic_lfs"));
 ```
 
-A program that works on local repositories, or over ssh and the file system alone, turns the `http`
-option off and fetches none of HTTP's packages; an `http` or `https` remote is then
-`error.HttpUnavailable`, and so is Git LFS: opening an LFS server, its transfers and locks, a custom
-transfer agent and the lock cache:
+Two build options, both on by default, each with the packages it fetches.
+`http` is fetching and pushing over HTTP(S), with uplink and cloak; without
+it an `http` or `https` remote is `error.HttpUnavailable`, and so is an LFS
+server reached over HTTP(S). `lfs` is Git LFS, the `relic_lfs` module, with
+strand; without it there is no `relic_lfs`, and a `filter=lfs` path is an
+ordinary filter driver, as it is to git without git-lfs installed.
+
+| `http` | `lfs` | Fetches | For |
+|---|---|---|---|
+| on | on | uplink, cloak, strand | Everything: the default. |
+| off | on | strand | Local repositories, ssh and the file system, with Git LFS over git-lfs's pure-ssh protocol and custom transfer agents. |
+| on | off | uplink, cloak | Every remote, without Git LFS. |
+| off | off | none | Local repositories, ssh and the file system alone. |
 
 ```zig
-const relic_dep = b.dependency("relic", .{ .target = target, .optimize = optimize, .http = false });
+const relic_dep = b.dependency("relic", .{ .target = target, .optimize = optimize, .http = false, .lfs = false });
 ```
 
-There is no other build option to forward.
+A declaration that needs a package a build left out is absent from it,
+not a stand-in: `transport.http_backend` and `relic_lfs.server` exist only
+with `http`, and `relic.built_with` says which options a build has, for
+`@hasDecl` and `if` alike. There is no other build option to forward.
 
 Zig 0.17.0, and a `git` on the path for the fixture tests, which are skipped
 without one.
@@ -381,6 +396,16 @@ Decoding precedes splitting, including home paths and encoded delimiters.
 Scp shorthand and plain paths keep percent signs literal, HTTP keeps its
 encoded request path, and `identity.url.raw` always retains the original.
 
+**`git://` is reached as git reaches it.** The program `GIT_PROXY_COMMAND`
+names, else the first `core.gitProxy` that matches the host and port as
+written (` for <domain>` at a dot boundary, `none` for none), is run with the
+host and the port and carries the conversation. Without one, a TCP connection
+goes to the port, 9418 unless the URL names another, through uplink's dialer.
+The request is git daemon's, with protocol v2 for upload-pack alone and
+`GIT_OVERRIDE_VIRTUAL_HOST` as the host when it is set; a daemon that refuses
+is `RemoteError`, with its `ERR` words. Built without `http`, relic has no
+dialer, and only a proxied `git://` works.
+
 **HTTP and TLS are [uplink](https://github.com/pedronaugusto/uplink)'s.** relic reads git's
 `http.*` settings, its environment and git-lfs's own settings, and hands
 uplink what they say: the authorities trusted (`http.sslCAInfo` in place
@@ -418,7 +443,7 @@ in process; the server is found where git-lfs looks for it and asked the way
 git-lfs asks it, over https or git-lfs's pure-ssh protocol; the last lock
 listing is kept where git-lfs keeps it, in its JSON, so either tool shows the
 other's locks offline. A repository carrying git-lfs's own hooks works on a
-machine without git-lfs. The other side is here too: `lfs.server` serves the
+machine without git-lfs. The other side is here too: `relic_lfs.server` serves the
 batch API and the locking API on uplink's server beside git's smart HTTP, the
 objects in a store the caller gives (a directory, or S3-compatible storage the
 client reaches through signed URLs) and every request put to the caller's
@@ -753,7 +778,7 @@ writes beside them, and `relic.refs.reftable.table` is the table format.
 | `transport.pkt_line` | Module within `transport`. |
 | `transport.upload_pack` | `Server` — serving fetches, with shallow and every filter. |
 | `transport.receive_pack` | `Server`, `connect` — serving pushes as git's receive-pack: quarantine, connectivity and fsck, the receive hooks, `receive.*`, report-status v1 and v2. |
-| `transport.http_backend` | `Backend` — git's smart HTTP served on uplink's server: clone, fetch and push over `http://`. |
+| `transport.http_backend` | `Backend` — git's smart HTTP served on uplink's server: clone, fetch and push over `http://`. Only with `http`. |
 | `transport.bundle` | `create`, `write`, `File.open`, `Header.read`, `listHeads`, `writeSummary`, `verify`, `unbundle`, `isBundle`: `git bundle` v2 and v3, its header byte for byte, filtered by any filter git takes, `sparse:oid=` included; a path to a bundle is fetched and cloned from. |
 | `transport.bundle_uri` | `fetch`, `fetchList`, `List`: bundle URIs as git's `bundle-uri.c` takes them, a bundle or a bundle list (`mode`, the `creationToken` heuristic) unbundled before a clone or a fetch asks the server, its refs under `refs/bundles/`. |
 | `transport.progress` | Module within `transport`. |
@@ -762,18 +787,6 @@ writes beside them, and `relic.refs.reftable.table` is the table format.
 | `submodule` | Public concern. |
 | `submodule.gitmodules` | Module within `submodule`. |
 | `submodule.gitlink` | Module within `submodule`. |
-| `lfs` | LFS without git-lfs: pointers and the store. |
-| `lfs.filter` | Native LFS filters selected by an operation owner. |
-| `lfs.clone` | Clone with native LFS checkout and downloads. |
-| `lfs.netrc` | What the LFS client reads beside: `~/.netrc`. |
-| `lfs.ssh` | Module within `lfs`. |
-| `lfs.hooks` | Module within `lfs`. |
-| `lfs.push` | Module within `lfs`. |
-| `lfs.locks` | Module within `lfs`. |
-| `lfs.transfer` | Module within `lfs`. |
-| `lfs.custom` | Module within `lfs`. |
-| `lfs.api` | Module within `lfs`. |
-| `lfs.server` | `Backend`, `Store`, `Directory`, `S3` — a Git LFS server as a handler for uplink's server: the batch API, basic transfers into the caller's store (a directory, or S3-compatible storage through signed URLs), the locking API, authorization by the caller's hook. |
 | `patch` | `parse`, `Patch`, `FilePatch`, `Fragment`: git patches and plain unified diffs read as `git apply` reads them, from whatever surrounds them. |
 | `patch.am` | `start`, `proceed`, `skip`, `abort`, `quit` — `git am` with `--3way`, its state in `rebase-apply` as git keeps it. |
 | `patch.commit_diff` | `parts`, `write`, `configured` — a commit's diff as `git log -p` and `git show` write it: a merge's by `--diff-merges` and `log.diffMerges`, first parent, each parent, combined, dense or the remerge diff. |
@@ -795,14 +808,36 @@ writes beside them, and `relic.refs.reftable.table` is the table format.
 | `maintenance` | `writeCommitGraph`, `writeMidx`, `repackMidx`, `expireMidx`, `writePackBitmap`, `writeMidxBitmap`, `writeConfiguredCommitGraph`, `repackRepository`, `packRefs`, `expireReflogs`, `prune` and `reachableObjects` (git's `pack-refs`, `reflog expire` and `prune`, with `gc.reflogExpire*` and `gc.pruneExpire`). The format modules own the bytes; these operations gather through the object database, diff and revision walk. Fetch applies `fetch.writeCommitGraph`; configured maintenance applies `gc.writeCommitGraph` and the bitmap settings. |
 <!-- END MODULES -->
 
-Native LFS belongs to the operation owner. Use `lfs.filter.load(gpa, io, &repo,
+Git LFS is a module of its own, `relic_lfs`, over the same core: LFS
+without git-lfs, from the pointer and the store to clone and push with LFS,
+transfers, locks, custom agents and a server. What it takes and hands back
+are relic's types, a `relic.repo.Repository` among them. Its namespaces:
+
+<!-- BEGIN LFS MODULES -->
+| Module | Purpose |
+|---|---|
+| `filter` | Native LFS filters selected by an operation owner. |
+| `clone` | Clone with native LFS checkout and downloads. |
+| `netrc` | What the LFS client reads beside: `~/.netrc`. |
+| `ssh` | Module within `relic_lfs`. |
+| `hooks` | Module within `relic_lfs`. |
+| `push` | Module within `relic_lfs`. |
+| `locks` | Module within `relic_lfs`. |
+| `transfer` | Module within `relic_lfs`. |
+| `custom` | Module within `relic_lfs`. |
+| `api` | Module within `relic_lfs`. |
+| `settings` | git-lfs's configuration and `.lfsconfig`, read as git-lfs reads them. |
+| `server` | `Backend`, `Store`, `Directory`, `S3` — a Git LFS server as a handler for uplink's server: the batch API, basic transfers into the caller's store (a directory, or S3-compatible storage through signed URLs), the locking API, authorization by the caller's hook. Only with `http`. |
+<!-- END LFS MODULES -->
+
+Native LFS belongs to the operation owner. Use `relic_lfs.filter.load(gpa, io, &repo,
 .{ .fetch = fetcher })` to load native LFS alongside configured program filters,
 then supply that collection as `worktree.Rules.filters`. `repo.loadFilters` loads
 ordinary program filters unless its options supply a native provider. Use
-`lfs.clone.clone` for clone with native LFS downloads, and `lfs.push.push` for
+`relic_lfs.clone.clone` for clone with native LFS downloads, and `relic_lfs.push.push` for
 push with LFS locks and uploads. Transport's lower operations accept neutral
 filter-loading and content-preparation callbacks. A snapshot that needs native
-LFS supplies `lfs.filter.provider` in `CaptureOptions.native_provider`; the
+LFS supplies `relic_lfs.filter.provider` in `CaptureOptions.native_provider`; the
 snapshot redirects its writes to its private store. Checkout reports unavailable
 native content in `native_fallbacks` and `filter.Report.native_missing`.
 
@@ -832,7 +867,7 @@ reread the affected refs before retrying.
 - **A promisor fetch's pack takes every `.gitmodules` and `.gitattributes` it lacks as promised,** where git asks whether a promisor pack names the blob. With nothing configured, a fetch still checks what it receives, at git's levels with `.`, `..` and `.git` in a tree refused (`fsck.baseline`), where git checks nothing; `fetch.fsckObjects=false` checks nothing.
 - **`repack --drop-filtered` drops promisor blobs only.** A blob the filter leaves out that no promisor remote has, one committed here, is still packed apart, where git 2.56 deletes it with the old packs and leaves the repository missing it.
 - **A fetch that takes packs by URI keeps none of them after.** git 2.56's fetch leaves its main pack's `.keep` when packfile URIs came (it records that lock for removal only when the fetch asked to keep the pack), so gc never repacks it; relic removes it as after any fetch. Nor does relic keep a pack of no objects, as git's fetch does when every object it asked for came by URI.
-- **No `git://` or dumb HTTP.** Refused by name. A remote helper is spoken to through `connect`, `fetch`, `import`, `push` and `export`; one with only `stateless-connect` or `get` cannot fetch here, `HelperCannotFetch`.
+- **Dumb HTTP** is cloned and fetched from as git's walker does (loose objects, packs, alternates), never pushed to: git pushes there over WebDAV, `DumbHttpPushUnsupported`. A depth, a date or an exclusion is `DumbHttpShallow`; git refuses the first two and silently fetches everything for an exclusion (remote-curl.c:1175), which relic refuses on purpose. A remote helper is spoken to through `connect`, `fetch`, `import`, `push` and `export`; one with only `stateless-connect` or `get` cannot fetch here, `HelperCannotFetch`.
 - **No editor for a note.** Refused by name.
 - **`apply` with the index compares content where a stat differs.** git says "does not match index" until the index is refreshed; this reads the file and agrees when its content does.
 - **A binary hunk in a written patch is this package's deflate.** It decodes to the same file; the compressed bytes are not zlib's. A cover letter's shortlog under a mailmap is refused by name.
@@ -869,7 +904,7 @@ running it, and CI does that for `x86_64-linux-gnu`, `aarch64-linux-gnu`,
 
 ## Built with
 
-One module, with [conduit](https://github.com/pedronaugusto/conduit) for
+Two modules, `relic` and `relic_lfs`, over one core, with [conduit](https://github.com/pedronaugusto/conduit) for
 running programs, [reactor](https://github.com/pedronaugusto/reactor) for Unix sockets, [sweep](https://github.com/pedronaugusto/sweep) for git's globs,
 [parallax](https://github.com/pedronaugusto/parallax) for line diffs and merges,
 [warp](https://github.com/pedronaugusto/warp) for checksums and DEFLATE,
@@ -877,10 +912,11 @@ running programs, [reactor](https://github.com/pedronaugusto/reactor) for Unix s
 [xenoglyph](https://github.com/pedronaugusto/xenoglyph) for the Unicode composition behind `core.precomposeUnicode`. Conduit carries its libc linkage on POSIX; Windows needs
 no C runtime. SHA-256 comes from `std.crypto`; SHA-1 is in the package.
 
-Fetching and pushing over HTTP and HTTPS, and Git LFS, take three more:
-[uplink](https://github.com/pedronaugusto/uplink) for HTTP,
-[cloak](https://github.com/pedronaugusto/cloak) for TLS's certificates, keys and trust, and
-[strand](https://github.com/pedronaugusto/strand) for the JSON servers send. The `http` option (on by default) brings them.
+Fetching and pushing over HTTP and HTTPS take two more, which the `http`
+option (on by default) brings: [uplink](https://github.com/pedronaugusto/uplink) for HTTP and
+[cloak](https://github.com/pedronaugusto/cloak) for TLS's certificates, keys and trust. Git LFS
+takes [strand](https://github.com/pedronaugusto/strand) for the JSON its servers and custom agents send,
+which the `lfs` option (on by default) brings with `relic_lfs`.
 
 [preflight](https://github.com/pedronaugusto/preflight) supplies the build and CI gate, and
 [shakedown](https://github.com/pedronaugusto/shakedown) supplies the tests' clocks and fault plans. Both are dev dependencies, which [bay](https://github.com/pedronaugusto/bay) gives relic's own development and a project that depends on relic never sees.
