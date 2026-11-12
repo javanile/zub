@@ -1,21 +1,21 @@
 ---
 title: bs
-description: A fast Debug-mode compiler for Zig 0.17.
+description: Fast Debug-mode compiler for Zig 0.17 and 0.16.
 license: MIT
 author: baskingspot
 author_github: baskingspot
 repository: https://github.com/baskingspot/bs
 keywords:
   - compiler
-date: 2026-11-08
-updated_at: 2026-11-08T16:29:38+00:00
-last_sync: 2026-11-08T16:29:38Z
+date: 2026-11-12
+updated_at: 2026-11-12T14:18:02+00:00
+last_sync: 2026-11-12T14:18:02Z
 package_kind: binary
 has_library: false
 has_binary: true
 has_distributable_binary: true
-binary_count: 5
-distributable_binary_count: 5
+binary_count: 7
+distributable_binary_count: 7
 multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
@@ -30,17 +30,17 @@ permalink: /packages/baskingspot/bs/
   </picture>
 </h1>
 
-A fast Debug-mode compiler for Zig 0.17.
+Fast Debug-mode compiler for Zig 0.17 and 0.16.
 
-bs compiles exactly one Zig release, 0.17.1, and the std library that ships with it, for x86_64 Linux and Apple Silicon macOS. It takes the same commands and flags as `zig build-exe`, `zig build-obj`, `zig run`, `zig test`, and `zig build`, so a project's own `build.zig` builds with it unchanged. Every build has Debug semantics: safety checks stay on, and the output keeps line tables and frame pointers. For ReleaseFast, use upstream `zig`.
+bs compiles two Zig releases, 0.17.1 and 0.16.0, each with the std library that ships with it, for x86_64 and aarch64 Linux and Apple Silicon macOS. A project builds as 0.17 unless its `.bs.zon` says `.zig_version = "0.16"`. It takes the same commands and flags as `zig build-exe`, `zig build-obj`, `zig run`, `zig test`, and `zig build`, so a project's own `build.zig` builds with it unchanged. Every build has Debug semantics: safety checks stay on, and the output keeps line tables and frame pointers. For ReleaseFast, use upstream `zig`.
 
-Its compile errors are written for coding agents: an exact location, the facts needed to fix the error, and the fix when bs knows it, in a form a program can parse.
+Its compile errors are written for coding agents: an exact location, the facts needed to fix the error, and the fix when bs knows it, in a form a program can parse. A project that asks for it, with a `lint` section in `.bs.zon` or a `.ziglint.zon`, also gets [ziglint](https://github.com/rockorager/ziglint)'s rules as compile errors in its own files.
 
 bs is incubating.
 
 ## Install
 
-bs needs upstream Zig 0.17.1 on `PATH`: it compiles that release's std library, and hands C and C++ sources to its `zig cc`. Without it, or with another version, bs stops and says so. `--zig-lib-dir` or `ZIG_LIB_DIR` point it at a lib directory instead.
+bs needs upstream Zig 0.17.1 on `PATH`: it compiles that release's std library, and hands C and C++ sources to its `zig cc`. Without it, or with another version, bs stops and says so. `--zig-lib-dir` or `ZIG_LIB_DIR` point it at a lib directory instead. A project on Zig 0.16 also needs zig 0.16.0, in `BS_ZIG_0_16` or as `zig` on `PATH`.
 
 With Homebrew, on macOS or Linux:
 
@@ -54,6 +54,12 @@ With [mise](https://mise.jdx.dev), next to the zig it needs, in a project's `mis
 [tools]
 zig = "0.17.1"
 "github:baskingspot/bs" = "latest"
+```
+
+With Nix, pinned to a release, which brings the Zig 0.17.1 it needs:
+
+```sh
+nix run github:baskingspot/bs/v0.1.3 -- build-exe main.zig
 ```
 
 Or download `bs-<version>-<platform>.tar.gz` for `linux-x64`, `linux-arm64`, or `macos-arm64` from [the releases](https://github.com/baskingspot/bs/releases), check it against `SHA256SUMS`, and put `bs` on `PATH`.
@@ -79,7 +85,7 @@ bs test lib.zig
 bs build            # in a project with a build.zig
 ```
 
-`bs help` lists every command. A flag that upstream accepts and bs cannot honor yet, such as a release mode or the LLVM backend, fails with a message that says so.
+`bs help` lists every command. `bs --version` prints bs's own version; `bs version` prints the Zig version it compiles, as `zig version` does. A flag that upstream accepts and bs cannot honor yet, such as a release mode or the LLVM backend, fails with a message that says so.
 
 ## Work on it
 

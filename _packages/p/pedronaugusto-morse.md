@@ -6,9 +6,12 @@ author: pedronaugusto
 author_github: pedronaugusto
 repository: https://github.com/pedronaugusto/morse
 keywords:
-date: 2026-10-25
-updated_at: 2026-10-25T12:46:32+00:00
-last_sync: 2026-10-25T12:46:32Z
+  - ansi-escape-codes
+  - terminal
+date: 2026-11-11
+category: tooling
+updated_at: 2026-11-11T14:57:02+00:00
+last_sync: 2026-11-11T14:57:02Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -34,6 +37,12 @@ Requires Zig 0.17.0. Fetch with `zig fetch --save
 git+https://github.com/pedronaugusto/morse`, then obtain the `morse` module through
 `b.dependency` and add it to your executable's imports. Forward your target and optimize
 settings.
+
+## Stability
+
+morse is 0.x and tracks Zig 0.17.x. A breaking change comes only in a minor release
+(0.8 to 0.9), with a CHANGELOG entry saying what changed and what to write instead; a
+patch release never breaks.
 
 ## Usage
 

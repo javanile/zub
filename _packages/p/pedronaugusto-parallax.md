@@ -1,0 +1,432 @@
+---
+title: parallax
+description: "Line diff, three-way merge and patches for Zig: git-exact output"
+license: MIT
+author: pedronaugusto
+author_github: pedronaugusto
+repository: https://github.com/pedronaugusto/parallax
+keywords:
+  - diff
+  - merge
+date: 2026-11-11
+updated_at: 2026-11-11T14:42:27+00:00
+last_sync: 2026-11-11T14:42:27Z
+package_kind: hybrid
+has_library: true
+has_binary: true
+has_distributable_binary: true
+binary_count: 4
+distributable_binary_count: 4
+multiple_binaries: true
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
+permalink: /packages/pedronaugusto/parallax/
+---
+
+# parallax
+
+Work in progress; the release validation is still pending.
+
+parallax is a line diff and a three-way line merge in Zig. Its output is git's,
+byte for byte: the same edit scripts under Myers, minimal, patience, anchored and
+histogram, the same hunks and unified body, and the same merged text in the
+merge, diff3 and zdiff3 styles. The same algorithms diff and merge any sequence
+and refine a changed line down to the words or characters that differ, conflict
+markers read back as git's rerere reads them, and unified patches parse and apply
+with GNU patch's offset and fuzz rules. It does no I/O: every call is pure
+computation, a caller's `Io`, when given, is asked only whether the task is
+canceled, and a reusable workspace makes no allocation once it is warm.
+
+## Install
+
+Requires Zig 0.17.0. Fetch with `zig fetch --save
+git+https://github.com/pedronaugusto/parallax`, then obtain the `parallax` module
+through `b.dependency` and add it to your executable's imports. Computation uses
+published aegis and std and makes no OS calls; it builds for every target,
+wasm32-freestanding included.
+
+## Stability
+
+parallax is 0.x and tracks Zig 0.17.x. A breaking change comes only in a minor release
+(0.3 to 0.4), with a CHANGELOG entry saying what changed and what to write instead; a
+patch release never breaks.
+
+## Usage
+
+A `Differ` is the workspace every diff goes through; a diff borrows it until the
+next call:
+
+<!-- BEGIN GENERATED zig build docs -- usage -->
+```zig
+const parallax = @import("parallax");
+
+// One workspace for many diffs: once warm it allocates nothing.
+var differ: parallax.Differ = .init(gpa);
+defer differ.deinit();
+const diff = try differ.lines("a\nb\nc\n", "a\nB\nc\nd\n", .{ .algorithm = .histogram });
+std.debug.assert(diff.changes.len == 2);
+std.debug.assert(diff.stat().added == 2);
+// The unified body, as `git diff` prints it.
+var out: std.Io.Writer.Allocating = .init(gpa);
+defer out.deinit();
+try parallax.writeUnified(&out.writer, diff, .{ .function_names = true }, .{});
+std.debug.assert(std.mem.eql(u8, out.written(), "@@ -1,3 +1,4 @@\n a\n-b\n+B\n c\n+d\n"));
+```
+<!-- END GENERATED -->
+
+A merge gives regions in the order of our side, and `merge.write` renders them as
+`git merge-file` does:
+
+<!-- BEGIN GENERATED zig build docs -- merge -->
+```zig
+const parallax = @import("parallax");
+
+var differ: parallax.Differ = .init(gpa);
+defer differ.deinit();
+const m = try differ.merge("one\nbase\nend\n", "one\nours\nend\n", "one\ntheirs\nend\n", .{ .style = .diff3 });
+std.debug.assert(m.conflicts == 1);
+for (m.regions) |region| switch (region.kind) {
+    .conflict => std.debug.assert(region.ours.start == 1),
+    else => {},
+};
+// The text `git merge-file --diff3` writes.
+var out: std.Io.Writer.Allocating = .init(gpa);
+defer out.deinit();
+try parallax.merge.write(&out.writer, m, .{ .labels = .{ .ours = "HEAD", .base = "base", .theirs = "topic" } });
+std.debug.assert(std.mem.startsWith(u8, out.written(), "one\n<<<<<<< HEAD\nours\n||||||| base\nbase\n=======\ntheirs\n>>>>>>> topic\n"));
+```
+<!-- END GENERATED -->
+
+Refinement and generic sequences:
+
+<!-- BEGIN GENERATED zig build docs -- refine -->
+```zig
+const parallax = @import("parallax");
+
+var differ: parallax.Differ = .init(gpa);
+defer differ.deinit();
+const old = "let total = sum(a, b);\n";
+const new = "let total = sum(a, c);\n";
+const diff = try differ.lines(old, new, .{});
+// Which words of a changed line differ, as spans that never cross a line.
+const refined = try differ.refine(diff, diff.changes[0], .{ .tokens = .words });
+for (refined.new) |span| {
+    if (span.changed) std.debug.assert(std.mem.eql(u8, new[span.start..][0..span.len], "c"));
+}
+// Any sequence diffs once interned: here, words.
+var interner: parallax.Interner([]const u8, std.hash_map.StringContext) = .init(gpa, .{});
+defer interner.deinit();
+var a: [3]parallax.ClassId = undefined;
+var b: [3]parallax.ClassId = undefined;
+try interner.internSlice(&.{ "red", "green", "blue" }, &a);
+try interner.internSlice(&.{ "red", "yellow", "blue" }, &b);
+const changes = try differ.sequences(&a, &b, .{ .classes = interner.classes() }, .{});
+std.debug.assert(changes.len == 1);
+std.debug.assert(changes[0].old_start == 1);
+```
+<!-- END GENERATED -->
+
+A patch parses into files and hunks, and applies where its text is found:
+
+<!-- BEGIN GENERATED zig build docs -- patch -->
+```zig
+const parallax = @import("parallax");
+
+const text =
+    \\--- a/notes.txt
+    \\+++ b/notes.txt
+    \\@@ -2,3 +2,3 @@
+    \\ two
+    \\-three
+    \\+THREE
+    \\ four
+    \\
+;
+var patch = try parallax.patch.parse(gpa, text, .{});
+defer patch.deinit();
+// The base has gained a line at the top: the hunk applies one line on.
+var out: std.Io.Writer.Allocating = .init(gpa);
+defer out.deinit();
+var results: [1]parallax.patch.HunkResult = undefined;
+try parallax.patch.apply(gpa, &out.writer, "zero\none\ntwo\nthree\nfour\n", patch.files[0], .{ .fuzz = 2 }, &results);
+std.debug.assert(std.mem.eql(u8, out.written(), "zero\none\ntwo\nTHREE\nfour\n"));
+std.debug.assert(results[0].applied.offset == 1);
+```
+<!-- END GENERATED -->
+
+## Design
+
+[Architecture](docs/design.md) records the layers, ownership and invariants.
+
+Every line becomes a dense `u32` id. The texts are split at `\n` without copying
+them; each line is hashed once while it is scanned, the comparison form under the
+whitespace flags streamed into the hash with no copy, and bytes are compared only
+when two hashes meet. The algorithms then work on ids alone: arrays indexed by
+id, with a generation stamp, replace every hash map, and the counts the prune
+step needs cost the size of the region, not of the file.
+
+Myers has git's shape: the common ends trimmed, lines with no counterpart and
+lines too common to matter set aside, the linear-space middle-snake split, and
+git's give-up rules, which change the answer on large or noisy input and so are
+kept exactly. Patience and histogram are git's decision for decision, including
+the regions they hand to Myers. Every run of changes is then slid where git puts
+it, by the indentation heuristic or to line up with a change on the other side.
+Every recursion in git is an explicit work stack here, taken in the same order,
+so stack use is constant: the deep inputs diff on a 64 KiB stack.
+
+`Options.max_work = .fromRaw(n)` caps the work a diff may do, in Myers sweeps; past it the rest
+is described as one deletion and one insertion. The cap is a count, not a clock,
+so the answer is the same on every machine. `Options.stop` is the flag a caller
+raises instead, from any thread, when it no longer wants the answer: it is read
+once per sweep and once per region, and from then on the rest is described the
+same way, so the call returns soon with a script that is still correct. Merges
+and refinements take it too.
+
+A merge interns its three texts into one table, diffs both sides against the
+base, and walks the two scripts as git does. The style and level decide whether a
+conflict is narrowed to the lines that really differ, joined with a close
+neighbour, or (zdiff3) trimmed of the lines both sides share at its ends. The
+result is regions; labels, marker size and how a conflict resolves are the
+writer's.
+
+### Comparison
+
+| `Compare` field | git | Lines that are the same |
+|---|---|---|
+| `whitespace.all` | `-w` | ignoring every whitespace byte |
+| `whitespace.change` | `-b` | ignoring how much whitespace, not whether |
+| `whitespace.at_eol` | `--ignore-space-at-eol` | ignoring whitespace at the end |
+| `whitespace.cr_at_eol` | `--ignore-cr-at-eol` | ignoring a carriage return before the newline |
+| `ignore_case` | none | ignoring ASCII case |
+
+Whitespace is git's class: space, tab, newline and carriage return. Vertical tab
+and form feed are ordinary bytes. With no flag a final line without a newline
+never equals the same text with one; under any whitespace flag the newline is
+whitespace and the two can match.
+
+### Hunks and the unified body
+
+`HunkOptions` has git's `-U`, `--inter-hunk-context`, `--ignore-blank-lines`
+and `-W`: `function_context` widens each hunk to the whole function around its
+changes, from its function line, with the comment lines above it, to the next
+one, and changes in one function share a hunk, as git's do (git's hunks then
+sometimes overlap, and so do these). `writeUnified` writes the `@@` lines, the
+function line under `function_names`, context taken from the new side as git
+prints it, and `\ No newline at end of file`.
+
+The caller's rules come as a context, `.{}` for none, as std's sort takes its
+`lessThan`: each method it has is called, inlined. `heading` says which lines
+start a function and what a hunk shows of one (without it, `cFunction`, git's
+default rule); `ignore` is git's `-I`, a test of each line given with its
+newline; `paint` is handed each line, what it is, its sign and its number, and
+writes it instead of `writeLine`: how a caller colours the diff, as git's
+`--color` does. Its errors pass through `writeUnified`.
+
+### Sequences and refinement
+
+`Interner(T, Context)` gives any type dense ids, with `Context` as std's hash maps
+take it, and `Differ.sequences` diffs two id sequences with every algorithm, the
+work cap, and the anchors and indentation of the caller's context when it has
+them (`anchor`, `indentOld` and `indentNew`); `Differ.mergeSequences` reads the
+context's `content`, as git's line merge reads letters and digits.
+
+`Differ.refine` takes one change of a line diff and cuts its old lines and its
+new lines into tokens: `words` (runs of letters, digits, `_` and bytes from
+0x80; runs of spaces, tabs and carriage returns; any other byte alone),
+`chars` (UTF-8 scalars, a byte that starts none on its own) or `bytes`. The
+whole runs are tokenized, not line by line, so a word that moved across a line
+break is found. The token ids are diffed and slid, and come back as byte spans,
+changed or not, that cover the change's lines and never cross a line end. A
+change with an empty side is one changed span per line. Tokens compare under the
+options' `Compare`, so case and whitespace can be overlooked inside a line too.
+
+`RefineOptions.cleanup` runs the reference's cleanups over the token script
+first, measured in tokens. `.semantic` is for a reader: an equality no longer
+than the edits on both sides of it goes, each edit between two equalities slides
+to the best word or line boundary, and what a deletion ends with and the
+insertion after it starts with becomes an equality. `.efficiency` is for a
+machine: an equality shorter than `edit_cost` between edits goes.
+
+### Patches
+
+`patch.parse` reads a unified patch with any number of files. The lines before a
+file's `---` are its header, kept verbatim (`diff --git`, `index`, `rename from`
+and the like are the caller's to read); a section with a git header and no `---`,
+such as a mode change, is a file with no names and no hunks. A hunk must hold the
+lines its header counts, or the parse stops with `error.HunkLengthMismatch` and
+`Diagnostics` says on which line. `\ No newline at end of file` marks the line
+before it; a carriage return stays in a line's text.
+
+A caller that keeps the patch text and reads its own file headers, as `git apply`
+does, takes the hunks alone. `patch.scanHunk` checks the hunk at the start of a text
+and measures it without allocating (its counts, the bytes it holds, the context lines
+around its changes), and `patch.HunkLines` reads its lines back one at a time. Both
+read either dialect: `.gnu` is the reading `parse` uses, and `.git` is `git apply`'s,
+which ends a hunk where its counts do, takes a `\ No newline` marker only right after
+a line, refuses a line that begins with a tab and a hunk that changes nothing, and with
+`recount` takes the counts from the lines instead.
+
+`patch.apply` writes the base with one file's hunks applied, by GNU patch's
+rules. Hunks apply in order, each after the end of the one before. A hunk is
+looked for at its stated line plus the offset the hunks before it found, then
+further away, one line at a time, after and then before, within `max_offset`;
+failing that, again with up to `fuzz` context lines ignored at each end. A hunk
+with less context at its start than at its end only applies at the start of the
+file, and the other way round at the end. Context lines are taken from the base,
+never from the patch, so ignored context is kept. `reverse` applies the patch
+backwards. Each hunk reports where it applied, its offset and the fuzz it took,
+or that it was rejected; `rejects = .skip` goes on past a rejected hunk, as GNU
+patch does, and `.fail` stops at it. With `reversed_hint`, a first hunk that
+does not apply is looked for the other way round too, and the hint says whether
+it was found there: GNU patch's "Reversed (or previously applied) patch
+detected!". The patch still applies as given; applying it again with `reverse`
+flipped is what GNU patch's `-t` does.
+
+### Merge styles and levels
+
+| `Level` | git | |
+|---|---|---|
+| `minimal` | `XDL_MERGE_MINIMAL` | the same change on both sides is still a conflict |
+| `eager` | `XDL_MERGE_EAGER` | the same change on both sides is taken once |
+| `zealous` | the merge machinery | conflicts narrowed; three lines or fewer apart joined |
+| `zealous_alnum` | `git merge-file`, the default | and joined across lines with no letter or digit |
+
+diff3 is capped at eager, as in git. `Resolve` is `markers`, `ours`, `theirs` or
+`both` (git's union).
+
+`Differ.mergeSequences` merges any three interned sequences the same way, in
+every style and level; `content` tells `.zealous_alnum` which tokens count as
+having a letter or digit. `merge.parseMarkers` reads marked text back, one part
+at a time and allocating nothing: plain text, or a conflict with our side, the
+base when there is one, their side and the labels. It reads markers as git's
+rerere does, a conflict nested in a side staying in that side, and also takes a
+marker alone on its line, which `write` writes for an empty label.
+
+## API
+
+| Call | Does |
+|---|---|
+| `Differ.init(gpa)`, `deinit`, `shrink(keep)` | The workspace; `shrink` releases its scratch when it holds more than `keep` bytes |
+| `differ.lines(old, new, options)` | The line diff of two texts, as a `Diff` borrowing the inputs and the workspace |
+| `differ.sequences(old, new, options, context)` | The diff of two sequences of ids below `options.classes` |
+| `differ.merge(base, ours, theirs, options)` | The three-way merge, as regions |
+| `differ.mergeSequences(base, ours, theirs, options, context)` | The three-way merge of id sequences below `options.classes` |
+| `differ.refine(diff, change, options)` | The changed and unchanged spans inside one change |
+| `Interner(T, Context)` | Dense ids for any type: `intern`, `internSlice`, `classes`, `get`, `clear` |
+| `diffLines(gpa, old, new, options)` | A one-shot diff that owns its memory |
+| `diff.stat()`, `diff.ratio()` | Lines added and removed; the matched share of both sides |
+| `diff.ops()`, `diff.hunks(options)` | The script as steps, and as hunks (`next(context)`); neither allocates |
+| `writeUnified(w, diff, options, context)` | The unified body, optionally with `---`/`+++` lines, each line through the context's `paint` where it has one |
+| `writeLine(w, line)` | One line of the body, plain, as a painter writes the lines it leaves uncoloured |
+| `merge.write(w, merge, options)` | The merged text with labels, marker size and resolution |
+| `merge.mergeAlloc(gpa, base, ours, theirs, options, write_options)` | Merge and write in one call |
+| `merge.parseMarkers(text, options)` | The text and conflicts of marked text, one part at a time |
+| `patch.parse(gpa, text, options)` | The files and hunks of a unified patch, borrowing the text |
+| `patch.apply(gpa, w, base, file, options, results)` | The base with one file's hunks applied, and each hunk's result |
+| `patch.scanHunk(text, options)` | One hunk checked and measured in place, in either dialect |
+| `patch.HunkLines` | The lines of a scanned hunk, one at a time, allocating nothing |
+
+Every input is under 4 GiB, and the inputs of one call hold fewer than 2^32 lines
+between them; anything larger is `error.InputTooLarge`. Past that, a diff, merge
+or refinement fails only with `error.OutOfMemory`; `patch.parse` and `patch.apply`
+have errors of their own, named in their error sets.
+
+There is one module, `parallax`, and its concerns are namespaces of it:
+`parallax.diff`, `parallax.merge`, `parallax.patch`, `parallax.interner`,
+`parallax.lines` and `parallax.compare`. The root also declares the types most
+callers want (`parallax.Differ`, `parallax.Lines`, ...), the same declarations.
+None of the parts has a dependency or a link of its own, so a program that names
+only `parallax.patch` compiles only what the patch code reaches.
+`ClassId` distinguishes an equivalence class from a position; `ClassCount`,
+`Work` and `Bytes` distinguish counts in public options and scratch retention.
+Use `fromRaw` when importing a raw value, and `raw()` only at an explicit
+representation boundary. `Differ.shrink(.fromRaw(n))` retains scratch up to
+n bytes before releasing it all. Production computation depends on aegis/std;
+preflight and shakedown are dev dependencies through [bay](https://github.com/pedronaugusto/bay), which a project that depends on parallax never sees.
+
+## Scope
+
+- No git headers (`diff --git`, `index`), funcname drivers, colour or
+  `--word-diff`: those are git's policy, built on top.
+- No binary rule: any bytes diff and merge, NUL included. Deciding that a file is
+  binary is the caller's.
+- No rename or copy similarity, no directory diff and no binary deltas.
+- No wall-clock deadline: `max_work` is the reproducible cap.
+- No git apply rules: extended headers, binary patches, `--3way` and whitespace
+  fixing are git's, layered on the header lines `patch.parse` keeps.
+- No structural (syntax-tree) diff or merge.
+
+## Platforms
+
+Every target Zig supports, wasm32-freestanding included. parallax uses only
+`std.mem`, `std.hash`, `std.Io.Writer` and an `Allocator`. Nothing is serialised,
+so byte order never matters; the byte scans that use vectors have a scalar twin,
+and a test holds the two to the same answer.
+
+## Built with
+
+**tycho**, every coding agent in one folder (in development), and the Zig packages it
+is built from.
+
+## Testing
+
+`bay test` runs the suite and the usage example. git's own output is the
+reference: a corpus captured once from git 2.55 and committed as data
+(`testdata/git-2.55/`, under 2 MB) holds edit scripts for 600 pairs under every
+algorithm, 1,483 unified bodies across context, inter-hunk context, headings, the
+whitespace flags, `--ignore-blank-lines` and `-I`, and 3,015 merges in every style,
+algorithm, label, marker size and resolution, with `merge-tree`'s blobs for the
+merge machinery's level and whitespace options, and 282 whole-function bodies
+(`-W`). parallax must reproduce every byte, and the merges again over interned
+lines. git's rerere is the reference for reading markers back: 680 marked texts
+(git merge-file's in every style and three marker sizes, malformed, nested and
+random ones) must parse, or fail, as rerere parses them, conflict for conflict.
+GNU patch 2.8 is the reference for applying: 488 applications captured from it
+(`testdata/gnu-patch-2.8/`) cover offsets, fuzz, reverse and rejected hunks, and
+400 more in its batch mode the patches it takes for reversed or already applied;
+parallax must write the same text and report the same fuzz and offset for every
+hunk. A reference implementation of the cleanups (version 20241021) is their
+reference: its diffs of 609 text pairs, cleaned up by parallax's passes, must come out as its own
+semantic and efficiency cleanups leave them.
+
+Properties run through shakedown on 23,400 seeded cases in every `bay test`,
+with failures shrunk and printed as replayable tapes. Select a property with
+`-Dtest-filter` and set `SHAKEDOWN_TAPE` to replay it, or `SHAKEDOWN_SEED` to
+choose another seed. The same properties run under the fuzzer
+with `bay test --fuzz`: every script applies, under every algorithm,
+comparison, work cap and a raised stop flag, for lines and for id sequences; a
+minimal script is never longer; hunks hold their changes, with whole functions
+too; lines of one form always match; refined spans tile every changed line under
+every cleanup and the unchanged ones read the same on both sides; a merge's
+regions cover our side in order, an unchanged side gives the other, the markers
+read back give each side's lines and resolution, and the merge over interned
+lines gives the same regions. A written patch parses back to its hunks and
+applies forwards and backwards with no reversed hint, the parse takes any bytes,
+failing only with its own errors, and marked text of any shape reads back as
+parts that tile it. A warm workspace is counted to make no allocation, every
+allocation failure is survived without a leak, the adversarial workloads are
+held to recorded work units and scripts, a stop flag raised before or during a
+diff ends it with a script that applies, and the deep inputs run on a 64 KiB
+stack.
+
+`bay bench` builds the programs into `zig-out/bench` and times parallax's
+own workloads in ReleaseFast: large files with few and many edits, the
+adversarial shapes, many small diffs through one workspace with their latency and
+allocations, the whitespace flags, merges with many conflicts, each beside the
+code parallax replaces, the refinement of every replaced line, and patches parsed
+and applied as they are, shifted and with their context changed. `bay
+bench-corpus -- --repo <git repository> --out <directory>` collects the
+changed files of a range of real history (Linux v6.11..v6.12 unless `--range`
+says otherwise) into a directory outside this repository, checked against
+`bench/linux-v6.11-v6.12.manifest`; `zig-out/bench/bench --corpus <directory>`
+then also times every changed file of the range, the large ones apart, and the
+merges of its merge commits. `bay cli -Doptimize=ReleaseFast` builds
+`bench/cli`, a small command that diffs, merges and applies files, for timing
+parallax end to end against other tools. Run `zig-out/bench/bench` with `--json`,
+`--runs N`, `--only W1,W5` or `--smoke` for smaller inputs. Every `bay test`
+smoke-runs all three programs, including a tiny Git history for the corpus writer.
+
+## Licence
+
+MIT. See [LICENSE](LICENSE).

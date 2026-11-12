@@ -6,9 +6,9 @@ author: scrapli
 author_github: scrapli
 repository: https://github.com/scrapli/libscrapli
 keywords:
-date: 2026-11-04
-updated_at: 2026-11-04T15:45:40+00:00
-last_sync: 2026-11-04T15:45:40Z
+date: 2026-11-09
+updated_at: 2026-11-09T21:21:57+00:00
+last_sync: 2026-11-09T21:21:57Z
 package_kind: hybrid
 has_library: true
 has_binary: true
