@@ -9,9 +9,9 @@ keywords:
   - radio
   - sdr
   - zigradio
-date: 2026-08-05
-updated_at: 2026-08-05T09:12:53+00:00
-last_sync: 2026-08-05T09:12:53Z
+date: 2026-11-07
+updated_at: 2026-11-07T06:35:11+00:00
+last_sync: 2026-11-07T06:35:11Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -79,7 +79,7 @@ Check out some more [examples](examples) of what you can build with ZigRadio.
 
 ## Quickstart
 
-ZigRadio requires Zig version 0.16.
+ZigRadio requires Zig version 0.17.
 
 ```
 $ git clone https://github.com/vsergeev/zigradio.git

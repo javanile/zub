@@ -6,9 +6,9 @@ author: eggyengine
 author_github: eggyengine
 repository: https://github.com/eggyengine/clutch
 keywords:
-date: 2026-10-15
-updated_at: 2026-10-15T05:55:53+00:00
-last_sync: 2026-10-15T05:55:53Z
+date: 2026-11-07
+updated_at: 2026-11-07T08:47:37+00:00
+last_sync: 2026-11-07T08:47:37Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -24,10 +24,10 @@ permalink: /packages/eggyengine/clutch/
 
 # clutch
 
-clutch is an ecs system (named after a group of eggs) written in Zig, and inspired by bevy_ecs
+clutch is an ECS system (named after a group of eggs) written in Zig, and inspired by bevy_ecs
 
 ## add to project
-requires zig `0.16.0`
+requires zig `0.17.0`
 
 to use this with the zig build system, import as so:
 ```bash

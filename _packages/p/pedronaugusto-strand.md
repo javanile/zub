@@ -1,20 +1,25 @@
 ---
 title: strand
-description: "Serialization for Zig: one mapping core over any type, with JSON, JSON Lines, ZON, URL-encoded forms, CSV, CBOR and MessagePack"
+description: "Serialization for Zig: one mapping core over any type, with JSON, JSON Lines, ZON, TOML, YAML, XML, INI, JSON5, CSV, CBOR, MessagePack and more"
 license: MIT
 author: pedronaugusto
 author_github: pedronaugusto
 repository: https://github.com/pedronaugusto/strand
 keywords:
-date: 2026-10-25
-updated_at: 2026-10-25T14:27:23+00:00
-last_sync: 2026-10-25T14:27:23Z
+  - json
+  - serialization
+  - toml
+  - yaml
+date: 2026-11-11
+category: data-formats
+updated_at: 2026-11-11T13:49:48+00:00
+last_sync: 2026-11-11T13:49:48Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 10
-distributable_binary_count: 10
+binary_count: 15
+distributable_binary_count: 15
 multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
@@ -24,8 +29,8 @@ permalink: /packages/pedronaugusto/strand/
 
 # strand
 
-strand reads and writes Zig values as JSON, JSON Lines, ZON, URL-encoded forms,
-CSV, CBOR, MessagePack, TOML, YAML and XML, through one mapping core that every format shares. Zig 0.17.0 is required.
+strand reads and writes Zig values as JSON (with JSONC and JSON5), JSON Lines, ZON, URL-encoded forms,
+CSV, CBOR, MessagePack, TOML, YAML, XML, INI and .env, through one mapping core that every format shares. Zig 0.17 is required.
 
 A value of any plain Zig type is parsed straight into that type, borrowed from
 the input, copied into an owner of its own, or put on an arena the caller holds,
@@ -43,16 +48,26 @@ needs it.
 
 ## Install
 
-Requires Zig 0.17.0. Fetch with `zig fetch --save
+Requires Zig 0.17. Fetch with `zig fetch --save
 git+https://github.com/pedronaugusto/strand`, then obtain the `strand` module through
 `b.dependency` and add it to your executable's imports. Forward your target and optimize
 settings.
 
 The build exposes one module, `strand`, whose namespaces are `strand.core`,
 `strand.json`, `strand.jsonl`, `strand.zon`, `strand.urlencoded`, `strand.csv`,
-`strand.cbor`, `strand.msgpack`, `strand.toml` and `strand.yaml`. Zig analyses only what a program
+`strand.cbor`, `strand.msgpack`, `strand.toml`, `strand.yaml`, `strand.xml`, `strand.ini` and
+`strand.dotenv`. Zig analyses only what a program
 names, so a program that names only `strand.json` compiles no JSON Lines or
 airlock code.
+
+With `.schema = true` (`b.dependency("strand", .{ .schema = true })`), the build also
+exposes `strand_schema`, JSON Schema validation, and `strand.built_with.schema` says so.
+
+## Stability
+
+strand is 0.x and tracks Zig 0.17.x. A breaking change comes only in a minor release
+(0.15 to 0.16), with a CHANGELOG entry saying what changed and what to write instead; a
+patch release never breaks.
 
 ## Usage
 
@@ -117,8 +132,8 @@ memory and 128 Mi units of work; `ParseOptions.limits` raises or lowers them.
 reads into `std.json.Value` under the same limits. `json.jsonc.parse`, `parseOwned`
 and `parseLeaky` read JSONC, the JSON of editors' settings and `tsconfig.json`: `//`
 and `/* */` comments wherever whitespace may be, and a comma after a container's last
-member or element, with JSON's options and promises. Writing is plain JSON whatever
-was read. `json.jcs.write` and `json.jcs.canonicalize` write the JSON Canonicalization
+member or element, with JSON's options and promises; it is written as JSON. JSON5 is
+the next section. `json.jcs.write` and `json.jcs.canonicalize` write the JSON Canonicalization
 Scheme (RFC 8785), one spelling for every value, for hashing and signing: members sorted
 by their names' UTF-16 code units, numbers as ECMAScript writes doubles, no whitespace; a
 name given twice, and a typed integer past ±(2^53−1), are refused.
@@ -189,6 +204,66 @@ while (try members.next()) |member| {
 A line can also be routed without checking it: `kindOf` reads its first key,
 `tagOf` the arm of a union it holds, and `memberOf` and `memberStringOf` one
 member wherever it is, each as a view into the line.
+
+## JSON5
+
+`strand.json.json5` reads JSON5 (json5.org), JSON for people to write, through the
+JSON reader in its third dialect, with JSON's options and promises: `parse`,
+`parseOwned` and `parseLeaky`. JSON5 is JSONC's comments and trailing commas, and keys
+as ECMAScript identifier names (Unicode letters and digits by the Unicode xenoglyph
+carries, `\u` escapes in them), strings in single quotes and continued on the next line
+after a backslash, ECMAScript's escapes (`\v`, `\0`, `\xHH`, any other character as
+itself), a control character standing in a string as itself, numbers in hexadecimal,
+with a plus, or with a point and no digits on one side of it, `Infinity` and `NaN`, and
+Unicode's space separators, U+2028 and U+2029 as white space. A key given twice is
+refused unless `duplicates` says otherwise, however each is spelled (`a`, `'a'`,
+`\u0061`), and a lone surrogate escape is refused unless `invalid_unicode` replaces it;
+JSON5's reference implementation keeps the last key and the lone surrogate. A number
+past a float's range is out of it, as in JSON, where the reference reads `Infinity`. A
+comment is passed over unread, as in JSONC, so a byte in one that is not UTF-8 is not
+looked at.
+`json.Value` keeps each number as it was written, so `0x1F` stays `0x1F`.
+`json.json5.write` writes JSON, but that a float JSON cannot spell is written
+`Infinity`, `-Infinity` or `NaN`, and a `Value`'s number and a `Raw` are checked as
+JSON5; `json.write` refuses them. The json5 project's json5-tests run in the tests,
+each case read as the reference reads it. [examples/json5.zig](examples/json5.zig)
+reads and writes a build's settings.
+
+<!-- BEGIN GENERATED zig build docs -- json5 -->
+```zig
+const strand = @import("strand");
+
+const text =
+    \\// The build's settings.
+    \\{
+    \\  name: 'relay',
+    \\  jobs: +8,
+    \\  umask: 0x1ED,           // 0755
+    \\  timeout: Infinity,      /* no limit */
+    \\  targets: ['linux', "macos",],
+    \\  banner: 'Built by \
+    \\the relay',
+    \\}
+;
+var settings = try strand.json.json5.parse(Settings, gpa, text, .{});
+defer settings.deinit();
+std.debug.assert(settings.value.umask == 0o755);
+std.debug.assert(std.math.isPositiveInf(settings.value.timeout));
+std.debug.assert(std.mem.eql(u8, settings.value.banner, "Built by the relay"));
+
+// Any document: a number stays as it was written.
+var value = try strand.json.json5.parse(strand.json.Value, gpa, text, .{});
+defer value.deinit();
+std.debug.assert(std.mem.eql(u8, value.value.object[2].value.number, "0x1ED"));
+
+// Written as JSON, but for the floats JSON cannot spell.
+var out: std.Io.Writer.Allocating = .init(gpa);
+try strand.json.json5.write(&out.writer, settings.value, .{});
+std.debug.assert(std.mem.eql(u8, out.written(),
+    \\{"name":"relay","jobs":8,"umask":493,"timeout":Infinity,"targets":["linux","macos"],"banner":"Built by the relay"}
+));
+```
+<!-- END GENERATED -->
 
 ## JSON Lines
 
@@ -569,6 +644,188 @@ std.debug.assert(strand.xml.parse(strand.xml.Element, gpa, external, .{}) == err
 ```
 <!-- END GENERATED -->
 
+## INI
+
+`strand.ini` reads and writes INI in a dialect, Python configparser's unless another is
+given: `#` and `;` comment lines, `=` and `:` between a key and its value, a value
+continued on the lines indented under its key (blank lines within kept), keys lowercased
+by Unicode's full mapping as configparser's `optionxform` does, section names as
+written. `parse`, `parseOwned` and `parseLeaky` read a document into a struct or a map,
+with the other formats' limits, ownership and field policy: the keys before the first
+section are its members, and each `[section]` a member that is a struct or a map of its
+keys. Lines are read as configparser reads them, and a key or a section given twice is
+refused, as its strict mode does. A value is text until the type asks for something
+else: a number in JSON's spelling, a boolean as configparser's `getboolean` reads one
+(`1`, `yes`, `true`, `on`, their opposites, any case), or a null, which an empty value
+is where the type takes one. `Dialect` changes the comment prefixes, adds comments after
+a value (`inline_comment_prefixes`), the delimiters, turns continuation off (rust-ini's
+and Go's reading), keeps keys as written, or takes keys with no value
+(`keys_without_values`, a null). There is no interpolation: `%(name)s` and `${name}` are
+text, and `[DEFAULT]` is a section like any other, since strand resolves nothing.
+`ini.Value` holds any document in order. The writer puts a struct's keys first and each
+struct or map member as a section after them, a continued value on tab-indented lines,
+and refuses what would not read back as itself: a key written after a section, a section
+in a section, a sequence, a value with white space at a line's end or a comment's start
+where one would be read. [examples/settings.zig](examples/settings.zig) reads and writes
+a service's settings.
+
+<!-- BEGIN GENERATED zig build docs -- ini -->
+```zig
+const strand = @import("strand");
+
+const text =
+    \\# relay's settings
+    \\name = relay
+    \\Debug = yes
+    \\
+    \\[server]
+    \\host = 0.0.0.0
+    \\port: 8443
+    \\
+    \\[banner]
+    \\text = Welcome
+    \\    to relay
+;
+var settings = try strand.ini.parse(Settings, gpa, text, .{});
+defer settings.deinit();
+std.debug.assert(settings.value.debug);
+std.debug.assert(settings.value.server.port == 8443);
+std.debug.assert(std.mem.eql(u8, settings.value.banner.text, "Welcome\nto relay"));
+
+// Written back: keys first, then each section; a continued value on
+// tab-indented lines.
+var out: std.Io.Writer.Allocating = .init(gpa);
+try strand.ini.write(&out.writer, settings.value, .{});
+std.debug.assert(std.mem.eql(u8, out.written(), "name = relay\ndebug = true\n\n[server]\nhost = 0.0.0.0\nport = 8443\n\n[banner]\ntext = Welcome\n\tto relay\n"));
+
+// Any document, in another dialect: comments after values, keys with
+// no value. No interpolation: `%(name)s` is text.
+const dialect: strand.ini.Dialect = .{ .inline_comment_prefixes = &.{";"}, .keys_without_values = true };
+var value = try strand.ini.parse(strand.ini.Value, gpa, "[mysqld]\nskip-networking\nuser = %(name)s ; who runs it\n", .{ .dialect = dialect });
+defer value.deinit();
+const mysqld = value.value.section("mysqld").?;
+std.debug.assert(mysqld[0].value == .none);
+std.debug.assert(std.mem.eql(u8, strand.ini.Value.text(mysqld, "user").?, "%(name)s"));
+```
+<!-- END GENERATED -->
+
+## .env
+
+`strand.dotenv` reads a .env file as python-dotenv reads one (its parser, 1.2), through
+the one core: `KEY=value` and `export KEY=value` lines, white space around `=`, `#`
+comment lines; a value unquoted, trimmed and cut at a `#` after white space, or in
+single or double quotes, across lines, with python-dotenv's escapes (`\\` and `\'` in
+single quotes; those, `\"` and `\a \b \f \n \r \t \v` in double quotes; any other
+backslash stays); a key unquoted (anything but `=`, `#` and white space) or in single
+quotes; a key with no `=`, which is a null. A file is read as Python reads a text file,
+so a line end inside quotes is a line feed. Nothing is interpolated: `$NAME` and
+`${NAME}` are text, where python-dotenv, dotenvy and others expand them. A file is a
+struct or a map of its keys; a value is text until the type asks, typed as INI's values
+are (a number in JSON's spelling, a boolean as `getboolean` reads one), an empty value
+empty text. Where python-dotenv warns and skips a line it cannot read, strand refuses
+the file, and a key given twice is refused, where python-dotenv keeps the last. The
+writer writes a struct's or a map's members as `KEY=value` lines, quoting a key or a
+value only where it must to read back as itself. python-dotenv's own parser cases run in
+the tests, each read as it reads a file of it. [examples/environment.zig](examples/environment.zig)
+reads and writes a service's environment.
+
+<!-- BEGIN GENERATED zig build docs -- dotenv -->
+```zig
+const strand = @import("strand");
+
+const text =
+    \\# The service.
+    \\export DATABASE_URL=postgres://db:5432/app  # where the data is
+    \\PORT = 8443
+    \\DEBUG=yes
+    \\GREETING="Hello,\n\tworld"
+    \\TOKEN='s3cr3t-$keep'
+    \\CERT='-----BEGIN-----
+    \\abc
+    \\-----END-----'
+    \\PROXY
+;
+var service = try strand.dotenv.parse(Service, gpa, text, .{});
+defer service.deinit();
+std.debug.assert(service.value.PORT == 8443);
+std.debug.assert(service.value.DEBUG);
+std.debug.assert(std.mem.eql(u8, service.value.GREETING, "Hello,\n\tworld"));
+// Nothing is expanded: `$keep` is text.
+std.debug.assert(std.mem.eql(u8, service.value.TOKEN, "s3cr3t-$keep"));
+std.debug.assert(service.value.PROXY == null);
+
+// Any file, as its keys in order, a key with no `=` null.
+var env = try strand.dotenv.parse(strand.core.Pairs([]const u8, ?[]const u8), gpa, text, .{});
+defer env.deinit();
+std.debug.assert(env.value.items.len == 7);
+
+// Written back, a value quoted only where it must be.
+var out: std.Io.Writer.Allocating = .init(gpa);
+const Banner = struct { NAME: []const u8, MOTD: []const u8, NOTE: []const u8 };
+try strand.dotenv.write(&out.writer, Banner{ .NAME = "relay", .MOTD = "Hello, world #1", .NOTE = "two\nlines" }, .{});
+std.debug.assert(std.mem.eql(u8, out.written(), "NAME=relay\nMOTD='Hello, world #1'\nNOTE=\"two\\nlines\"\n"));
+```
+<!-- END GENERATED -->
+
+## JSON Schema
+
+`strand_schema` validates any document strand reads against a JSON Schema: draft 2020-12
+with every vocabulary, and 2019-09 and draft-07 by `$schema`. It is a module of its own,
+built when a project sets `.schema = true` on strand, and only then are its dependencies
+fetched: uplink's codecs for URIs, spectra for ECMAScript patterns and almanac for RFC 3339
+dates and times. `Schema.compile` reads a schema once into a program; `Schema.validate`
+streams an instance through it with no tree in memory, every branch of `anyOf`, `oneOf`
+and their kin read in the same pass. Numbers compare as exact decimals, so `1.0` equals
+`1` and `multipleOf` is never rounded. An invalid instance is `false`, never an error;
+`.basic` output gives each failing keyword with its instance location, its keyword
+location and its absolute location.
+
+References resolve by RFC 3986 against `$id`, anchors and JSON Pointers, the official
+meta-schemas built in, remote documents only through a `Loader` the caller supplies.
+`$dynamicRef`, `$recursiveRef`, `unevaluatedProperties` and `unevaluatedItems` follow the
+specification. A schema that can apply itself again at the same place in an instance is
+refused when it is compiled, so validation always finishes. Formats are annotations
+unless `.formats = .assert`, and then each is a strict recognizer of its RFC's grammar;
+`idn-hostname` and `idn-email` check IDNA2008 validity as written, and a caller who wants
+UTS #46 mapping applies xenoglyph's `idna.toAscii` first. A pattern spectra cannot run
+in linear time is refused, or with `.unsupported_pattern = .downgrade` compiled as an
+annotation that every validation passing through it reports. Every bound is a
+`schema.Limits` field: frames, per container state, errors, exponent, depth, schema size,
+subschemas and reference chains.
+[examples/validate.zig](examples/validate.zig) checks a tool's result.
+
+<!-- BEGIN GENERATED zig build docs -- validate -->
+```zig
+const strand = @import("strand");
+const strand_schema = @import("strand_schema");
+
+var schema = try strand_schema.Schema.compile(gpa, io, strand.json, .init(
+    \\{"type": "object", "required": ["city", "celsius"],
+    \\ "properties": {"city": {"type": "string", "minLength": 1},
+    \\   "celsius": {"type": "number", "minimum": -273.15},
+    \\   "observed": {"type": "string", "format": "date-time"}},
+    \\ "additionalProperties": false}
+), .{ .formats = .assert });
+defer schema.deinit();
+
+var scratch: std.heap.ArenaAllocator = .init(gpa);
+defer scratch.deinit();
+const good = "{\"city\": \"Lisbon\", \"celsius\": 21.5, \"observed\": \"2026-10-14T09:30:00Z\"}";
+std.debug.assert(try schema.validate(io, scratch.allocator(), strand.json, .init(good), .{ .flag = null }));
+
+// An invalid result is `false`, never an error; `basic` says where and why.
+var errors: strand_schema.Schema.Errors = .{};
+const bad = "{\"city\": \"\", \"celsius\": -300, \"observed\": \"yesterday\"}";
+std.debug.assert(!try schema.validate(io, scratch.allocator(), strand.json, .init(bad), .{ .basic = &errors }));
+std.debug.assert(errors.records.len == 3);
+std.debug.assert(std.mem.eql(u8, errors.records[0].instance_location, "/city"));
+
+// The same schema reads the same result from YAML.
+const yaml = "city: Porto\ncelsius: 18\n";
+std.debug.assert(try schema.validate(io, scratch.allocator(), strand.yaml, .init(yaml), .{ .flag = null }));
+```
+<!-- END GENERATED -->
+
 ## Editing
 
 `strand.toml.Edit`, `strand.yaml.Edit` and `strand.json.jsonc.Edit` hold a document as
@@ -650,6 +907,11 @@ format reads the same declaration; a format supplies only its syntax. The core
 uses `std` and [aegis](https://github.com/pedronaugusto/aegis), which is `std`
 alone; JSON Lines adds airlock for syncs and file identity.
 
+JSON is checked whole and written as a tape where it fits, then read into the
+type, so each slice is allocated once at its size. It reads the same as the
+input streamed, but malformed input is a syntax error before any type error.
+Where the tape does not fit, the input is streamed.
+
 A type that holds resources (an allocator, a file, a lock) or memory with no safe
 data meaning (many-item and C pointers) is refused when it is compiled, with the
 path to the field that is the problem. A type with a meaning of its own declares
@@ -666,6 +928,9 @@ and nonzero checks included.
 - It does not watch the filesystem or flush on a timer.
 - It reads no application type from a YAML tag, and does not merge YAML 1.1's `<<` keys.
 - It fetches no external XML entity or DTD, applies no `ATTLIST` default, and does not validate against a DTD or a schema.
+- It interpolates no INI value (`%(name)s`, `${name}`) and gives no section `[DEFAULT]`'s keys.
+- It expands no .env variable (`$NAME`, `${NAME}`) and reads no process environment.
+- `strand_schema` fetches no remote schema itself, asserts no format unless asked, decodes no `contentEncoding`, and reads drafts 4 and 6 and custom vocabularies not at all.
 
 ## Built with
 
@@ -681,15 +946,21 @@ and nonzero checks included.
   the tests and CI. It is a dev dependency too: with [bay](https://github.com/pedronaugusto/bay),
   shakedown and preflight belong to strand's own development, and a project that
   depends on strand never sees them.
+- With `.schema = true`: [uplink](https://github.com/pedronaugusto/uplink)'s codecs
+  resolve references and check the URI formats, [spectra](https://github.com/pedronaugusto/spectra)
+  runs ECMAScript patterns in linear time, [almanac](https://github.com/pedronaugusto/almanac)
+  checks RFC 3339 dates and times, and [xenoglyph](https://github.com/pedronaugusto/xenoglyph)
+  checks IDNA2008 names.
 
 ## Testing
 
 Development runs through bay.
 
 `bay test` runs the unit suite, scratch tests and examples in Debug by default.
-The suite covers each format's own standard suite (JSONTestSuite, RFC 8785's and the
+The suite covers each format's own standard suite (JSONTestSuite, json5-tests, python-dotenv's parser cases, RFC 8785's and the
 cyberphone vectors, RFC 8949's Appendix A, msgpack-test-suite, toml-test, yaml-test-suite, the W3C XML
-Conformance Test Suite, which the build fetches from the W3C), round trips
+Conformance Test Suite, which the build fetches from the W3C, and for `strand_schema` the
+JSON-Schema-Test-Suite in draft-07, 2019-09 and 2020-12, its instances also as YAML and TOML), round trips
 through every reader and writer, framing, checked copies, rotation, cancellation and
 malformed records. Properties are shakedown `check` runs of seeded
 cases; `SHAKEDOWN_CASES` and `SHAKEDOWN_SEED` select a larger or a repeated run. `zig
@@ -726,3 +997,7 @@ dispatched; variable wall-clock performance never gates correctness.
 ## Licence
 
 MIT. See [LICENSE](LICENSE).
+
+The JSON Schema meta-schemas `strand_schema` embeds, in `src/schema/metaschemas`, are
+json-schema-org's, byte for byte, under the AFL or the BSD licence: see
+[their LICENSE](src/schema/metaschemas/LICENSE).

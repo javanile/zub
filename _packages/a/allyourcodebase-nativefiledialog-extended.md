@@ -6,9 +6,9 @@ author: allyourcodebase
 author_github: allyourcodebase
 repository: https://github.com/allyourcodebase/nativefiledialog-extended
 keywords:
-date: 2026-08-17
-updated_at: 2026-08-17T17:15:44+00:00
-last_sync: 2026-08-17T17:15:44Z
+date: 2026-11-06
+updated_at: 2026-11-06T20:18:51+00:00
+last_sync: 2026-11-06T20:18:51Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -35,7 +35,7 @@ First, update your `build.zig.zon`:
 ```
 # Initialize a `zig build` project if you haven't already
 zig init
-zig fetch --save git+https://github.com/allyourcodebase/nativefiledialog-extended.git#1.3.0
+zig fetch --save git+https://github.com/allyourcodebase/nativefiledialog-extended.git#1.4.1
 ```
 
 You can then import `nativefiledialog-extended` in your `build.zig` with:
@@ -45,9 +45,9 @@ const nfd_dependency = b.dependency("nativefiledialog-extended", .{
     .target = target,
     .optimize = optimize,
 });
-your_exe.linkLibrary(nfd_dependency.artifact("nfd"));
+your_exe.root_module.linkLibrary(nfd_dependency.artifact("nfd"));
 ```
 
 ## Dependencies
 
-See https://github.com/btzy/nativefiledialog-extended/tree/v1.3.0#dependencies
+See https://github.com/btzy/nativefiledialog-extended/tree/v1.4.1#dependencies

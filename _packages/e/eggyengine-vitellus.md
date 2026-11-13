@@ -8,10 +8,10 @@ repository: https://github.com/eggyengine/vitellus
 keywords:
   - graphics
   - graphics-library
-date: 2026-10-24
+date: 2026-11-07
 category: game-development
-updated_at: 2026-10-24T11:16:43+00:00
-last_sync: 2026-10-24T11:16:43Z
+updated_at: 2026-11-07T08:47:40+00:00
+last_sync: 2026-11-07T08:47:40Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -35,11 +35,11 @@ guides and API reference: https://eggyengine.github.io/vitellus/
 > **Needed**: Metal developers or really anyone with a mac should consider contributing to this
 
 ## add to project
-requires zig `0.16.0`
+requires zig `0.17.0`
 
 to use this with the zig build system, import as so:
 ```bash
-zig fetch --save git+https://github.com/eggyengine/vitellus#0.16.0
+zig fetch --save git+https://github.com/eggyengine/vitellus
 ```
 
 and then in `build.zig`:
@@ -55,7 +55,7 @@ const vit = b.dependency("vitellus", .{
 
 exe.root_module.addImport("vitellus", vit.module("vitellus"));
 exe.root_module.addImport("vitellus_spirv", vit.module("vitellus_spirv")); // or vitellus_dxc, vitellus_slangc
-@import("vitellus").installLibraries(b, vit); // ships DXC and Slang beside your app
+@import("vitellus").installLibraries(b, vit); // ships DXC and Slang beside your app if enabled
 ```
 
 and lastly in your library/executable:
