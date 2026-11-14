@@ -10,9 +10,9 @@ keywords:
   - camellia
   - cipher
   - cryptography
-date: 2026-09-07
-updated_at: 2026-09-07T07:27:04+00:00
-last_sync: 2026-09-07T07:27:04Z
+date: 2026-11-09
+updated_at: 2026-11-09T11:23:28+00:00
+last_sync: 2026-11-09T11:23:28Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -60,7 +60,7 @@ See the [documentation][docs-url] for more details.
 
 ## Zig version
 
-This library is compatible with Zig version 0.16.0.
+This library is compatible with Zig version 0.17.0.
 
 ## Source code
 

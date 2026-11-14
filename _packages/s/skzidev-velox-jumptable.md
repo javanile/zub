@@ -7,9 +7,9 @@ author_github: skzidev
 repository: https://github.com/skzidev/velox-jumptable
 keywords:
   - vex-v5
-date: 2026-09-19
-updated_at: 2026-09-19T19:51:51+00:00
-last_sync: 2026-09-19T19:51:51Z
+date: 2026-11-09
+updated_at: 2026-11-09T03:23:31+00:00
+last_sync: 2026-11-09T03:23:31Z
 package_kind: library
 has_library: true
 has_binary: false

@@ -8,9 +8,9 @@ repository: https://github.com/sorairolake/sysexits-zig
 keywords:
   - exitcode
   - sysexits
-date: 2026-05-10
-updated_at: 2026-05-10T05:54:24+00:00
-last_sync: 2026-05-10T05:54:24Z
+date: 2026-11-07
+updated_at: 2026-11-07T23:37:49+00:00
+last_sync: 2026-11-07T23:37:49Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -60,7 +60,7 @@ See the [documentation][docs-url] for more details.
 
 ## Zig version
 
-This library is compatible with Zig version 0.16.0.
+This library is compatible with Zig version 0.17.0.
 
 ## Source code
 

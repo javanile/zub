@@ -1,0 +1,138 @@
+---
+title: metrics
+description: "Metrics for Zig: recording primitives, and an exposition writer per format. No HTTP."
+license: MIT
+author: baskingspot
+author_github: baskingspot
+repository: https://github.com/baskingspot/metrics
+keywords:
+  - metrics
+  - prometheus
+date: 2026-11-08
+updated_at: 2026-11-08T02:41:27+00:00
+last_sync: 2026-11-08T02:41:27Z
+package_kind: hybrid
+has_library: true
+has_binary: true
+has_distributable_binary: true
+binary_count: 1
+distributable_binary_count: 1
+multiple_binaries: false
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
+permalink: /packages/baskingspot/metrics/
+---
+
+<h1>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/static/logo-dark.svg">
+    <img src="docs/static/logo.svg" alt="metrics" height="48">
+  </picture>
+</h1>
+
+Prometheus text exposition format for Zig: write metrics to any writer, no HTTP.
+
+The exposition bytes are the part every service writes by hand, and they are
+where the bugs are. One unescaped newline in a label value takes down every
+series in the scrape, not one line, and Zig's own `{d}` writes `nan` for `NaN`
+and 301 characters for `1e300`. This package owns those two rules and the
+escaping around them, to any `std.Io.Writer`.
+
+```zig
+var buffer: [4096]u8 = undefined;
+var out: std.Io.Writer = .fixed(&buffer);
+var w: metrics.prometheus.Writer = .init(&out);
+
+const requests = try w.writeFamily(.{
+    .name = "http_requests_total",
+    .kind = .counter,
+    .help = "Requests served, by method and status.",
+});
+try requests.write(.{ .method = "GET", .status = "200" }, 1841);
+try requests.write(.{ .method = "POST", .status = "500" }, 3);
+```
+
+It is a cursor, not a registry. Which families appear, in what order, and
+whether a family has help text are the caller's business, and the primitives
+underneath (`Writer.help`, `kind`, `name`, `value`, `line`) are public so a
+caller can compose a shape this library does not have.
+
+The API is pre-1.0: pin the commit, and expect it to move.
+
+## What is in it
+
+- [Samples](https://baskingspot.dev/metrics/#samples): `Writer.writeMetric` writes one line, and labels come from a struct's field names, so an illegal label name does not compile.
+- [Families](https://baskingspot.dev/metrics/#families): `Writer.writeFamily` writes `# HELP` and `# TYPE` and returns the handle its samples go through.
+- [Histograms](https://baskingspot.dev/metrics/#histograms): `Writer.writeHistogram` writes `_bucket`, `_sum`, and `_count` from the caller's cumulative counts, and `histogram.Fixed(S, bounds)` records the observations into counters the caller owns.
+- [Values and escaping](https://baskingspot.dev/metrics/#values-and-escaping): a float that reads back as an integer is written as one, and the three bytes that need escaping are escaped.
+- [The primitives](https://baskingspot.dev/metrics/#the-primitives): `Writer` writes one record at a time, and every composition above it is built from those methods.
+- [Counters](https://baskingspot.dev/metrics/#counters): `counter.Local(T)` and `counter.Atomic(T)` are an unsigned integer and an add, wrapping, with no way to reset.
+- [Gauges](https://baskingspot.dev/metrics/#gauges): `gauge.Local(T)` and `gauge.Atomic(T)` are a number with `set`, `add`, `sub`, `inc`, `dec`, and `get`; the integer may be signed and the float is `f32` or `f64`.
+
+Not implemented:
+
+- HTTP. There is no listener, no handler, no `Content-Type` constant, and no status code. Wrap a `std.Io.Writer`.
+- Ordering, family uniqueness, and a document model. The writer lays down lines.
+- A recording type that writes. Read the number with `get` and pass it to the writer.
+- A registry, global state, or a `var` of any kind.
+- Validation of a histogram's counters beyond the length.
+- OpenMetrics 1.0, exemplars, `_created` series, and native histograms.
+- `process_*` collectors. `getrusage` and `/proc/self` are the operating system's numbers.
+
+## Install
+
+```sh
+zig fetch --save https://baskingspot.dev/metrics/v0.3.0.tar.gz
+```
+
+Add the module in `build.zig`:
+
+```zig
+const metrics = b.dependency("metrics", .{ .target = target, .optimize = optimize });
+exe.root_module.addImport("metrics", metrics.module("metrics"));
+```
+
+No std namespace is named `metrics`, so nothing needs an alias. A program that already binds `metrics` to something of its own
+imports the format instead of the package — `const prometheus = @import("metrics").prometheus;`
+— and call sites read `prometheus.Writer` as before. One that wants the
+recording types too imports the package as `metricsx`, the org's rule for a
+shadowed name. `metrics` builds with Zig 0.16 and 0.17. It has one dependency, `testingx`, marked lazy
+and used only after `build.zig` returns for a consumer, so a consumer's fetch
+graph is the module and nothing else.
+
+## Documentation
+
+- The [guide](https://baskingspot.dev/metrics/) covers samples, families, histograms, and the value and escaping rules.
+- The [API reference](https://baskingspot.dev/metrics/api/) documents every public symbol in `src/root.zig`.
+- [`docs/examples/`](docs/examples/) is the test-verified code shown in the guide: `just test` compiles and runs it alongside the module's own tests.
+- [`AGENTS.md`](AGENTS.md) has the working notes for the repository.
+
+## Work on it
+
+```sh
+just ci
+```
+
+`nix develop` provides the toolchain and the site tools. `just` lists the
+recipes, and `just ci` runs what CI runs: the unit tests, the guide's examples,
+lint, the `prom2json` gates, one benchmark iteration, and the site build.
+
+Two recipes check the output against Prometheus's own parser:
+`just check-golden` pipes every golden document through it, and
+`just check-corpus N SEED` renders `N` random documents from a seed and fails
+on the first rejection. `just check` is the same gate on the previous Zig.
+
+`just bench` runs the encode benchmarks in ReleaseFast and reports bytes per
+second.
+
+## License
+
+MIT. See [`LICENSE`](LICENSE). The logo files in `docs/static/` are baskingspot
+marks and are not covered by it. See [`docs/static/LICENSE`](docs/static/LICENSE).
+
+## How it's made
+
+Built with LLM assistance. [How, in detail](https://github.com/baskingspot/.github/blob/main/docs/AI.md).
+
+<a href="https://github.com/baskingspot"><img src="https://raw.githubusercontent.com/baskingspot/.github/main/brand/assets/badge.svg" alt="baskingspot" height="24"></a>

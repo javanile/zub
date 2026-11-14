@@ -11,10 +11,10 @@ keywords:
   - linux
   - networking
   - tools
-date: 2026-10-31
+date: 2026-11-08
 category: systems
-updated_at: 2026-10-31T11:24:23+00:00
-last_sync: 2026-10-31T11:24:23Z
+updated_at: 2026-11-08T21:46:53+00:00
+last_sync: 2026-11-08T21:46:53Z
 package_kind: hybrid
 has_library: true
 has_binary: true
