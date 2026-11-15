@@ -8,10 +8,10 @@ repository: https://github.com/pedronaugusto/ztreesitter
 keywords:
   - parser
   - tree-sitter
-date: 2026-11-07
+date: 2026-11-11
 category: data-formats
-updated_at: 2026-11-07T16:11:24+00:00
-last_sync: 2026-11-07T16:11:24Z
+updated_at: 2026-11-11T14:49:54+00:00
+last_sync: 2026-11-11T14:49:54Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -117,6 +117,12 @@ other globals (`keywords`, `end`, another grammar's scanner functions); the
 catalogue records them and the build renames each to
 `tree_sitter_<name>__<global>`, so grammars link beside each other and
 beside the program.
+
+## Stability
+
+ztreesitter is 0.x and tracks Zig 0.17.x. A breaking change comes only in a minor release
+(0.1 to 0.2), with a CHANGELOG entry saying what changed and what to write instead; a
+patch release never breaks.
 
 ## Grammars
 

@@ -8,10 +8,10 @@ repository: https://github.com/pedronaugusto/shakedown
 keywords:
   - simulation
   - testing
-date: 2026-11-07
+date: 2026-11-12
 category: tooling
-updated_at: 2026-11-07T16:11:32+00:00
-last_sync: 2026-11-07T16:11:32Z
+updated_at: 2026-11-12T14:08:36+00:00
+last_sync: 2026-11-12T14:08:36Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -56,6 +56,12 @@ links one aegis. bay gives a graph one version of each package, so a project
 with aegis in its own graph and shakedown share it. Without bay, pin the aegis
 release shakedown pins, so Zig fetches it once, and ask for shakedown and aegis
 with the same target and mode: Zig keys a package instance by its options too.
+
+## Stability
+
+shakedown is 0.x and tracks Zig 0.17.x. A breaking change comes only in a minor release
+(0.6 to 0.7), with a CHANGELOG entry saying what changed and what to write instead; a
+patch release never breaks.
 
 ## Usage
 
@@ -210,7 +216,8 @@ matching call with a seeded chance. A fault returns an error from the call's own
 error set in place of the call (`fail`), or makes the call and loses its answer,
 returning the error after it took effect (`fail_after`, as a write that reached
 the disk and then reported `InputOutput`); cuts a read or write short (0 bytes is
-no progress, not the end of a stream); lands a cancel; wakes a futex wait with no
+no progress, not the end of a stream, and is refused on a positional read, where
+it would be the end of the file); lands a cancel; wakes a futex wait with no
 one waking it (`spurious_wake`); stalls the call until a cancel ends it, as a read
 of a silent terminal does; sleeps on the base first; or runs test code at that
 point, and then makes the call or injects the fault its `then` names. A plan that
@@ -332,6 +339,18 @@ exact up to 2^53. A score that only says whether a state was reached has no
 slope to climb, so give it a measure of distance. `explore`, `SHAKEDOWN_TAPE`
 and the fuzzer ignore targets.
 
+### Points to reach
+
+A property can pass without reaching the state it was written to test: a
+retry that never ran, a timeout that never fired. `.reach = &.{"a retry"}`
+names a point the run must reach, and `case.reached("a retry")` marks it, in
+the body or in a task of its simulation. Once every case has passed, a point
+no passing case reached fails the run, and the report names it. `explore`
+takes `.reach` too: a point counts in any run of the search. Marking draws
+nothing, so tapes and shrinking are what they were, and a label the options do
+not name is not kept. `SHAKEDOWN_TAPE` and the fuzzer ignore points. A point
+that must never be reached is an error the body returns.
+
 ### Continuous fuzzing
 
 `shakedown-fuzz` (an artifact of the package, as `shakedown-bench-compare` is)
@@ -345,9 +364,15 @@ in the package with
 the package and grow from session to session. Each property the fuzzer fails
 is replayed on its tape (`SHAKEDOWN_TAPE`, which `check` shrinks) and written to
 `<store>/<package>/findings/<test>.txt` with the minimal tape, for the
-property's `.regressions`. It exits 1 when it found something, and when a
-session crashed outside a property or ran no input, which it reads from the
-cache, as Zig exits 0 from a bounded session either way.
+property's `.regressions`. A property that panics ends its process before
+`check` can print a tape: the input the fuzzer saved for it (`f/crash` in the
+cache) is the finding, written to the same file with the panic's message, the
+input as hex and as the tape that replays it, and whether that replay crashes
+again outside the fuzzer; a crash is not shrunk. It exits 1 when it found
+something, and when a session failed otherwise or ran no input, which it reads
+from the cache, as Zig exits 0 from a bounded session either way; a test binary
+built without the fuzzer's instrumentation (the self-hosted x86_64 backend's)
+is named as such.
 
 ### Exhaustive search
 
@@ -458,7 +483,8 @@ previous writeouts before subsequent effects, `data` persists contents and
 length, and `full` persists metadata too. A device flush also persists earlier
 writeouts on this disk. `writeout` includes retrieval metadata, as Darwin
 `fsync` and Windows `NO_SYNC` do; Linux `sync_file_range` must not map to it.
-The model represents one device, and assumes a successful barrier is honoured.
+The model represents one device. It honours a successful barrier, and a
+successful sync unless `Options.fs.faults.sync_lie_per_million` makes one lie.
 std's Threaded currently reports `OperationUnsupported` for both hard-link
 slots on Windows; the shared conformance checks accept that contract while
 checking hard-link identity wherever the operation succeeds.
@@ -482,13 +508,27 @@ match the clean trace. `max_states` bounds images per point; the returned report
 contiguous ranges of the points, so a long operation's sweep runs as several
 tests; a range keeps together the points that leave the same states, so shards
 seldom repeat each other's recoveries (a state two ranges reach is recovered in
-each). `diagnostics` records a failed recovery's crash point, error and trace. Optional `ctx.tearDown()` releases state
+each). `lying_syncs = k` also explores, at every point, the images left if
+its last 1 to k `data` or `full` syncs lied: a point after `m` syncs runs
+`1 + min(m, k)` times, each with up to `max_states` images. `diagnostics` records a failed recovery's crash point, error and trace. Optional `ctx.tearDown()` releases state
 owned by the context. Abandoned tasks do not execute defers, including with an
 root-namespace `IoFault.crash` plan, which requires its filesystem enabled.
 Explicit nodes use cooperative cancellation through their crash/kill lifecycle.
 Application heap state that must survive abandonment belongs to the context.
-`corrupt`, `failReads` and `misdirectNextWrite` inject storage faults by inode;
-a zero-length `failReads` clears the current bad range.
+`corrupt`, `failReads` and `misdirectNextWrite` inject storage faults by path:
+bit rot over a range, a range reads cannot return until a write covers it (a
+file may hold several; a zero-length `failReads` clears them), and a next write
+that lands elsewhere. `Options.fs.faults` draws the same faults from the
+simulation's source, each a chance in a million, as the code under test reads
+and writes through `Io`: `rot_per_million` and `latent_error_per_million` on
+the sectors at rest a read reaches (at most one of each per read), and
+`misdirect_per_million` per write, which lands at another sector of the same
+file. `lost_write_per_million` makes a write the device reports done and
+never stores: reads return it until a crash drops the cache, and no sync makes
+it durable. `sync_lie_per_million` makes a `data` or `full` sync return success
+and do only what a writeout does: an OS crash keeps what it covered, power loss
+need not, and the next honest sync on the disk persists it. Each is a choice on the tape, so `check` shrinks a failure to the faults
+it needs and `SHAKEDOWN_TAPE` replays them. All are off by default.
 
 `corpus.entry` builds one length-prefixed entry for `std.testing.Smith`'s slice
 draws, `corpus.entries` a whole fuzz corpus of them, and `corpus.encode` a whole
@@ -532,6 +572,17 @@ cancels the node's tasks while respecting blocked cancellation protection.
 `OutOfMemory`. `node.restart(f, args)` starts an owned task; it reports `NodeBusy`
 until old live tasks have ended and `SimulationEnded` after a final outcome.
 
+`sim.settle(.{ .within = .fromSeconds(30) })` says the faults are over: it
+heals every partition and hold, empties the fault plan and stops drawn
+wall-clock steps and drawn storage faults, then runs the simulation on, never past thirty seconds of
+`.awake`, until every task has ended, or, with `.until = .{ .holds = &state.progress }`, until the test's own
+predicate holds. The result is `live` with the time it took, `stalled` with a
+report of every task still alive and where it waits (the run paused, free to
+go on), or `ended` with the outcome that came first. It formats as a report, so
+a `check` body notes it and returns an error: a case that is not live after its
+faults heal shrinks and replays like any other. What a fault left behind (a
+stalled call, a crashed node, a damaged sector) stays, and links keep their latency and loss.
+
 Batches probe every submitted operation and retain blocked submissions. A timed
 await returns `Timeout`; `batch.cancel` removes pending work. Canceling a connect
 releases both unaccepted endpoints and its handshake. Closed handles never alias
@@ -541,6 +592,19 @@ shared packet storage (1024 by default); packets hold at most 65536 bytes and
 UDP datagrams at most 65535. A resource limit reports `SystemResources`;
 optional duplicate packets may be dropped when the pool is full. All resources
 are released by `sim.deinit()`.
+
+A node's clocks can disagree with the simulation's:
+`sim.node("b", .{ .clock = .{ .set = .{ .real = .fromSeconds(-90), .drift_ppm = 100 } } })`
+reads a wall clock ninety seconds slow that gains 100 µs a second, and
+`.drawn` draws each offset and the drift from the source, up to the bounds
+given, so a failing case shrinks to the smallest skew that fails it.
+`.monotonic` offsets the awake and boot clocks, and `step_per_million` steps
+the wall clock, forward or back, at a read of `.real`. `node.stepReal(t)` and
+`node.suspendFor(d)` jump a node's clocks as `Clock`'s do: only the wall clock
+goes back. A timer on a node waits for its reading on that node's clock, so a
+jump fires the timers it passes. `Options.clock.late` makes each timer fire up
+to that late, drawn per timer. Node zero, `sim.io()`'s, keeps the simulation's
+time, which `sim.now` reads; `node.now` reads a node's.
 
 `Sim.Event.node` records the call's Io namespace and `TaskReport.node` records
 task ownership; task IDs remain global. Both are distinct id types

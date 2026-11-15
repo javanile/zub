@@ -9,10 +9,10 @@ keywords:
   - binding
   - vulkan
   - vulkan-api
-date: 2026-10-26
+date: 2026-11-02
 category: game-development
-updated_at: 2026-10-26T16:26:16+00:00
-last_sync: 2026-10-26T16:26:16Z
+updated_at: 2026-11-02T15:34:32+00:00
+last_sync: 2026-11-02T15:34:32Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -42,7 +42,7 @@ However this repository has subtle differences for maintainability tasks:
 
 ## Dependencies
 
-The [Zig][3] part of this package requires the latest (0.17.0) or the master (0.18.0-dev) [Zig][3] release.
+This repository tries to stay up-to-date with the Zig master branch.
 
 For other dependencies see [the build.zig.zon](https://github.com/tiawl/vulkan.zig/blob/stable/build.zig.zon)
 

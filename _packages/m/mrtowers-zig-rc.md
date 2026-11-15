@@ -7,9 +7,9 @@ author_github: mrtowers
 repository: https://github.com/mrtowers/zig-rc
 keywords:
   - reference-counting
-date: 2026-07-13
-updated_at: 2026-07-13T18:48:03+00:00
-last_sync: 2026-07-13T18:48:03Z
+date: 2026-11-11
+updated_at: 2026-11-11T07:32:20+00:00
+last_sync: 2026-11-11T07:32:20Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -27,7 +27,7 @@ permalink: /packages/mrtowers/zig-rc/
 
 A simple and efficient implementation of a reference counting smart pointer for Zig. This library helps manage the lifetime of heap-allocated objects by automatically tracking references and freeing memory when no references remain.
 
-Requires **Zig 0.16.0**.
+Requires **Zig 0.17.0**.
 
 ## Features
 
@@ -74,12 +74,13 @@ const User = struct {
 };
 
 pub fn main() !void {
-    var gpa = std.heap.DebugAllocator(.{}).init;
-    defer _ = gpa.deinit();
+    var gpa = std.heap.SafeAllocator.init(std.heap.page_allocator, .{});
+    defer if (gpa.deinit() != 0) @panic("memory leak");
+    const allocator = gpa.allocator();
 
-    var ptr = try rc.Rc(User).init(gpa.allocator(), User{
-        .allocator = gpa.allocator(),
-        .name = try gpa.allocator().dupe(u8, "some user"),
+    var ptr = try rc.Rc(User).init(allocator, User{
+        .allocator = allocator,
+        .name = try allocator.dupe(u8, "some user"),
     }, .{
         .auto_deinit = true,
     });
@@ -99,10 +100,11 @@ const Rc = rc.Rc;
 const WeakRc = rc.WeakRc;
 
 pub fn main() !void {
-    var gpa = std.heap.DebugAllocator(.{}).init;
-    defer _ = gpa.deinit();
+    var gpa = std.heap.SafeAllocator.init(std.heap.page_allocator, .{});
+    defer if (gpa.deinit() != 0) @panic("memory leak");
+    const allocator = gpa.allocator();
 
-    const ptr = try Rc(i32).init(gpa.allocator(), 5, .{});
+    const ptr = try Rc(i32).init(allocator, 5, .{});
     defer ptr.deref();
 
     usingWeak(ptr.weak());
@@ -122,27 +124,27 @@ fn usingWeak(weak: WeakRc(i32)) void {
 
 ```zig
 const std = @import("std");
-const testing = std.testing;
 const rc = @import("rc");
 const Arc = rc.Arc;
 const WeakArc = rc.WeakArc;
 
 pub fn main(init: std.process.Init) !void {
-    var gpa = std.heap.DebugAllocator(.{}).init;
-    defer _ = gpa.deinit();
+    var gpa = std.heap.SafeAllocator.init(std.heap.page_allocator, .{});
+    defer if (gpa.deinit() != 0) @panic("memory leak");
+    const allocator = gpa.allocator();
     const io = init.io;
 
-    const ptr = try Arc(i32).init(gpa.allocator(), 5, .{});
-    defer _ = ptr.deref(io);
+    const ptr = try Arc(i32).init(allocator, 5, .{});
+    defer _ = ptr.deref(io) catch unreachable;
 
-    usingWeak(ptr.weak(io), io);
+    try usingWeak(try ptr.weak(io), io);
 }
 
-fn usingWeak(weak: WeakArc(i32), io: std.Io) void {
+fn usingWeak(weak: WeakArc(i32), io: std.Io) std.Io.Cancelable!void {
     defer weak.deref(io) catch unreachable;
 
     if (try weak.upgrade(io)) |number_ref| {
-        defer _ = number_ref.deref(io);
+        defer _ = number_ref.deref(io) catch unreachable;
         std.debug.print("number is: {d}\n", .{number_ref.rc.value.*});
     }
 }

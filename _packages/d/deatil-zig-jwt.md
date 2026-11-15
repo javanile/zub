@@ -8,9 +8,9 @@ repository: https://github.com/deatil/zig-jwt
 keywords:
   - jwt
   - zig-jwt
-date: 2026-11-06
-updated_at: 2026-11-06T23:08:09+00:00
-last_sync: 2026-11-06T23:08:09Z
+date: 2026-11-11
+updated_at: 2026-11-11T04:50:05+00:00
+last_sync: 2026-11-11T04:50:05Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -96,9 +96,6 @@ pub fn main(init: std.process.Init) !void {
     const alloc = init.arena.allocator();
 
     const kp = jwt.eddsa.Ed25519.KeyPair.generate(io);
-
-    var prng = std.Random.DefaultPrng.init(1234);
-    const random = prng.random();
 
     const claims = .{
         .aud = "example.com",

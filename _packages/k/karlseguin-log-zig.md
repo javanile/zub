@@ -8,9 +8,9 @@ repository: https://github.com/karlseguin/log.zig
 keywords:
   - logging-library
   - structured-logging
-date: 2026-04-18
-updated_at: 2026-04-18T09:52:10+00:00
-last_sync: 2026-04-18T09:52:10Z
+date: 2026-11-15
+updated_at: 2026-11-15T15:51:01+00:00
+last_sync: 2026-11-15T15:51:01Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -29,7 +29,7 @@ Structured Logging for Zig
 logz is an opinionated structured logger that outputs to stdout, stderr, a file or a custom writer using logfmt or JSON. It aims to minimize runtime memory allocation by using a pool of pre-allocated loggers. 
 
 ## Zig Version
-This is for Zig 0.16.0. Use the [zig-0.15](https://github.com/karlseguin/log.zig/tree/zig-0.15) branch for Zig 0.15 or the [dev](https://github.com/karlseguin/log.zig/tree/dev) which may or may not be up to date with zig dev.
+This is for Zig 0.17.0.
 
 # Metrics
 If you're looking for metrics, check out my <a href="https://github.com/karlseguin/metrics.zig">prometheus library for Zig</a>.
@@ -194,11 +194,24 @@ pub const Config = struct {
     // Controls what the large buffer pool does when empty. It can either 
     // dynamically create a large buffer, or drop the attribute
     large_buffer_startegy: .create, // or .drop
+
+    // The format of the @ts field. See the Timestamp and Level section
+    timestamp: Timestamp = .number, // or .iso or .sql
 };
 ```
 
 ### Timestamp and Level
 When using the `debug`, `info`, `warn`, `err` or `fatal` functions, logs will always begin with `@ts=$MILLISECONDS_SINCE_JAN1_1970_UTC @l=$LEVEL`, such as: `@ts=1679473882025 @l=INFO`. With JSON encoding, the object will always have the `"@ts"` and `"@l"` fields.
+
+The format of the timestamp is controlled by the `timestamp` configuration field. All formats are in UTC:
+
+| `timestamp` | logfmt | json |
+| --- | --- | --- |
+| `.number` (default) | `@ts=1679473882025` | `"@ts":1679473882025` |
+| `.iso` | `@ts=2023-03-22T08:31:22.025000Z` | `"@ts":"2023-03-22T08:31:22.025000Z"` |
+| `.sql` | `@ts=2023-03-22 08:31:22.025000` | `"@ts":"2023-03-22 08:31:22.025000"` |
+
+`.number` is in milliseconds; `.iso` and `.sql` have microsecond precision.
 
 ### Logger Life cycle
 The logger is implicitly returned to the pool when `log`, `logTo` or `tryLog` is called. In rare cases where `log`, `logTo` or `tryLog` are not called, the logger must be explicitly released using its `release()` function:
@@ -369,7 +382,7 @@ When configured with `.pool_strategy = .noop` and `.large_buffer_strategy = .dro
 ### Maximum Log Line Size
 The maximum possible log entry is: `config.prefix.len + config.buffer_size + config.large_buffer_size + ~35`.  
 
-Th last 35 bytes is for the the @ts and @l attributes, and the trailing newline. The exact length of these can vary by a few bytes (e.g. the json encoder takes a few additional bytes to quote the key).
+Th last 35 bytes is for the the @ts and @l attributes, and the trailing newline. The exact length of these can vary by a few bytes (e.g. the json encoder takes a few additional bytes to quote the key). The `.iso` and `.sql` timestamp formats add up to 16 more bytes.
 
 ### Custom Output
 The `logTo(writer: anytype)` can be called instead of `log()`. The writer must expose 1 method:

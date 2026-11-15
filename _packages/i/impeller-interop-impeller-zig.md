@@ -8,16 +8,16 @@ repository: https://github.com/impeller-interop/impeller-zig
 keywords:
   - bindings
   - graphics
-date: 2026-11-08
+date: 2026-11-10
 category: systems
-updated_at: 2026-11-08T15:58:52+00:00
-last_sync: 2026-11-08T15:58:52Z
-package_kind: library
+updated_at: 2026-11-10T21:27:36+00:00
+last_sync: 2026-11-10T21:27:36Z
+package_kind: hybrid
 has_library: true
-has_binary: false
-has_distributable_binary: false
-binary_count: 0
-distributable_binary_count: 0
+has_binary: true
+has_distributable_binary: true
+binary_count: 1
+distributable_binary_count: 1
 multiple_binaries: false
 is_sponsor: false
 sync_priority: normal
@@ -40,11 +40,11 @@ Standalone SDK artifacts are packaged in [`impeller-sdk`](https://github.com/imp
 </p>
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/883936cf-6c3b-40b6-a34a-0d6c7388b7cc" width="60%" />
+  <img src="https://github.com/user-attachments/assets/42a9e05c-4088-4a76-a295-74619eb8ecfe" width="60%" />
 </p>
 
 <p align="center">
-  <strong><a href="https://github.com/impeller-interop/impeller-zig-examples">Explore runnable examples →</a></strong>
+  <strong><a href="examples/">Explore runnable examples →</a></strong>
 </p>
 
 ## Features
@@ -166,7 +166,7 @@ try surface.present();
 
 ## Examples
 
-Runnable examples live in [`impeller-zig-examples`](https://github.com/impeller-interop/impeller-zig-examples), keeping this package a pure library dependency with no windowing requirement.
+Runnable examples live in [`examples/`](examples/), split into the independent `backends` and `shaders` projects. The library itself stays a pure dependency with no windowing requirement.
 
 ## API notes
 

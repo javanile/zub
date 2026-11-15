@@ -11,10 +11,10 @@ keywords:
   - linter
   - memory-safety
   - static-analysis
-date: 2026-11-06
+date: 2026-11-11
 category: tooling
-updated_at: 2026-11-06T19:30:33+00:00
-last_sync: 2026-11-06T19:30:33Z
+updated_at: 2026-11-11T13:25:28+00:00
+last_sync: 2026-11-11T13:25:28Z
 package_kind: hybrid
 has_library: true
 has_binary: true
