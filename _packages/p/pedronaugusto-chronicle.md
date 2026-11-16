@@ -8,9 +8,9 @@ repository: https://github.com/pedronaugusto/chronicle
 keywords:
   - event-log
   - event-sourcing
-date: 2026-11-03
-updated_at: 2026-11-03T17:18:36+00:00
-last_sync: 2026-11-03T17:18:36Z
+date: 2026-11-12
+updated_at: 2026-11-12T14:42:46+00:00
+last_sync: 2026-11-12T14:42:46Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -32,10 +32,16 @@ folding them into state.
 
 ## Install
 
-Requires Zig 0.17.0. Fetch with `zig fetch --save
+Requires Zig 0.17. Fetch with `zig fetch --save
 git+https://github.com/pedronaugusto/chronicle`, then obtain the `chronicle` module
 through `b.dependency` and add it to your executable's imports. Forward your target and
 optimize settings.
+
+## Stability
+
+chronicle is 0.x and tracks Zig 0.17.x. A breaking change comes only in a minor release
+(0.10 to 0.11), with a CHANGELOG entry saying what changed and what to write instead; a
+patch release never breaks.
 
 ## Usage
 
@@ -127,8 +133,10 @@ cursor are each made durable under their name, the directory included, on every
 platform: Windows flushes the directory too. Segments are removed one at a time, each
 removal durable before the next, so a crash never leaves a hole in the log. A snapshot, a cursor and a compacted segment are written under a
 temporary name drawn at random and renamed into place; a writer's open removes the
-temporaries a crash left once they are an hour old. A backup makes its copies durable
-together, a writeout of each and one flush of the device on macOS and Windows.
+temporaries a crash left once they are an hour old. A backup writes each copy under a
+temporary beside its name, a clone where the filesystem shares extents, and makes them
+durable together, a writeout of each and one flush of the device on macOS and Windows,
+before renaming each over its name.
 
 Opening repairs an unfinished final record by default: a line with no newline, or one
 whose newline reached the disk without all of its bytes, as a power cut can leave it.

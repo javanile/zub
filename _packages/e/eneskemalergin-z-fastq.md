@@ -1,0 +1,167 @@
+---
+title: z-fastq
+description: Fast single-threaded FASTQ work in small, predictable memory. One static binary and a Zig package.
+license: MIT
+author: eneskemalergin
+author_github: eneskemalergin
+repository: https://github.com/eneskemalergin/z-fastq
+keywords:
+  - adapter-trimming
+  - bioinformatics
+  - cli
+  - fastq
+  - genomics
+  - low-memory
+  - ngs
+  - paired-end
+  - quality-control
+  - sequence-validation
+  - sequencing
+  - simd
+  - static-binary
+date: 2026-11-03
+category: tooling
+updated_at: 2026-11-03T05:21:39+00:00
+last_sync: 2026-11-03T05:21:39Z
+package_kind: hybrid
+has_library: true
+has_binary: true
+has_distributable_binary: true
+binary_count: 1
+distributable_binary_count: 1
+multiple_binaries: false
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
+permalink: /packages/eneskemalergin/z-fastq/
+---
+
+<!-- markdownlint-disable MD033 MD041 -->
+
+<div align="center">
+  <img src="assets/logo-readme.svg" alt="z-fastq" width="220">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/tagline-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="assets/tagline-light.svg">
+    <img src="assets/tagline-light.svg" alt="Lightning FASTQ work without the toolchain sprawl" width="700">
+  </picture>
+  <p><strong>Count, check, sample, interleave, and trim paired FASTQ with one self-contained executable built in Zig.</strong></p>
+  <p>
+    <a href="https://github.com/eneskemalergin/z-fastq/releases/latest"><img src="https://img.shields.io/github/v/release/eneskemalergin/z-fastq?style=flat-square&amp;label=release" alt="Latest release"></a>
+    <a href="https://github.com/eneskemalergin/z-fastq/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/eneskemalergin/z-fastq/ci.yml?branch=main&amp;style=flat-square&amp;label=CI&amp;logo=githubactions&amp;logoColor=white" alt="CI status"></a>
+    <a href="https://github.com/eneskemalergin/z-fastq/wiki/Installation"><img src="https://img.shields.io/badge/Linux%20%7C%20macOS-x86--64%20%7C%20aarch64-64748b?style=flat-square" alt="Linux and macOS on x86-64 and aarch64"></a>
+    <a href="https://ziglang.org/download/"><img src="https://img.shields.io/badge/Zig-0.16.0-F7A41D?style=flat-square&amp;logo=zig&amp;logoColor=white" alt="Zig 0.16.0"></a>
+    <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-16a34a?style=flat-square" alt="MIT License"></a>
+    <br>
+    <a href="https://github.com/eneskemalergin/z-fastq/wiki/Performance"><img src="https://img.shields.io/badge/1%20core-a%20few%20MiB-0d9488?style=flat-square" alt="One core and a few MiB per run"></a>
+    <a href="bench/README.md"><img src="https://img.shields.io/badge/benchmarks-reports-f59e0b?style=flat-square" alt="Benchmarks"></a>
+    <a href="https://github.com/eneskemalergin/z-fastq/wiki"><img src="https://img.shields.io/badge/wiki-documentation-2563eb?style=flat-square" alt="Wiki"></a>
+    <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/changelog-history-7c3aed?style=flat-square" alt="Changelog"></a>
+  </p>
+</div>
+
+---
+
+I built z-fastq for the FASTQ work that comes before alignment: the steps that run on every sample, where a slow or memory-hungry tool is paid for again and again. One CLI, also usable as a Zig package, with no runtime dependencies. Every command runs on one core in bounded memory, a few MiB for most jobs, and stops on a broken record instead of passing it on:
+
+- [`count`](https://github.com/eneskemalergin/z-fastq/wiki/Counting-and-Statistics): Count records in one or many files, or standard input.
+- [`stats`](https://github.com/eneskemalergin/z-fastq/wiki/Counting-and-Statistics#stats): Report lengths, base composition, GC, and quality, as text or JSON.
+- [`check`](https://github.com/eneskemalergin/z-fastq/wiki/Validation): Validate structure, sequence letters, and quality bytes, alone, as mate files, or interleaved, naming the record, byte offset, and rule of a failure.
+- [`sample`](https://github.com/eneskemalergin/z-fastq/wiki/Sampling): Select a seeded fraction or an exact count of records or pairs, reproducibly.
+- [`interleave` and `deinterleave`](https://github.com/eneskemalergin/z-fastq/wiki/Interleaving): Convert between mate files and one interleaved stream, checking every pair.
+- [`process`](https://github.com/eneskemalergin/z-fastq/wiki/Processing): Trim and filter paired reads with fastp's rules into plain or gzip files, with [FastQC-compatible QC](https://github.com/eneskemalergin/z-fastq/wiki/Quality-Control) that MultiQC reads, in one pass.
+- [Zig package](https://github.com/eneskemalergin/z-fastq/wiki/Zig-Library): the reader, writer, validation, and statistics give other Zig programs the same rules without the CLI.
+
+z-fastq reads plain and gzip FASTQ and writes plain FASTQ, gzip from `process`, and text or JSON reports. It runs on Linux and macOS, on x86-64 and aarch64. For FASTA, see [z-fasta](https://github.com/eneskemalergin/z-fasta), built around the same priorities.
+
+## Speed and memory
+
+Each job against the fastest other tools for it, every tool on one CPU:
+
+<!-- bench summary: generated by bench/FEATURE/run.sh summary -->
+
+<p align="center">
+  <a href="bench/README.md">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="bench/summary/01-jobs-dark.png">
+      <source media="(prefers-color-scheme: light)" srcset="bench/summary/01-jobs-light.png">
+      <img src="bench/summary/01-jobs-light.png" alt="Each job: the fastest other tools as multiples of z-fastq's wall time and peak memory" width="100%">
+    </picture>
+  </a>
+</p>
+
+| Job                      | z-fastq time | z-fastq memory | Other tool   | Its time | Its memory |
+| ------------------------ | -----------: | -------------: | ------------ | -------: | ---------: |
+| Count records            |       144 ms |       0.52 MiB | Needletail   |     1.4x |       4.1x |
+| Aggregate statistics     |       253 ms |       0.52 MiB | Needletail   |     3.9x |       4.2x |
+| Validate a file          |       181 ms |       0.52 MiB | fq           |     4.8x |       8.6x |
+| Validate a pair          |       305 ms |       1.02 MiB | fq           |     7.7x |      26.8x |
+| Sample by fraction       |       211 ms |       0.91 MiB | IRMA Core    |     5.7x |       5.2x |
+| Sample by count          |       400 ms |       1.09 MiB | IRMA Core    |     3.0x |       4.4x |
+| Sample pairs by fraction |       328 ms |       1.03 MiB | IRMA Core    |     4.7x |       4.3x |
+| Interleave a pair        |       391 ms |       1.02 MiB | IRMA Core    |     3.5x |       4.1x |
+| Deinterleave a pair      |       654 ms |       0.78 MiB | IRMA Core    |     5.5x |       5.3x |
+| Trim a pair              |       2.82 s |       8.92 MiB | chelae*      |     1.0x |       5.7x |
+| QC tables for a pair     |       1.60 s |       6.37 MiB | FastQC-Rust* |     2.6x |       4.5x |
+
+On 1 GiB plain inputs, every tool on one CPU; the other tool is the fastest that does the whole job, its time and memory as multiples of z-fastq's; \* marks a job no other tool does whole, with the fastest that does part of it. On the malformed records and pairs of the edge cases, z-fastq stopped on 54 of 54; [the benchmark summary](bench/README.md) has the method, every tool, threads, and the cases where another tool is faster.
+
+<!-- bench summary end -->
+
+### What threads cost
+
+Most of the other tools can use many threads. With enough of them chelae, Trim Galore, fasterp, and FastQC-Rust beat z-fastq's wall time on one core, chelae from 2 threads and the others from 4 to 16; fastp does not, even at 16. The threads buy them time, not memory: from 2 threads on, every one of them holds several times z-fastq's memory, fastp over a hundred times. chelae does its work in about z-fastq's CPU time; the others spend several times as much.
+
+<p align="center">
+  <a href="https://github.com/eneskemalergin/z-fastq/wiki/Performance">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="bench/summary/04-threads-memory-dark.png">
+      <source media="(prefers-color-scheme: light)" srcset="bench/summary/04-threads-memory-light.png">
+      <img src="bench/summary/04-threads-memory-light.png" alt="Trimming and QC tables: each other tool's path through 1 to 16 threads on time against memory, relative to z-fastq on one core" width="100%">
+    </picture>
+  </a>
+</p>
+<p align="center"><sub>The other tools at 1 to 16 threads on time against memory, relative to z-fastq on one core; the numbers on each path are thread counts. The <a href="https://github.com/eneskemalergin/z-fastq/wiki/Performance">Performance</a> page explains how it is measured and where another tool is faster.</sub></p>
+
+## A few honest tradeoffs
+
+z-fastq is built and tested on Linux and macOS, each on x86-64 and aarch64. A native Windows build is not there yet; on Windows, WSL is the way to try it. The published benchmarks run on Linux x86-64 with the x86-64-v3 release binary, so its speed on aarch64, where the vector code runs as NEON, and on macOS is not measured there yet.
+
+One core is a choice, not a limit I am waiting to lift. It keeps every run's cost known before it starts, so a pipeline can run one sample per core side by side. The price is one large file on an otherwise idle machine: a tool that spreads it over many cores can finish sooner, and z-fastq does not split a file across cores yet. (Maybe ever?)
+
+gzip output uses a fast preset by default, which writes files about 16% larger than fastp's at its default level. `--gzip-preset even` or `dense` makes them smaller, more slowly.
+
+z-fastq writes data, not pages: its QC comes out as FastQC-style tables and a JSON summary for MultiQC to render, with no HTML report of its own.
+
+## Start
+
+Download the binary for Linux or macOS, on x86-64 or aarch64, from the [latest release](https://github.com/eneskemalergin/z-fastq/releases/latest). The x86-64 binaries need a CPU with x86-64-v3 (AVX2, BMI2, FMA); on an older x86-64 CPU, build from source with [Zig 0.16.0](https://ziglang.org/download/), which runs on any. The [installation page](https://github.com/eneskemalergin/z-fastq/wiki/Installation) covers both.
+
+```bash
+zig build -Doptimize=ReleaseFast    # zig-out/bin/z-fastq; put it on your PATH
+z-fastq check --paired reads_R1.fastq.gz reads_R2.fastq.gz
+z-fastq stats reads_R1.fastq.gz
+z-fastq sample --fraction 0.1 --seed 11 reads_R1.fastq.gz > sample.fastq
+z-fastq process --gzip --adapter1 AGATCGGAAGAGCACACGTCTGAACTCCAGTCA --adapter2 AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT \
+  --min-length 15 --report sample.json --out1 trimmed_R1.fastq.gz --out2 trimmed_R2.fastq.gz reads_R1.fastq.gz reads_R2.fastq.gz
+```
+
+Work through the [getting-started walk-through](https://github.com/eneskemalergin/z-fastq/wiki/Getting-Started), then keep the [command cheat sheet](https://github.com/eneskemalergin/z-fastq/wiki/Command-Cheat-Sheet) nearby.
+
+## Documentation
+
+The wiki holds the details that would otherwise bury this page:
+
+[Counting and statistics](https://github.com/eneskemalergin/z-fastq/wiki/Counting-and-Statistics) | [Validation](https://github.com/eneskemalergin/z-fastq/wiki/Validation) | [Paired reads](https://github.com/eneskemalergin/z-fastq/wiki/Paired-Reads) | [Sampling](https://github.com/eneskemalergin/z-fastq/wiki/Sampling) | [Interleaving](https://github.com/eneskemalergin/z-fastq/wiki/Interleaving) | [Processing](https://github.com/eneskemalergin/z-fastq/wiki/Processing) | [Quality control](https://github.com/eneskemalergin/z-fastq/wiki/Quality-Control) | [Zig package](https://github.com/eneskemalergin/z-fastq/wiki/Zig-Library)
+
+[Report reference](https://github.com/eneskemalergin/z-fastq/wiki/Report-Reference) | [Input and output](https://github.com/eneskemalergin/z-fastq/wiki/Input-and-Output) | [Automation](https://github.com/eneskemalergin/z-fastq/wiki/Automation) | [Limits](https://github.com/eneskemalergin/z-fastq/wiki/Limits-and-Supported-Formats) | [Performance](https://github.com/eneskemalergin/z-fastq/wiki/Performance) | [Recipes](https://github.com/eneskemalergin/z-fastq/wiki/Recipes) | [Troubleshooting](https://github.com/eneskemalergin/z-fastq/wiki/Troubleshooting) | [FAQ](https://github.com/eneskemalergin/z-fastq/wiki/FAQ)
+
+## License
+
+z-fastq is released under the [MIT license](LICENSE).
+
+---
+
+<p align="center"><em>Four lines hold a life,<br>
+Each base travels through the night,<br>
+Reads emerge as light.</em></p>

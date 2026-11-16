@@ -7,15 +7,15 @@ author_github: robert-ancell
 repository: https://github.com/robert-ancell/kete
 keywords:
   - gui
-date: 2026-10-31
-updated_at: 2026-10-31T15:18:32+00:00
-last_sync: 2026-10-31T15:18:32Z
+date: 2026-11-12
+updated_at: 2026-11-12T11:28:01+00:00
+last_sync: 2026-11-12T11:28:01Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 5
-distributable_binary_count: 5
+binary_count: 6
+distributable_binary_count: 6
 multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
@@ -54,6 +54,10 @@ Import the `kete` module in your `build.zig`:
 const kete_dep = b.dependency("kete", .{ .target = target, .optimize = optimize });
 exe.root_module.addImport("kete", kete_dep.module("kete"));
 ```
+
+To give your app its own window and render backends (SDL, a framebuffer, a game engine) instead of Kete's, pass `.backends = false`: Kete then needs nothing of the system, not even libc (see [examples/custom_backend.zig](examples/custom_backend.zig)).
+
+Kete includes its fonts, Fira Sans and Twemoji Mozilla (about 1.6 MB). To leave them out, pass `.@"embed-fonts" = false` (or `-Dembed-fonts=false`): Kete then reads fonts from files, the app's own (`App.Options.font_path` and `emoji_font_path`) or else its own found among the system's fonts (and in the directories `KETE_FONT_PATH` names).
 
 Then build your UI in `src/main.zig`:
 

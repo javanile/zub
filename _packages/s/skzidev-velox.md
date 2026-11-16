@@ -11,11 +11,11 @@ keywords:
   - vex-robotics
   - vex-robotics-competition
   - vex-v5
-date: 2026-09-14
-updated_at: 2026-09-14T03:21:44+00:00
-last_sync: 2026-09-14T03:21:44Z
-package_kind: hybrid
-has_library: true
+date: 2026-11-12
+updated_at: 2026-11-12T06:57:28+00:00
+last_sync: 2026-11-12T06:57:28Z
+package_kind: binary
+has_library: false
 has_binary: true
 has_distributable_binary: true
 binary_count: 1

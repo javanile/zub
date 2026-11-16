@@ -7,9 +7,9 @@ author_github: stefanpartheym
 repository: https://github.com/stefanpartheym/phiz
 keywords:
   - physics-engine
-date: 2026-07-05
-updated_at: 2026-07-05T19:46:46+00:00
-last_sync: 2026-07-05T19:46:46Z
+date: 2026-11-10
+updated_at: 2026-11-10T13:45:08+00:00
+last_sync: 2026-11-10T13:45:08Z
 package_kind: hybrid
 has_library: true
 has_binary: true

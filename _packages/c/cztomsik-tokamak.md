@@ -10,10 +10,10 @@ keywords:
   - dependency-injection
   - http
   - rest
-date: 2026-10-27
+date: 2026-11-13
 category: networking
-updated_at: 2026-10-27T15:44:53+00:00
-last_sync: 2026-10-27T15:44:53Z
+updated_at: 2026-11-13T09:30:40+00:00
+last_sync: 2026-11-13T09:30:40Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -35,7 +35,7 @@ Tokamak is a web application framework for Zig, built around
 [http.zig](https://github.com/karlseguin/http.zig) and a simple dependency
 injection container.
 
-> **Note:** The main branch requires **Zig 0.17.0** or newer.
+> **Note:** The main branch requires **Zig 0.17.1** or newer.
 
 Note that it is **not designed to be used alone**, but with a reverse proxy in
 front of it, like Nginx or Cloudfront, which will handle SSL, caching,
