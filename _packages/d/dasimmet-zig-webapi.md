@@ -41,40 +41,52 @@ Type-safe Zig WebAssembly browser and WASI API wrappers around [`zig-javascript-
 
 All modules are re-exported from [`src/webapi.zig`](src/webapi.zig):
 
-| Module / Symbol | Source | Purpose |
-| --- | --- | --- |
-| `webapi` (root) | [`src/webapi.zig`](src/webapi.zig) | Zero-allocation string extraction (`stringFromHandle`, `stringFromHandles`), allocating helpers (`stringFromHandleAlloc`, `bytesFromHandleAlloc`, `createStandaloneUint8Array`), context-bound callbacks (`boundFunction`, `boundEventListener`, `boundEventListenerTyped`), Web Crypto PRNG (`PseudoRandomNumberGenerator`), `constTagName`, `getUri`, `retainHandle`, `hasProperty`, `callAsync`. |
-| `webapi.zjb` | [`src/webapi.zig`](src/webapi.zig) | Resolves to `@import("zjb")` on WASM targets and [`src/testing/zjb.zig`](src/testing/zjb.zig) on host targets. |
-| `webapi.codec` | [`src/codec.zig`](src/codec.zig) | Cached singleton JS `TextEncoder` / `TextDecoder` helpers (`encode`, `decode`). |
-| `webapi.console` | [`src/console.zig`](src/console.zig) | Browser console logging (`log`, `debug`, `@"error"`) and `rootLogFn` for `std.Options.logFn`. |
-| `webapi.dom` | [`src/dom.zig`](src/dom.zig) | Typed DOM wrappers: `Document`, `Window`, `Element`, `CSSStyleDeclaration`, `TokenList`, `DOMRect`, `Location`, `History`, `Navigator`, `Clipboard`, `Performance`, `MediaQueryList`, `VisualViewport`, `DataTransfer`, `HTMLIFrameElement`, `ServiceWorker`, `ServiceWorkerContainer`, `ServiceWorkerRegistration`. |
-| `webapi.Event` | [`src/Event.zig`](src/Event.zig) | Base `Event` wrapper and compile-time `EventFor(name)` mapping to `KeyboardEvent`, `PointerEvent`, `MouseEvent`, `WheelEvent`, `InputEvent`, `ClipboardEvent`, `FocusEvent`, `SubmitEvent`, `TouchEvent`, `HashChangeEvent`, `PopStateEvent`, `MediaQueryListEvent`, and `BeforeInstallPromptEvent`. |
-| `webapi.Promise` | [`src/Promise.zig`](src/Promise.zig) | `Promise` and `Promise.Typed(T)` wrappers with context-bound `.thenFn(...)`. |
-| `webapi.Fetch` / `webapi.fetch` | [`src/Fetch.zig`](src/Fetch.zig) | Browser Fetch API: `fetch`, `Headers`, `RequestInit`, and `Response`. |
-| `webapi.download` | [`src/download.zig`](src/download.zig) | Trigger browser file downloads from raw byte slices (`download.bytes`). |
-| `webapi.WebGL` | [`src/WebGL.zig`](src/WebGL.zig) | WebGL2 / WebGL rendering context, buffers, textures, shaders/programs (`createProgramFromSource`), uniforms (`uploadMat4`, etc.), framebuffers, VAOs, and draw calls. |
-| `webapi.IndexedDb` | [`src/IndexedDb.zig`](src/IndexedDb.zig) | Context-bound async `IndexedDB` wrapper (`open`, `Database`, `Transaction`, `ObjectStore`, `loadAllEntries`) using detached `Uint8Array` copies safe across WASM memory growth. |
-| `webapi.WebRTC` | [`src/WebRTC.zig`](src/WebRTC.zig) | `RTCPeerConnection`, `RTCDataChannel`, `RTCSessionDescription`, `RTCIceCandidate`, `RTCConfiguration`, and `RTCIceServer`. |
-| `webapi.WebSocket` | [`src/WebSocket.zig`](src/WebSocket.zig) | `WebSocket` wrapper with `ReadyState` and typed listener attachment. |
-| `webapi.BroadcastChannel` | [`src/BroadcastChannel.zig`](src/BroadcastChannel.zig) | Cross-tab / worker `BroadcastChannel` wrapper. |
-| `webapi.WebAssembly` | [`src/WebAssembly.zig`](src/WebAssembly.zig) | `Module`, `Instance`, `Memory`, `validate`, `compile`, `instantiate`, `instantiateAsync`, and JSPI (`Suspending`, `isJspiSupported`, `promising`). |
-| `webapi.Wasi` | [`src/Wasi.zig`](src/Wasi.zig) | Pure-Zig WASI Snapshot Preview 1 runtime for running WASM binaries in the browser with in-memory, `.tar`, and `IndexedDb`-backed filesystems ([`src/Wasi/FileSystem.zig`](src/Wasi/FileSystem.zig)). |
-| `webapi.testing` | [`src/testing.zig`](src/testing.zig) | Host-side unit tests and handle-leak checks powered by [`src/testing/zjb.zig`](src/testing/zjb.zig). |
+| Module / Symbol | Purpose |
+| --- | --- |
+| [`webapi`](src/webapi.zig) (root) | Zero-allocation string extraction (`stringFromHandle`, `stringFromHandles`), allocating helpers (`stringFromHandleAlloc`, `bytesFromHandleAlloc`, `createStandaloneUint8Array`), context-bound callbacks (`boundFunction`, `boundEventListener`, `boundEventListenerTyped`), Web Crypto PRNG (`PseudoRandomNumberGenerator`), `constTagName`, `getUri`, `retainHandle`, `hasProperty`, `callAsync`. |
+| [`webapi.zjb`](src/webapi.zig) | Resolves to `@import("zjb")` on WASM targets and [`src/testing/zjb.zig`](src/testing/zjb.zig) on host targets. |
+| [`webapi.codec`](src/codec.zig) | Cached singleton JS `TextEncoder` / `TextDecoder` helpers (`encode`, `decode`). |
+| [`webapi.CompressionStream`](src/CompressionStream.zig) | Compression Streams API `CompressionStream` (`gzip`, `deflate`, `deflate-raw`). |
+| [`webapi.console`](src/console.zig) | Browser console logging (`log`, `debug`, `@"error"`) and `rootLogFn` for `std.Options.logFn`. |
+| [`webapi.Crypto`](src/Crypto.zig) / [`webapi.crypto`](src/Crypto.zig) | Web Crypto API (`window.crypto`, `getRandomValues`, `randomUUID`, `SubtleCrypto`, `CryptoKey`). |
+| [`webapi.DecompressionStream`](src/DecompressionStream.zig) | Compression Streams API `DecompressionStream`, `ReadableStream`, `WritableStream`, and `WritableStreamDefaultWriter`. |
+| [`webapi.dom`](src/dom.zig) | Typed DOM wrappers: `Document`, `Window`, `Element`, `CSSStyleDeclaration`, `TokenList`, `DOMRect`, `Location`, `History`, `Navigator`, `Clipboard`, `Performance`, `MediaQueryList`, `VisualViewport`, `DataTransfer`, `HTMLIFrameElement`, `ServiceWorker`, `ServiceWorkerContainer`, `ServiceWorkerRegistration`. |
+| [`webapi.Event`](src/Event.zig) | Base `Event` wrapper and compile-time `EventFor(name)` mapping to `KeyboardEvent`, `PointerEvent`, `MouseEvent`, `WheelEvent`, `InputEvent`, `ClipboardEvent`, `FocusEvent`, `SubmitEvent`, `TouchEvent`, `HashChangeEvent`, `PopStateEvent`, `MediaQueryListEvent`, and `BeforeInstallPromptEvent`. |
+| [`webapi.Promise`](src/Promise.zig) | `Promise` and `Promise.Typed(T)` wrappers with context-bound `.thenFn(...)`. |
+| [`webapi.Fetch`](src/Fetch.zig) / [`webapi.fetch`](src/Fetch.zig) | Browser Fetch API: `fetch`, `Headers`, `RequestInit`, and `Response`. |
+| [`webapi.download`](src/download.zig) | Trigger browser file downloads from raw byte slices (`download.bytes`). |
+| [`webapi.WebGL`](src/WebGL.zig) | WebGL2 / WebGL rendering context, buffers, textures, shaders/programs (`createProgramFromSource`), uniforms (`uploadMat4`, etc.), framebuffers, VAOs, and draw calls. |
+| [`webapi.IndexedDb`](src/IndexedDb.zig) | Context-bound async `IndexedDB` wrapper (`open`, `Database`, `Transaction`, `ObjectStore`, `loadAllEntries`) using detached `Uint8Array` copies safe across WASM memory growth. |
+| [`webapi.WebRTC`](src/WebRTC.zig) | `RTCPeerConnection`, `RTCDataChannel`, `RTCSessionDescription`, `RTCIceCandidate`, `RTCConfiguration`, and `RTCIceServer`. |
+| [`webapi.WebSocket`](src/WebSocket.zig) | `WebSocket` wrapper with `ReadyState` and typed listener attachment. |
+| [`webapi.BroadcastChannel`](src/BroadcastChannel.zig) | Cross-tab / worker `BroadcastChannel` wrapper. |
+| [`webapi.Worker`](src/Worker.zig) | Web Workers API: `Worker`, `SharedWorker`, `MessagePort`, `MessageChannel`, `DedicatedWorkerGlobalScope`, `SharedWorkerGlobalScope`, `WorkerNavigator`, `WorkerLocation`. |
+| [`webapi.WebAssembly`](src/WebAssembly.zig) | `Module`, `Instance`, `Memory`, `validate`, `compile`, `instantiate`, `instantiateAsync`, and JSPI (`Suspending`, `isJspiSupported`, `promising`). |
+| [`webapi.Wasi`](src/Wasi.zig) | Pure-Zig WASI Snapshot Preview 1 runtime for running WASM binaries in the browser with in-memory, `.tar`, and `IndexedDb`-backed filesystems ([`src/Wasi/FileSystem.zig`](src/Wasi/FileSystem.zig)). |
+| [`webapi.testing`](src/testing.zig) | Host-side unit tests and handle-leak checks powered by [`src/testing/zjb.zig`](src/testing/zjb.zig). |
 
 ## Quick Start
 
 ### 1. Add `webapi` to `build.zig.zon`
 
-Reference `webapi` via `zig fetch --save=webapi <url>` or a local path:
+Fetch `webapi` with `zig fetch`:
+
+```bash
+zig fetch --save=webapi git+https://github.com/dasimmet/zig-webapi
+```
+
+Or add it directly to `build.zig.zon` (for local checkouts, use `.path = "../zig-webapi"` instead of `.url`/`.hash`):
 
 ```zig
 .{
     .name = .my_wasm_app,
     .version = "0.0.1",
     .minimum_zig_version = "0.17.1",
+    .fingerprint = 0x...,
     .dependencies = .{
         .webapi = .{
-            .path = "../webapi",
+            .url = "git+https://github.com/dasimmet/zig-webapi#f9fd8468a3031a25985eefdf10b9f922e8138835",
+            .hash = "webapi-0.0.1-fgeJxBcHBwBJNu2Zqi32OMNc8lfee1cW0wNFgs1PoOFx",
         },
     },
     .paths = .{ "build.zig", "build.zig.zon", "src", "static" },

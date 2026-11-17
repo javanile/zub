@@ -6,9 +6,9 @@ author: allyourcodebase
 author_github: allyourcodebase
 repository: https://github.com/allyourcodebase/boringssl
 keywords:
-date: 2026-11-09
-updated_at: 2026-11-09T20:31:02+00:00
-last_sync: 2026-11-09T20:31:02Z
+date: 2026-11-16
+updated_at: 2026-11-16T06:49:42+00:00
+last_sync: 2026-11-16T06:49:42Z
 package_kind: hybrid
 has_library: true
 has_binary: true

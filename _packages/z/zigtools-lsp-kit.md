@@ -7,9 +7,9 @@ author_github: zigtools
 repository: https://github.com/zigtools/lsp-kit
 keywords:
   - lsp
-date: 2026-08-01
-updated_at: 2026-08-01T15:45:07+00:00
-last_sync: 2026-08-01T15:45:07Z
+date: 2026-11-14
+updated_at: 2026-11-14T21:06:19+00:00
+last_sync: 2026-11-14T21:06:19Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -35,7 +35,7 @@ Provides the necessary building blocks to develop Language Server Protocol imple
 # Installation
 
 > [!NOTE]
-> The default branch requires Zig `0.17.0-dev.1397+4331ba0fb` or later. Checkout the `0.16.x` branch when using Zig 0.16
+> The default branch requires Zig `0.17.0` or later.
 
 ```bash
 # Initialize a `zig build` project if you haven't already

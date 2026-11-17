@@ -7,10 +7,10 @@ author_github: Arwalk
 repository: https://github.com/Arwalk/zig-protobuf
 keywords:
   - protobuf
-date: 2026-11-10
+date: 2026-11-16
 category: data-formats
-updated_at: 2026-11-10T15:06:18+00:00
-last_sync: 2026-11-10T15:06:18Z
+updated_at: 2026-11-16T07:06:56+00:00
+last_sync: 2026-11-16T07:06:56Z
 package_kind: library
 has_library: true
 has_binary: false

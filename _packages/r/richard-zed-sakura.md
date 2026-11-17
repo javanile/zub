@@ -8,9 +8,9 @@ repository: https://github.com/richard-zed/Sakura
 keywords:
   - image-decoder
   - png
-date: 2026-11-06
-updated_at: 2026-11-06T17:06:49+00:00
-last_sync: 2026-11-06T17:06:49Z
+date: 2026-11-09
+updated_at: 2026-11-09T22:39:38+00:00
+last_sync: 2026-11-09T22:39:38Z
 package_kind: library
 has_library: true
 has_binary: false

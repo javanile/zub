@@ -15,10 +15,10 @@ keywords:
   - oklch
   - parser
   - rgb
-date: 2026-10-19
+date: 2026-11-10
 category: tooling
-updated_at: 2026-10-19T16:29:44+00:00
-last_sync: 2026-10-19T16:29:44Z
+updated_at: 2026-11-10T03:33:04+00:00
+last_sync: 2026-11-10T03:33:04Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -83,7 +83,7 @@ See the [documentation][docs-url] for more details.
 
 ## Zig version
 
-This library is compatible with Zig version 0.16.0.
+This library is compatible with Zig version 0.17.0.
 
 ## Source code
 

@@ -9,10 +9,10 @@ keywords:
   - bgfx
   - bgfx-graphics-library
   - gamedev
-date: 2026-10-01
+date: 2026-11-09
 category: game-development
-updated_at: 2026-10-01T15:45:28+00:00
-last_sync: 2026-10-01T15:45:28Z
+updated_at: 2026-11-09T17:12:49+00:00
+last_sync: 2026-11-09T17:12:49Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -58,25 +58,21 @@ When [zig](https://codeberg.org/ziglang/zig) meets [bgfx](https://github.com/bka
 Folders `libs`, `shaders` is copy&paste from [bgfx](https://github.com/bkaradzic/bgfx) for more sell-contained
 experience and is licensed by [LICENSEE](https://github.com/bkaradzic/bgfx/blob/master/LICENSE)
 
-Zig binding is licensed by [WTFPL](LICENSE)
+ZBGFX is licensed by [WTFPL](LICENSE)
 
 ## Zig version
 
-Minimal is `0.16.0`. But you know try your version and believe.
+Minimal is `0.17.0`. But you know try your version and believe.
 
 ## Bgfx version
 
 See `build.zig.zon` for pinned commits.
 
-- [BX](https://github.com/bkaradzic/bx/compare/1c986bd1e9a176a08ae885a6cdcefe76c3f700fc...master)
-- [BImg](https://github.com/bkaradzic/bimg/compare/6b08e87de28e7aa54782d5ce1b279dca373a10c6...master)
-- [BGFX](https://github.com/bkaradzic/bgfx/compare/7346c3e731bd65f35c7e6a99819840e554f5b748...master)
-
 ### Upgrade BGFX by yourself.
 - Uncomment deps in `build.zig.zon`.
 - Change commit ref and hash for deps you need.
 - `zig build -Dwith_sync sync`.
-- `zig build`.
+- Comment deps in `build.zig.zon`.
 
 ## Getting started
 
@@ -173,6 +169,10 @@ zig-out/bin/shader-runtime
 ### [ZGui](examples/zgui/)
 
 Minimal setup for zgui/ImGui.
+
+> [!IMPORTANT]
+>
+> - Disabled until `zgui` migrate to zig 0.17.0.
 
 ```sh
 zig-out/bin/zgui

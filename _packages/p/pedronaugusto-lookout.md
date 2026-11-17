@@ -6,9 +6,12 @@ author: pedronaugusto
 author_github: pedronaugusto
 repository: https://github.com/pedronaugusto/lookout
 keywords:
-date: 2026-10-25
-updated_at: 2026-10-25T13:17:09+00:00
-last_sync: 2026-10-25T13:17:09Z
+  - file-watcher
+  - filesystem
+date: 2026-11-11
+category: systems
+updated_at: 2026-11-11T14:49:09+00:00
+last_sync: 2026-11-11T14:49:09Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -37,6 +40,12 @@ Requires Zig 0.17.0. Fetch with `zig fetch --save
 git+https://github.com/pedronaugusto/lookout`, then obtain the `lookout` module through
 `b.dependency` and add it to your executable's imports. Forward your target and optimize
 settings.
+
+## Stability
+
+lookout is 0.x and tracks Zig 0.17.x. A breaking change comes only in a minor release
+(0.7 to 0.8), with a CHANGELOG entry saying what changed and what to write instead; a
+patch release never breaks.
 
 ## Usage
 
