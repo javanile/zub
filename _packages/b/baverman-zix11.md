@@ -7,9 +7,9 @@ author_github: baverman
 repository: https://github.com/baverman/zix11
 keywords:
   - x11
-date: 2026-10-29
-updated_at: 2026-10-29T14:31:49+00:00
-last_sync: 2026-10-29T14:31:49Z
+date: 2026-11-05
+updated_at: 2026-11-05T10:15:07+00:00
+last_sync: 2026-11-05T10:15:07Z
 package_kind: hybrid
 has_library: true
 has_binary: true

@@ -9,9 +9,9 @@ keywords:
   - archive
   - tar
   - zip
-date: 2026-11-09
-updated_at: 2026-11-09T19:36:12+00:00
-last_sync: 2026-11-09T19:36:12Z
+date: 2026-11-11
+updated_at: 2026-11-11T13:46:00+00:00
+last_sync: 2026-11-11T13:46:00Z
 package_kind: binary
 has_library: false
 has_binary: true
@@ -35,13 +35,17 @@ whole archive or a whole entry. Compression comes from
 through [airlock](https://github.com/pedronaugusto/airlock), with the
 hostile-input rules on by default.
 
-Work in progress: tar, zip, 7z reading and extraction are built.
-
 ## Install
 
-Requires Zig 0.17.0. Fetch with `zig fetch --save
+Requires Zig 0.17. Fetch with `zig fetch --save
 git+https://github.com/pedronaugusto/hold`, then obtain the `hold` module
 through `b.dependency` and add it to your executable's imports.
+
+## Stability
+
+hold is 0.x and tracks Zig 0.17.x. A breaking change comes only in a minor release
+(0.2 to 0.3), with a CHANGELOG entry saying what changed and what to write instead; a
+patch release never breaks.
 
 ## Usage
 

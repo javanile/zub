@@ -11,10 +11,10 @@ keywords:
   - sans-io
   - tls
   - tls13
-date: 2026-11-10
+date: 2026-11-12
 category: networking
-updated_at: 2026-11-10T17:35:13+00:00
-last_sync: 2026-11-10T17:35:13Z
+updated_at: 2026-11-12T10:23:14+00:00
+last_sync: 2026-11-12T10:23:14Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -69,7 +69,7 @@ Not implemented:
 ## Install
 
 ```sh
-zig fetch --save https://baskingspot.dev/tls/v0.3.0.tar.gz
+zig fetch --save https://baskingspot.dev/tls/v0.4.4.tar.gz
 ```
 
 Add the module to your build:
@@ -92,7 +92,7 @@ The same dependency exposes `tls_std`, `tls_nonblocking` (caller-driven server),
 and `tls_ktls` (Linux).
 The [guide](https://baskingspot.dev/tls/#install) has the full setup.
 
-The library and every integration module build on Zig 0.16 and 0.17.
+The library and every integration module build on Zig 0.17.
 
 The build needs libcrypto and `pkg-config` to find it. The module calls
 `linkSystemLibrary("crypto")`, and the C ABI step runs `pkg-config --variable=libdir
