@@ -11,10 +11,10 @@ keywords:
   - command-line
   - command-line-parser
   - parsed-arguments
-date: 2026-11-15
+date: 2026-11-19
 category: tooling
-updated_at: 2026-11-15T01:33:44+00:00
-last_sync: 2026-11-15T01:33:44Z
+updated_at: 2026-11-19T15:25:35+00:00
+last_sync: 2026-11-19T15:25:35Z
 package_kind: hybrid
 has_library: true
 has_binary: true

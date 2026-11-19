@@ -1,0 +1,1102 @@
+---
+title: preflight
+description: "Shared CI workflows for Zig packages: cached builds, tiered checks, every OS"
+license: MIT
+author: pedronaugusto
+author_github: pedronaugusto
+repository: https://github.com/pedronaugusto/preflight
+keywords:
+  - ci
+  - github-actions
+date: 2026-10-31
+updated_at: 2026-10-31T15:48:41+00:00
+last_sync: 2026-10-31T15:48:41Z
+package_kind: binary
+has_library: false
+has_binary: true
+has_distributable_binary: true
+binary_count: 4
+distributable_binary_count: 4
+multiple_binaries: true
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
+permalink: /packages/pedronaugusto/preflight/
+---
+
+# preflight
+
+preflight gives a Zig package one local gate and one hosted gate. The build helper
+runs format, gantry structure rules, [glint](https://github.com/pedronaugusto/glint)'s
+code rules, namespace layout, documented snippets and test imports, then the package's tests.
+It is a build dependency; a consumer's module never imports it.
+
+**WIP:** the configured-build adapter supports Zig 0.17.0 and Zig 0.18.0-dev master builds. Neither test campaigns nor sanitizer runs prove raw-pointer lifetimes.
+
+## Install
+
+Requires Zig 0.17.0. Add preflight as a development dependency with bay,
+`bay add --dev git+https://github.com/pedronaugusto/preflight#<commit>`, or as a lazy
+dependency without it; [Usage](#usage) shows both.
+
+See [the design](docs/design.md) for ownership and invariants.
+
+## Usage
+
+preflight is a development tool, so it belongs in a package's development dependencies:
+[bay](https://github.com/pedronaugusto/bay) keeps those out of what the package ships, and a
+project that depends on yours never sees preflight. With bay, adopting it takes three steps
+and no configuration file:
+
+1. `bay add --dev git+https://github.com/pedronaugusto/preflight#<commit>`.
+2. In `build.zig`, the gate goes in `dev`, over the package as a dependency of the
+   development build:
+
+   ```zig
+   pub fn dev(b: *std.Build, tools: type) void {
+       const package = b.dependency("example", .{});
+       const test_step = b.step("test", "Run the tests");
+       test_step.dependOn(&b.addRunArtifact(b.addTest(.{ .root_module = package.module("example") })).step);
+       tools.preflight.addCi(b, package.builder, .{ .tests = test_step });
+   }
+   ```
+
+3. Generate the hosted workflow: `bay generate`.
+
+`bay ci` runs the gate locally. The hosted gate builds bay beside the checks and runs
+every step of a package that declares `.dev_dependencies` as `bay dev <step>`, so a
+step named like one of bay's commands is still the step; one without runs `zig build`.
+[sample/bay](sample/bay) is such a package: it ships with aegis and tests on shakedown,
+passing aegis's types between them, so it compiles only when its build links one aegis,
+which bay makes whatever revisions the two pin.
+
+Without bay, preflight is a lazy dependency, and `build` adds the gate over its own package:
+pin it with `zig fetch --save=preflight git+https://github.com/pedronaugusto/preflight#<commit>`,
+add `.lazy = true` to the entry, then
+`@setEvalBranchQuota(100_000); if (b.pkg_hash.len == 0) if (b.lazyImport(@This(), "preflight")) |preflight| preflight.addCi(b, b, .{ .tests = test_step });`
+after creating the test step, and `zig build generate`. The `pkg_hash` guard keeps a build of
+the package as a dependency from asking for preflight, so its consumers fetch none of it. A
+package preflight is built from (aegis, sweep, glint, gantry, shakedown) uses bay: as a
+dependency it would make a cycle with preflight.
+
+In `addCi(b, package, config)`, `b` is the build the steps and their `-D` options belong to,
+and the one whose dependencies hold `preflight` and `shakedown`; `package` is the package
+checked, whose sources, manifest, installed artifacts and modules the gate reads. With bay
+they are the development build and the package; without it, one builder is both. The tests
+the gate runs are a step of `b`, complete when `addCi` is called: it gives each test it
+finds there preflight's runner, and the gate refuses one added after, by name.
+
+Every push to main and every pull request then runs the ci tier on that commit (the source
+checks, the Debug suite on Linux, macOS and Windows, and a compile of every configured
+target), save a push that changes documentation alone (`docs/**`, top-level Markdown); the release tier, the full matrix, runs weekly and by dispatch, and a tag needs a
+green release run on its commit. Locally, `bay ci` (`zig build ci`) is the ci tier's checks
+on the machine at hand: the source checks and its tests.
+Every option has a default: `ci/preflight.json` chooses what the source checks read and
+hold, `ci/workflow.json` what the hosted gate runs, and `ci/layers.zig` a source layering
+to enforce; a project needs none of them to start. [sample/zero](sample/zero) is such a
+project, and preflight's own gate runs it on every host.
+
+`addCi` adds the steps its gate runs by name (`lint`, `snippets`, `ci`, `ci-test`, `ci-check`, `ci-check-bench`,
+`ci-link`, `ci-build`, `ci-run`, `plan`, `facts`, `cache`, `docs`, `deprecations`,
+`check-imports`, `surface`, `gate`, and with their options `bench`, `bench-build`, `bench-ab`, `fuzz`,
+`hardened`, `hardened-fuzz`, `hardened-tsan`, `check-consumer`). A package that already has a
+step by one of those names keeps it, and its tests fail with a message naming the step to
+rename, since the gate would otherwise run the package's step in place of its own.
+
+`addCi` also makes `check` compile, without linking or running anything, all `ci-check` does
+on the machine at hand: the tests, the programs they run (an example among them), the
+installed artifacts, the public modules and the benchmarks in Debug, so a broken benchmark
+fails `zig build check` (`bay check`) and not only `test`'s smoke run. With them come the
+ci tier's cross compiles: `check` runs `ci-check` for every target the ci tier names, as its
+hosted jobs do, so a test behind another system's branch, a Linux-only body on a Mac, fails
+on the machine at hand rather than first in the hosted run. A build that takes `-Dtarget`
+gets them. One that defines `check` before `addCi` keeps its own, with these added, and one
+without gets preflight's. Each target is a build of its own, which takes every core unless
+`PREFLIGHT_JOBS=N` holds it to N jobs (`-jN`): `-j` given to the outer build cannot reach it,
+since Zig reads `-j` after the build script has made its steps. A planned job leaves them to the
+plan's own cross-compile jobs.
+
+`zig build lint` runs source checks, among them that a function of `build.zig` that calls `lazyImport` calls `@setEvalBranchQuota` first: std compares every package of the tree there at comptime, and a large tree passes the default 1000 branches. `zig build ci` checks sources before running
+tests. A watchdog in the shared test runner fails a test that runs longer than
+120 s, its Io teardown included, by name, phase and seed, in local runs too. A
+package that needs another bound says why: `.test_timeout = .{ .bound = .{ .limit =
+.fromSeconds(30), .reason = "..." } }`, or `.{ .off = "..." }` for a test runner of its
+own or a single-threaded build, which otherwise fail the build by name. preflight
+passes the build runner no `--test-timeout`; one given by hand bounds each test there
+too. `.test_log_level = .info` prints a library's `std.log.info` lines in its tests,
+where Zig's runner prints `.warn` and above. `zig build check-imports -- --audit` exposes gantry's graph for inspection.
+Serving the build, the runner runs the tests in a process of its own and keeps the
+build's streams to itself: the tests get an empty stdin, and their stdout and stderr
+reach the build through it. A process a test started that still holds that output two
+seconds after the tests ended fails the run, named with its arguments on Linux and
+macOS, where the build would otherwise wait for it and kill the runner a minute later
+with no name. A crash's report reaches the build whole either way.
+`-Dci-lint=false` leaves out glint's lint, and only it: a gate run while the lint is red by
+ruling still runs the other source checks beside its tests (formatting, the declared
+structure, test imports, namespace layout, package paths, and the documented snippets). The
+hosted test jobs run `ci-test`, the tests alone, on each system; the source checks, which
+read the same files on every system, run once, in the source checks job.
+Compiled caches never skip test execution: each gate runs the test binaries even
+when their build products are already available.
+
+A package with benchmarks gives them to `addCi` as `.bench = .{ .programs = &.{.{ .name
+= "scan", .source = "bench/scan.zig" }}, .imports = Bench.importsFrom(benchImports), .target =
+target, .optimize = optimize }`, where `benchImports(b, target, optimize)` builds the modules a
+program imports in that mode (under bay, `tools.preflight.Bench.importsFrom` in `dev`). One whose
+imports need state of its own embeds a `Bench.Imports` in that state and gives `&state.imports`,
+whose `make(&state.imports, b, target, optimize)` gets the state back with `@fieldParentPtr`. `zig build bench` builds every program in ReleaseFast
+under `zig-out/bench` and runs the timed ones one after another with no arguments
+(`.timed = false` leaves out a tool such as a fixture writer); a program's own
+arguments are for running it from `zig-out/bench` by hand, and each run has a
+fresh, empty working directory for the fixtures it writes;
+`zig build test` runs each once with `--smoke`, built in the test's mode, where a
+program runs every point once at its smallest size. A repository with a `bench/`
+directory and no `.bench` fails its tests by name.
+
+`preflight.addConsumerCheck(b, package, .{ .package = "name", .program = package.path("ci/consumer.zig") })`
+adds `check-consumer`: it builds a generated project that depends on the package
+by path with fetching off and a Zig cache of its own, so the build a consumer gets
+cannot reach the package's CI dependencies or anything cached for them. `.modules` names the modules the program imports,
+and `.packages` the dependencies the package itself needs. `.options` gives the package
+the options a consumer would (`.{ .name = "http", .value = .{ .flag = false } }` builds it
+without its optional HTTP), so that a feature a package makes optional is built both ways.
+The consumer builds for the host in Debug.
+
+A package with optional features lists the configurations it promises once, as
+`configurations` in `ci/workflow.json`, and both checks read it: the consumer check builds a
+consumer in each, and the ci tier compiles the package's own `check` (`compile_step`) in each,
+in a job named for it (`check (no-http)`), so its tests, helpers and benchmarks compile
+without a feature too, not only the consumer's program:
+
+```json
+"configurations": [
+  {"name": "default", "options": {"http": true, "lfs": true}},
+  {"name": "neither", "options": {"http": false, "lfs": false}, "modules": ["relic"]}
+]
+```
+
+Each entry's options are the package's own, checked as the build configures: an option it
+does not declare, a value of another type, or a module it does not export fails `check` and
+`check-consumer`, naming the entry. `modules` names what a consumer's program imports where
+the options leave a module out.
+
+A build nested in the package (a conformance build against an emulator that is not yours, a
+fixture) that uses a package the root also pins takes the pin from the root:
+`preflight.addNestedBuild(b, package, .{ .directory = "conformance", .name = "pkg_conformance", .fingerprint = 0x..., .path_dependencies = &.{.{ .name = "pkg", .path = ".." }}, .shared = &.{"shakedown"}, .pins = &.{.{ .name = "emulator", .url = "...", .hash = "..." }}, .args = &.{"test"} })`
+returns the step that assembles the nested build under the cache and runs it there with `.args`, by
+`zig build` from the package's own build and by `bay build` from its development build, so the
+nested graph has one version of each package as the package's does:
+its files (`.paths`) are copied from `conformance/`, and its manifest is written from the root's
+`build.zig.zon`, each `.shared` package's source and hash as the root pins it, `.pins` for those only
+the nested build uses, and each path dependency made relative to where the build is assembled. The
+package's tree keeps only the nested build's sources, so no copy of a pin exists to drift, and it
+works from the package's own build and from its development build. `lint` still checks any
+nested manifest it finds, which catches one kept by hand. `preflight.addCheck(b, package, name, source)` builds a
+repository check program, runs its tests, then runs it from the repository root
+as step `name`.
+
+## Design
+
+### The family's policy
+
+preflight works on any Zig project, adapting to what it has. A project opts into the family's
+bar with one key, `"policy": "family"` in `ci/preflight.json`, which the build and the checks
+both read. Under it:
+
+- the hardened profile runs for every package, on shakedown's quarantine (`"hardened": false`
+  is refused, and so is a hardened run with no shakedown declared);
+- `rules` may only raise a rule;
+- what the build installs is ReleaseSafe unless `Config.release_fast` says why;
+- the CHANGELOG is checked in bay's format (it is too for a package developed with bay);
+- benchmarks measure through shakedown.
+
+Without it, the release tier runs the hardened profile when `ci/workflow.json` says
+`"hardened": true`, on shakedown's quarantine when shakedown is declared and on std's allocator
+otherwise. A rule may be set below its default, `off` included, and the lint shows each one so
+set. ReleaseFast installs are the project's choice. The CHANGELOG is the project's own, unless
+it releases with bay. Benchmarks without shakedown are built, smoke-run and run, with nothing
+compared. Any other value of `policy` is refused by name. Messages name the command the project
+has: `bay generate` under bay, `zig build generate` without it.
+
+### Repository facts
+
+`ci/layers.zig` declares gantry's layers, required paths, entries, named modules,
+reference rules and optional owned tokens. Layers order production sources only.
+The shared runner checks layers, cycles and entries over the production graph,
+the edges a non-test build compiles, and refuses a production file with zero or
+multiple layers. Test code is in no layer, so a test file may import anything;
+no production edge may reach test code, and an import in an inline test may not
+reach a higher layer than its file. A glob such as `src/report/**` covers the
+production files under it and passes over the test files beside them; a literal
+pattern naming a test file fails. An entry that is test code fails too, since the
+entry rule reads only the production graph. Required paths, reference rules and owned
+tokens hold for every file. The runner walks the `sources` roots, as lint does. An
+import gantry marks dead, in a declaration nothing reaches from a public, exported
+or comptime member, a field, `main` or a test, is unused and fails. A file gantry
+could not read as its language fails too, since it gave the graph none of its imports.
+Gantry remains the language-neutral graph library; these runners belong here.
+
+A namespace file that publishes the files of its own directory declares those
+imports in `ci/layers.zig` as `reexports`, each a `.{ .from = "src/odb.zig", .to =
+"src/odb/bitmap.zig" }`. Layers and cycles read the implementation without them;
+every other rule reads them. A declared re-export that is no production import, or
+whose file lies outside the namespace's directory, fails. A package names the
+packages only its tests may import in `ci/preflight.json` `test_dependencies`, such
+as a library of test doubles taken as a lazy dependency; an import of one outside
+test code fails.
+
+Test code has one definition, shared by the source checks and the structure
+runner: files named `*_test.zig`, `test_*.zig` or `tests.zig`, and the
+`test_support` patterns (`src/testing/**` by default). Gantry classifies the
+rest: an import inside a test block, or in a declaration only tests reach, is a
+test edge. Every path pattern uses gantry's dialect, git's globs as sweep reads them: `*`,
+`?` and brackets stay within one path component, `**` standing as a whole component
+spans components (`src/**` is what lies under `src`), `\` escapes, and a pattern without
+`/` matches the file name. A layer pattern with no wildcard, bracket or escape names one
+file. The structure check compiles each pattern once.
+
+`ci/preflight.json` names source directories, test roots, test support, README
+regions and extra repository checks. A `vendored` file is an upstream's file kept
+unchanged: its entry names the upstream, how the upstream's copy is verified and that
+copy's SHA-256 (`{"upstream": ..., "verification": ..., "sha256": ...}`). Its text
+is its upstream's, so the house style and dead code (the Zig style rules, P003, Z016, D001
+and Z013) leave it out; the rules on what it does or whether it builds hold it.
+Function exceptions name an exact file and function,
+a reason and the current line ceiling; growth fails once P003 is gated. The normal limit
+is 120, with lower per-path `function_limits` for shared folds.
+
+A namespace containing two or more implementation files has one adjacent entry:
+`src/parser.zig` beside `src/parser/`. Case-insensitive matching accommodates
+existing Zig type namespaces; tests and configured test support do not count.
+Every file with tests is named by a test block a configured root reaches: the
+alias itself (`_ = corpus;`), a whole `@import("corpus.zig")`, or
+`refAllDecls(@This())` over a public alias. A member a test happens to use
+(`corpus.seed()`) does not name the file: its tests would last only as long as that
+use. A root is the root file of a test artifact some run runs under a step CI runs:
+`ci`, which holds the tests, the steps the fuzzer and the hardened profile run, the
+steps of the release tier's own jobs and those `extra_checks` run. Zig runs a binary's
+tests only when a run runs it, so a test artifact only compiled (for `check`, say) is
+no root, and the lint names it: its tests never run. One compiled again beside a run
+of the same root file, for another target or with libc, is the run's.
+
+After its runs the tests step counts the tests of each root: preflight's runner
+records, when the build asks a binary which tests it holds, how many it holds and how
+many its shard selects (`preflight-counts/` in the build's cache), and a run whose
+binary holds no test fails by name, unless a filter left it none: its tests are in
+modules it imports, which Zig never runs, or it has none. A passing run prints
+nothing; the gate and a hosted job print the counts per root
+(`preflight: tests per root: src/tests.zig 412 (test)`). Portable tests are counted
+the same way where they replay.
+
+`build.zig.zon`'s `.paths` ships exactly what a fetched package needs: `build.zig`,
+`build.zig.zon`, the source roots, `LICENSE`, `README.md` and `CHANGELOG.md`.
+Benchmarks, CI, examples and workflows stay in the repository. A further path a
+consumer's build reads is named in `ci/preflight.json` `shipped` with its reason.
+
+Generated Markdown blocks retain their visible generator labels. Their source,
+region, module import and whether that import is shown are facts in the JSON
+configuration. Other generated blocks may use an explicit `zig build` argument-array command.
+Missing markers, stale blocks and failed generators fail the gate.
+
+### Code rules
+
+The code rules are glint's, and `zig build lint` runs them as a library: preflight
+reads the files, classifies them, resolves each import the way the configured build
+does and hands glint its policy in one project. Nothing is parsed twice and
+no child process stands between a finding and the gate.
+
+**Files.** Every Zig file the package ships (`build.zig.zon`'s `.paths`), those under
+`examples`, `ci`, `conformance` and `bench` where they exist, and `build.zig`.
+`glint_paths` adds files and directories to that, never narrows it; a path it names
+that is not there fails. Benchmarks, examples and CI code are linted and gated without
+shipping.
+
+**Imports.** `std` is the standard library of the Zig that builds the package. A
+relative file is itself. A named module is what the configured build binds the
+name to in each module that compiles the file; two modules that bind one name
+differently leave it unresolved, and so does a name the build does not bind.
+Each file is the package of the nearest `build.zig.zon` above it, by name and
+fingerprint. That is how glint recognizes aegis in a program: by its identity,
+under whatever name the build gives it, at any revision that keeps its public names.
+
+**Policy.** preflight's default, which a repository amends:
+
+| Rule | Weight |
+|---|---|
+| Z003 syntax, Z013 dead import, Z026 discarded error | gate |
+| Z011 deprecated call, P005 debug print | finding: any finding fails, and a call glint cannot resolve is counted, not a verdict |
+| P007 unchecked operations, P008 same-typed ids, P009 frame pointer carried out: glint's shipped bans | finding under the family's policy; report elsewhere |
+| the rules the program's packages declare in their `lint_rules` (aegis's A001, A004, A007-A013, A015, A021) | each by its own default: a ban a finding, hygiene a report, an opt-in rule off until named |
+| P003 function length, Z012, Z016, Z001, Z005, Z006, Z009, Z014, Z031, Z032 | report, until a package is clean under them and gates them itself |
+| Z024 line length | off |
+| D001 dead declarations | report |
+| P006 disallowed declarations | gate: what `disallowed` adds, and under the family's policy the durability door (airlock's: std's raw syncs, its `Io` atomic files and `File.sync`) and the whole-file read (aegis's) |
+
+`gate` is glint's: a finding fails the run. A *finding* rule fails on what glint finds; a
+*report* prints and never fails. glint leaves no site undecided: a site is a finding, a
+report or nothing, and a run error (a file it cannot parse, an import no mapping names, a
+budget run out, a configuration naming nothing) stops the run. The lint maps the modules of
+the build for every target `ci/workflow.json` names, so a module only one target adds is read
+on every run.
+
+**The shipped bans** (P007-P009, and every rule a package declares) hold what
+`build.zig.zon`'s `.paths` ships, `build.zig` among it, and no setting narrows them; tests and
+test support are not shipped, so they leave them out; a `vendored` file ships, and is held to
+them: while it is the copy its SHA-256 names, the upstream's verification is the reason its
+sites carry, and changed, it fails the run. Every rule takes one suppression,
+`// glint-ignore: <rule>, ... -- <reason>`; the aegis escape form is read no more, and
+`zig build fix` (`bay dev fix`) rewrites it into that form. The run prints the first 25
+findings of each rule (every one in `.zig-cache/preflight-lint/findings.txt` when there are
+more) and a line of the shipped bans' findings. `glint.unresolved` and `glint.escapes` are
+retired: there is no undecided count, and no escape count, to hold.
+
+**A repository amends the policy** in the `glint` object of `ci/preflight.json`:
+
+```json
+"glint": {
+  "rules": [{"id": "A004", "level": "gate"}, {"id": "Z006", "level": "gate"}],
+  "fact_budget": 4000000, "max_line_length": 100,
+  "disallowed": [{"source": "src/io.zig", "declaration": "write", "reason": "...", "replacement": "..."}]
+}
+```
+
+`rules` raises a rule to `report` or `gate` above its default weight. Under the family's
+policy a level below it (`off` for a reported rule, `off` or `report` for a finding) fails by
+name, since a repository may only raise the family's bar; without it the level is the
+project's, and the lint names each rule set below its default. A package's rule (`A004`)
+resolves once the run reads the packages' `lint_rules`. An unknown or removed id fails with
+glint's own words for it (`glint.RemovedRule`: A019 is P007 now, A010 is gone, A007 is
+aegis's), and P001, P002, P004 and E001 say where their sites went. There is no profile:
+the default policy is preflight's, and a deviation is a visible line. `function_limit`
+(120), `function_limits` (a lower ceiling by path) and `function_exceptions` (an exact
+`path:function`, a ceiling and a reason; growth fails, and one that names no function
+fails) stay at the top level.
+
+**An analysis that did not finish is not a pass.** The run fails when a selected file
+does not parse or lower, when glint ran out of its fact budget, when a gating rule
+could not decide a site, when a file cannot be read, and when a suppression suppresses
+nothing. A finding that policy allows
+never hides one of these.
+
+**Suppression** is glint's: one real comment, one site, a reason,
+`// glint-ignore: Z026 -- cleanup after a failure the caller already gets`. There are
+no ledgers: `ziglint_exceptions`, `unreachable_exceptions`, `debug_print_exceptions`,
+`ziglint_paths` and `glint_config` are retired, as are `glint.casts`,
+`glint.cast_scope` and `glint.strict_suppressions`, and a repository that still names one fails by name, so that no gate
+is believed that is not there. A malformed suppression or escape is named where it is and
+leaves the run incomplete.
+
+Assertion counts per function and package appear in the run summary as a report,
+without affecting the gate.
+
+Layout exceptions likewise name their exact member set and a reason.
+`zig build docs -- usage` renders a configured region for updating its block.
+`zig build cache` preserves fetched packages and tools when pruning build products.
+
+### Measuring and comparison
+
+`Config.bench` injects `shakedown`, the one the package declares, and `preflight_bench_options` (`commit`, physical build-host `cpu`, `os`). Its imports callback is optional and gives the package's own modules; one that gives `shakedown` too is refused. Benchmark programs call published `shakedown.bench.run` with named `Row(Context, WorkloadError)` callbacks and an explicit workload error set, workload units and observable results. Shakedown owns warmup, clock resolution, batching, samples, statistics, JSONL and comparison noise; preflight owns builds and child processes. [The sample](sample/bench/sum.zig) is a complete consumer.
+
+`zig build bench-build` compiles ReleaseFast programs and the published `shakedown-bench-compare` tool, executing nothing. `zig build bench` manually measures them. Local `zig build test` invokes each program once with `--smoke`; each row does its one smoke invocation. Hosted orchestration passes `-Dci-bench-smoke=false` and compiles benches without timing gates. Smoke rows cannot be compared as measurements.
+
+From a clean Git checkout, select a commit and workload:
+
+```sh
+zig build bench-ab -- --base <commit> --program workflow --row 'caller generation' --pairs 5 --output .zig-cache/measurements
+```
+
+The driver resolves an immutable base, clones it beneath the caller's `.zig-cache`, builds each revision's `bench-build`, then alternates base/candidate order between pairs, with fresh working directories. It delegates every pair to shakedown's comparator, preserving raw JSONL with `--output`. Both revisions must implement `bench-build` and the selected program's `--row` contract; earlier revisions fail explicitly rather than being patched. Candidate tracked edits and untracked source files are refused; use an ignored output directory for repeated runs. Provenance must match both Git commits. Source archives report `source-archive` rather than inventing a commit. CPU provenance names the physical build host, separate from a selected target's CPU; native executions are required for comparisons. Unknown, missing or duplicate options, nonzero/signal exits, timeouts, capture limits, malformed/truncated JSONL, smoke output and output failures fail infrastructure. Changes beyond observed noise are reports, never speed pass/fail thresholds.
+
+### Fuzzing
+
+Fuzzing is continuous and off the landing path: no landing fuzzes. `zig build fuzz`
+runs shakedown's `shakedown-fuzz` over the package's `check` properties, as many sessions
+of `zig build test --fuzz=<limit>` as it is given, with the fuzzer's corpora in a store
+outside the repository and every failure shrunk to the tape to add to the property's
+`.regressions`: `zig build fuzz -- --limit 50M --sessions 4 --store ~/fuzz`. It fuzzes
+`Config.fuzz_step`, else the step the hardened run fuzzes, and where that is the tests,
+the package's own property tests alone: `ci-properties`, the runs of the test binaries the
+tests run that the package builds and whose modules import shakedown, and no other run of
+the tests' graph. A session of Zig's fuzzer runs every Run step its step reaches again, a
+generator's or a fixture's as much as a test's, so fuzzing the whole tests step had each
+session run all of them (hull's two table generators wrote one output path). A package with
+no such binary is refused by name; one fuzzing `std.testing.fuzz` tests outside shakedown
+names its step. The fuzzer refuses a step with no property or fuzz test. The fuzzer and the
+properties are the package's own shakedown, which the build that calls `addCi` declares (a
+dev dependency with bay); a package that declares none has no `fuzz` step and fetches
+nothing for one, and one that names a `fuzz_step` without it is refused. The fuzzing,
+the corpora and the shrinking are shakedown's; preflight wires the step. Each session's
+build is given `-Dci-fuzzing=true`, which builds the tests the fuzz step runs with LLVM,
+whose instrumentation lists the coverage Zig's fuzzer reads (the self-hosted x86_64
+backend's lists none); without it the backend is the package's.
+
+On GitHub the release tier's fuzz job does the same for `fuzz_minutes` of `ci/workflow.json`
+(15 by default, at most 330, 0 for none): `zig build ci-fuzz`, where `preflight fuzz-budget`
+spends the minutes in sessions one after another, each paced to what is left, since Zig's
+`--fuzz` counts runs and not time. The first finding fails the job, each finding's file
+printed in its log and summary (the tape found and the shrunk one); an input that crashed the
+fuzzer fails it too, kept at `f/crash`. The corpora are cached from run to run and kept with
+the findings as the run's artifact. Dispatching the caller with tier `fuzz` runs the job
+alone, for `fuzz-minutes` when given: fuzz a package there, not on the machine at hand.
+
+What is not fuzzed is visible. `zig build lint` reports, without failing, the parsers of
+untrusted input the package exports with no fuzz target: public functions named as
+parsers (`parse…`, `decode…`, `deserialize…`, `unpack…`, `unmarshal…`, `fromBytes…`)
+that take bytes or a reader, and any named under `fuzz.parsers` in `ci/preflight.json`. A
+parser is fuzzed when a test that runs a `check` property or `std.testing.fuzz` reaches it
+by name, a few calls deep. `fuzz.trusted` names a parser whose input is the package's own,
+with the reason: `"fuzz": { "trusted": { "parseCache": "the package's own cache file" } }`.
+
+### Hardened profile
+
+Under the family's policy every package runs the hardened profile (aegis's design §7), and without it a package that says `"hardened": true` in `ci/workflow.json` (see "The family's policy"); only a configuration that runs no native tests (a freestanding target) sets `Config.hardened = null`, visibly. `Config.hardened` chooses its steps: `.{ .fuzz_step = "profile-tests", .tsan_step = "profile-tests", .fuzz_iterations = 1000 }`, by default `test` for both. A package with nothing to fuzz says so, `.fuzz_step = null`, and its campaign has nothing to run. Under the family's policy the planner schedules the hardened jobs in the release tier for every package, and `"hardened"` in `ci/workflow.json` may only be `true`. Dedicated steps must execute tests. A package whose fuzz step finds no fuzz tests receives Zig's `no fuzz tests found` failure rather than a compile-only green campaign. The fuzz step's tests run on preflight's runner, as `tests` do. A fuzz test that ends without calling `std.testing.fuzz` in the fuzzing build (one that skips when `builtin.fuzz` is set) fails the campaign by name: the build found it a fuzz test in the unfuzzed build, and the fuzzer would select it forever. A property that is not the fuzzer's says so where it is written (shakedown's `.fuzz = false`).
+
+**What ships is ReleaseSafe.** `bay install` builds a package's programs ReleaseSafe. Under the family's policy, an installed artifact the build itself makes ReleaseFast or ReleaseSmall, when the caller chose no mode, fails the lint unless `Config.release_fast` names it with the measurement that says why (`.{ .artifact = "decoder", .reason = "..." }`). A name that matches no such artifact fails too.
+
+`zig build hardened` runs the ordinary suite with `-Dci-hardened=true`; its test modules use Debug or ReleaseSafe with the LLVM backend selected explicitly for native sanitizer and fuzz instrumentation. Its `std.testing.allocator` takes its memory from the package's shakedown's quarantine (`shakedown.alloc.Quarantine`, a mapping per block with an inaccessible page after it, no address handed out twice), so a read or write after free of a block std's allocator takes whole faults at the line, in every run. Under the family's policy a package with a hardened run declares shakedown; without it, one that declares none runs on std's allocator. Normal build modes remain caller-selected. A measured source loop can explicitly disable safety at its boundary, with its reason and matched measurements; this batch adds no such exceptions. Source-site rules belong to glint, architectural rules to gantry. No startup-allocation policy is forced on a consumer.
+
+`zig build hardened-fuzz` executes the installed Zig 0.17 bounded native fuzzer, with caller options forwarded. The current compiler supports native 64-bit non-Windows hosts; foreign targets and unsupported backends must fail execution. Seed corpora belong in `std.testing.fuzz` options. Zig reports campaign counts and instrumented coverage, retains corpus/coverage beneath `.zig-cache/v`, and reports failing inputs and reproduction details. Hosted jobs retain the actual configured local-cache v directory, including on failure, for seven days. Preserve those files and the printed test seed when reproducing; accumulated coverage is not a coverage guarantee.
+
+`zig build hardened-tsan` compiles with LLVM ThreadSanitizer and executes the selected tests on native x86_64 or aarch64 Linux or macOS. Every selected module's target is checked. Other hosts fail with an explicit eligibility message. The sample executes real concurrent tests; preflight's Linux regression first runs a synchronized consumer, then requires a real intentional-race diagnostic. Sanitizer startup failures remain failures. The existing test runner continues to own `std.testing.allocator`, using std's SafeAllocator with `check_write_after_free = true`; a real consumer test frees storage and writes through it to prove detection. There is no substitute allocator, verifier or future language feature.
+
+### Configured build facts
+
+`zig build facts -D<name>=<value>` reports the actual configured build as JSON, naming the Zig that produced it: compiler module identities and scoped import tables, artifact steps and dependencies, configured options, package owners/hashes, discovered lazy dependencies, test-root descriptors, source/generated path identities, target flags and native framework requests. Additional configuration flags can follow `--`. Lint takes its test roots from those facts; `ci/preflight.json` still selects sources and policies. Embedded WriteFile test sources are read from the compiler configuration, without executing or guessing generator paths. Dynamic producer content is unavailable at configure time and is reported as generated; if lint requires that content it fails `GeneratedTestRootUnavailable` rather than substituting handwritten roots.
+
+This adapter reads the installed `lib/compiler/Maker.zig`, `configurer.zig`, `std/zig/{Server,Client}.zig` and `std/Build/Configuration.zig` contracts: `zig build --listen=-` sends build-system handshake version 1 and a serialized configuration-file path. Compiler `zig_version` messages are a different protocol. The file is read while the child lives, because poisoned configurations are deleted on clean exit; the adapter then sends the supported exit message. It requests no artifact execution. Zig configuration is a native serialized internal format, **not a stable external API**, and does not provide the compiler's analyzed source-level dependency graph. Gantry still owns source boundaries and their declarations. `ci-check` already projects the configured `std.Build` graph directly; that compiler-owned graph remains its source, and `ci-link` retains native SDK linking.
+
+Compiling and invoked Zig must be the same build, and one `src/zig_version.zig` names the builds the adapter is verified on: the 0.17.0 release and master builds leading to 0.18.0 (`0.18.0-dev.<n>`), whose configuration format and protocol are the same today; any other Zig is refused with a message naming them. The protocol version must be 1. Unknown/version-mismatched messages, configuration failures, malformed lengths/indices/tags/reserved fields, truncation, child signals/nonzero exits, cancellation, capture/write failures and budget exhaustion are explicit failures. Limits are 64 frames, 8 MiB per frame, 32 KiB paths/strings, 64 MiB each for protocol accumulation, each capture stream and the configuration file, one million validation words/references and 64 nested decoding levels. No failure falls back to the previous guessed root list. Unsupported non-CLI build inputs are refused because their configuration cannot be faithfully replayed.
+
+### Test runs
+
+Packages with relocatable test binaries set `.portable_tests = true` in the
+build helper, and that one switch plans the release tier's native link jobs: `plan`,
+`gate` and `generate` read from the build whether it has `ci-build`, so a link job is
+never planned on a step the build lacks (`compile_once` in `ci/workflow.json` was a
+second switch; `generate` drops it). Each Windows runner links its tests with the native SDK (macOS builds them
+where they run, its legs sharing one runner); shards download
+and execute those binaries through
+Zig's test protocol, retaining per-test timeouts and custom watchdogs. A program
+the tests run (a fixture server, a helper child) is named to them with
+`preflight.addTestProgram(b, options, "name", program)`: it is installed under
+`zig-out/preflight/programs/`, which the replaying runner downloads with the
+tests, and named by that path from the package root, where every test run
+works. A path from `addOptionPath` is the building runner's cache, which the
+replaying runner does not have, so `ci-build` refuses one in a portable test.
+An artifact upload drops the permission to run; preflight restores it for the
+tests and their programs before execution. The native matrix stays
+available for comparing elapsed time and runner minutes against this path.
+
+A tier records the durations of every host and mode it executes, through Zig's
+test protocol. In the merge and release tiers, the profile job folds the records
+into `ci/durations.json`, keeping the columns the run did not measure. It uploads
+the result as the proof artifact, `preflight-merge-<sha>` or `preflight-release-<sha>`.
+A run that went red is folded too (`profile --partial`), every test it did not record
+keeping its earlier durations, and uploaded as `records-merge-<sha>` or
+`records-release-<sha>`, which proves nothing: a job that ran out of time still leaves
+the record that sizes its shards in the next plan.
+`gh run download <run> -n preflight-merge-<sha> -D ci` refreshes the package's
+copy. From a package root, `zig build --build-file <preflight>/build.zig
+-Drepo-root=. profile -- --input <dir>` folds local or downloaded records into
+`ci/durations.json` in place.
+
+The run's last job, `runners`, names each job GitHub never gave a runner. A job queued
+until GitHub cancelled it ("not acquired by Runner") ends cancelled with no runner and no
+step, and a cancelled result is no job's red: the profile skips, and the run could end with
+a platform's tests never run and nothing failing by name. `runners` reads the run attempt's
+jobs with the token's `actions: read` (`preflight runners --jobs`) and fails on each, with
+the minutes it was queued; a non-blocking job (Zig master's) is reported and fails nothing.
+Nothing is retried: the run is dispatched again by whoever reads why.
+The shared runner shuffles test order using the test seed in every tier and in local
+runs. A direct run prints the seed; under `zig build` a passing run prints
+nothing, each failure line names the seed, and a crash shows it as the failed
+command's `--seed`. Set `PREFLIGHT_TEST_SEED` to reproduce an order. Direct
+test binaries also accept `--seed=<number>`.
+Custom runners can import `preflight_order`, whose `init` seeds, selects the
+shard's tests and orders them, and `preflight_timings` to record durations;
+`preflight_runner_options` carries the recorded durations and the record's name.
+Test runs carry no environment from the build: Zig keeps a run's environment in
+its cached configuration, so the runner reads the shard and seed when it runs.
+Test artifacts that share a root module share its runner options, timing record and
+count record.
+
+`-Dci-vm` runs what a build makes for riscv64 Linux, which no hosted runner is, on a
+riscv64 Linux kernel under QEMU's system emulation (`qemu-system-riscv64` on the PATH),
+where QEMU's user mode would emulate one process and leave out what a kernel does:
+reaping, pidfds, io_uring, file maps. The machine is Alpine Linux's kernel and root
+file system, pinned by hash in preflight's manifest and fetched only by a build that
+asks for it, with a first process of preflight's own. Each test or program run boots
+it (about a second), runs the program as the build's user with the host's directories
+it names (where it runs, where it is, what its arguments point to) at their paths and
+its scratch in the machine's memory (`TMPDIR` is `/tmp`, and `.zig-cache/tmp` and the tmp
+of the cache the build names to the tests are tmpfs: the host's directories reach the
+machine over 9p, which drops a shared mapping's write a read should see, FIFOs and a
+directory's sync), and ends as the program ended: its exit code, or its signal, or 128 +
+a signal no process can catch (SIGKILL, SIGSTOP), named. Its standard streams are pipes, as on any host. The watchdog's
+bound is ten times as long there. The release tier's riscv64 job runs its Debug suite
+this way.
+
+What a build makes for x86_64 FreeBSD runs the same way on FreeBSD's own kernel and
+runtime image under KVM (`ci-vm=freebsd`): `qemu-system-x86_64` on the PATH and
+`/dev/kvm` open to the build's user, on an x86_64 Linux host only; a build on any other host is
+refused by name. The program sees FreeBSD's system read-only, its own devices with every
+open descriptor at `/dev/fd` (fdescfs), its own `/tmp` and scratch as on the riscv64
+machine, an empty home, and the host's directories it names at their paths. A directory
+of the host's with a scratch beneath it is the machine's own, the build user's, holding a
+bind of each of the host's entries (nullfs mounts a file on a file), so the scratch is
+mounted on the machine's own directory, never on one of the share. A mount on a directory
+of the share does not hold: FreeBSD's p9fs knows a vnode by its 9p qid's path and version,
+and QEMU makes a directory's version of its mtime and size, so once the host makes or
+removes an entry in `.zig-cache/tmp` (its build does, throughout) the machine's next lookup
+of it is a new vnode, past any mount on the old one. What the program makes in a split
+directory (a file, a directory, a link that stays inside it) is carried to the host's
+directory when the program ends, and the run fails naming what could not be (a FIFO, a link
+out of it, a name or a size the share refuses). The machine checks, before the program
+starts, that each scratch is a mount of its own that names itself, and stops otherwise,
+saying which. The machine stops a boot
+that has not started the program in 180 seconds; a run that ends without the
+program's ending (a panic, the deadline, QEMU ending) keeps its directory, console
+among it, under `.zig-cache/tmp`, and writes the console's last lines to the build's
+output. The release tier's FreeBSD job runs every package's Debug suite this way, so a
+package that claims FreeBSD has a kernel's evidence of it, not only a cross-compile's.
+
+On either machine, an argument that is the build's Zig (`.zig_exe`, `b.graph.zig_exe`) or a
+path in its library (`.zig_lib`) is the machine's own Zig: ziglang.org's build of the same
+version for the machine's target, pinned by hash in preflight's manifest and fetched only
+by a run that names it, as a portable replay names the replaying runner's. A program that
+compiles with the Zig it is handed (glint's soundness suite) runs it there; the host's
+would not start. A build whose Zig is another version than the machines' (0.17.0) is
+refused by name.
+
+The machine is Alpine's minimal system. Tests that need more of it, such as `git` or
+`openssl`, name Alpine's packages in `vm_packages`; Alpine's own `apk` installs them
+on the machine, over QEMU's user network, when the build first makes it. They come
+from the release's repositories, verified by its signing keys. Alpine keeps only the
+newest build of a package there, so a fresh cache takes the release's current build,
+as a hosted runner's tools are its image's. An entry from a tagged repository
+(`git@edge`) is refused: edge drops the build an entry names, so the machine would
+stop being made. A package whose tests need a git newer than the release's names its
+held git (below), which is on the machine already; `git` in `vm_packages` beside it is
+refused.
+
+### Held git
+
+A package whose tests compare against git names one git release in `ci/workflow.json`,
+and every job that runs its tests runs that git, on every host and the riscv64 machine,
+where it ran whatever the runner's image had:
+
+```json
+{"git": {"version": "2.56.0", "sha256": "<the release tarball's>",
+         "windows": {"x86_64": "<PortableGit-2.56.0-64-bit.7z.exe's>", "aarch64": "<PortableGit-2.56.0-arm64.7z.exe's>"}}}
+```
+
+`preflight held-git-pin 2.56.0` writes it: it fetches git's release tarball from
+kernel.org and Git for Windows' two portable builds of that release, and writes their sha256s,
+so a move to another git is a diff that shows them. A run reads no checksum from the
+network: a download that does not match the configuration fails by name. A package that
+names no git keeps the runner's.
+
+On Windows the job unpacks Git for Windows' release into the store from its portable build
+(`PortableGit`, the installer's files in a self-extracting archive), checked against the
+hash, and puts it first on the path. No installer runs: one refuses to put an older release
+beside the runner's newer Git, and over it could not replace the programs of the bash that
+runs the job's steps; the runner's own Git never matters. Everywhere else `zig build ci-held-git` builds git from the
+tarball with `zig cc` for a target named outright (`aarch64-macos.13.0`,
+`x86_64-linux-gnu.2.31`, `aarch64-linux-gnu.2.31`, `riscv64-linux-musl`), against zlib,
+LibreSSL and curl built from the releases `build.zig.zon` pins by hash, fetched by any build
+of a package that names a held git (its `zig build` reads them while it configures, whatever
+step it runs) and by no other. No compiler, header or library of the host's enters: the build reads
+what each of its programs links (Mach-O load commands, ELF `DT_NEEDED`) and fails on a
+library that is neither a pinned source nor the platform's base (the SDK's on macOS,
+glibc's on Linux; the riscv64 build is static and links none), and on one named twice. git keeps its own
+assert()s (`-UNDEBUG`: zig cc's -O2 defines NDEBUG), as distributions build it; its libraries keep their flags.
+A download is read to the length its response states: a body cut short is a failed transfer, retried, and only a
+whole one whose hash differs refuses the pin. A build is kept in a store
+(`PREFLIGHT_GIT_STORE`, else `preflight-git` in Zig's global cache) by release, recipe and
+target, which a hosted job caches under that name, and is first on the path of the steps
+after it, its program in `PREFLIGHT_GIT`. On the machine at hand `zig build ci-held-git`
+builds it; a hosted job builds it in a step of its own (`preflight prepare --held-git`, 30 minutes),
+before its tools' attempts.
+
+It holds what the family's interop suites run through git: HTTP and HTTPS as a client
+(TLS and a SOCKS proxy through curl), the daemon, `http-backend`, credential helpers,
+iconv (the platform's own) and, on macOS, the fsmonitor daemon. Perl's, Python's and Tcl's
+commands, translations, PCRE and expat are left out, and a test that asks for one fails by
+the command's name.
+
+### Hosted gate
+
+The gate has two tiers, the second holding everything the first checks:
+
+- **ci**: what every push to main and every pull request runs, on that commit: the source
+  checks, the documented snippets (a job of their own, so a red lint never hides a broken
+  one), the Linux Debug suite in as many shards as `fast_shards` asks for, the macOS and
+  Windows Debug suites (sharded as `shards` says), and an object compile of every configured
+  cross target in as many jobs as `cross_jobs` asks for. Test, helper and public-module
+  objects are compiled for each target, and the benchmarks in Debug: this proves
+  compilation, not linking. Main is kept green: a red push is fixed forward at once.
+- **release**: the full matrix, weekly and by dispatch, and what a tag requires: every mode
+  on every host (Debug, ReleaseSafe and ReleaseFast, ARM Linux and Windows included), the
+  Debug suite on a riscv64 Linux kernel under QEMU, the Debug suite of each configured target
+  a runner executes on an ABI not its own (msvc on the Windows runners, musl on the Linux
+  ones), ReleaseSmall compiled on each system, every cross target with the ReleaseFast
+  benchmarks, the links of every macOS and Windows target (a macOS one on a Mac only when its
+  build links a framework), TSan, the fuzz campaigns and the hardened checks where
+  configured, the fuzz job (`fuzz_minutes` of the package's properties, where it declares
+  shakedown), and the Debug suite on Linux with Zig master. Its macOS jobs are legs of one
+  job, run in sequence on one runner, each with its own build, limit and records and each
+  failure named: GitHub drops a job it cannot give a runner, and an account's macOS runners
+  are few (a leg that would take the job past 360 minutes starts another). A green release
+  run leaves its proof, the artifact `preflight-release-<sha>`, which `preflight attest`
+  looks for.
+
+The release tier also runs the Debug suite on Linux with Zig master,
+the next release in development. That job never blocks: the run's summary
+reports its result, and a break is a note for the next port's rewrite table.
+The setup action takes `zig-version` (0.17.0, or master), and its cache keys
+carry it, and its output `tools-hit` says whether the external tools came from
+their cache. The shared workflow runs external-tool setup separately, with up to
+three attempts of five minutes each; on a tools-cache miss the first attempt has
+thirty, since the setup step then builds the tools cold. A hung `apt-get update`
+therefore expires at a step deadline and can be retried. Exhausted attempts fail
+blocking jobs. A guest leg's QEMU install gives apt deadlines and retries of its
+own, under a fifteen-minute step. Every Zig master step has a deadline, with their
+total below its job timeout, so a hang remains an advisory failure and the blocking
+jobs decide the run's conclusion. Its setup has thirty minutes, since it compiles
+preflight's checks with Zig master, and its suite twenty.
+
+Call `.github/workflows/zig.yml` pinned by the same commit as the package. Pass
+that commit as `preflight-ref` and the tier as `tier`. A run checks it before it builds
+anything (`preflight pin --ref`): a manifest that pins another preflight than the caller
+runs, a re-pin whose caller was not made again, stops the run by name, since its jobs
+would run an older preflight than the build calls. Every action `zig.yml` and its
+composite actions use is pinned by commit, its release in a comment beside it, and the gate
+holds a repository's own workflows to the same: a `uses:` under `.github` that names a tag
+or a branch, which the action's owners can move, fails it by file and line. The sample caller in this
+repository shows the trigger and concurrency policy:
+
+- Each push to main runs the ci tier on its own commit, so every commit on main has its
+  status; a push that changes only `docs/**` and top-level Markdown (`paths-ignore`) runs
+  nothing, and work-branch pushes start no run.
+- Pull requests run the ci tier, the status check to require; a newer push to a pull
+  request cancels the run of the older.
+- A schedule runs the release tier weekly, at the package's own minute of the week (from
+  its manifest's fingerprint), so the account's runners never take every package's full
+  matrix at once. Dispatch runs the tier it names, ci by default.
+
+The options of `ci/workflow.json`, all off or defaulted in a new project. Any other key is
+refused, so a misspelt option fails the plan instead of quietly changing nothing.
+
+- `attest` and `nightly` are refused by name: every push to main runs the ci tier itself, and
+  the release tier's schedule is weekly, at the package's own time. `generate` takes them out
+  of the file, naming each, so moving a package to this preflight is that one command.
+- `jobs`: the package's own jobs, each a build step the gate runs beside its own:
+
+  ```json
+  {"jobs": [
+    {"name": "conformance", "step": "test", "directory": "conformance", "os": ["ubuntu-latest", "macos-latest"]},
+    {"name": "report formats", "step": "check-reports", "setup": "reports-setup", "tiers": ["release"]},
+    {"name": "corpus sizes", "step": "check-sizes", "tiers": ["ci", "release"], "setup": false, "timeout": 30},
+    {"name": "ThreadSanitizer", "step": "test", "args": ["-Dthread-sanitizer=true"], "tiers": ["release"], "shards": 3}
+  ]}
+  ```
+
+  `os` defaults to Ubuntu and `tiers` to ci and release; `args` holds whitespace-free `-D`
+  flags (the package's `build_args` are its own builds', not a declared job's); `directory` is
+  relative to the repository and defaults to the package; `setup` runs the package's
+  `setup_step` (true, the default), nothing (false) or a step of the job's own; `timeout` is
+  in minutes; `shards` splits a test step over that many jobs on each host, each running the
+  share `PREFLIGHT_SHARD` names, as the hosts' own test jobs are split. A declared job has the gate's setup, caches and toolchain, and a landing waits for
+  it. Work that is not a check, such as a measurement dispatched by hand, belongs in a workflow
+  of its own.
+- `targets`, `build_args`, `shards`, `fast_shards`, `cross_jobs`, `cross_seconds`,
+  `riscv64_seconds`, `portable_hosts`, `hardened`: what the tiers build and
+  run, described below.
+- `compile_step` (default `check`): the step the release tier's ReleaseSmall job compiles.
+- `setup_step`: a build step that installs the package's external tools, run before its tests
+  with three attempts of five minutes (the first thirty on a tools-cache miss); `before_tests_step`: a step run before the tests.
+- `git`: the held git every test job runs (above), written by `preflight held-git-pin`.
+  `windows_git_latest` is refused: it took whatever release was newest that day.
+- `test_job_timeout`, `windows_job_timeout`, `source_job_timeout`, `cross_job_timeout`:
+  minutes, 20 by default: the test jobs', the Windows test jobs', the source checks' and
+  the compile jobs' (the cross compiles, the release tier's ReleaseSmall compiles and the
+  links), so every job a plan makes takes its budget from one of them. A job that runs slower
+  than a native runner takes its kind's budget times preflight's measure of how much slower,
+  the same for every package, at most 360: the ThreadSanitizer job 3, the FreeBSD machine under
+  KVM 2, the riscv64 machine under QEMU 4.
+- `fuzz_minutes`: the release tier's fuzz job's minutes, 15 by default, at most 330; 0 for no
+  fuzz job. A dispatched fuzz run (tier `fuzz`) can give its own.
+
+`ci/workflow.json` is the declarative input, and the caller is wholly generated from it:
+both reusable-workflow references, the checkout pin, triggers, concurrency policy, the
+the ci tier's matrix and the release tier's three (its jobs, its compiles and the runs
+of what they compiled), with the declared jobs. Make it, and make it again after a pin moves,
+with:
+
+```sh
+bay generate
+```
+
+(`zig build generate` without bay.) It finds the package's caller under the repository's
+`.github/workflows` and writes it again where it is, or writes `.github/workflows/ci.yml` at
+the repository's top when there is none; a caller that is current is left as it is. A train
+(`bay --workspace release`) runs it after moving a member's pins.
+
+The generator reads the manifest's full immutable preflight URL pin; it never uses an old
+workflow's pin. It refuses to replace a caller holding a job the configuration does not
+declare, naming it, so nothing is dropped unseen; `--drop <job>`, repeated, lets go of a job
+the configuration now declares under `jobs`. It refuses traversal and symlinks and renders
+and validates all inputs before writing. Repeated generation is byte identical. There is no
+package-local planner or Python dependency. This is an offline regeneration write, not a
+crash-atomic or durable publication API. `--working-directory <relative-directory>` makes
+a caller whose jobs run in another directory, `--config <file>` names its configuration and
+`--manifest <file>` the manifest whose pin it names; the caller's first line records them,
+so generating it again needs none of them. Preflight alone uses `--self` to call its own
+reusable workflows at `github.sha`. Its self-caller gates the sample, made once with:
+
+```sh
+zig build generate -- --self --config sample/ci/workflow.json --working-directory sample
+```
+
+`zig build plan -- --tier <tier> --output <file>` emits a tier's matrix records for
+inspecting a plan; it appends hosted-output records. Consumer repositories keep only
+declarative inputs and their generated caller, never copied planner code or consumer plan
+dumps.
+
+### Releasing
+
+preflight verifies; it neither versions, tags nor pushes. A package releases with bay
+(`bay release`), which writes the release from `CHANGELOG.md`'s `[Unreleased]` section and
+tags it only once the release tier has run green on that commit (`preflight attest` finds the
+run's proof). The gate (`zig build gate`, `bay gate` under bay), a step `addCi` adds, checks
+in seconds what a release needs beside that run, each refusal naming its fix:
+
+1. the caller is what `generate` makes for the package's pins and
+   configuration, so the hosted runs check the package with the preflight it pins;
+2. the manifest's `.version` is the CHANGELOG's newest release;
+3. the CHANGELOG says what the public API changed since the last `v*` tag: a change to the
+   surface needs an entry in `[Unreleased]` or in a release made since, and a removed or
+   changed public declaration of a module the package exports (`b.addModule`), or of its
+   `build.zig`, which a build depending on it imports, a breaking one (`### Breaking` or
+   `### Removed`), each declaration named in code form with its container (`` `S.y` ``). The modules are read from `build.zig`'s
+   `b.addModule("name", .{ .root_source_file = b.path("...") })` calls at the last tag and now,
+   so a module moved or no longer exported is compared too; a build that names a module or its
+   root through anything but a literal is refused, since what its tag exported cannot be read.
+   The surface is read with glint's project model from the modules' root files, following
+   their relative imports and the types a function returning `type` makes. A line per
+   declaration: a function's parameter and return types, a field's type, the fields a struct
+   literal must name, what a public constant aliases, a constant's value, and an exhaustive
+   enum's tags and a tagged union's fields as one set, which every exhaustive switch names. A
+   type is written as what it names, a container by the public path it is listed under, so
+   respelling one through an alias is no change, and changing what a private alias names is.
+   Layout, comments and parameter names are not part of it; an addition is no break, nor is a
+   field given a default, and a constant's new value needs an entry, not a breaking one. `zig
+   build surface` lists the surface, `zig build surface -- --since <tag>` what changed (`-`
+   removed or changed, `+` added). A shallow clone, or git failing, fails the check rather than
+   compare with nothing. The last tag is the newest `v*` tag in the commit's history, whatever
+   the CHANGELOG's headings say, and the CHANGELOG must name its release (`## [X.Y.Z]`). What it cannot see: an inferred error set (`!T`), which only the
+   compiler's analysis of both revisions knows, and the members of what another package's
+   module declares. A change of behaviour it cannot see at all: its author names it. CHANGELOG.md is read as bay reads it (bay's `changelog` module):
+   an entry is a line under one of Keep a Changelog's groups or `### Breaking`.
+
+The lint checks 2 and 3 on every commit too. The gate runs no job: the hosted tiers run them,
+and `bay ci` runs the ci tier's checks on the machine at hand. `--working-directory <dir>`
+reads the caller of a package whose planned jobs run in `dir` (preflight's own runs its
+sample there).
+
+### The linked graph
+
+A package has two graphs. Its *linked* graph is the code an artifact of it links: its own
+modules and what they import. Its *tooling* edges are the packages only its CI and checks
+use: preflight itself, a linter, test support it pins for its own tests. A tooling edge is
+a lazy dependency only CI steps ask for, so a project depending on the package never fetches
+it, the way Cargo and Go leave out a dependency's dev-dependencies. A tool is a separate
+program: it reads the package and links none of it, so it may be built with any revision of
+anything, including an older one of the package it checks. That is how a tool checks itself:
+its CI runs the revision of itself it pins, and moving a library the tool uses never waits for
+the tool to move.
+
+`lint` reads the configured build and holds every artifact the package builds to two rules,
+for any project:
+
+- **One revision of each package.** Two revisions of a package in one artifact are two sets
+  of types that do not unify, and two sets of any state it holds once per program. The message
+  names the package, both revisions and who pulls each:
+
+  ```
+  core is linked in 2 revisions:
+    core-0.1.0-rsxouifg... pulled by net, store
+    core-0.1.0-rsxoutrd... pulled by testkit
+  ```
+
+- **No cycle between packages.** A package linked by another must not link it back: then a
+  move of either ripples through both. The package under test is held to both rules as much as
+  any other. It cannot pin its own commit, so a second revision of itself in its own artifact is
+  always a cycle through a dependency's pin, and it is reported as one:
+
+  ```
+  the linked packages form a cycle: core -> testkit -> core
+  ```
+
+A test dependency that is built on the package's own types (test doubles taking the package's
+ids, say) is the usual way in. Under bay the package under development wins over every release
+of itself, so the dependency's import of the package is the package's own module: one copy,
+neither a second revision nor a cycle. Without bay, the dependency's pin of the package is a
+second revision of it in the package's own tests, and lint says so: a package that a test
+dependency is built on develops with bay. Programs built in the package's graph from another package's sources
+(a checker's own tools) are not the package's artifacts and are not counted.
+
+What preflight adds to a package's artifacts follows the same rule. Its test runner, shard
+order and watchdog link std alone; benchmarks and fuzzing measure through the package's own
+`shakedown`, which the build that calls `addCi` declares, and are refused by name when it does
+not. With bay, shakedown itself declares shakedown like any package: its development build
+holds the package as a dependency, as it holds every package's. Nothing of preflight's own pins reaches a package's artifact.
+
+A package two lines of which may meet in one artifact (a new major, or below 1.0 a new minor,
+beside the old) is named in the manifest's `.coexist = .{ .name }`, the field bay reads to select
+both lines and Zig ignores. It allows one revision per line: two revisions on one line are still
+reported, as bay never selects them.
+
+Every other manifest in the repository, a fixture's or a conformance build's, must pin each
+package the root manifest also pins exactly as the root does: a fixture with its own pin goes
+stale at the next re-pin and tests a revision nothing ships. Better, a fixture takes the
+package from the root's dependency at build time, as `addConsumerCheck` does, and cannot drift.
+
+### Hosted gate options
+
+Targets are strings or objects with `target`, optional `cpu`, and optional
+`args` (an array of `-D` feature flags). `build_args` supplies flags to every
+host and target; target/CPU configuration belongs in its explicit fields.
+For example:
+
+```json
+{"build_args":["-Dfeature=true"],"targets":[{"target":"x86_64-macos","cpu":"baseline","args":["-Dtrust-store=true"]},"aarch64-macos","x86_64-windows-gnu"]}
+```
+
+These flags must be individual whitespace-free `-D` arguments. Malformed
+triples, arrays, CPUs, shard counts, booleans and portable-host declarations are
+refused, and so is `windows_git_latest` (the held git replaces it). A
+workflow-level `test_timeout` is refused: `Config.test_timeout` bounds each test.
+`fast_shards` splits the Linux Debug tests; the source checks and the cross
+compile are jobs of their own. `cross_jobs` sets how many jobs share the cross
+targets, and `cross_seconds` how many seconds of compiling each may hold. Static jobs explicitly distinguish `execute`, `objects`,
+`link` and `replay` operations. A build with portable tests (`.portable_tests`, its
+`ci-build` step) has the separate native link and shard replay matrices; they never move
+SDK linking to Linux.
+
+`ci-check` emits objects for the configured test graph, installed artifacts,
+the `check` graph and public modules, the benchmarks in Debug,
+helpers, generated inputs and transitive native libraries. `ci-check-bench` emits
+the benchmarks as they are built to run, in ReleaseFast: the release tier
+compiles them for every target, and the ci tier does not, since that optimizing
+compile takes longer than all the other objects together. The compile
+projection carries target, CPU, optimization and source/header options; SDK
+link requests stay on the original native modules. Zig resolves framework and
+system-library names even in object mode, so those link-only requests are not
+passed to the compile projection. `ci-link` links the original artifacts without
+running them; `ci`, `test` and portable `ci-build` retain their required libraries
+and framework declarations. No compile-only success certifies a native link.
+On macOS the shared setup discovers `SDKROOT` and passes its identity as an
+explicit build option, so configuration caches cannot retain another SDK; `-Dci-sdk=<SDK path>` is an explicit
+local build option for native links, including an explicit macOS target or CPU.
+The SDK search paths also reach transitive native dependencies. Foreign object
+jobs do not require an Apple SDK.
+
+The first job of a dispatched ci run filters changes. A dispatched branch whose commits
+since it left `origin/main` touch only Markdown outside `src`, LICENSE or images runs the
+documented-snippet check alone. Mixed changes, source Markdown and an unavailable base
+keep the test gate. A push to main that changes only `docs/**` and top-level Markdown starts
+no run; a pull request and the release tier always run the whole gate, documentation or
+not, so what a landing passes does not depend on a path filter.
+
+`"shards": {"windows": 5, "macos": 2}` runs each mode on that host as so many
+jobs (keys `linux`, `macos`, `windows`, `linux_arm`, `windows_arm`, `riscv64` for the
+riscv64 job on its emulated kernel, and `tsan` for the hardened ThreadSanitizer run). The
+riscv64 suite, several times as long emulated, is otherwise sized by its record: as few jobs
+as hold `riscv64_seconds` of its tests each (half of `test_job_timeout` by default; the other
+half builds the suite and boots the kernel), by the seconds `ci/durations.json` holds, a test
+the riscv64 column has none of weighed by its Linux Debug record times the ratio of the two
+columns over the tests both recorded. With no record of either, it is one job, whose record
+sizes the next plan; `shards.riscv64` fixes the count instead. The hardened runs take `test_job_timeout`; `hardened` splits
+as the Linux jobs do, `hardened-tsan` by `tsan` (else as they do), and the fuzz campaign is one
+job. Every job compiles the whole suite once, or downloads it where the tests are
+portable, and the test runner picks its share of the test cases: longest
+first onto the least-loaded shard, by the seconds recorded for that target in
+`ci/durations.json`, a column per system, architecture and mode, and one more for a
+ThreadSanitizer build (`linux-debug-tsan`), which a declared job records with
+`-Dci-timings=true` in its `args`. A test with no record in its column weighs its Linux
+Debug record (`linux-debug`) times the ratio of the two columns over the tests both
+recorded, and failing that the mean of those with one; without records the split is by
+count. Every shard computes the same split, so
+each test runs exactly once. A package's own jobs are declared in `ci/workflow.json`
+`jobs` and run in the tiers they name (see the options below).
+Cross targets are dealt out to as many Linux jobs as hold `cross_seconds` (200) of
+compiling each, longest target first onto the job with the least, each target keeping
+its optional CPU and flags. A target costs what the last release run measured
+of it (`ci/costs.json`, which the run's proof artifact carries beside
+`ci/durations.json`). No job holds more compiling than its `cross_job_timeout` leaves after
+300 s of setup, and a target past that is refused by name. A target no run has measured
+has a job of its own, named for it (`Cross compile <target>, unmeasured`), of GitHub's
+360 minutes: no guess of its cost could be held to a bound, and its job finishes and
+measures it. `cross_jobs` fixes the count instead, those jobs among it. The checks run on their host's baseline CPU target, so a
+binary built once serves every runner model.
+
+Every job takes the checks as a binary, and none compiles them. The first job of a
+run, `toolchain`, builds `preflight` for Linux, macOS and Windows with `zig build
+toolchain` (about a minute apiece, cross compiled in one job), or takes the build
+that preflight's own run made of the pinned commit: that run keeps it ninety days as
+the artifact `toolchain-<commit>`, and a caller reads it from there. The other
+jobs download the run's copy and put it on the path; their `fetch`, `prepare` and
+`run` are its subcommands, and its `run` hands the build it starts as `-Dci-checks`,
+which `addCi` takes in place of compiling the checks (a build without the option
+compiles them, as local runs do). The Zig master leg builds its own, since the checks
+read the configuration of the Zig that compiled them.
+
+Fetched packages, what Zig builds for itself and pinned external tools have separate
+caches; what a job builds of the package is kept in none, since the next run changes
+the sources and a gigabyte of objects per job evicted the rest of the repository's
+caches. What Zig builds for itself is the build runner and each target's runtime,
+which every `zig build` compiles first, for the CPU model it runs on (the hosted runners
+have several, and a runner built on one is of no use on another, so the cache is keyed
+by the model) and renewed weekly, together with the package's external tools: the ci run of
+each push to main saves them, and a branch sees the caches of main and its own, so a pull
+request's jobs restore the runner instead of compiling it, and the tools instead of
+building them.
+Each job fetches what its own build asks for: it configures the build with the
+job's arguments (`zig build --list-steps`) and builds nothing, retrying three times
+with backoff, as tool setup does. Zig compiles the build script of every package a
+manifest names once it is in the package cache, lazy and unasked for or not, so a
+dependency only one job needs, such as the emulator a conformance job feeds, is named
+in a build of its own under `conformance/`, with its own manifest, and that job runs
+there (`working-directory: conformance` for the setup and the build). Named in the
+package's own manifest, even behind an option, it would reach every build of the
+package, and of a program on it, whose cache holds it: the Zig master leg among them.
+The format and source checks pass over the `zig-out` and `zig-pkg` such a build keeps
+beside its manifest. `zig build ci-setup` may install a repository's external tools
+into the cached runner temp directory.
+
+The design uses GitHub's standard [reusable workflows](https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows):
+repository facts stay with the caller and common mechanics have one owner.
+
+### Following std's deprecations
+
+`zig build deprecations` lists every reference to something the Zig release
+that builds the package deprecated, with the rewrite that replaces it, and
+`zig build deprecations -- --write` applies them and formats the files it
+changed. It reads std's source from that Zig. A deprecated alias, such as
+`pub const indexOf = find;`, needs nothing more: `std.mem.indexOf` becomes
+`std.mem.find`. The rest are in a table per release, checked against that std
+before anything is rewritten:
+
+- `std.fmt.allocPrint(a, ...)` becomes `a.print(...)`, its sentinel variant
+  `a.printSentinel(...)`. A first argument that is not a plain name or call
+  keeps the function form, `std.mem.Allocator.print(...)`.
+- `std.fmt.bufPrint` becomes `std.mem.print`, `bufPrintSentinel`
+  `std.mem.printSentinel`, and `std.fs.path` becomes `std.Io.Dir.path`.
+- `std.mem.copyForwards(T, dest, source)` and `copyBackwards` become
+  `@memmove(dest[0..source.len], source)` when `source` is a name.
+- `b.lazyDependency(...) orelse x` becomes `b.dependencyLazy(...) catch x` for
+  `b` declared as `*std.Build`.
+- A deprecated `std.Build.Step.Run` method whose body only calls its
+  replacement becomes that call: `run.addArtifactArg(exe)` becomes
+  `run.addArtifactArg2(exe, .{})`, `run.addPrefixedDirectoryArg(p, dir)`
+  `run.addDirectoryArg2(dir, .{ .prefix = p })`. Arguments that would run in
+  another order are left for a person unless all but one are names or
+  literals.
+- `@import("builtin")`'s `os`, `cpu`, `abi` and `object_format` become
+  `target.os`, `target.cpu`, `target.abi` and `target.ofmt`, and `mode`
+  becomes `optimize`. The compiler writes that module, so these are checked
+  against the compiler that built preflight.
+- A form the language dropped is in the table too, and is checked against the
+  parser that built preflight, which must refuse it. A file in such a form
+  does not parse, so it is repaired over its tokens before anything else is
+  read: `[_]T{e} ** n`, array repetition, which 0.17 took out, becomes
+  `@as([n]T, @splat(e))`. A repetition of anything but a one-element array
+  literal is listed for a person, line by line, and what could be rewritten
+  still is.
+
+Names resolve through the file's own aliases (`const mem = std.mem;`) and
+through the types of values: a parameter or variable declared with a std type,
+`std.ArrayList(u8)` included, or initialized by a std method,
+`const run = b.addRunArtifact(exe);`. A method std aliases on such a value
+moves with it: `list.getLastOrNull()` becomes `list.last()`. A deprecated
+`pub const Debug: @This() = .debug;` is followed to `.debug`. An
+alias the rewrites leave unused is removed. A rewrite that would delete a
+comment is left for a person, as is any deprecated reference the table cannot
+move; both are listed as `by hand`. Files that do not parse are skipped and
+named. Build output, `zig-pkg` and hidden directories are not read; name files
+or directories after `--` to read only those.
+
+## API
+
+`build.zig` exports what a package's own `build.zig` calls:
+
+| Declaration | What it does |
+|---|---|
+| `addCi(b, Config)` | Adds `lint`, `ci`, object `ci-check`, native `ci-link`, `plan`, `facts`, `check-imports`, `docs`, `cache` and `deprecations`; optional bench and hardened steps |
+| `Config`, `TestTimeout`, `Bench`, `Hardened` | The gate's paths, shard records, watchdog, test log level and benchmarks |
+| `addConsumerCheck(b, package, ConsumerOptions)` | Adds `check-consumer` |
+| `addNestedBuild(b, package, NestedBuild)` | Returns the step that assembles a nested build under the cache, its manifest from the package's own pins, and runs it |
+| `addCheck(b, package, name, source)` | Builds, tests and runs a repository check program as step `name` |
+
+A test runner of a package's own can import `preflight_order` and
+`preflight_timings`. `preflight_order.init(io, init, args, tests, durations)` seeds,
+selects the shard's tests and orders them, returning `InitError` for a seed that is no
+`u32`, a shard that is not `i/n` or durations of the wrong shape. Its `weigh` and
+`assign` are the shard split by themselves. `Shard` holds a zero-based `index` below a
+nonzero `count`; construct one with `Shard.init(index, count)` or parse hosted `i/n` text.
+These modules link std alone, as everything preflight adds to a test binary does.
+`assign` rejects invalid shards, overflowing load-storage counts or unequal name/weight lengths in every build
+mode. `TestTimeout.duration()` returns a checked `std.Io.Duration`; a custom bound
+above `u64` nanoseconds fails configuration. Public waits keep std's Io vocabulary. `preflight_timings.Recorder.init(io,
+environ, stem, key)` opens the timing record, `record(io, name, nanoseconds, status)`
+appends one test and `deinit(io)` closes it; the recorder keeps no `Io`.
+`preflight_timings.count(io, environ, stem, record)` writes the count of a binary's
+tests the tests step reads after its runs (`stem` under the build's `--cache-dir`,
+`preflight_runner_options.counts`); a runner of its own that writes none is not
+counted.
+
+## Scope
+
+- It is a build dependency only: no module a consumer compiles imports it.
+- It does not format code: `zig fmt` does, and the gate checks the result.
+- It starts no containers and schedules no runs.
+- It rewrites code only when asked, with `zig build deprecations -- --write`.
+- It does not pick the files a gate checks: `ci/preflight.json` names them.
+
+## Built with
+
+**tycho**, every coding agent in one folder (in development), and the Zig packages it
+is built from.
+
+## Testing
+
+Run `bay test` for the check regression suite, `cd sample && zig build ci` to exercise the helper on a tiny package without bay, and `cd sample/bay && bay ci` on one developed with it.
+preflight gates itself: `ci/layers.zig` and `ci/preflight.json` hold its own
+structure, and `zig build verify` runs its lint, tests and format check.
+Cross object validation retains a compile step's `expect_errors` and diagnostic
+limit. Zig matches the caller's expected diagnostics; wrong diagnostics and
+unexpected success fail. Expected-failure steps request no emitted binary.
+Ordinary positive artifacts still emit objects, and native SDK links retain the
+original artifact graph.
+
+glint and gantry are lazy build dependencies, built in ReleaseSafe for the checks and used
+as libraries; the checks are a tool, and nothing of them reaches a package's artifacts.
+
+## Rules a package declares
+
+A package's own token and reference rules are ordinary gantry rules in its `ci/layers.zig`,
+next to its layers; packages that only tests may import are `test_dependencies` in
+`ci/preflight.json`, which no production file may import.
+
+Gantry owns path syntax, compilation and matching. Preflight compiles configured
+patterns through `gantry.rules.Globs`, returning malformed-pattern errors even for
+empty sources or after an earlier pattern matches. It has no direct sweep dependency.
+Generic Zig lint rules belong to glint: Z009 owns file-name case, Z011 gates
+deprecations and Z013 dead private imports. Gantry's declaration liveness still
+reports an import in a declaration nothing reaches. The `deprecations` command remains
+a separately invoked codemod and does not run as a lint gate.
+
+## Licence
+
+MIT. See [LICENSE](LICENSE).

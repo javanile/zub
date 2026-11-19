@@ -6,9 +6,9 @@ author: allyourcodebase
 author_github: allyourcodebase
 repository: https://github.com/allyourcodebase/grpc
 keywords:
-date: 2026-10-23
-updated_at: 2026-10-23T14:53:30+00:00
-last_sync: 2026-10-23T14:53:30Z
+date: 2026-11-01
+updated_at: 2026-11-01T22:12:10+00:00
+last_sync: 2026-11-01T22:12:10Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -31,16 +31,16 @@ permalink: /packages/allyourcodebase/grpc/
 | x86_64            | ✅    | ✅    |
 | arm 64            | ✅    | ✅    |
 
-| Refname  | libGRPC version         | Core version | Zig `0.18-dev` | Zig `0.17.x` | Zig `0.16.x` | Zig `0.15.x` |
-|:---------|:------------------------|-------------:|:--------------:|:------------:|:------------:|:------------:|
-| `master` | `v1.85.0-pre1` "googol" |     `58.0.0` | ✅             | ✅           | ✅           | ✅           |
-| `1.84.0` | `v1.84.0` "gimbal"      |     `56.0.0` | :x:            | ✅           | ✅           | ✅           |
+| Refname            | libGRPC version    | Core version | Zig `0.18-dev` | Zig `0.17.x` | Zig `0.16.x` | Zig `0.15.x` |
+|:-------------------|:-------------------|-------------:|:--------------:|:------------:|:------------:|:------------:|
+| `master`, `1.85.2` | `v1.85.2` "googol" |     `58.0.0` | ✅             | ✅           | ✅           | ✅           |
 
 <details>
 <summary>Older versions</summary>
 
 | Refname    | libGRPC version        | Core version | Zig `0.17.x` | Zig `0.16.x` | Zig `0.15.x` |
 |:-----------|:-----------------------|-------------:|:------------:|:------------:|:------------:|
+| `1.84.0`   | `v1.84.0` "gimbal"     |     `56.0.0` | ✅           | ✅           | ✅           |
 | `1.83.1`   | `v1.83.1` "garden"     |     `56.0.0` | ✅           | ✅           | ✅           |
 | `1.82.2`   | `v1.82.2` "glacier"    |     `55.0.0` | ✅           | ✅           | ✅           |
 | `1.81.1`   | `v1.81.1` "graphic"    |     `54.0.0` | ✅           | ✅           | ✅           |

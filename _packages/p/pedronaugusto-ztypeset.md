@@ -7,9 +7,9 @@ author_github: pedronaugusto
 repository: https://github.com/pedronaugusto/ztypeset
 keywords:
   - zig-gamedev
-date: 2026-10-04
-updated_at: 2026-10-04T02:40:39+00:00
-last_sync: 2026-10-04T02:40:39Z
+date: 2026-10-17
+updated_at: 2026-10-17T22:12:26+00:00
+last_sync: 2026-10-17T22:12:26Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -32,7 +32,7 @@ HarfBuzz, SheenBidi and libunibreak. It orders a paragraph, itemises it into
 runs, finds the break and grapheme boundaries, shapes each run and rasterises
 the glyphs; drawing them is the host's.
 
-Status: **v0.2**.
+Status: **v0.3**.
 
 Beside this file: [CHANGELOG.md](CHANGELOG.md) for what changed and what a
 version bump means, [UPSTREAM.md](UPSTREAM.md) for the pinned upstream commits
@@ -181,7 +181,7 @@ paint, colour, maths and OpenType layout queries, FreeType's glyph objects and
 colour layers — is reached through their own headers, installed beside
 ztypeset's. Of the outline formats FreeType can read, this build compiles
 TrueType and CFF/CFF2 only. Nothing in the repository enforces that division:
-it is the state of the surface at 0.2.1, not a checked property.
+it is the state of the surface at 0.3.0, not a checked property.
 
 The handles. None has a destruction order — whichever of a pair is released
 second frees what they share, so `deinit` is safe in any sequence:
@@ -418,10 +418,10 @@ ci/verify-vendor.sh         # diff libs/ against pinned upstream (needs network)
 ci/install-hooks.sh         # run ci/run.sh automatically before every push
 ```
 
-**147 tests**, executed twice: the second pass runs the same binary with
+**148 tests**, executed twice: the second pass runs the same binary with
 HarfBuzz's three environment variables set to values that change what it does,
 and every assertion has to hold unchanged.
-`zig build test` therefore reports **294/294 passed**.
+`zig build test` therefore reports **296/296 passed**.
 Tests that touch a face, a shaper or a paragraph install
 `std.testing.allocator`, so any allocation ztypeset or an upstream fails to
 return fails the test.

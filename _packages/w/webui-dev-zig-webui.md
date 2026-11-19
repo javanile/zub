@@ -13,10 +13,10 @@ keywords:
   - webui
   - windows
   - zig-webui
-date: 2026-11-12
+date: 2026-11-18
 category: systems
-updated_at: 2026-11-12T07:12:07+00:00
-last_sync: 2026-11-12T07:12:07Z
+updated_at: 2026-11-18T12:52:05+00:00
+last_sync: 2026-11-18T12:52:05Z
 package_kind: hybrid
 has_library: true
 has_binary: true
