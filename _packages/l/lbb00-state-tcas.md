@@ -1,0 +1,175 @@
+---
+title: state_tcas
+description: "Bounded Safety and Liveness verification toolkit for Zig: state space exploration, TLA+ declaration locking, and Apalache ITF trace replay."
+license: MIT
+author: lbb00
+author_github: lbb00
+repository: https://github.com/lbb00/state_tcas
+keywords:
+  - apalache
+  - concurrency
+  - formal-verification
+  - model-checking
+  - safety-critical
+  - state-machine
+  - testing
+  - tla-plus
+date: 2026-11-17
+category: systems
+updated_at: 2026-11-17T06:18:46+00:00
+last_sync: 2026-11-17T06:18:46Z
+package_kind: hybrid
+has_library: true
+has_binary: true
+has_distributable_binary: true
+binary_count: 9
+distributable_binary_count: 9
+multiple_binaries: true
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
+permalink: /packages/lbb00/state_tcas/
+---
+
+# state_tcas
+
+[![CI](https://github.com/lbb00/state_tcas/actions/workflows/ci.yml/badge.svg)](https://github.com/lbb00/state_tcas/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/lbb00/state_tcas)](https://github.com/lbb00/state_tcas/releases)
+[![Zig 0.17.0](https://img.shields.io/badge/zig-0.17.0-orange.svg)](https://ziglang.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+Bounded Safety and Liveness verification for Zig libraries under test.
+**Pure Zig `std` only** — zero third-party dependencies or external tools.
+
+Hand-written test traces frequently miss subtle edge-case orderings, while formal model checkers (such as TLA+ or Microsoft P) require writing and maintaining a separate specification model. `state_tcas` bridges this gap by driving your **actual Zig API** directly through harness closures with budget-bounded state space exploration and permutation enumeration.
+
+- **Realistic state management**: Pure value contexts can be cloned for Breadth-First Search (`bfs`), while stateful systems with OS handles or live event loops use action-log rebuild with Depth-First Search (`dfs` / `dfsKeyed`).
+- **Bounded exploration**: Exploration depth and permutations are budget-bounded (`error.SearchIncomplete` on budget exhaustion) to prevent infinite loops in cyclic state spaces.
+- **Living documentation**: Execution stories automatically render as Mermaid sequence and state diagrams with byte-level golden consistency locks.
+
+| Module | Purpose |
+|--------|---------|
+| `explore` | Enabling-set state space search (`dfs`, `dfsKeyed`, `bfs`, `shuffleSeeded`) |
+| `exhaust` | Bounded permutation enumeration (`orders`) and single-scenario replay (`play`) |
+| `calendar` | Monotonic discrete virtual time calendar with snapshot support |
+| `monitor` | Modular Safety invariant checkers and Liveness goal monitors |
+| `picture` | Mermaid state/sequence diagram generator with byte-level regression locks |
+| `role` | Participant labels for sequence diagrams (`Initiator`, `Responder`, `Harness`) |
+| `trace` | Structured JSON event tracing for exploration inspection |
+| `tla` | TLA+ specification interoperability: declaration locking and ITF trace replay |
+
+`state_tcas` is not a discrete-event simulator or a full formal specification language; it is an in-process exploration toolkit designed to catch race conditions and ordering bugs directly in your implementation.
+
+## Requirements
+
+- Zig ≥ 0.17.0 (`build.zig.zon` `minimum_zig_version`)
+
+## Stability & Versioning
+
+Following Semantic Versioning, `0.x` provides a stable core module layout. Any contract adjustments or picture-lock layout updates are documented in [CHANGELOG.md](CHANGELOG.md).
+
+### Public Contract Surface
+
+| Module | Primary Public APIs |
+|--------|---------------------|
+| `explore` | `dfs`, `dfsKeyed`, `bfs`, `shuffleSeeded`, `ActLogReplay`, `minimizeTrace`, `SleepSet`, `Stats`, `max_enabled`, `verify*` |
+| `exhaust` | `orders`, `play`, `publish`, `render`, `Shell`, `fact`, `SkipOrder`, `verify*` |
+| `calendar` | `Calendar`, `Timed`, `EventId`, `ClockRewind`, `clone`, `resetTo` |
+| `monitor` | `Safety`, `Liveness`, `Bundle`, `Monitored`, `MonitoredKeyed`, `KeyedOnly` |
+| `picture` | `Picture`, `Observation`, `lock`, `matchesNormalizingCRLF`, `renderItfJson`, `verifyCoverage`, `RenderItfOptions` |
+| `tla` | `formatDeclarations`, `formatDeclarationSection`, `lock`, `lockWithOptions`, `parseAct`, `replayJsonTrace`, `replayJsonTraceWithOptions`, `validateSpecSyntax`, `decodeItfValue`, `verifyCoverage`, `TlaError`, `ReplayStats` |
+| `role` / `trace` | Module re-exports |
+| `build.zig` | `addExploreGateCheck`, `GateRule`, `ExploreGateOptions` |
+
+Root re-exports these namespaces as well as convenience aliases for `Picture`, `Role`, `Monitored`, `MonitoredKeyed`, and `KeyedOnly`. Internal recursion helpers (`dfsRec`, `dfsKeyedRec`) are private.
+
+## Installation
+
+Add `state_tcas` as a dependency in `build.zig.zon`:
+
+```zig
+.dependencies = .{
+    .state_tcas = .{
+        .url = "git+https://github.com/lbb00/state_tcas.git#v0.3.1",
+        .hash = "...", // Generated by `zig fetch`
+    },
+},
+```
+
+Import the module in `build.zig`:
+
+```zig
+const st = b.dependency("state_tcas", .{
+    .target = target,
+    .optimize = optimize,
+});
+your_tests.root_module.addImport("state_tcas", st.module("state_tcas"));
+```
+
+Basic usage in tests:
+
+```zig
+const st = @import("state_tcas");
+
+// Enabling-set state space exploration
+try st.explore.dfs(Act, &ctx, budget, &stats);
+
+// Exhaustive permutation verification
+try st.exhaust.orders(Act, 3, .{ .a, .b, .c }, limit, &ctx, pic);
+
+// Safety / Liveness monitors
+var safety = st.monitor.Safety(Ctx){ ... };
+var calendar = st.calendar.Calendar.init(allocator);
+```
+
+## Running Tests & Examples
+
+```bash
+zig build test              # Run unit and contract test suites (includes gate-check)
+zig build gate-check        # Run native explore gate pattern checks
+zig build bootstrap         # Run self-bootstrapping dogfood verification suite
+zig build examples          # Build and run all example targets
+```
+
+| Step | Example Source | Demonstrates |
+|------|----------------|--------------|
+| `zig build example-toy` | [`examples/toy_fsm.zig`](examples/toy_fsm.zig) | State machine DFS exploration with Safety and Liveness assertions |
+| `zig build example-exhaust-lock` | [`examples/toy_exhaust_lock.zig`](examples/toy_exhaust_lock.zig) | Permutation enumeration with Mermaid diagram golden locking |
+| `zig build example-calendar` | [`examples/toy_calendar_timeout.zig`](examples/toy_calendar_timeout.zig) | Virtual calendar deadlines, cancellation, and monotonic clock checks |
+| `zig build example-calendar-dfs` | [`examples/toy_calendar_dfs.zig`](examples/toy_calendar_dfs.zig) | Calendar snapshotting (`clone` / `resetTo`) during DFS backtracking |
+| `zig build example-act-log` | [`examples/toy_act_log_dfs.zig`](examples/toy_act_log_dfs.zig) | Action-log rebuild with DFS for stateful, non-cloneable systems |
+| `zig build example-tla-lock` | [`examples/toy_tla_lock.zig`](examples/toy_tla_lock.zig) | TLA+ declaration golden lock and ITF trace replay |
+| `zig build example-bootstrap` | [`examples/toy_bootstrap_dogfood.zig`](examples/toy_bootstrap_dogfood.zig) | Full dogfooding self-verification across Calendar, SleepSet POR, minimizeTrace, and TLA+ |
+
+## Documentation
+
+- [Harness & Integration Cookbook](docs/harness.md): Context duck-type specifications, DFS/BFS integration patterns, RAII handling, and virtual time recipes.
+- [Frequently Asked Questions](docs/FAQ.md): Architectural decisions, live SUT integration, exploration layers (L0/L1/L2), and clock semantics.
+- [Changelog](CHANGELOG.md): Release notes and migration instructions.
+- [Contributing](CONTRIBUTING.md): Code style, testing requirements, and contribution guidelines.
+
+## Key Design Principles
+
+### 1. Context Contracts & Verification
+Context structures conform to lightweight duck types checked at compile time via `verify*` entrypoints. Missing methods fail immediately at the API boundary with descriptive `@compileError` messages. Detailed templates are available in [`docs/harness.md`](docs/harness.md).
+
+### 2. Search Strategies & Memory Safety
+- `explore.dfs` copies enabled action slices into a fixed-size stack buffer (`max_enabled = 64`) per frame. Reusing an action buffer across recursion frames is completely safe; action sets exceeding this bound return `error.EnabledSetTooLarge`.
+- Exploration terminates cleanly with `error.SearchIncomplete` when the configured visit budget is reached.
+- `dfsKeyed` and `bfs` employ state-keyed pruning: visiting a previously recorded state key backtracks immediately.
+
+### 3. Permutation Testing
+- `exhaust.orders` explores all unique permutations of a given action sequence.
+- If a particular permutation is invalid in the current scenario, the harness can return `error.SkipOrder` to bypass that path while continuing the broader suite.
+- For fixed scenarios, `exhaust.play` replays an exact action sequence without factorial permutation expansion.
+
+### 4. Monotonic Virtual Clocks
+`Calendar` advances monotonically via `advanceTo` (returning `error.ClockRewind` on backwards jumps) and `advanceBy` (returning `error.Overflow` on arithmetic overflow). In DFS exploration, virtual time is restored using snapshots (`clone` in `step`, `resetTo` in `undo`).
+
+### 5. Safety & Liveness Verification
+- **Safety**: Invariants should assert delta transitions against snapshots rather than sticky terminal states.
+- **Liveness**: Goals tracked via `Liveness.note()` remain monotonic across DFS backtracking; a goal satisfied on any explored path persists through `finish()`.
+
+## License
+
+[MIT](LICENSE)

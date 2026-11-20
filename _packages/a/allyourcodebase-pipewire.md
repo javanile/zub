@@ -6,9 +6,9 @@ author: allyourcodebase
 author_github: allyourcodebase
 repository: https://github.com/allyourcodebase/pipewire
 keywords:
-date: 2026-04-13
-updated_at: 2026-04-13T23:21:05+00:00
-last_sync: 2026-04-13T23:21:05Z
+date: 2026-11-15
+updated_at: 2026-11-15T20:43:34+00:00
+last_sync: 2026-11-15T20:43:34Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -47,7 +47,7 @@ Note that the video feed will be fairly low resolution as the example doesn't ha
 
 ## Status
 
-Only the pipewire plugins/modules required for the provided examples are currently built. To use other parts of the pipewire API, you may need to add more symbols to the `libs` table in [src/wrap/dlfcn.zig](src/wrap/dlfcn.zig) and regenerate `c.zig` if additional pipewire headers are required. Contributions welcome!
+Only the pipewire plugins/modules required for the provided examples are currently built. To use other parts of the pipewire API, you may need to add more symbols to the `libs` table in [src/wrap/dlfcn.zig](src/wrap/dlfcn.zig). Contributions welcome!
 
 ## Usage
 
@@ -81,6 +81,7 @@ defer pw.pw_deinit();
 ```
 
 See [`src/examples`](`src/examples`) for more information.
+
 
 ### Help, I'm getting undefined symbols!
 

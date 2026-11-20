@@ -6,9 +6,9 @@ author: allyourcodebase
 author_github: allyourcodebase
 repository: https://github.com/allyourcodebase/wayland
 keywords:
-date: 2026-10-14
-updated_at: 2026-10-14T20:34:05+00:00
-last_sync: 2026-10-14T20:34:05Z
+date: 2026-11-12
+updated_at: 2026-11-12T18:42:00+00:00
+last_sync: 2026-11-12T18:42:00Z
 package_kind: hybrid
 has_library: true
 has_binary: true

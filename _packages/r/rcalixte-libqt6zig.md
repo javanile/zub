@@ -16,10 +16,10 @@ keywords:
   - qt-widgets
   - qt6
   - qt6-widgets
-date: 2026-10-27
+date: 2026-11-19
 category: systems
-updated_at: 2026-10-27T23:43:22+00:00
-last_sync: 2026-10-27T23:43:22Z
+updated_at: 2026-11-19T11:41:37+00:00
+last_sync: 2026-11-19T11:41:37Z
 package_kind: library
 has_library: true
 has_binary: false

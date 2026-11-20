@@ -13,10 +13,10 @@ keywords:
   - websocket
   - websocket-client
   - websocket-server
-date: 2026-11-06
+date: 2026-11-20
 category: networking
-updated_at: 2026-11-06T19:10:26+00:00
-last_sync: 2026-11-06T19:10:26Z
+updated_at: 2026-11-20T11:55:11+00:00
+last_sync: 2026-11-20T11:55:11Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -34,7 +34,7 @@ permalink: /packages/lalinsky/dusty/
 
 [![CI](https://github.com/lalinsky/dusty/actions/workflows/test.yml/badge.svg)](https://github.com/lalinsky/dusty/actions/workflows/test.yml)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Zig](https://img.shields.io/badge/zig-0.17.0-orange.svg)](https://ziglang.org/download/)
+[![Zig](https://img.shields.io/badge/zig-0.17.1-orange.svg)](https://ziglang.org/download/)
 [![Documentation](https://img.shields.io/badge/docs-online-green.svg)](https://lalinsky.github.io/dusty/)
 [![HTTP Arena H1](https://img.shields.io/endpoint?url=https://http-arena.com/badge/dusty/h1.json)](https://http-arena.com/#type=emerging,flagship&tuned=0)
 [![HTTP Arena WebSocket](https://img.shields.io/endpoint?url=https://http-arena.com/badge/dusty/ws.json)](https://http-arena.com/#scope=ws&type=emerging,flagship&tuned=0)
@@ -64,7 +64,7 @@ See the [documentation](https://lalinsky.github.io/dusty/) for the full guide.
 - Server-Sent Events, and WebSocket on both the server and the client
 - Static files with conditional and range requests, and assets embedded at build time
 - HTTP and HTTPS client with connection pooling, and Unix socket support
-- TLS on both sides, including client certificates, through [tls.zig](https://github.com/lalinsky/tls.zig)
+- TLS on both sides, including client certificates, through [ztls](https://github.com/lalinsky/ztls), or a TLS library of your choice
 
 ## Installation
 
@@ -73,7 +73,7 @@ Requires Zig 0.16 or 0.17.
 1) Add Dusty as a dependency in your `build.zig.zon`:
 
 ```sh
-zig fetch --save "git+https://github.com/lalinsky/dusty"
+zig fetch --save "git+https://github.com/lalinsky/dusty#v0.6.0"
 ```
 
 2) In your `build.zig`, add the `dusty` module as a dependency to your program:
@@ -105,7 +105,7 @@ fn index(app: *App, res: *http.Response) !void {
     try res.print(.text, "{s}, world!\n", .{app.greeting});
 }
 
-fn hello(app: *App, name: http.Param("name", []const u8), res: *http.Response) !void {
+fn hello(app: *App, name: http.Path("name", []const u8), res: *http.Response) !void {
     try res.print(.text, "{s}, {s}!\n", .{ app.greeting, name.value });
 }
 
@@ -167,7 +167,7 @@ across browser tabs over Server-Sent Events.
 
 Databases:
 
-- [pg.zig](https://github.com/lalinsky/pg.zig) - PostgreSQL client (fork that uses [tls.zig](https://github.com/ianic/tls.zig) instead of `OpenSSL` for `std.Io` compatibility)
+- [pg.zig](https://github.com/lalinsky/pg.zig) - PostgreSQL client for `std.Io`, with optional TLS through [ztls](https://github.com/lalinsky/ztls)
 - [mysql](https://github.com/speed2exe/myzql) - MySQL client
 - [redis.zig](https://github.com/lalinsky/redis.zig) - Redis client
 - [memcached.zig](https://github.com/lalinsky/memcached.zig) - Memcached client
