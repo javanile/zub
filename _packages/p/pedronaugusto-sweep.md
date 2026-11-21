@@ -1,0 +1,357 @@
+---
+title: sweep
+description: "Path globs and ignore rules for Zig: git-exact, linear time"
+license: MIT
+author: pedronaugusto
+author_github: pedronaugusto
+repository: https://github.com/pedronaugusto/sweep
+keywords:
+  - gitignore
+  - glob
+date: 2026-11-11
+updated_at: 2026-11-11T14:52:40+00:00
+last_sync: 2026-11-11T14:52:40Z
+package_kind: hybrid
+has_library: true
+has_binary: true
+has_distributable_binary: true
+binary_count: 1
+distributable_binary_count: 1
+multiple_binaries: false
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
+permalink: /packages/pedronaugusto/sweep/
+---
+
+# sweep
+
+sweep matches path globs in Zig: git's wildmatch exactly, and the common glob
+dialects beside it, for one pattern or many at once. Matching time is linear
+in the subject for every pattern, by construction: there is no backtracking and
+no recursion anywhere, the parser included.
+
+Work in progress toward the public cut. Optional `normalization = .nfc`
+matches composed scalars in patterns and names; defaults remain exact.
+`foldCase` and `Composed` share Unicode data with filesystem callers.
+
+## Install
+
+Requires Zig 0.17.0. Fetch with `zig fetch --save
+git+https://github.com/pedronaugusto/sweep`, then obtain the `sweep` module through
+`b.dependency` and add it to your executable's imports. sweep depends on the
+std-only aegis safety library
+at runtime. Its matching and capture APIs build for every target,
+wasm32-freestanding included. Optional filesystem expansion uses `std.Io`.
+There is one module, `sweep`, with two namespaces: `sweep.glob` (pure matching
+and Unicode transforms) and `sweep.walk` (filesystem expansion); the common
+names are also at the root. A program that only matches never compiles the walk.
+See [the design](docs/design.md) for ownership, layers and matching bounds.
+
+The package a project fetches is sweep's build files, its Zig sources and its docs: 144 KB
+compressed, 0.6 MiB unpacked. Its test data (the UCD's NormalizationTest.txt and CaseFolding.txt,
+the pattern corpora) stays in the repository under `testdata/`.
+
+## Stability
+
+sweep is 0.x and tracks Zig 0.17.x. A breaking change comes only in a minor release
+(0.3 to 0.4), with a CHANGELOG entry saying what changed and what to write instead; a
+patch release never breaks.
+
+## Usage
+
+`match` answers one question with no allocation:
+
+<!-- BEGIN GENERATED zig build docs -- usage -->
+```zig
+const sweep = @import("sweep");
+
+// git's dialect: `*` stays in one component, `**/` spans any number.
+std.debug.assert(try sweep.match("src/**/*.zig", "src/a/b/c.zig", .{}));
+std.debug.assert(!try sweep.match("src/*.zig", "src/a/c.zig", .{}));
+// gitignore's rule for a pattern with no separator: any depth.
+std.debug.assert(try sweep.match("*.o", "build/x/y.o", .{ .anywhere = true }));
+// Braces and UTF-8 scalars in the glob dialect.
+std.debug.assert(try sweep.match("*.{c,h}", "main.h", .{ .syntax = .glob }));
+```
+<!-- END GENERATED -->
+
+A `Pattern` is compiled once for many subjects, and answers the questions a walk
+asks:
+
+<!-- BEGIN GENERATED zig build docs -- pattern -->
+```zig
+const sweep = @import("sweep");
+
+var pattern: sweep.Pattern = try .compile(gpa, "src/**/test_*.zig", .{});
+defer pattern.deinit();
+std.debug.assert(pattern.matches("src/net/test_io.zig"));
+// Walking: start at the literal base, enter only what can lead to a match.
+std.debug.assert(std.mem.eql(u8, pattern.base(), "src"));
+std.debug.assert(pattern.leadsTo("src/net"));
+std.debug.assert(!pattern.leadsTo("docs"));
+// Capture scratch is separate and reusable, with one cache per thread.
+var captures = try pattern.captureCache(gpa);
+defer captures.deinit();
+var out: [4]?sweep.Pattern.Capture = undefined;
+std.debug.assert(try pattern.captures(&captures, "src/net/test_io.zig", &out));
+// Captures include the globstar directory and the filename's star.
+```
+<!-- END GENERATED -->
+
+Filesystem expansion accepts a borrowed Pattern or a Set with its cache:
+
+<!-- BEGIN GENERATED zig build docs -- walk -->
+```zig
+const sweep = @import("sweep");
+
+var pattern = try sweep.Pattern.compile(gpa, "src/**/*.zig", .{});
+defer pattern.deinit();
+var walk = try sweep.Walk.open(gpa, io, .cwd(), .{ .pattern = &pattern }, .{
+    .hidden = false,
+    .files_only = true,
+});
+defer walk.deinit(io);
+while (try walk.next(io)) |entry| {
+    // entry.path is borrowed until the next call or deinit.
+    std.mem.doNotOptimizeAway(entry.path);
+}
+```
+<!-- END GENERATED -->
+
+A `Set` matches many patterns in one pass. With `gitignore.parseLine` it is an
+ignore file:
+
+<!-- BEGIN GENERATED zig build docs -- set -->
+```zig
+const sweep = @import("sweep");
+
+const lines = [_][]const u8{ "*.log", "!keep.log", "build/" };
+var builder: sweep.Set.Builder = .init(gpa);
+defer builder.deinit();
+var negated: [lines.len]bool = undefined;
+for (lines) |line| {
+    const parsed = sweep.gitignore.parseLine(line) orelse continue;
+    negated[(try builder.add(parsed.pattern, parsed.entry)).raw()] = parsed.negated;
+}
+var set = try builder.build();
+defer set.deinit();
+// One cache per thread; queries allocate nothing.
+var cache: sweep.Set.Cache = try .init(gpa, &set, .{});
+defer cache.deinit();
+// The last matching line decides, and a negated line re-includes.
+const ignored = struct {
+    fn f(s: *const sweep.Set, c: *sweep.Set.Cache, n: []const bool, path: []const u8, kind: sweep.Kind) bool {
+        return if (s.last(c, path, kind)) |i| !n[i.raw()] else false;
+    }
+}.f;
+std.debug.assert(ignored(&set, &cache, &negated, "x/debug.log", .file));
+std.debug.assert(!ignored(&set, &cache, &negated, "x/keep.log", .file));
+std.debug.assert(ignored(&set, &cache, &negated, "build", .dir));
+// Every parent in one pass: a file under an ignored directory is ignored.
+var it = set.ancestors(&cache, "build/out/keep.log", .file);
+while (it.next()) |step| {
+    if (step.last) |i| if (!negated[i.raw()]) break;
+}
+```
+<!-- END GENERATED -->
+
+## Design
+
+A pattern compiles to a Thompson automaton over units, bytes or UTF-8 scalars,
+with forward epsilon edges except for regular extglob repetition. Closure tracks
+visited contexts, so each automaton state is visited at most once per subject unit:
+O(n·m) for n units and m states. The NFA counts the states it closes, and a set's
+lazy DFA its transitions and the states it closes to build new ones, and both
+assert that bound in safe builds; a literal comparison or the eager DFA takes one
+step a unit. The tests run the bound against inputs that make backtracking
+matchers exponential.
+
+Three executors sit on top of the automaton. A pattern a few byte comparisons
+decide (`src/main.zig`, `*.c` at any depth, `build/**`, `**/node_modules`) never
+runs it. Others are checked against the literal prefix and suffix every match
+needs, then use a validated direct reader for plain byte patterns or a small DFA
+built at compile time (64 states at most); the
+NFA is the fallback that keeps the bound. A set hashes the literal entries (whole
+paths, base names, extensions, directory prefixes, path suffixes and component prefixes) and runs the
+rest as one lazy DFA whose states a per-thread cache builds on first use. A set of at most 32
+entries that literal comparisons and the direct reader decide asks them one at a time instead, which
+costs a few nanoseconds an entry and does not touch the cache.
+
+`match` reads a plain pattern straight from its text, only as far as the answer
+needs: bytes, `?`, `*`, `**`, and brackets of bytes and ranges with case kept, with
+no escape or brace. Stars split a component into segments; a star before the last
+takes exactly what that segment leaves, and a star before any other the least it
+can, so a component is read once, and the last `**` over components is the one
+retry point, which keeps the bound. Any other pattern it builds as the automaton on
+the stack, in about 24 KiB. Neither allocates, and `match` is inline, so options
+known at compile time choose the reader at compile time. `match` takes patterns up
+to 1024 units with up to 64 brackets, whichever reader would take them; a longer one
+is `error.PatternTooLong` and compiles as a `Pattern`. Construction can also exhaust one-shot scratch with many classes or interval
+blocks; use a `Pattern` in that case. A `Pattern` takes up to
+8192 units (`Pattern.max_units`) and runs its NFA on the caller's stack, in about
+14 KiB, so any number of threads query it with nothing shared; a longer pattern is
+`error.PatternTooLong`, and a `Set` of one entry takes it. `Pattern` and `Set` matching
+allocate when they are built and never after; a `Set.Cache` allocates once at
+`init`, clears itself when full, and finishes a query that keeps clearing it on the
+NFA, so its capacity changes speed, never answers or the bound. `cache.stats()`
+counts the states built, the clears and the fallbacks.
+
+### Dialects
+
+One parser reads every dialect; each `Syntax` field is independent:
+
+| Field | Meaning |
+|---|---|
+| `separator` | `*`, `?` and brackets never match it, and `**` standing between two of them is a globstar. `null` is text mode: `*` matches anything. |
+| `globstar` | `.component`: `**` as a whole component matches zero or more components, and is `*` anywhere else. `.anywhere`: every `**` matches any run. `.off`: `**` is `*`. |
+| `escape` | `\x` matches `x`, inside brackets too. A trailing lone `\` is an invalid pattern. |
+| `brackets` | `.strict`: an unclosed `[` or an unknown `[:class:]` is an invalid pattern. `.lenient`: an unclosed `[` is a literal. `.none`: `[` is a literal. |
+| `braces` | `{a,b}`, nested, empty alternatives allowed; compiled as alternation, never expanded. |
+| `unit` | `.byte`, or `.utf8`: `?` and a bracket take one scalar, and each byte of an ill-formed sequence is a unit of its own. |
+| `numeric_ranges` | Signed 64-bit integer intervals `{n..m}`, compiled by decimal digit blocks. Optional signs, canonical decimal digits, no leading zeroes. |
+| `extglob` | Regular `?()`, `*()`, `+()` and `@()` groups, with nested alternatives. Complement `!()` is refused. |
+| `basename`, `root_slash` | Basename matching for separator-free patterns, and a leading separator anchored relative to the root. |
+| `single_brace_literal` | A brace group with no comma keeps its braces literally. |
+| `globstar_slash` | Under `.anywhere`, `/**/` also matches zero directories. |
+| `bracket_separator_literal` | A bracket containing an unescaped separator is literal text. |
+| `leading_dot` | `.explicit`: a `.` starting a component is matched only by a literal `.` starting a pattern component. |
+
+| Preset | Equals |
+|---|---|
+| `Syntax.git` | git's `wildmatch` with `WM_PATHNAME`: `.gitignore`, attributes, `:(glob)` pathspecs |
+| `Syntax.git_text` | git's `wildmatch` without it, and `fnmatch` with no flags |
+| `Syntax.glob` | path globs with braces over UTF-8 scalars |
+| `Syntax.editorconfig` | UTF-8 globs with braces, numeric intervals, globstars anywhere, basename/root anchoring and literal singleton braces |
+| `Syntax.posix` | `fnmatch(FNM_PATHNAME \| FNM_PERIOD)` in a UTF-8 locale |
+
+`Case.ascii` folds A–Z everywhere. `Case.ascii_git` is git's `WM_CASEFOLD` exactly,
+quirks included: an escaped letter and a bracket member compare unfolded, so `\A`
+and `[A]` match nothing while `[A-Z]` matches `q`.
+
+`Case.unicode` uses Unicode 18.0.0 default simple case folding: literals, escaped
+literals and bracket ranges compare by one canonical scalar. It implies UTF-8
+units. Folding alone does not normalize, expand `ß` to `ss`, or apply Turkic
+mappings.
+Invalid UTF-8 bytes remain distinct. The Unicode data is xenoglyph's.
+
+`Options.normalization = .nfc` composes pattern literals and names after parsing
+syntax. `[é]` matches composed or decomposed é, never plain e; `?` consumes one
+composed scalar. Ranges, negation and escapes use those scalars too. A bracket
+member that remains multiple scalars is rejected when the pattern compiles.
+The allocation-free `Composed` iterator and `foldCase` share sweep's Unicode
+data with callers; filesystem equivalence policy remains the caller's.
+
+`Options.anywhere` is gitignore's basename rule: a pattern holding no separator
+byte matches the last component at any depth.
+
+Braces follow their expansion: `{**/a,b}` holds a globstar and `x{**,y}` does not,
+since `x` comes first. A `**` is two or more `*` written together, so `*{*,a}` is
+two stars.
+
+Where git aborts on a malformed bracket it returns no match; sweep refuses the
+pattern with `error.InvalidPattern` and fills `Options.diagnostics` with the byte
+offset and the reason.
+
+## API
+
+| Call | Does |
+|---|---|
+| `match(pattern, subject, options)` | Whether a pattern matches all of a subject, with no allocation |
+| `Pattern.compile(gpa, pattern, options)` | A pattern of up to 8192 units compiled once; nothing stays borrowed |
+| `pattern.matches(subject)` | Whether it matches |
+| `pattern.ancestor(subject)` | The end of the shortest prefix ending at a separator, or the whole subject, that matches |
+| `pattern.leadsTo(dir)` | Whether anything below `dir` could match; exact, so a walk can prune by it |
+| `pattern.base()` | The literal leading directories a walk of the pattern starts from |
+| `pattern.captureCache(gpa)` | Allocates a tagged program and scratch once; the pattern must outlive the cache |
+| `pattern.captures(cache, subject, out)` | Greedy byte ranges in lexical opening order; unselected items are null, empty captures have equal offsets; allocates nothing |
+| `Walk.open(gpa, io, dir, matcher, options)` | Starts a filesystem walk at a Pattern’s base, pruning with `leadsTo`; a matcher borrows a Pattern or a Set and its dedicated cache |
+| `walk.next(io)`, `walk.deinit(io)` | Next borrowed path, or release owned directories and buffers |
+| `expand(gpa, io, dir, matcher, options)` | Owned paths in a `Paths` result; release with `paths.deinit()` |
+| `Set.Builder.add(pattern, entry)` | Adds an entry and returns a `Set.Index`; `entry.dir_only` matches directories only |
+| `set.any`, `first`, `last`, `all` | Whether any entry matches; the lowest or highest matching index; every `Set.Index`, ascending |
+| `set.ancestors(cache, path, kind)` | One pass over every prefix of a path: the last entry matching each, and whether anything below can |
+| `set.leadsTo(cache, dir)` | Whether anything below `dir` could match |
+| `gitignore.parseLine(line)` | One ignore-file line: its pattern, `Set.Entry` and whether it is negated |
+| `gitignore.parsePattern(text)` | One pattern as given, without a file's comments and trimming (git's `parse_path_pattern`, as `git clean -e` adds one) |
+| `isSpecial`, `literalPrefix`, `escape` | Which bytes are special; the plain leading run; a literal written as a pattern |
+
+A set's entries share primary and alternate separators (`error.SeparatorMismatch`
+otherwise); each has
+its own syntax, case and `anywhere`. A `Set` is immutable and any number of threads
+may query it, each through a `Set.Cache` of its own. Negation and include or
+exclude policy are the caller's: gitignore is `if (set.last(...)) |i| !negated[i.raw()]`.
+
+Captures include star runs, question marks, brackets and brace/range/extglob
+groups. Scratch costs O(states × captures). Each subject position visits each
+state at most once; copying capture histories costs O(captures) per visit.
+Repeated items retain their last participating iteration’s capture. The cache
+exposes `count()` for sizing `[]?Pattern.Capture`; a short output returns
+`error.BufferTooSmall`, and a nonmatch leaves the output unchanged.
+
+Walking accepts `/` separators. The supplied directory, matcher and Set cache
+stay borrowed. By default hidden entries are eligible when the dialect permits,
+and directory symlinks are not followed. `follow_symlinks` checks ancestor cycles,
+`hidden = false` excludes hidden entries, `files_only` excludes directories, and
+`order = .lexical` materializes and sorts matches globally. The default order is
+filesystem traversal order. Paths are relative to the supplied directory. Set
+expansion returns the union of matches. `Options.ignore` narrows a walk by ignore
+files stacked as git stacks them (`sweep.ignore`).
+
+## Scope
+- Ignore files are read and stacked as git does (`sweep.ignore`: `Stack`,
+  `Checker`, `Walk.Options.ignore`); attribute files are not read. Finding a
+  repository, and the files above a walk's root, are the caller's: add them as
+  levels.
+- Canonical NFC is optional; no compatibility normalization or full case-fold
+  expansion.
+- Native Windows matching accepts `.alternate_separator = '\\'` with
+  `.escape = false`. Walking emits `/` paths; matching preserves supplied bytes.
+- No negated patterns or complement `!(...)` extglobs.
+- No translation to regular expressions and no brace expansion to strings.
+
+## Platforms
+
+Matching and captures work on every target Zig supports, with the same
+behaviour. Filesystem expansion requires a target with directory support and
+a caller-supplied `std.Io`.
+
+## Built with
+
+- [Zig](https://ziglang.org) 0.17.0 and its standard library; nothing is linked.
+- [bay](https://github.com/pedronaugusto/bay) runs sweep's development. [preflight](https://github.com/pedronaugusto/preflight) (the source checks, the tests and CI) and [shakedown](https://github.com/pedronaugusto/shakedown) (the test doubles) are dev dependencies through bay, which a project that depends on sweep never sees.
+
+## Testing
+
+`bay test` runs the suite and the usage example. git's own wildmatch test
+vectors are committed as data, and a port of git's matcher is the reference: random
+patterns and subjects over git's alphabet must get the same answer from sweep in
+all four git modes. A naive backtracking matcher, written from the rules above, is
+the oracle for the original dialects and case rules. Integer intervals also
+agree with arithmetic, regular extglobs with a short expansion oracle, Unicode
+folding with the raw Unicode records, and new syntax and captures with independent
+generated vectors. Walking tests cover pruning, order, hidden entries, symlink
+cycles and Io failures. Compiled patterns are held to the
+one-shot matcher executor by executor, the direct reading of plain patterns to the
+NFA, `ancestor` and `leadsTo` to brute force, and sets to their entries matched one by one, `ancestors` included, also with a cache
+so small that queries finish on the NFA. The step bound is asserted on the shapes
+that make backtracking exponential, at 4096 units. Every
+allocation failure in building is survived without a leak, queries are counted to
+allocate nothing, and eight threads share one set. The properties run on seeded
+inputs in every `bay test`, and under `bay test --fuzz` they search
+further. The release tier runs the hardened profile: `bay hardened` (the suite
+with safety on and `std.testing.allocator` on shakedown's quarantine),
+`bay hardened-fuzz` (the properties under Zig's fuzzer) and, on x86_64 or
+aarch64 Linux, `bay hardened-tsan` (the suite under ThreadSanitizer).
+
+`bay bench` times sweep's own workloads in ReleaseFast: single patterns one-shot
+and compiled over a synthetic tree, compile times, set queries at 100 to 10,000 entries,
+the adversarial shapes, 9000-unit prefix and repeated-star Sets, integer ranges, regular extglobs,
+Unicode folding, captures and a pruned filesystem expansion. Run from `zig-out/bench`, `bench
+--json` prints JSON lines. `bay test` runs it once at its smallest size with
+`--smoke`; CI times nothing.
+
+## Licence
+
+MIT. See [LICENSE](LICENSE). The Unicode test data in `testdata/` uses the
+[Unicode data license](testdata/UNICODE-LICENSE.txt).

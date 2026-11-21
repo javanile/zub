@@ -8,9 +8,9 @@ repository: https://github.com/karlseguin/log.zig
 keywords:
   - logging-library
   - structured-logging
-date: 2026-11-19
-updated_at: 2026-11-19T11:42:51+00:00
-last_sync: 2026-11-19T11:42:51Z
+date: 2026-11-21
+updated_at: 2026-11-21T03:11:51+00:00
+last_sync: 2026-11-21T03:11:51Z
 package_kind: library
 has_library: true
 has_binary: false

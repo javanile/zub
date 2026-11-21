@@ -10,9 +10,9 @@ keywords:
   - learning-lab
   - monorepo
   - neural-networks
-date: 2026-10-12
-updated_at: 2026-10-12T17:17:30+00:00
-last_sync: 2026-10-12T17:17:30Z
+date: 2026-11-14
+updated_at: 2026-11-14T22:49:25+00:00
+last_sync: 2026-11-14T22:49:25Z
 package_kind: hybrid
 has_library: true
 has_binary: true
