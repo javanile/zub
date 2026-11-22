@@ -17,16 +17,16 @@ keywords:
   - tls
   - websocket
   - webtransport
-date: 2026-11-12
+date: 2026-11-22
 category: systems
-updated_at: 2026-11-12T10:08:48+00:00
-last_sync: 2026-11-12T10:08:48Z
+updated_at: 2026-11-22T08:11:04+00:00
+last_sync: 2026-11-22T08:11:04Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 30
-distributable_binary_count: 30
+binary_count: 29
+distributable_binary_count: 29
 multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
@@ -64,7 +64,7 @@ curl localhost:3000/      # {"hello":"world"}, OpenAPI page at /docs
 Or by hand, in a `zig init` project:
 
 ```sh
-zig fetch --save git+https://github.com/xuckless/anole#v0.5.4
+zig fetch --save git+https://github.com/xuckless/anole#v0.6.0
 ```
 
 ```zig
@@ -130,7 +130,7 @@ Every bundled library sits behind a flag, all on by default; what you switch off
 | Flag | minimal | web | full (default) | Adds |
 | --- | --- | --- | --- | --- |
 | `-Dtls=boringssl\|none` | none | boringssl | boringssl | BoringSSL |
-| `-Dhttp2=bool` | false | true | true | nghttp2 |
+| `-Dhttp2=bool` | false | true | true | HTTP/2 server and client (Zig, no C library) |
 | `-Dhttp3=bool` | false | false | true | ngtcp2, nghttp3, WebTransport |
 | `-Dcompression=bool` | false | true | true | zlib-ng, zstd |
 | `-Dbrotli=bool` | false | true | true | Brotli responses (google/brotli); needs `-Dcompression` |
@@ -171,9 +171,9 @@ Examples run with `zig build run-<name>`: `hello`, `rest`, `websocket`, `grpc`, 
 
 ## Status
 
-Pre-1.0; the latest release is [0.5.4](CHANGELOG.md), and the API may still change. Next: hardening for 1.0, then the anole-node and anole-py bindings.
+Pre-1.0; the latest release is [0.6.0](CHANGELOG.md), and the API may still change. Next: hardening for 1.0, then the anole-node and anole-py bindings.
 
-Anole stands on [zio](https://github.com/lalinsky/zio), [dusty](https://github.com/lalinsky/dusty) (adapted as its HTTP core), nghttp2, ngtcp2, nghttp3 and BoringSSL. Bugs and ideas: [Issues](https://github.com/xuckless/anole/issues/new/choose); questions: [Discussions](https://github.com/xuckless/anole/discussions); security: [SECURITY.md](SECURITY.md).
+Anole stands on [zio](https://github.com/lalinsky/zio), [dusty](https://github.com/lalinsky/dusty) (adapted as its HTTP core), nghttp2 (its HTTP/2 rules, translated to Zig), ngtcp2, nghttp3 and BoringSSL. Bugs and ideas: [Issues](https://github.com/xuckless/anole/issues/new/choose); questions: [Discussions](https://github.com/xuckless/anole/discussions); security: [SECURITY.md](SECURITY.md).
 
 ## License
 

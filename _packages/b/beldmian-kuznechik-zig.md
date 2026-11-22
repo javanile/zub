@@ -6,9 +6,9 @@ author: beldmian
 author_github: beldmian
 repository: https://github.com/beldmian/kuznechik.zig
 keywords:
-date: 2026-10-29
-updated_at: 2026-10-29T14:53:30+00:00
-last_sync: 2026-10-29T14:53:30Z
+date: 2026-11-01
+updated_at: 2026-11-01T10:57:35+00:00
+last_sync: 2026-11-01T10:57:35Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -169,11 +169,9 @@ zig build fuzz-build
 zig build fuzz-test
 ```
 
-The standalone AFL runners still need input delivery and target-name fixes
-([#3](https://github.com/beldmian/kuznechik.zig/issues/3)); the key-schedule
-harness also needs a valid oracle ([#4](https://github.com/beldmian/kuznechik.zig/issues/4)).
-These smoke checks are not evidence of a fuzzing campaign. See the
-[fuzzing status and build targets](docs/FUZZING.md).
+The standalone runners accept AFL input on stdin; `fuzz-test` remains a smoke
+check, not a coverage measurement. See [fuzzing status and build targets](docs/FUZZING.md)
+for the short uninstrumented campaign and its limits.
 
 ## Performance
 

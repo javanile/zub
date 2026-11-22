@@ -6,9 +6,9 @@ author: JonathanHallstrom
 author_github: JonathanHallstrom
 repository: https://github.com/JonathanHallstrom/pawnocchio
 keywords:
-date: 2026-08-07
-updated_at: 2026-08-07T10:33:01+00:00
-last_sync: 2026-08-07T10:33:01Z
+date: 2026-11-15
+updated_at: 2026-11-15T00:18:22+00:00
+last_sync: 2026-11-15T00:18:22Z
 package_kind: binary
 has_library: false
 has_binary: true

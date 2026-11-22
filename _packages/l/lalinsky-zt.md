@@ -1,7 +1,7 @@
 ---
 title: zt
 description: HTML template language that compiles to Zig
-license: ""
+license: MIT
 author: lalinsky
 author_github: lalinsky
 repository: https://github.com/lalinsky/zt
@@ -9,10 +9,10 @@ keywords:
   - html
   - template
   - web-development
-date: 2026-10-23
+date: 2026-11-18
 category: tooling
-updated_at: 2026-10-23T18:15:05+00:00
-last_sync: 2026-10-23T18:15:05Z
+updated_at: 2026-11-18T12:43:06+00:00
+last_sync: 2026-11-18T12:43:06Z
 package_kind: hybrid
 has_library: true
 has_binary: true

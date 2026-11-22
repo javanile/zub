@@ -11,10 +11,10 @@ keywords:
   - frostlake
   - snowflake
   - sql
-date: 2026-10-01
+date: 2026-11-01
 category: data-formats
-updated_at: 2026-10-01T14:06:51+00:00
-last_sync: 2026-10-01T14:06:51Z
+updated_at: 2026-11-01T09:56:04+00:00
+last_sync: 2026-11-01T09:56:04Z
 package_kind: hybrid
 has_library: true
 has_binary: true

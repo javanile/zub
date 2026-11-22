@@ -10,9 +10,9 @@ keywords:
   - xz-lzma
   - xz-lzma2
   - zig-xz
-date: 2026-10-18
-updated_at: 2026-10-18T13:14:40+00:00
-last_sync: 2026-10-18T13:14:40Z
+date: 2026-10-31
+updated_at: 2026-10-31T14:21:57+00:00
+last_sync: 2026-10-31T14:21:57Z
 package_kind: hybrid
 has_library: true
 has_binary: true

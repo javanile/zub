@@ -6,9 +6,9 @@ author: johan0A
 author_github: johan0A
 repository: https://github.com/johan0A/zig-linear-algebra
 keywords:
-date: 2026-09-06
-updated_at: 2026-09-06T15:31:47+00:00
-last_sync: 2026-09-06T15:31:47Z
+date: 2026-10-26
+updated_at: 2026-10-26T23:48:15+00:00
+last_sync: 2026-10-26T23:48:15Z
 package_kind: library
 has_library: true
 has_binary: false
