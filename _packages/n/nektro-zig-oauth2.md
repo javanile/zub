@@ -6,9 +6,9 @@ author: nektro
 author_github: nektro
 repository: https://github.com/nektro/zig-oauth2
 keywords:
-date: 2026-10-03
-updated_at: 2026-10-03T23:10:37+00:00
-last_sync: 2026-10-03T23:10:37Z
+date: 2026-11-01
+updated_at: 2026-11-01T09:36:10+00:00
+last_sync: 2026-11-01T09:36:10Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -27,7 +27,7 @@ permalink: /packages/nektro/zig-oauth2/
 ![loc](https://sloc.xyz/github/nektro/zig-oauth2)
 [![license](https://img.shields.io/github/license/nektro/zig-oauth2.svg)](https://github.com/nektro/zig-oauth2/blob/master/LICENSE)
 [![nektro @ github sponsors](https://img.shields.io/badge/sponsors-nektro-purple?logo=github)](https://github.com/sponsors/nektro)
-[![Zig](https://img.shields.io/badge/Zig-0.16-f7a41d)](https://ziglang.org/)
+[![Zig](https://img.shields.io/badge/Zig-0.17-f7a41d)](https://ziglang.org/)
 [![Zigmod](https://img.shields.io/badge/Zigmod-latest-f7a41d)](https://github.com/nektro/zigmod)
 
 HTTP handler functions to allow you to easily add OAuth2 login support to your Zig application.

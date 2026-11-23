@@ -7,9 +7,9 @@ author_github: eneskemalergin
 repository: https://github.com/eneskemalergin/z-toml
 keywords:
   - toml-parser
-date: 2026-05-24
-updated_at: 2026-05-24T20:54:48+00:00
-last_sync: 2026-05-24T20:54:48Z
+date: 2026-10-31
+updated_at: 2026-10-31T17:51:02+00:00
+last_sync: 2026-10-31T17:51:02Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -31,15 +31,15 @@ permalink: /packages/eneskemalergin/z-toml/
 <h1 align="center">z-toml</h1>
 
 <p align="center">
-  TOML v1.1.0 parser and rewrite toolkit for Zig 0.16.
+  TOML v1.1.0 parser and rewrite toolkit for Zig 0.16 and 0.17.
 </p>
 
 <p align="center">
   <a href="https://github.com/eneskemalergin/z-toml/actions/workflows/ci.yml">
     <img src="https://github.com/eneskemalergin/z-toml/actions/workflows/ci.yml/badge.svg?style=flat-square" alt="CI">
   </a>
-  <img src="https://img.shields.io/badge/version-v0.4.0-2C8EBB?style=flat-square" alt="v0.4.0">
-  <img src="https://img.shields.io/badge/zig-0.16.0-F7A41D?style=flat-square&logo=zig&logoColor=white" alt="Zig 0.16.0">
+  <img src="https://img.shields.io/badge/version-v0.4.1-2C8EBB?style=flat-square" alt="v0.4.1">
+  <img src="https://img.shields.io/badge/zig-0.16.0%20%7C%200.17.0-F7A41D?style=flat-square&logo=zig&logoColor=white" alt="Zig 0.16.0 | 0.17.0">
   <img src="https://img.shields.io/badge/TOML-v1.1.0-9C4221?style=flat-square" alt="TOML v1.1.0">
   <img src="https://img.shields.io/badge/license-MIT-4B9D6E?style=flat-square" alt="MIT">
 </p>
@@ -99,16 +99,16 @@ try toml.rewriteValueAtPath(
 
 ## Install
 
-Requires Zig `0.16.0` or later.
+Requires Zig `0.16.0` or `0.17.0`.
 
 ```sh
-zig fetch --save https://github.com/eneskemalergin/z-toml/archive/refs/tags/v0.4.0.tar.gz
+zig fetch --save https://github.com/eneskemalergin/z-toml/archive/refs/tags/v0.4.1.tar.gz
 ```
 
 ```zig
 .dependencies = .{
     .z_toml = .{
-        .url = "https://github.com/eneskemalergin/z-toml/archive/refs/tags/v0.4.0.tar.gz",
+        .url = "https://github.com/eneskemalergin/z-toml/archive/refs/tags/v0.4.1.tar.gz",
         .hash = "<run zig fetch to get the hash>",
     },
 };
@@ -130,9 +130,14 @@ exe.root_module.addImport("toml", z_toml.module("toml"));
 
 ## Roadmap
 
-- `v0.4.0`: faithful output, structured-path rewrites, spans, and real-document validation.
-- `v0.4.1`: detailed documentation, guides, and reference material.
-- `v0.5.0`: CLI with `to-json`, `fmt`, `lint`, and `rewrite` commands.
+Direction, not a schedule. Items land when they are ready.
+
+- **Documentation**: guides and reference material for parsing, typed mapping, faithful output, and rewrites.
+- **CLI**: `to-json`, `fmt`, `lint`, and `rewrite` commands, then extensions shaped by user feedback.
+- **Typed serialization**: complete round trips, with `parseInto(T)` for reads and `writeFromStruct(T)` for writes.
+- **Config overlays**: merge parsed trees, for layered configuration.
+- **Composability**: zero-copy views together with format hints.
+- **Zig releases**: keep up with new Zig versions as they ship.
 
 ## License
 

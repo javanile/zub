@@ -8,16 +8,16 @@ repository: https://github.com/baskingspot/http
 keywords:
   - http
   - parsers
-date: 2026-11-12
+date: 2026-11-18
 category: networking
-updated_at: 2026-11-12T06:55:00+00:00
-last_sync: 2026-11-12T06:55:00Z
+updated_at: 2026-11-18T02:30:59+00:00
+last_sync: 2026-11-18T02:30:59Z
 package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 18
-distributable_binary_count: 18
+binary_count: 19
+distributable_binary_count: 19
 multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
@@ -71,7 +71,7 @@ The library is pre-1.0 and the API is not frozen; a consumer pins a version.
 - [The client contract](https://baskingspot.dev/http/#the-client-contract): `client.Request` and `client.Body` are protocol-neutral, `client.Response.body.reader` is a `std.Io.Reader` over a framing-blind decoder, and `client.Client` dispatches to an h1 or an h2 adapter.
 - [The client](https://baskingspot.dev/http/#the-client): `client.Client.send` dials and sends in one call, `attached` takes a socket you already own, and `client.transport.Connector` is the seam that keeps TLS in a separate module.
 - [Running a server](https://baskingspot.dev/http/#running-a-server): `engine.Handler(Exchange)` is the one vtable every engine calls, and `http_tls` adds TLS without putting crypto in the core.
-- [Performance](https://baskingspot.dev/http/#performance): 81 ns against 79 ns on a typical request head, 255 ns against 334 ns on a wide one, and 3.8x on a 1 KiB header value.
+- [Performance](https://baskingspot.dev/http/#performance): head-parser time on four heads, measured over the corpus in `bench/h1_bench.zig`, with the table as the only place the numbers live.
 - [Limits](https://baskingspot.dev/http/#limits): no chunked request bodies on h1, no connection reuse, and the rest of what is not here.
 
 Not implemented:
@@ -79,18 +79,18 @@ Not implemented:
 - Streaming request bodies: `client.Request.body` is a `[]const u8`, and an engine's `Exchange.request.body` is the whole body up to `Config.body_bytes`.
 - Chunked request bodies on the server: `h1.ServerConn` answers 501 with `RejectReason.chunked_unsupported`.
 - Response trailers: `h1.ClientConn` parses them into `Config.trailers`, and `client.ResponseHead` has no trailer list, so the fields are dropped.
-- Connection reuse and pooling: `h1.client.buffered.fetch` does not reuse the connection, and nothing in `http.client` pools one.
-- Redirects: a 3xx comes back as a `client.Response` with its `Status`; nothing follows it.
+- Connection pooling: `client.Client` reuses one kept-alive connection, but there is no pool of several and `h1.client.buffered.fetch` still does not reuse one.
+- HTTP/2 multiplexing: one request is in flight per connection, even on h2. Content decoding: `Accept-Encoding` is not sent, so a `Content-Encoding` body arrives encoded.
 - Cookies: `Headers` never combines `Set-Cookie`, h2 `cookie` lines stay separate, and there is no jar.
 - Routing: `h1.targetForm` classifies the target and stops. There is no router and no method dispatch.
 - Middleware: `engine.Handler` is one vtable with four entries, and nothing chains around it.
 - Server push: a received `PUSH_PROMISE` is a connection error `PROTOCOL_ERROR`.
-- HTTP/3: there is no `h3` namespace, no QPACK, and no QUIC varint.
+- HTTP/3: `h3.frame`, `h3.head`, `h3.control`, and `h3.Session` cover framing, heads, the control stream, and one connection; `qpack` handles field sections and `varint` the QUIC integer. There is no QUIC driver yet.
 
 ## Install
 
 ```sh
-zig fetch --save https://baskingspot.dev/http/v0.6.1.tar.gz
+zig fetch --save https://baskingspot.dev/http/v0.8.1.tar.gz
 ```
 
 Add the module in `build.zig`:

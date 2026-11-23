@@ -1,16 +1,16 @@
 ---
 title: datastar.zig
-description: Datastar SDK for zig 0.16
-license: MIT
+description: Datastar SDK for zig 0.17
+license: NOASSERTION
 author: zigster64
 author_github: zigster64
 repository: https://github.com/zigster64/datastar.zig
 keywords:
   - data-star
   - datastar
-date: 2026-09-12
-updated_at: 2026-09-12T16:42:59+00:00
-last_sync: 2026-09-12T16:42:59Z
+date: 2026-11-13
+updated_at: 2026-11-13T21:58:01+00:00
+last_sync: 2026-11-13T21:58:01Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -24,9 +24,9 @@ sync_source: zigistry
 permalink: /packages/zigster64/datastar.zig/
 ---
 
-# datastar.zig - A Web Framework for Zig 0.16
+# datastar.zig - A Web Framework for Zig 0.17
 
-**A Datastar-aware HTTP server for Zig 0.16. using Datastar v1.0.3**
+**A Datastar-aware HTTP server for Zig 0.17. using Datastar v1.0.5**
 
 
 Build realtime collaborative web apps where the backend pushes DOM patches, signal updates, and browser scripts to connected clients over a fast SSE pipe. Single binary, no JS bundler, no frontend framework.
@@ -46,7 +46,7 @@ Related repos:
 
 ## Zig Version
 
-Requires Zig **0.16.0** or newer. Tracks the `0.16.0` release.
+Requires Zig **0.17.0** or newer. Tracks the `0.17.0` release.
 
 Breaking Change - sse.patchSignals no longer needs the 'json_options' field, so its simplified to `sse.patchSignals(object, options)`.
 
@@ -112,7 +112,7 @@ A complete, working reactive Datastar app: `zig build && ./your-app`, visit `htt
 The fastest way to get a feel for what this library does is to run the bundled examples.
 
 ```bash
-# Zig 0.16 or newer must be installed
+# Zig 0.17 or newer must be installed
 git clone https://github.com/zigster64/datastar.zig
 cd datastar.zig
 zig build
@@ -179,6 +179,7 @@ fn handler(http: *HTTPRequest) !void {
     http.css(body) / cssFmt(fmt, args)    // text/css
     http.js(body) / jsFmt(fmt, args)      // application/javascript
     http.sendFile(path, content_type)     // serve a file, mime-typed by extension
+    http.sendData(content, mime_type)     // send arbritrary data, with given mime type
 
     // Read Datastar signals from the request
     http.readSignals(T)                   // T = your signals struct

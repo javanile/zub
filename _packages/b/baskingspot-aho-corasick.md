@@ -7,9 +7,9 @@ author_github: baskingspot
 repository: https://github.com/baskingspot/aho-corasick
 keywords:
   - search
-date: 2026-11-02
-updated_at: 2026-11-02T17:28:27+00:00
-last_sync: 2026-11-02T17:28:27Z
+date: 2026-11-09
+updated_at: 2026-11-09T15:35:19+00:00
+last_sync: 2026-11-09T15:35:19Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -74,10 +74,8 @@ Not implemented:
 
 ## Install
 
-Before the first tag:
-
 ```sh
-zig fetch --save git+https://github.com/baskingspot/aho-corasick
+zig fetch --save https://baskingspot.dev/aho-corasick/v0.1.0.tar.gz
 ```
 
 Add the module to your build:
@@ -93,8 +91,8 @@ Then import it:
 const ac = @import("aho-corasick");
 ```
 
-`aho-corasick` builds with Zig 0.16 and 0.17. The `acviz` tool in `tools/` is a
-separate 0.17 package, because libvaxis requires 0.17.
+`aho-corasick` builds with Zig 0.17. The `acviz` tool in `tools/` is a
+separate package, because libvaxis requires 0.17.
 
 ## Documentation
 
@@ -108,9 +106,8 @@ separate 0.17 package, because libvaxis requires 0.17.
 
 ```sh
 nix develop            # Zig 0.17 and the tools
-nix develop .#zig-old  # Zig 0.16
 just ci                # the full gate: tests, lint, and the docs build
-just check             # the test matrix and the examples, for the compatibility shell
+just check             # the test matrix and the examples, without lint, the tool, or the docs
 just viz tools/patterns.txt -f tui -t ushers  # browse the automaton
 just examples          # build the scanner in examples/
 just bench             # local benchmark suite; see bench/README.md
