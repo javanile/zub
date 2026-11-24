@@ -15,10 +15,10 @@ keywords:
   - tint-zig
   - zig-color
   - zig-terminal
-date: 2026-10-04
+date: 2026-10-31
 category: tooling
-updated_at: 2026-10-04T01:59:52+00:00
-last_sync: 2026-10-04T01:59:52Z
+updated_at: 2026-10-31T14:21:45+00:00
+last_sync: 2026-10-31T14:21:45Z
 package_kind: hybrid
 has_library: true
 has_binary: true

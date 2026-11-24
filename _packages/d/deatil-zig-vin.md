@@ -1,6 +1,6 @@
 ---
 title: zig-vin
-description: A template render library like jinja2 for zig.
+description: A template render library like jinja2 for Zig.
 license: Apache-2.0
 author: deatil
 author_github: deatil
@@ -13,9 +13,9 @@ keywords:
   - vin
   - zig-jinja
   - zig-vin
-date: 2026-11-05
-updated_at: 2026-11-05T04:42:25+00:00
-last_sync: 2026-11-05T04:42:25Z
+date: 2026-11-18
+updated_at: 2026-11-18T08:37:33+00:00
+last_sync: 2026-11-18T08:37:33Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -31,7 +31,7 @@ permalink: /packages/deatil/zig-vin/
 
 ## Zig-vin 
 
-A template render library like jinja2 for zig.
+A template render library like jinja2 for Zig.
 
 
 ### Env
@@ -113,16 +113,15 @@ pub fn main(init: std.process.Init) !void {
     });
     defer env.deinit();
 
-    var diag: vin.Diagnostic = undefined;
+    var diag: vin.Diagnostic = .{};
+    env.withDiag(&diag);
 
-    const out = try env.renderAlloc(alloc, tpl, ctx, &diag);
-    defer alloc.free(out);
-
-    const err_msg = try alloc.print("{f}", .{diag});
-    if (err_msg.len > 0) {
+    const out = try env.execute(tpl, ctx) catch {
+        const err_msg = try alloc.print("{f}", .{diag});
         std.debug.print("error: {s} \n", .{err_msg});
         return;
-    }
+    };
+    defer alloc.free(out);
 
     std.debug.print("html: {s} \n", .{out});
 }
@@ -154,9 +153,7 @@ pub fn main(init: std.process.Init) !void {
     const dl: *vin.DirLoader = try .create(
         a, io, 
         try std.Io.Dir.cwd().openDir(io, "views", .{}), 
-        .{ 
-            .suffix = ".htm",
-        },
+        .{ .suffix = ".htm" },
     );
 
     var env = try vin.Environment.initWithLoader(alloc, .{
@@ -165,20 +162,50 @@ pub fn main(init: std.process.Init) !void {
     }, dl.loader());
     defer env.deinit();
 
-    var diag: vin.Diagnostic = undefined;
+    const tpl = "index";
 
-    const out = try env.renderTemplateAlloc(alloc, tpl, ctx, &diag);
-    defer alloc.free(out);
+    var diag: vin.Diagnostic = .{};
+    env.withDiag(&diag);
 
-    const err_msg = try alloc.print("{f}", .{diag});
-    if (err_msg.len > 0) {
+    const out = try env.render(tpl, ctx) catch {
+        const err_msg = try alloc.print("{f}", .{diag});
         std.debug.print("error: {s} \n", .{err_msg});
         return;
-    }
+    };
+    defer alloc.free(out);
 
     std.debug.print("html: {s} \n", .{out});
 }
 ~~~
+
+
+### Example
+
+```html
+{% extends 'base' %}
+
+{% import 'macros' as m %}
+
+{% block interfaces %}
+<div class="box">
+    <ul>
+    {% for i in interfaces %}
+        <li>
+            {{- m.iface(i.name, i.addr, i.mask) -}}
+        </li>
+    {% endfor %}
+    </ul>
+</div>
+{% endblock %}
+
+{% block routing %}
+{{ super() }}
+
+<div class="route">
+    ip routing
+</div>
+{% endblock %}
+```
 
 
 ### LICENSE

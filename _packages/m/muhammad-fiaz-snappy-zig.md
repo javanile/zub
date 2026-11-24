@@ -13,10 +13,10 @@ keywords:
   - snappy
   - snappy-compression-library
   - snappy-zig
-date: 2026-10-17
+date: 2026-10-31
 category: systems
-updated_at: 2026-10-17T13:04:55+00:00
-last_sync: 2026-10-17T13:04:55Z
+updated_at: 2026-10-31T14:21:42+00:00
+last_sync: 2026-10-31T14:21:42Z
 package_kind: hybrid
 has_library: true
 has_binary: true

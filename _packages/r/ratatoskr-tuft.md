@@ -23,10 +23,10 @@ keywords:
   - windows
   - x86
   - x86-64
-date: 2026-11-20
+date: 2026-11-21
 category: game-development
-updated_at: 2026-11-20T13:47:54+00:00
-last_sync: 2026-11-20T13:47:54Z
+updated_at: 2026-11-21T19:44:25+00:00
+last_sync: 2026-11-21T19:44:25Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -41,6 +41,10 @@ permalink: /packages/ratatoskr/tuft/
 ---
 
 # Tuft
+
+[![CI](https://img.shields.io/github/actions/workflow/status/ratatoskr/tuft/main_ci.yml?branch=main&label=CI)](https://github.com/ratatoskr/tuft/actions/workflows/main_ci.yml)
+[![License](https://img.shields.io/github/license/ratatoskr/tuft)](https://github.com/ratatoskr/tuft/blob/main/LICENSE)
+[![Zig](https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Fraw.githubusercontent.com%2Fratatoskr%2Ftuft%2Fmain%2Fbuild.zig.zon&search=minimum_zig_version%5Cs%2A%3D%5Cs%2A%22%28%5B%5E%22%2B%5D%2B%29&replace=%241&label=zig&color=f7a41d&logo=zig&logoColor=white)](https://github.com/ratatoskr/tuft/blob/main/build.zig.zon)
 
 A Zig toolkit for modding x64 and x86 Windows games.
 
@@ -62,6 +66,7 @@ Pre-release. Expect breaking changes.
 - Sees every file the game opens, and can change it or serve files from memory.
 - DLL injection, even x64 into WoW64, and proxy DLLs.
 - Game memory read by the types in a Salamander `.sal` schema, and its `[Sig]`s found.
+- Mono and IL2CPP reflection through the game's own runtime.
 - Image decoding and PNG encoding.
 
 ## Building
@@ -73,6 +78,8 @@ zig build test
 ```
 
 `zig build build-test` builds the test programs into `zig-out/bin` without running them, to run one on its own.
+
+`-Dmono-game=<folder>` or `-Dil2cpp-game=<folder>` also tests `tuft_managed` on an installed Unity game's runtime, started without the game. Games with Denuvo can't be tested this way, since it stops the runtime starting outside the game.
 
 Want to help? See [CONTRIBUTING.md](https://github.com/ratatoskr/.github/blob/main/CONTRIBUTING.md). Found a security problem? See [SECURITY.md](https://github.com/ratatoskr/.github/blob/main/SECURITY.md).
 

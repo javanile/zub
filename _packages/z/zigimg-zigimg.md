@@ -14,9 +14,9 @@ keywords:
   - pcx
   - png
   - png-decoder
-date: 2026-11-14
-updated_at: 2026-11-14T14:31:39+00:00
-last_sync: 2026-11-14T14:31:39Z
+date: 2026-11-24
+updated_at: 2026-11-24T20:12:05+00:00
+last_sync: 2026-11-24T20:12:05Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -694,7 +694,7 @@ pub fn example(linear_color: zigimg.color.Colorf32) {
 
 ### Convert a single color to a different color space
 
-To convert to a device independant color space, you need first to use a reference RGB color space. Usually the most common for computer purposes is `sRGB`. Then each RGB colorspace has functions to convert from and to various color spaces. They support both non-alpha and alpha of the color space.
+To convert to a device independent color space, you need first to use a reference RGB color space. Usually the most common for computer purposes is `sRGB`. Then each RGB colorspace has functions to convert from and to various color spaces. They support both non-alpha and alpha of the color space.
 
 To a color space:
 ```zig
