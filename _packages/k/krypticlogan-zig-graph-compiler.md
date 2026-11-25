@@ -1,0 +1,399 @@
+---
+title: zig-graph-compiler
+description: Ahead-of-time numerical computation graph compiler.
+license: MIT
+author: krypticlogan
+author_github: krypticlogan
+repository: https://github.com/krypticlogan/zig-graph-compiler
+keywords:
+date: 2026-11-24
+updated_at: 2026-11-24T20:28:27+00:00
+last_sync: 2026-11-24T20:28:27Z
+package_kind: hybrid
+has_library: true
+has_binary: true
+has_distributable_binary: true
+binary_count: 5
+distributable_binary_count: 5
+multiple_binaries: true
+is_sponsor: false
+sync_priority: normal
+sync_source: zigistry
+permalink: /packages/krypticlogan/zig-graph-compiler/
+---
+
+# Zig Graph Compiler
+
+ZGC is an **ahead-of-time tensor graph compiler** written in Zig that generates statically planned, allocation-free runtimes.
+
+Using Zig's `comptime`,
+a graph architecture is defined,
+lowered and optimized to a fixed execution graph,
+assigned an inline memory plan,
+and emitted as a specialized type all before the real program ever executes.
+
+Compiled executables are validated and contain specialized execution logic directly, eliminating runtime graph interpretation.
+Graph traversal, tensor ranks, shapes, dtypes, layouts,
+and kernel selection are compile-time-known.
+
+The project requires Zig 0.17.0.
+
+## What's it for?
+
+Any statically defined numerical pipeline. This includes, but is not limited to:
+ 
+- Inference on dense neural network graphs
+- Iterative mathematical solvers (physics simulations)
+- Audio analysis (digital signal processing)
+- Image analysis
+- Cellular automata or other rule-based simulations
+
+Specialized for:
+
+- High visibility and control
+- Cross-compilation (thanks Zig)
+- Entirely static execution
+- No runtime graph interpretation or graph-level operation dispatch
+
+ZGC provides a common static graph representation for these workloads; passing optimization off to the compiler instead of handwriting these pipelines.
+
+In selected benchmarks, ZGC-generated executables perform close to equivalent handwritten Zig implementations. Performance varies with graph structure, selected execution plan, and hardware.
+Examples exist in the [examples](examples/) directory.  
+Check them out and build locally if you prefer to see it in action.
+
+## ZGC in action
+
+### Conway's Game of Life
+
+https://github.com/user-attachments/assets/4764d198-9650-4db1-b541-27d46fec85e2
+
+### MNIST digit classifier
+
+https://github.com/user-attachments/assets/1c3cbe07-377e-42a5-aab2-9fd6ec340f38
+
+## Installation & usage
+
+In a Zig project directory:
+
+```bash
+zig fetch --save git+https://github.com/krypticlogan/zig-graph-compiler
+```
+
+Add to your build.zig and add the ZGC module as an import to your own:
+
+```zig
+const zgc_dep = b.dependency("zgc", .{
+    .target = target,
+    .optimize = optimize,
+});
+const zgc_mod = zgc_dep.module("zgc");
+
+exe.root_module.addImport("zgc", zgc_mod);
+```
+
+Import normally.
+
+### Defining a model
+
+> [!Note]
+> ZGC is under active development. Public APIs and compiled-model contracts should be expected to
+> change before a stable release.
+
+`DefinitionBuilder` is the public model-building surface. Source keys and tensor
+values are concrete types.
+
+```zig
+const std = @import("std");
+const zgc = @import("zgc");
+
+const Sources = enum(usize) { input, weights }; // user-defined source keys
+const Definition = zgc.DefinitionBuilder;
+
+fn define(builder: *Definition) void { // complete graph architecture is defined here
+    const sources = builder.sources(Sources);
+    const input = sources.input(.input, .f32, &.{ 4, 8 });
+    const weights = sources.parameter(.weights, .f32, &.{ 8, 16 });
+    builder.output(
+        builder.relu(
+            builder.matmul(input, weights)
+        )
+    );
+}
+
+const definition = blk: {
+    var builder = Definition.init();
+    define(&builder);
+    break :blk builder.finish();
+};
+
+const MyExecutable = definition.executable(); // graph is lowered to a specialized Zig type
+
+pub fn main() !void {
+    var runtime = MyExecutable.Runtime.init();
+
+    const input_values: [4 * 8]f32 = @splat(1);
+    const weight_values: [8 * 16]f32 = @splat(0.25);
+    try runtime.copyInput(.input, &input_values);
+    try runtime.copySource(.weights, &weight_values);
+    runtime.run();
+
+    const output = runtime.outputView(0);
+    std.debug.print("shape={any} data={any}\n", .{ output.shape, output.storage });
+}
+```
+
+## Executable selection
+
+`executableWith` chooses from the compiler's retained executable frontier at
+compile time. The default target is `balanced`:
+
+```zig
+const FastExecutable = definition.executableWith(.{ .target = .fast });
+const MemoryExecutable = definition.executableWith(.{ .target = .memory });
+const SmallExecutable = definition.executableWith(.{ .target = .small });
+const ForcedExecutable = definition.executableWith(.{ .frontier_index = 0 });
+```
+
+`fast` minimizes estimated runtime work  
+`memory` minimizes planned peak model buffer space  
+`small` minimizes estimated generated-code units  
+`balanced` combines runtime, peak memory, and code-size ratios with a 3:1:1 weighting
+
+These are compile-time estimates; `small` does not measure the linked binary.
+An explicit `frontier_index` overrides the target and fails compilation if the
+index is outside the retained frontier. Inspect
+`Executable.executable_candidate_frontier` and
+`Executable.selected_executable_candidate_index` to choose an index. The frontier
+retains distinct implementations for explicit selection, including some that
+lose on every current cost metric, and holds at most 16 candidates. Source
+bindings can be supplied in the same options value with `.sources = &.{...}`.
+
+## CLI and beyond Zig
+
+ZGC provides tooling for compilation, inspection, and runtimes outside of Zig.
+
+To install the CLI, first run `zig build -Doptimize=ReleaseFast` from the project root. This will install the CLI executable titled `zgc` to zig-out.
+Finally, add the directory containing `zgc` to your system PATH and invoke the CLI with `zgc`.
+The CLI provides:
+
+| Instruction                              | Description                                                                            |
+| ---------------------------------------- | -------------------------------------------------------------------------------------- |
+| `compile <.zgir or graph.zig> <options>` | Compile graph definitions to a target artifact. Options for output and compilation.    |
+| `time <executable-library> <options>`    | Time a compiled & lowered runtime. Options to configure timing and output.             |
+| `inspect <executable-library> <options>` | Inspect artifacts (artifact provided must be compiled using the `--inspectable` flag). |
+| `cache <options>`                        | Inspect configured cache path or clear it.                                             |
+
+Python bindings exist for both executable building (`zgc-compiler`) and runtimes (`zgc-runtime`).
+Separate Python libraries are maintained, but the compiler module depends on the runtime module.    
+Use `zgc-compiler` to build graphs in Python, just as you would in Zig. Use `zgc-runtime` to load and execute them.  
+Use pip to install either Python package:  
+`pip install zgc-runtime` -- install just the runtime, for pre-compiled binaries  
+`pip install zgc-compiler` -- installs both the runtime and compilation mechanisms  
+
+A C ABI is provided for runtime loading of executables in languages besides Zig.  
+
+ZGIR (.zgir) is ZGC's serialized graph representation, allowing external frontends to compile graphs through the same backend as native Zig definitions. Read more about it here ([ZGIR](docs/zgir.md)).  
+Other languages can integrate with ZGC by translating their graph definitions into ZGIR and compiling those representations through the CLI.
+
+## Features
+
+- Front-facing `DefinitionBuilder` with enum-indexed sources composes graphs.
+- Fluent expressions chain operations from `builder.expr(value)`.
+- Arbitrary composite expression functions can be applied with typed arguments for reusable graph-level operations.
+- `definition.executable()` constructs, validates, and lowers
+  the definition to a complete executable type with a runtime.
+- Reusable, lifetime-planned runtime memory.
+- Multiple graph inputs, parameters, constants, and outputs.
+- Source-free scalar literals and zero-stride filled tensors.
+- `f32`, `f16`, `i8`, and strict boolean tensor dtypes.
+- Unary math, arithmetic, comparison, logical, selection, matmul, reduction,
+  softmax, and concatenation primitives.
+- Explicit copy and row-major contiguous materialization.
+- Transpose, permutation, reshape, flatten, squeeze, unsqueeze, and static slicing view operations.
+- Trailing-axis broadcasting for binary arithmetic and compile-time single- or multi-axis reductions.
+- SIMD fast paths for contiguous kernels and generic strided traversal.
+- Graph-level fusion and traversal planning across compatible operations.
+- Compile-time layout and execution-plan selection.
+- Search-based compilation pipeline, and explicit control over executable selection.
+- Retained executable plans that can be selected for lowering at compile-time.
+- Core-backed extensions and abstractions like `nn` and `img`.
+- Operation and generated-model benchmarks, plus standalone example packages.
+- Lean binaries and first-class inspection for any compiled tensor graph.
+- C ABI for using pre-compiled models external to Zig.
+- Reusable Python bindings that dynamically load any compatible model artifact.
+- CLI tooling for graph compilation, executable inspection, and cache management.
+
+See [development state](docs/development-state.md) for precise limitations and
+[architecture](docs/architecture.md) for the compilation pipeline.
+
+## Advanced usage
+
+### Domain extensions _(in development)_
+
+#### Neural-network layers
+
+`zgc.ext.nn` composes higher-level layers through `DefinitionBuilder`
+
+```zig
+const Dense = zgc.ext.nn.Dense(Sources);
+const Classifier = zgc.ext.nn.Sequential(&[_]Dense{
+    .{ .weights = .w1, .bias = .b1, .output_size = 16, .activation = .relu },
+    .{ .weights = .w2, .bias = .b2, .output_size = 10, .activation = .softmax },
+});
+
+const input = builder.input(.input, .f32, &.{ batch_size, input_size });
+builder.output(Classifier.apply(builder, input));
+```
+
+Dense weights use logical `[input, output]` storage by default. Set
+`.weight_layout = .output_input` for sources stored as `[output, input]`; the
+layer adds an aliasing transpose before matmul.
+
+#### Image-processing pipelines
+
+`zgc.ext.img.Dimensions` defines channel-first or channel-last rank-4 shapes,
+and `zgc.ext.img.input` declares a core graph input with that convention.
+
+### Source storage
+
+Sources use runtime-owned storage by default. Runtime inputs can be copied into
+that storage with `copyInput`, while owned parameters and constants use the
+typed `copySource` API shown above.
+
+Parameters and constants may instead be embedded directly into the program:
+
+```zig
+const EmbeddedExecutable = definition.executableWith(.{ .sources = &.{
+    .{ .source = .weights, .binding = zgc.memory.Source.embed(@embedFile("weights.bin")) },
+} });
+```
+
+The required byte length is derived from the source tensor's compile-time dtype
+and shape and checked during compilation.
+
+`Source.embed` accepts raw logical
+row-major, native-endian tensor data and packs it at compile time when lowering
+selects another physical layout.
+
+`Source.embedPacked` accepts bytes already in the layout reported by `Executable.Runtime.sourceLayout`.
+
+Embedded values remain read-only and do not receive a region in the runtime's
+mutable memory plan.
+
+Inputs can also borrow caller-owned runtime storage without a copy:
+
+```zig
+const BorrowingExecutable = definition.executableWith(.{ .sources = &.{
+    .{ .source = .input, .binding = zgc.memory.Source.bound },
+    .{ .source = .weights, .binding = zgc.memory.Source.embed(@embedFile("weights.bin")) },
+} });
+
+var runtime = BorrowingExecutable.Runtime.init();
+try runtime.bindInput(.input, runtime_values);
+runtime.run();
+```
+
+The bound slice must:
+
+- use the physical order reported by `BorrowingExecutable.Runtime.sourceLayout(.input)`
+- remain alive and unchanged while `run()` is executing.
+
+It may be updated or rebound between runs. `copyInput` accepts logical
+row-major values and packs them when lowering selects another layout.
+
+Unspecified sources use runtime-owned storage, so `definition.executable()` is
+equivalent to an all-owned source plan.
+
+Outputs can borrow caller-owned writable storage as a group:
+
+```zig
+const Executable = definition.executableWith(.{
+    .outputs = zgc.memory.Output.bound,
+});
+var runtime = Executable.Runtime.init();
+try runtime.bindOutput(0, output_values);
+runtime.run();
+```
+
+Every output must be bound before `run()` in this mode. Input binding is
+independent. Bound output buffers use the compiled physical layout reported by
+`Executable.Runtime.outputLayout(index)` and may be rebound between runs.
+Outputs must have distinct computed storage roots; use `copy` or `contiguous`
+to materialize an aliasing output first.
+
+## Contributing
+
+### Build and test
+
+Run the entire test suite and check the build.
+
+```sh
+zig build test
+zig build check
+```
+
+The test suite contains important invariants for regression tracking and numerical validation.  
+New operations or graph-level intermediates should be tested and verified.
+
+### Benchmarks
+
+The library provides benchmarks at 2 levels.
+
+As a part of the ZGC build system the benchmark step is retained as a way to track ZGC implementations versus handwritten equivalents.
+Additionally, it serves as the timing and performance check for compiler-level regressions.
+
+To use it, run `zig build benchmark -Dbenchmark=<workload> -Doptimize=ReleaseFast` from the ZGC root.
+
+To benchmark pre-compiled executables, use the `zgc time` interface.
+
+```sh
+zgc compile graph.zgir -O ReleaseFast --time -o graph.dylib
+zgc time graph.dylib
+```
+
+Append timing records to a JSON file:
+
+```sh
+zgc time graph.dylib --out benchmarks/results.json
+```
+
+See the [benchmark workloads](benchmarks/README.md) for retained reference
+graphs and timing notes.
+
+### AI Usage
+This project is AI-assisted and LLMs have been used in this codebase to generate documentation, test implementations, and largely as a discussion and unblocking tool. Any AI-generated code is reviewed and revised before being treated as solved.  
+Any and all contributions should be human-reviewed at some level.
+
+## Repository layout
+
+| Path                  | Purpose                                                                                            |
+| --------------------- | -------------------------------------------------------------------------------------------------- |
+| `src/zgc/frontend/`   | Public definition types and the typed graph-building surface                                       |
+| `src/zgc/compiler/`   | Construction, validation, analysis, optimization, planning, scheduling, and executable search      |
+| `src/zgc/core/`       | Graph, tensor/view, model, and inspection structures                                               |
+| `src/zgc/execution/`  | Executable programs, kernel plans, and dispatch                                                    |
+| `src/zgc/operations/` | Semantic operation definitions and reusable operation-family descriptors                           |
+| `src/zgc/kernels/`    | Elementwise, reduction, contraction, layout, and special kernels                                   |
+| `src/zgc/storage/`    | Dtypes, source policies, and memory planning                                                       |
+| `src/cli/`            | Executable-specific command-line entry points                                                      |
+| `src/artifact/`       | Generated-model artifact entry points                                                              |
+| `src/extensions/`     | Optional domain abstractions exported through `zgc.ext.nn` and `zgc.ext.img`                       |
+| `bindings/`           | Reusable host-language bindings for generated model artifacts                                      |
+| `tests/`              | Compile-time graph, runtime model, validation, view, and kernel coverage                           |
+| `benchmarks/`         | Reference graph workloads and direct implementations                                               |
+| `examples/`           | Standalone model definitions, interactive applications, inspection, and artifact analysis          |
+| `playground/`         | Standalone scratch package for graph construction, execution, testing, inspection, and disassembly |
+| `docs/`               | Architecture, design constraints, capabilities, and limitations                                    |
+
+## Documentation
+
+- [Documentation index](docs/README.md)
+- [Architecture and compilation pipeline](docs/architecture.md)
+- [Design constraints](docs/design-constraints.md)
+- [Executable inspection](docs/inspection.md)
+- [Generated model artifacts](docs/executables.md)
+- [Development state](docs/development-state.md)
+- [MNIST digit classifier](examples/mnist-digit-classifier/README.md)
+- [Conway's Game of Life](examples/conways-game-of-life/README.md)
+- [Graph playground](playground/README.md)
+- [Benchmarks](benchmarks/README.md)

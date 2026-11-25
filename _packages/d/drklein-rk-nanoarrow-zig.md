@@ -7,9 +7,9 @@ author_github: drklein-rk
 repository: https://github.com/drklein-rk/nanoarrow-zig
 keywords:
   - arrow
-date: 2026-11-09
-updated_at: 2026-11-09T20:42:10+00:00
-last_sync: 2026-11-09T20:42:10Z
+date: 2026-11-12
+updated_at: 2026-11-12T04:33:53+00:00
+last_sync: 2026-11-12T04:33:53Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -63,7 +63,8 @@ C++ test suite.
 ## Test
 
 ```sh
-zig build test    # runs examples/basic.zig against the built library
+zig build test        # runs examples/basic.zig against the built library
+zig build test -Dipc  # additionally runs examples/ipc.zig (IPC round trip)
 ```
 
 ## Build
@@ -107,6 +108,10 @@ pub fn main() !void {
 
 The module links `libnanoarrow` automatically. See [`examples/basic.zig`](examples/basic.zig) for
 building and reading arrays.
+
+With `-Dipc`, the `nanoarrow_ipc` module is also available. It exposes the IPC API on top of the
+core API (use it instead of `nanoarrow`, not alongside it). See
+[`examples/ipc.zig`](examples/ipc.zig) for writing and reading an IPC stream.
 
 **Known limitation:** Zig's translate-c cannot translate some of nanoarrow's inline helpers
 (e.g. `ArrowCharView`, `ArrowArrayAppendString`), so those fail to compile from Zig. The rest of

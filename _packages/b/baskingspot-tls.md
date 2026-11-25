@@ -1,6 +1,6 @@
 ---
 title: tls
-description: "Sans-I/O TLS 1.3 in Zig: no sockets, no engine allocations, caller-owned buffers."
+description: "TLS 1.3 in Zig: a sans-I/O engine over caller-owned buffers, with blocking, nonblocking, and kTLS integrations."
 license: Apache-2.0
 author: baskingspot
 author_github: baskingspot
@@ -11,10 +11,10 @@ keywords:
   - sans-io
   - tls
   - tls13
-date: 2026-11-12
+date: 2026-11-23
 category: networking
-updated_at: 2026-11-12T10:23:14+00:00
-last_sync: 2026-11-12T10:23:14Z
+updated_at: 2026-11-23T22:43:32+00:00
+last_sync: 2026-11-23T22:43:32Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -35,24 +35,36 @@ permalink: /packages/baskingspot/tls/
   </picture>
 </h1>
 
-Sans-I/O TLS 1.3 in Zig: no sockets, no engine allocations, caller-owned buffers.
+TLS 1.3 in Zig: a sans-I/O engine over caller-owned buffers, with blocking, nonblocking, and kTLS integrations.
 
-The library is a TLS 1.3 state machine. You feed it the bytes you read off the
+**Warning: the default `native` backend is for development and iteration. It is
+not yet for production use.** No performance measurement against libcrypto or
+independent security review exists for native. Production builds must select
+`-Dcrypto=openssl` or `-Dcrypto=aws-lc`.
+
+Native does not support RSA signing, encrypted PEM, or ML-KEM-1024. A native
+server needs an ECDSA P-256 or P-384 credential. Native loads Ed25519 keys and
+verifies Ed25519 chain signatures, but it does not support Ed25519 CertificateVerify.
+
+The engine is a TLS 1.3 state machine. You feed it the bytes you read off the
 wire and it hands back the bytes to write. The socket, the event loop, and the
-buffers stay yours.
+buffers stay yours. The `tls_std`, `tls_nonblocking`, and `tls_ktls` modules
+drive that engine over a transport; the core never opens one.
 
-It is faster than OpenSSL's libssl on every comparable application-data row
-measured, on x86_64, aarch64, and macOS Apple Silicon. Against rustls it wins on
-AES-GCM on all three, and loses on small ChaCha20 records.
+The libcrypto builds are faster than OpenSSL's libssl on every comparable
+application-data row measured, on x86_64, aarch64, and macOS Apple Silicon.
+Against rustls they win on AES-GCM on all three, and lose on small ChaCha20
+records.
 
-It is in production use. The test suite is 910 tests with fuzzing on the parser
-and record-decrypt surfaces, three crypto backends, and conformance runs against
-TLS-Anvil and tlsfuzzer. The API is not frozen, so pin a commit.
+The engine is in production use with libcrypto. The test suite is 910 tests with
+fuzzing on the parser and record-decrypt surfaces, four crypto backends, and
+conformance runs against TLS-Anvil and tlsfuzzer. The API is not frozen, so pin a
+version.
 
 ## What is in it
 
 - [Why this exists](https://baskingspot.dev/tls/#why-this-exists): when to reach for it, when to use something mature instead, and what the engine and libcrypto each do. TLS 1.3 only, on Linux and macOS.
-- [Supported surface](https://baskingspot.dev/tls/#supported-surface): what CI exercises, what the caller owns, and what is out of scope. The libcrypto backend is OpenSSL, AWS-LC, or BoringSSL, chosen at build time.
+- [Supported surface](https://baskingspot.dev/tls/#supported-surface): what CI exercises, what the caller owns, and what is out of scope. Native crypto is the development default. OpenSSL and AWS-LC are the production choices.
 - [The buffer model](https://baskingspot.dev/tls/#the-buffer-model): the engine owns the protocol, you own every buffer, and `RecordBuffer` frames a byte stream into records.
 - [The drive loop](https://baskingspot.dev/tls/#the-drive-loop): working client and server code, the `pending_write` interlock, close semantics, and peer alerts.
 - [Credentials and negotiation](https://baskingspot.dev/tls/#credentials-and-negotiation): server credentials, certificate policy, tickets, SNI, ALPN, and the RFC 10024 hybrid groups.
@@ -62,14 +74,14 @@ TLS-Anvil and tlsfuzzer. The API is not frozen, so pin a commit.
 
 Not implemented:
 
-- Sockets, trust stores, and `connect()`: the engine is the state machine, and you write the drive loop.
+- Sockets, trust stores, and `connect()` in the core: `tls_std` has those on `std.Io.net`, and `tls_ktls` hands the data plane to the kernel. Every other transport is yours to drive.
 - TLS 1.2, DTLS, and Windows: out of scope, with no downgrade target.
 - Exporters: not planned until someone asks for one.
 
 ## Install
 
 ```sh
-zig fetch --save https://baskingspot.dev/tls/v0.4.4.tar.gz
+zig fetch --save https://baskingspot.dev/tls/v0.4.6.tar.gz
 ```
 
 Add the module to your build:
@@ -94,7 +106,15 @@ The [guide](https://baskingspot.dev/tls/#install) has the full setup.
 
 The library and every integration module build on Zig 0.17.
 
-The build needs libcrypto and `pkg-config` to find it. The module calls
+The default `native` backend uses `std.crypto` and in-tree primitives. It needs
+no libcrypto headers, library, or `pkg-config`. `-Dcrypto=auto` remains
+selectable and detects OpenSSL, AWS-LC, or BoringSSL from the selected headers.
+
+For a production build, set `.crypto = .openssl` or `.crypto = .@"aws-lc"` in
+`b.dependency`. The corresponding root build flags are `-Dcrypto=openssl` and
+`-Dcrypto=aws-lc`.
+
+An explicit libcrypto build needs `pkg-config`. The module calls
 `linkSystemLibrary("crypto")`, and the C ABI step runs `pkg-config --variable=libdir
 libcrypto` directly, so supplying a library path is not enough:
 
@@ -103,8 +123,13 @@ buildInputs = [ pkgs.openssl.dev pkgs.openssl.out pkgs.pkg-config ];
 PKG_CONFIG_PATH = "${pkgs.openssl.dev}/lib/pkgconfig";
 ```
 
-Without the `.pc` file the build fails while translating the OpenSSL headers
+Without the `.pc` file a libcrypto build fails while translating the headers
 with a message about the dynamic system library `crypto` and no search paths.
+
+Native verifies RSA PKCS#1 v1.5 certificate-chain signatures and RSA-PSS
+CertificateVerify with SHA-256, SHA-384, and SHA-512. It loads unencrypted
+P-256/P-384 PKCS#8 and SEC1 keys from PEM and DER, plus Ed25519 seeds from
+PKCS#8.
 
 ## Documentation
 
