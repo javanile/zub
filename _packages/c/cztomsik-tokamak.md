@@ -10,10 +10,10 @@ keywords:
   - dependency-injection
   - http
   - rest
-date: 2026-11-13
+date: 2026-11-21
 category: networking
-updated_at: 2026-11-13T09:30:40+00:00
-last_sync: 2026-11-13T09:30:40Z
+updated_at: 2026-11-21T20:20:57+00:00
+last_sync: 2026-11-21T20:20:57Z
 package_kind: library
 has_library: true
 has_binary: false

@@ -11,10 +11,10 @@ keywords:
   - sql
   - sqlite
   - sqlite3
-date: 2026-11-10
+date: 2026-11-24
 category: data-formats
-updated_at: 2026-11-10T12:27:16+00:00
-last_sync: 2026-11-10T12:27:16Z
+updated_at: 2026-11-24T18:25:49+00:00
+last_sync: 2026-11-24T18:25:49Z
 package_kind: library
 has_library: true
 has_binary: false

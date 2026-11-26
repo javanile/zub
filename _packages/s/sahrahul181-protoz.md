@@ -10,10 +10,10 @@ keywords:
   - protobuf
   - protobuf3
   - protobuffer
-date: 2026-11-25
+date: 2026-11-26
 category: data-formats
-updated_at: 2026-11-25T07:04:31+00:00
-last_sync: 2026-11-25T07:04:31Z
+updated_at: 2026-11-26T11:21:24+00:00
+last_sync: 2026-11-26T11:21:24Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -38,9 +38,9 @@ A high-performance, **zero-allocation** Protocol Buffers (`proto2`, `proto3`, an
 ## Highlights
 
 - **Zero Heap Allocations on Decode & Encode:** `Repeated`, `Map`, `Lazy`, and `UnknownFields` operate as compact **32–40 byte** zero-copy views directly over wire slices; strings and bytes borrow directly from the caller buffer.
-- **Multi-GB/s Wire Throughput:** Up to **66.72 Mops/s** (14.99 ns) on small messages and **3.06 GB/s** decode / **2.76 GB/s** encode on batched payloads in `ReleaseFast` (see [Benchmarks](#benchmarks)).
-- **Single-Pass Reverse Serialization (`ReverseWriter`):** `encodeSlice` writes backwards into caller-owned stack or slab buffers in a single pass—**1.76x faster** than forward streaming on batched payloads with no pre-pass size calculation for nested submessages.
-- **On-Demand Decoding:** Comptime `decodeOnly(bytes, .{ .id, .role })` materializes a minimal stack struct and skips unselected fields (**4.4x–6.7x faster** than full decode); `fieldIterator(bytes)` streams fields with early exit (**9.9x faster** on `User`).
+- **Multi-GB/s Wire Throughput:** Up to **67.25 Mops/s** (14.87 ns) on small messages and **3.17 GB/s** decode / **2.81 GB/s** encode on batched payloads in `ReleaseFast` (see [Benchmarks](#benchmarks)).
+- **Single-Pass Reverse Serialization (`ReverseWriter`):** `encodeSlice` writes backwards into caller-owned stack or slab buffers in a single pass—**1.60x faster** than forward streaming on batched payloads with no pre-pass size calculation for nested submessages.
+- **On-Demand Decoding:** Comptime `decodeOnly(bytes, .{ .id, .role })` materializes a minimal stack struct and skips unselected fields (**4.6x–6.1x faster** than full decode); `fieldIterator(bytes)` streams fields with early exit (**8.6x faster** on `User`).
 - **Full Protocol Toolkit:** Length-delimited framing (TCP/Unix/WAL), 5-byte gRPC HTTP/2 framing + comptime unary dispatch, zero-allocation ProtoJSON (`encodeJsonSlice` / `decodeJson`), Well-Known Type helpers (`Timestamp`, `Duration`, `Any`), `{f}` debug formatting, opt-in `UnknownFields` pass-through, and arena-backed `cloneOwned` / `cloneMessage`.
 - **Two Compiler Frontends:** Native `zig-protoc` (pure Zig lexer/parser/resolver with `file:line:col` diagnostics, transitive `import public`, and Make `.d` depfiles) and a standard `protoc-gen-zig` plugin for `protoc` / `buf`.
 - **First-Class `build.zig` Integration:** Package manifest exports `@import("protoz")` (application facade), `proto_wire` (slim runtime imported by generated `.pb.zig` files), `proto_wkt` (pre-wired Google Well-Known Types), host `zig-protoc` / `protoc-gen-zig` binaries, and `addProtoModule` / `addProtoPackage` helpers.
@@ -54,7 +54,7 @@ Requires **Zig 0.17.1+**.
 Add `protoz` to your project with `zig fetch`:
 
 ```sh
-zig fetch --save git+https://github.com/sahrahul181/protoz#v0.1.0
+zig fetch --save git+https://github.com/sahrahul181/protoz#v0.1.1
 ```
 
 Wire schema compilation in your `build.zig`:
@@ -79,6 +79,8 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
         // .preserve_unknown_fields = true, // opt-in proxy pass-through
+        // .minimal = true,                 // omit optional JSON/iterator/helper/validate families
+        // .only_roots = &.{"api.Request"}, // prune unreachable declarations
     });
 
     const exe = b.addExecutable(.{
@@ -124,7 +126,7 @@ protoc --plugin=protoc-gen-zig=./zig-out/bin/protoc-gen-zig \
   -I proto -I include proto/api.proto
 ```
 
-Standalone `zig-protoc` also supports `--out <file>`, `--out-dir <dir>`, `--root-file <name>`, `--depfile <file>`, `-I <dir>`, and `--preserve-unknown-fields`:
+Standalone `zig-protoc` also supports `--out <file>`, `--out-dir <dir>`, `--root-file <name>`, `--depfile <file>`, `-I <dir>`, `--preserve-unknown-fields`, `--minimal` (plus `--no-*`/`--emit-*` toggles), and `--only`:
 
 ```sh
 ./zig-out/bin/zig-protoc \
@@ -132,8 +134,19 @@ Standalone `zig-protoc` also supports `--out <file>`, `--out-dir <dir>`, `--root
   --out-dir generated_pb \
   --root-file root.zig \
   --depfile generated_pb/proto.d \
+  --minimal \
+  --only api.Request,api.Response \
   proto/api.proto
 ```
+
+### Minimal Codegen & Reachability Pruning
+
+For large schemas, you can cut generated code size and compile time without changing the core wire API (`decode`, `encodeSlice`, `encodeReverse`):
+
+- **Minimal profile (`--minimal`):** Omits optional helper families—ProtoJSON, `fieldIterator`, `format`/`cloneInto`/`cloneOwned` helpers, `decodeOnly`, forward `encode`/`encodedSize`, and `validateDepth` (while `proto_wire` falls back cleanly with zero allocations). Individual families can still be toggled via `--no-json` / `--emit-json`, `--no-iter` (`--no-field-iterator`) / `--emit-iter` (`--emit-field-iterator`), `--no-helpers` / `--emit-helpers`, `--no-decode-only` / `--emit-decode-only`, `--no-forward-encode` / `--emit-forward-encode`, and `--no-validate` / `--emit-validate`.
+- **Reachability pruning (`--only`):** Accepts comma-separated or repeated message, enum, or service roots (`pkg.Packet`, `Packet`, `MyService`) and emits only transitively referenced declarations (keeping bare namespace shells for nested types and skipping unreachable files in `--out-dir` / `root.zig`).
+- **`protoc-gen-zig` `--zig_opt` parameters:** Supports `minimal=true|false`, `emit_json=...`, `emit_field_iterator=...`, `emit_helpers=...`, `emit_decode_only=...`, `emit_forward_encode=...`, `emit_validate=...`, and `only=MsgA+MsgB` (or `;`-separated / repeated `only=...`).
+- **`build.zig` options (`addProtoModule` / `addProtoPackage`):** Exposes `.minimal = true`, nullable `.emit_*` overrides (`?bool`), and `.only_roots = &.{ ... }`.
 
 ---
 
@@ -231,6 +244,15 @@ const resp_frame = try protoz.rpc.dispatchUnaryGrpc(
 
 ---
 
+## Scope & Intentional Boundaries
+
+- **Protobuf coverage:** Supports `proto2` (including `group`, `extensions`, `extend`, custom `defaults`, and transitive `required` validation), `proto3` (including `proto3 optional`), and **Edition 2023** (`field_presence`, `repeated_field_encoding`, `utf8_validation`, and `message_encoding = DELIMITED` in both `zig-protoc` and `protoc-gen-zig`).
+- **Not included in v0.1.1:** `import weak` (parsed and skipped), arbitrary runtime custom descriptor options, and `textproto` parsing (human-readable `{f}` debug formatting and ProtoJSON are provided instead).
+- **gRPC & transport:** `protoz.rpc` handles 5-byte Length-Prefixed framing and zero-allocation comptime dispatchers (`dispatchUnaryGrpc`, `dispatchClientStreamGrpc`, `dispatchServerStreamGrpc`, `dispatchBidiStreamGrpc`, `dispatchGrpc`). Compressed gRPC payloads (`compressed = 1`) are exposed via `rpc.tryDecodeGrpcRaw` for caller-chosen decompression, and full HTTP/2 transport (HPACK, TLS, multiplexing) is left to the application's transport layer.
+- **`google.protobuf.Any` in ProtoJSON:** Inline JSON expansion uses a zero-allocation comptime type tuple (`encodeMessageSliceWithTypes` / `decodeMessageWithTypes`); unregistered types fall back cleanly to `{"@type":"...","value":"<base64>"}`.
+
+---
+
 ## Benchmarks
 
 Run the reproducible suite locally (`--filter` supported):
@@ -244,40 +266,40 @@ Measured with `zig build bench -Doptimize=ReleaseFast` (9 samples per workload, 
 
 | Workload | Payload | Median (ns) | Min (ns) | Mops/s | Throughput (MB/s) |
 |---|---:|---:|---:|---:|---:|
-| `Small/encodedSize` | 29 B | 2.82 | 2.82 | 354.24 | 10,272.9 |
-| `Small/encodeSlice (reverse)` | 29 B | 14.99 | 14.96 | 66.72 | 1,934.9 |
-| `Small/encode (forward)` | 29 B | 15.50 | 15.48 | 64.53 | 1,871.5 |
-| `Small/validateDepth` | 29 B | 17.87 | 17.24 | 55.96 | 1,622.8 |
-| `Small/decode (validate + views)` | 29 B | 25.74 | 23.67 | 38.86 | 1,126.8 |
-| `Small/encodeJsonSlice` | 87 B | 75.05 | 74.35 | 13.33 | 1,159.3 |
-| `Small/wire -> JSON transcode` | 87 B | 91.96 | 91.35 | 10.87 | 946.0 |
-| `Small/decodeJson (stack FBA)` | 87 B | 234.70 | 233.21 | 4.26 | 370.7 |
-| `User/encodedSize` | 161 B | 42.55 | 42.40 | 23.50 | 3,783.5 |
-| `User/encodeSlice (reverse)` | 161 B | 103.15 | 102.97 | 9.70 | 1,560.9 |
-| `User/encode (forward)` | 161 B | 137.59 | 136.51 | 7.27 | 1,170.2 |
-| `User/validateDepth` | 161 B | 121.02 | 120.50 | 8.26 | 1,330.3 |
-| `User/decode (validate + views)` | 161 B | 161.61 | 160.70 | 6.19 | 996.3 |
-| `User/decode + full traversal` | 161 B | 324.62 | 323.46 | 3.08 | 496.0 |
-| `User/decodeOnly (id + role)` | 161 B | 36.35 | 36.11 | 27.51 | 4,428.7 |
-| `User/fieldIterator (early-exit)` | 161 B | 16.37 | 15.77 | 61.08 | 9,833.4 |
-| `User/encodeJsonSlice` | 348 B | 421.12 | 418.40 | 2.37 | 826.4 |
-| `User/wire -> JSON transcode` | 348 B | 737.92 | 734.60 | 1.36 | 471.6 |
-| `User/decodeJson (stack FBA)` | 348 B | 1,264.94 | 1,241.49 | 0.79 | 275.1 |
-| `Batch/encodedSize` | 3,020 B | 251.13 | 248.92 | 3.98 | 12,025.5 |
-| `Batch/encodeSlice (reverse)` | 3,020 B | 1,095.87 | 1,094.91 | 0.91 | 2,755.8 |
-| `Batch/encode (forward)` | 3,020 B | 1,930.54 | 1,928.66 | 0.52 | 1,564.3 |
-| `Batch/validateDepth` | 3,020 B | 957.42 | 932.97 | 1.04 | 3,154.3 |
-| `Batch/decode (validate + views)` | 3,020 B | 987.02 | 959.00 | 1.01 | 3,059.7 |
-| `Batch/decode + full traversal` | 3,020 B | 2,666.52 | 2,613.00 | 0.38 | 1,132.6 |
-| `Batch/decodeOnly (host only)` | 3,020 B | 146.52 | 145.82 | 6.83 | 20,611.6 |
-| `Batch/fieldIterator (sum deltas)` | 3,020 B | 315.42 | 314.01 | 3.17 | 9,574.4 |
-| `Batch/encodeJsonSlice` | 7,112 B | 11,020.83 | 10,908.47 | 0.09 | 645.3 |
-| `Batch/wire -> JSON transcode` | 7,112 B | 13,701.77 | 13,598.25 | 0.07 | 519.1 |
-| `Batch/decodeJson (stack FBA)` | 7,112 B | 18,936.27 | 18,722.28 | 0.05 | 375.6 |
+| `Small/encodedSize` | 29 B | 2.83 | 2.83 | 353.32 | 10,246.3 |
+| `Small/encodeSlice (reverse)` | 29 B | 14.87 | 14.85 | 67.25 | 1,950.4 |
+| `Small/encode (forward)` | 29 B | 15.81 | 15.77 | 63.26 | 1,834.6 |
+| `Small/validateDepth` | 29 B | 17.87 | 17.64 | 55.95 | 1,622.6 |
+| `Small/decode (validate + views)` | 29 B | 25.66 | 24.39 | 38.97 | 1,130.2 |
+| `Small/encodeJsonSlice` | 87 B | 63.47 | 63.30 | 15.76 | 1,370.8 |
+| `Small/wire -> JSON transcode` | 87 B | 83.97 | 83.35 | 11.91 | 1,036.1 |
+| `Small/decodeJson (stack FBA)` | 87 B | 220.67 | 215.59 | 4.53 | 394.3 |
+| `User/encodedSize` | 161 B | 40.96 | 40.72 | 24.42 | 3,931.1 |
+| `User/encodeSlice (reverse)` | 161 B | 102.47 | 102.37 | 9.76 | 1,571.3 |
+| `User/encode (forward)` | 161 B | 132.03 | 131.08 | 7.57 | 1,219.4 |
+| `User/validateDepth` | 161 B | 130.67 | 129.74 | 7.65 | 1,232.1 |
+| `User/decode (validate + views)` | 161 B | 170.72 | 166.96 | 5.86 | 943.1 |
+| `User/decode + full traversal` | 161 B | 325.09 | 324.53 | 3.08 | 495.2 |
+| `User/decodeOnly (id + role)` | 161 B | 36.94 | 35.96 | 27.07 | 4,358.2 |
+| `User/fieldIterator (early-exit)` | 161 B | 19.93 | 19.37 | 50.19 | 8,080.1 |
+| `User/encodeJsonSlice` | 348 B | 343.29 | 341.54 | 2.91 | 1,013.7 |
+| `User/wire -> JSON transcode` | 348 B | 685.52 | 682.09 | 1.46 | 507.6 |
+| `User/decodeJson (stack FBA)` | 348 B | 951.51 | 946.03 | 1.05 | 365.7 |
+| `Batch/encodedSize` | 3,020 B | 251.25 | 248.74 | 3.98 | 12,019.9 |
+| `Batch/encodeSlice (reverse)` | 3,020 B | 1,072.85 | 1,071.71 | 0.93 | 2,814.9 |
+| `Batch/encode (forward)` | 3,020 B | 1,711.40 | 1,709.47 | 0.58 | 1,764.6 |
+| `Batch/validateDepth` | 3,020 B | 912.53 | 857.07 | 1.10 | 3,309.5 |
+| `Batch/decode (validate + views)` | 3,020 B | 953.17 | 933.31 | 1.05 | 3,168.4 |
+| `Batch/decode + full traversal` | 3,020 B | 2,689.49 | 2,654.09 | 0.37 | 1,122.9 |
+| `Batch/decodeOnly (host only)` | 3,020 B | 156.40 | 153.77 | 6.39 | 19,309.2 |
+| `Batch/fieldIterator (sum deltas)` | 3,020 B | 314.02 | 312.16 | 3.18 | 9,617.1 |
+| `Batch/encodeJsonSlice` | 7,112 B | 10,828.87 | 10,784.00 | 0.09 | 656.8 |
+| `Batch/wire -> JSON transcode` | 7,112 B | 13,909.23 | 13,873.26 | 0.07 | 511.3 |
+| `Batch/decodeJson (stack FBA)` | 7,112 B | 18,741.41 | 18,704.28 | 0.05 | 379.5 |
 
 - **`Small` (`SmallEvent`):** Flat telemetry event (`uint64`, `int64`, `uint32`, UTF-8 `string`).
-- **`User` (`UserProfile`):** Rich RPC message (`repeated uint32`, `repeated string`, `map<string, int32>`, nested message, explicit `optional bool`, `oneof`, cyclic `Lazy` message). `decodeOnly` is **4.4x faster** and early-exit `fieldIterator` is **9.9x faster** than full `decode`.
-- **`Batch` (`TelemetryBatch`):** 128 packed `sint64`, 128 packed `fixed64`, 64 repeated `Point` submessages. `encodeSlice` is **1.76x faster** than forward `encode`; `decodeOnly` (`host`) is **6.7x faster** than full `decode`.
+- **`User` (`UserProfile`):** Rich RPC message (`repeated uint32`, `repeated string`, `map<string, int32>`, nested message, explicit `optional bool`, `oneof`, cyclic `Lazy` message). `decodeOnly` is **4.6x faster** and early-exit `fieldIterator` is **8.6x faster** than full `decode`.
+- **`Batch` (`TelemetryBatch`):** 128 packed `sint64`, 128 packed `fixed64`, 64 repeated `Point` submessages. `encodeSlice` is **1.60x faster** than forward `encode`; `decodeOnly` (`host`) is **6.1x faster** than full `decode`.
 
 ---
 
@@ -300,7 +322,7 @@ zig build fuzz -Doptimize=ReleaseFast -- --iters 5000000
 
 ```text
 ├── build.zig                    # Exports protoz, proto_wire, proto_wkt, zig-protoc, protoc-gen-zig
-├── build.zig.zon                # Zig package manifest (v0.1.0)
+├── build.zig.zon                # Zig package manifest (v0.1.1)
 ├── build_proto.zig              # Reusable build helpers (addProtoModule, addProtoPackage, *With)
 ├── LICENSE                      # MIT License
 ├── README.md

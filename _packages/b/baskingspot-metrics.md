@@ -1,6 +1,6 @@
 ---
 title: metrics
-description: "Metrics for Zig: recording primitives, and an exposition writer per format. No HTTP."
+description: "Prometheus text exposition for Zig: write metrics to any writer, with counters, gauges, and histograms above it, and no HTTP."
 license: MIT
 author: baskingspot
 author_github: baskingspot
@@ -8,9 +8,9 @@ repository: https://github.com/baskingspot/metrics
 keywords:
   - metrics
   - prometheus
-date: 2026-11-08
-updated_at: 2026-11-08T02:41:27+00:00
-last_sync: 2026-11-08T02:41:27Z
+date: 2026-11-23
+updated_at: 2026-11-23T22:43:35+00:00
+last_sync: 2026-11-23T22:43:35Z
 package_kind: hybrid
 has_library: true
 has_binary: true
@@ -31,7 +31,7 @@ permalink: /packages/baskingspot/metrics/
   </picture>
 </h1>
 
-Prometheus text exposition format for Zig: write metrics to any writer, no HTTP.
+Prometheus text exposition for Zig: write metrics to any writer, with counters, gauges, and histograms above it, and no HTTP.
 
 The exposition bytes are the part every service writes by hand, and they are
 where the bugs are. One unescaped newline in a label value takes down every
@@ -58,13 +58,13 @@ whether a family has help text are the caller's business, and the primitives
 underneath (`Writer.help`, `kind`, `name`, `value`, `line`) are public so a
 caller can compose a shape this library does not have.
 
-The API is pre-1.0: pin the commit, and expect it to move.
+The API is pre-1.0: pin a version, and expect it to move.
 
 ## What is in it
 
 - [Samples](https://baskingspot.dev/metrics/#samples): `Writer.writeMetric` writes one line, and labels come from a struct's field names, so an illegal label name does not compile.
 - [Families](https://baskingspot.dev/metrics/#families): `Writer.writeFamily` writes `# HELP` and `# TYPE` and returns the handle its samples go through.
-- [Histograms](https://baskingspot.dev/metrics/#histograms): `Writer.writeHistogram` writes `_bucket`, `_sum`, and `_count` from the caller's cumulative counts, and `histogram.Fixed(S, bounds)` records the observations into counters the caller owns.
+- [Histograms](https://baskingspot.dev/metrics/#histograms): `Writer.writeHistogram` writes `_bucket`, `_sum`, and `_count` from the caller's cumulative counts, and `histogram.Fixed(S, bounds)` records the observations into counters the caller owns. Histograms are additive: `merge` adds one into another and `mergeAll` folds per-worker histograms into one series.
 - [Values and escaping](https://baskingspot.dev/metrics/#values-and-escaping): a float that reads back as an integer is written as one, and the three bytes that need escaping are escaped.
 - [The primitives](https://baskingspot.dev/metrics/#the-primitives): `Writer` writes one record at a time, and every composition above it is built from those methods.
 - [Counters](https://baskingspot.dev/metrics/#counters): `counter.Local(T)` and `counter.Atomic(T)` are an unsigned integer and an add, wrapping, with no way to reset.
@@ -83,7 +83,7 @@ Not implemented:
 ## Install
 
 ```sh
-zig fetch --save https://baskingspot.dev/metrics/v0.3.0.tar.gz
+zig fetch --save https://baskingspot.dev/metrics/v0.6.0.tar.gz
 ```
 
 Add the module in `build.zig`:
@@ -93,13 +93,19 @@ const metrics = b.dependency("metrics", .{ .target = target, .optimize = optimiz
 exe.root_module.addImport("metrics", metrics.module("metrics"));
 ```
 
-No std namespace is named `metrics`, so nothing needs an alias. A program that already binds `metrics` to something of its own
-imports the format instead of the package — `const prometheus = @import("metrics").prometheus;`
-— and call sites read `prometheus.Writer` as before. One that wants the
+No std namespace is named `metrics`, so nothing needs an alias. A program that
+already binds `metrics` to something of its own imports the format instead of
+the package:
+
+```zig
+const prometheus = @import("metrics").prometheus;
+```
+
+Call sites then read `prometheus.Writer` as before. One that wants the
 recording types too imports the package as `metricsx`, the org's rule for a
-shadowed name. `metrics` builds with Zig 0.16 and 0.17. It has one dependency, `testingx`, marked lazy
-and used only after `build.zig` returns for a consumer, so a consumer's fetch
-graph is the module and nothing else.
+shadowed name. `metrics` builds with Zig 0.17. It has one dependency,
+`testingx`, marked lazy and used only after `build.zig` returns for a
+consumer, so a consumer's fetch graph is the module and nothing else.
 
 ## Documentation
 
@@ -121,7 +127,7 @@ lint, the `prom2json` gates, one benchmark iteration, and the site build.
 Two recipes check the output against Prometheus's own parser:
 `just check-golden` pipes every golden document through it, and
 `just check-corpus N SEED` renders `N` random documents from a seed and fails
-on the first rejection. `just check` is the same gate on the previous Zig.
+on the first rejection.
 
 `just bench` runs the encode benchmarks in ReleaseFast and reports bytes per
 second.

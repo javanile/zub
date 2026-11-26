@@ -1,6 +1,6 @@
 ---
 title: velox
-description: Open Source Zig Framework for VEX V5
+description: Embedded Zig Kernel for VEX V5
 license: MIT
 author: skzidev
 author_github: skzidev
@@ -11,9 +11,9 @@ keywords:
   - vex-robotics
   - vex-robotics-competition
   - vex-v5
-date: 2026-11-12
-updated_at: 2026-11-12T06:57:28+00:00
-last_sync: 2026-11-12T06:57:28Z
+date: 2026-11-19
+updated_at: 2026-11-19T01:11:49+00:00
+last_sync: 2026-11-19T01:11:49Z
 package_kind: binary
 has_library: false
 has_binary: true
@@ -31,7 +31,7 @@ permalink: /packages/skzidev/velox/
 
 <h1 align="center">Velox</h1>
 
-<p align="center"><strong>Open Source Zig Framework for VEX V5.</strong></p>
+<p align="center"><strong>Embedded Zig Kernel for VEX V5.</strong></p>
 
 <p align="center">
   <img src="https://img.shields.io/github/actions/workflow/status/skzidev/velox/build.yml?style=for-the-badge" alt="GitHub Actions Workflow Status">
@@ -40,41 +40,18 @@ permalink: /packages/skzidev/velox/
   <img src="https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Fraw.githubusercontent.com%2Fskzidev%2Fvelox%2Frefs%2Fheads%2Fmain%2Fbuild.zig.zon&search=%5C.version%20%3D%20%22(%5Cd%5C.%5Cd%5C.%5Cd)%22&replace=%241&style=for-the-badge&label=Version" alt="Velox Version">
 </p>
 
+## What is it?
+
+Velox is an embedded Zig kernel for VEX V5. It implements multitasking using fibers.
+
 ## Getting Started
 
 To get started using Velox, you must have the following software installed:
 
-- Zig
-- Cargo (and cargo-v5)
+- Zig 0.16.x (see badge; CI uses latest Zig)
+- Cargo + `cargo-v5` for uploading (temporary until a native uploader exists)
 
-We're looking to replace cargo-v5 so you don't need to install cargo, but we haven't yet. This requirement should be replaced soon, hopefully.
-
-Additionally, this installation script only runs in UNIX environments (Linux and MacOS). Windows will be supported later.
-
-Create a new project folder and run this command:
-
-```sh
-curl -fsSL "https://raw.githubusercontent.com/skzidev/velox/refs/heads/main/new_project.sh" | sh
-```
-
-## Roadmap
-
-- [x] Write boot code
-- [x] Custom Allocator Override
-- [x] Panic handler with stack traces
-- [x] Jumptable integration
-- [x] Device Drivers (_partially done_)
-- [ ] Custom Uploader program
-- [ ] GUI library written on top of [Zigui](https://github.com/ddalcu/zigui)
-
-#### Additional work
-
-- [ ] Refactor `velox-jumptable` to just read from C header files and map memory addresses instead of generating bindings
-- [ ] Refactor `velox-jumptable` into this monorepo
-
-## Competition Legality
-
-Velox should be 100% legal. It is simply a framework for writing user programs.
+Create a project and wire Velox as a dependency in `build.zig`/`build.zig.zon`. A project template script is not currently shipped in this repository.
 
 ## Licensing
 
@@ -91,19 +68,3 @@ This project would not have been possible without the research from these projec
 - [VEXAPI](https://github.com/cetio/VEXAPI)
 
 Velox builds on their research into the Brain's memory model and configuration.
-
-## Tests
-
-> [!WARNING]
-> When cloning this repostiory to run the unit tests, preserve symlinks. Not doing this will break the unit tests for the umm allocator. Especially on Windows.
-
-Velox's unit tests run on the brain hardware. To run them yourself, plug in a brain and run the command:
-
-```sh
-zig build test
-```
-
-You can see the unit test results over serial.
-
-> [!NOTE]
-> Because we don't have a V5 brain as a test runner, these unit tests are not part of our CI.
