@@ -18,8 +18,8 @@ package_kind: hybrid
 has_library: true
 has_binary: true
 has_distributable_binary: true
-binary_count: 8
-distributable_binary_count: 8
+binary_count: 9
+distributable_binary_count: 9
 multiple_binaries: true
 is_sponsor: false
 sync_priority: normal
@@ -261,6 +261,7 @@ This guide provides brief instructions for installing SDL3 on various operating 
   vcpkg install sdl3
   vcpkg install sdl3_ttf
   vcpkg install sdl3_image
+  vcpkg install sdl3_mixer
   ```
 
 - **Manual Installation**:
@@ -277,6 +278,7 @@ This guide provides brief instructions for installing SDL3 on various operating 
   brew install sdl3
   brew install sdl3_ttf
   brew install sdl3_image
+  brew install sdl3_mixer
   ```
 
 - **Manual Installation**:
@@ -294,16 +296,17 @@ This guide provides brief instructions for installing SDL3 on various operating 
   sudo apt-get install libsdl3-dev
   sudo apt-get install libsdl3_ttf-dev
   sudo apt-get install libsdl3_image-dev
+  sudo apt-get install libsdl3_mixer-dev
   ```
 
 - **Manual Installation**:
 
   1. Install SDL3
     ```bash
-    wget https://github.com/libsdl-org/SDL/releases/download/release-3.2.26/SDL3-3.2.26.tar.gz
-    tar -xf SDL3-3.2.26.tar.gz
-    mkdir ./SDL3-3.2.26/build
-    cd ./SDL3-3.2.26/build
+    wget https://github.com/libsdl-org/SDL/releases/download/release-3.4.18/SDL3-3.4.18.tar.gz
+    tar -xf SDL3-3.4.18.tar.gz
+    mkdir ./SDL3-3.4.18/build
+    cd ./SDL3-3.4.18/build
     cmake ..
     cmake --build . --parallel $(nproc)
     sudo cmake --install .
@@ -331,6 +334,17 @@ This guide provides brief instructions for installing SDL3 on various operating 
     sudo cmake --install .
   ```
 
+  3. Install SDL3_mixer
+    ```bash
+	wget https://github.com/libsdl-org/SDL_mixer/releases/download/release-3.2.4/SDL3_mixer-3.2.4.tar.gz
+    tar -xf SDL3_mixer-3.2.4.tar.gz
+    mkdir ./SDL3_mixer-3.2.4/build
+    cd ./SDL3_mixer-3.2.4/build
+    cmake ..
+    cmake --build . --parallel $(nproc)
+    sudo cmake --install .
+  ```
+
 ### Linux (Fedora)
 
 - **Using dnf**:
@@ -339,6 +353,7 @@ This guide provides brief instructions for installing SDL3 on various operating 
   sudo dnf install SDL3-devel
   sudo dnf install SDL3_ttf-devel
   sudo dnf install SDL3_image-devel
+  # SDL3_mixer is not avaiable in fedora packages repo; you must install it manually
   ```
 
 ### Linux (Arch)
@@ -349,6 +364,7 @@ This guide provides brief instructions for installing SDL3 on various operating 
   paru -S sdl3
   paru -S sdl3_ttf
   paru -S sdl3_image
+  paru -S sdl3_mixer
   ```
 
 ### Verifying Installation
@@ -358,11 +374,36 @@ This guide provides brief instructions for installing SDL3 on various operating 
 
 For detailed instructions or troubleshooting, visit the [SDL3 documentation](https://wiki.libsdl.org/SDL3/Installation).
 
-
 ## TODOs
 
-### Version 0.2.0
+<details>
 
+<summary>Version 0.1.0 [✅]</summary>
+
+## Features
+- All keyboard and mouse key strokes are listed in the EventManager.
+- Objects parent-child relationship has been implemented.
+- The object functionality is now extendable; by integrating the LifeCycle within.
+- Differentiate between absolute and relative positions and rotations.
+- Objects now has active state; the scene only updates those who have active=true.
+- Name and tag properties are added into objects.
+- Objects inner-communication: scripts of any arbitrary object is now accessible via foreign objects; objects can call methods attached to any other object scripts.
+
+## Drawables & Scripts
+- The _Sprite_ drawable has been implemented. It can be used to render images/animation.
+- The _Text_ drawable has been implemented.
+- _AudioPlayer_ script has been implemented.
+
+## Refactoring
+- The EventManager has been Refactored, so that it no longer stores callbacks, it only mutate a global key-status state.
+- The code is more compliant to Zig explicit control philosophy.
+
+</details>
+
+<details open>
+
+<summary>Version 0.2.0 [⏳]</summary>
+ 
 #### Features
 - [x] Add loop, pause and volume settings in the AudioPlayer.
 - [x] Make scenes behave like cameras; they can zoom in and out, and move in the four directions.
@@ -379,7 +420,7 @@ NOTE: the memo should be invalidated as well when child objects are added to sce
 #### Scripts
 - [x] Implement _Rigidbody_ script; it should, at minimum, specify the mass of the object, detect collisions, and apply gravity.
 - [x] Implement _Collision_ script; any two objects with this script, and one of them is a rigid-body, they shall not overlap.
-- [ ] Implement AudioSource and AudioListener scripts. The general idea is that whenever an AudioSource \
+- [x] Implement AudioSource and AudioListener scripts. The general idea is that whenever an AudioSource \
 commence to play an audio, it searches for an AudioListener in the same scene. Once it find one, it plays \
 the audio with the volumes of its channels twisted according to the distance between the two objects (one \
 carries the source, and another carries the listener).
@@ -390,3 +431,5 @@ carries the source, and another carries the listener).
 - [x] Write UI Example.
 - [ ] Develop a [Pong game](https://www.ponggame.org/).
 - [ ] Develop a Sokoban game.
+
+</details>

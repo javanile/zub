@@ -10,10 +10,10 @@ keywords:
   - mariadb
   - mysql
   - sql
-date: 2026-11-07
+date: 2026-11-24
 category: embedded
-updated_at: 2026-11-07T09:47:26+00:00
-last_sync: 2026-11-07T09:47:26Z
+updated_at: 2026-11-24T18:31:27+00:00
+last_sync: 2026-11-24T18:31:27Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -42,7 +42,8 @@ permalink: /packages/speed2exe/myzql/
 | 0.15.1      | 0.15.1                    |
 | 0.16.1      | 0.16.0                    |
 | 0.17.0      | 0.17.0                    |
-| main        | 0.17.0                    |
+| 0.17.1      | 0.17.0, 0.17.1            |
+| main        | 0.17.0, 0.17.1            |
 
 ## Features
 - Native Zig code, no external dependencies
@@ -60,7 +61,7 @@ permalink: /packages/speed2exe/myzql/
 - For TLS connections only: a Zig standard library whose TLS client handles the
   `certificate_request` message. MySQL and MariaDB always ask for a client
   certificate (with an empty list of acceptable CA names), which the standard
-  library of Zig 0.17.0 and the current master answer with
+  library of Zig 0.17.0, 0.17.1 and the current master answer with
   `error.TlsUnexpectedMessage`. Until a fix is released upstream, apply
   [`contrib/zig-std-tls-client-certificate-request.patch`](contrib/zig-std-tls-client-certificate-request.patch)
   to the source tree of your Zig installation and rebuild:
@@ -72,7 +73,7 @@ patch -p1 -d /path/to/zig --input path/to/myzql/contrib/zig-std-tls-client-certi
 ## Add as dependency to your Zig project
 ### Fetch dependency
 ```bash
-zig fetch --save git+https://github.com/speed2exe/myzql#0.16.1
+zig fetch --save git+https://github.com/speed2exe/myzql#0.17.1
 ```
 or
 - `build.zig.zon`
@@ -81,8 +82,8 @@ or
     .dependencies = .{
       .myzql = .{
         // choose a tag according to "Version Compatibility" table
-        .url = "https://github.com/speed2exe/myzql/archive/refs/tags/0.16.1.tar.gz",
-        .hash = "1220582ea45580eec6b16aa93d2a9404467db8bc1d911806d367513aa40f3817f84c",
+        .url = "https://github.com/speed2exe/myzql/archive/refs/tags/0.17.1.tar.gz",
+        .hash = "myzql-0.0.0-XU5aADXNBQC6nnZbXda4_p9Li19m_MENYfDw7j1iChXy",
       }
     },
     // ...
@@ -157,7 +158,7 @@ pub fn main() !void {
 ### TLS Connection
 - TLS encrypts TCP connections. Enable it with `ssl` on the config, or with the
 `ssl=true` (`tls=true`) URL parameter, see [Connection from URL](#connection-from-url).
-- The standard library of Zig 0.17.0 and of the current master cannot answer
+- The standard library of Zig 0.17.0, 0.17.1 and of the current master cannot answer
 the `certificate_request` message that MySQL and MariaDB send during the TLS
 handshake, so TLS needs the patch of [Requirements](#requirements).
 ```zig
@@ -357,7 +358,38 @@ pub fn main() !void {
     std.debug.print("table: {any}\n", .{table.table});
 ```
 
+### Cached prepared statements
+
+`execute` prepares SQL on first use and reuses the statement on that connection.
+It returns `.ok`, `.err`, or `.rows`; consume all rows before issuing another
+command or returning the connection to the pool.
+
+```zig
+const result = try client.execute(io, "SELECT name FROM users WHERE id = ?", .{@as(u32, 42)});
+const rows = try result.expect(.rows);
+_ = try rows.first(io); // drains remaining rows
+```
+
+Each connection caches up to `Config.statement_cache_capacity` statements
+(default 32), evicting the least recently used statement when full. The
+server's prepared-statement limit is shared across all connections and clients,
+so size the cache accordingly. A capacity of zero disables `execute` and returns
+`error.StatementCacheDisabled`; the explicit `prepare` API remains available.
+
+The cache key is the SQL text. After changing the default database or session
+settings that affect statement preparation (including through stored routines),
+call `try client.clearStatementCache(io)` before the next cached execution.
+`Pool.ManagedConn` provides the same `execute` and `clearStatementCache` methods.
+
 ### Data Insertion
+- A prepared statement belongs to its connection. Call
+  `prep_res.deinit(allocator, io)` after consuming its results and before
+  closing or returning that connection to the pool. Do not move the connection
+  while the prepared result is alive. This closes the server-side statement as
+  well as freeing its metadata; a close failure is logged and the connection
+  must not be reused.
+- Use `prep_stmt.execute(io, params)` for any result, or
+  `prep_stmt.executeRows(io, params)` when the statement returns rows.
 - Let's assume that you have a table of this structure:
 ```sql
 CREATE TABLE test.person (
@@ -381,7 +413,7 @@ pub fn main() !void {
     // In order to do a insertion, you would first need to do a prepared statement.
     // Allocation is required as we need to store metadata of parameters and return type
     const prep_res = try client.prepare(allocator, io, "INSERT INTO test.person (name, age) VALUES (?, ?)");
-    defer prep_res.deinit(allocator);
+    defer prep_res.deinit(allocator, io);
     const prep_stmt: PreparedStatement = try prep_res.expect(.stmt);
 
     // Data to be inserted
@@ -390,7 +422,7 @@ pub fn main() !void {
         .{ "Sam", 24 },
     };
     inline for (params) |param| {
-        const exe_res = try client.execute(io, &prep_stmt, param);
+        const exe_res = try prep_stmt.execute(io, param);
         const ok: OkPacket = try exe_res.expect(.ok); // expecting ok here because there's no rows returned
         const last_insert_id: u64 = ok.last_insert_id;
         std.debug.print("last_insert_id: {any}\n", .{last_insert_id});
@@ -413,7 +445,7 @@ pub fn main() !void {
     const io: std.Io = threaded.io();
     const allocator = std.heap.page_allocator;
     const prep_res = try client.prepare(allocator, io, "SELECT name, age FROM test.person");
-    defer prep_res.deinit(allocator);
+    defer prep_res.deinit(allocator, io);
     const prep_stmt: PreparedStatement = try prep_res.expect(.stmt);
 
     // This is the struct that represents the columns of a single row.
@@ -423,7 +455,7 @@ pub fn main() !void {
     };
 
     { // Iterating over rows, scanning into struct or creating struct
-        const query_res = try client.execute(io, &prep_stmt, .{}); // no parameters because there's no ? in the query
+        const query_res = try prep_stmt.execute(io, .{}); // no parameters because there's no ? in the query
         const rows: ResultSet(BinaryResultRow) = try query_res.expect(.rows);
         const rows_iter = rows.iter();
         while (try rows_iter.next(io)) |row| {
@@ -449,7 +481,7 @@ pub fn main() !void {
     }
 
     { // collect all rows into a table ([]const Person)
-        const query_res = try client.execute(io, &prep_stmt, .{}); // no parameters because there's no ? in the query
+        const query_res = try prep_stmt.execute(io, .{}); // no parameters because there's no ? in the query
         const rows: ResultSet(BinaryResultRow) = try query_res.expect(.rows);
         const rows_iter = rows.iter();
         const person_structs = try rows_iter.tableStructs(Person, allocator, io);
@@ -482,7 +514,7 @@ pub fn main() !void {
     const allocator = std.heap.page_allocator;
     { // Insert
         const prep_res = try client.prepare(allocator, io, "INSERT INTO test.temporal_types_example VALUES (?, ?)");
-        defer prep_res.deinit(allocator);
+        defer prep_res.deinit(allocator, io);
         const prep_stmt: PreparedStatement = try prep_res.expect(.stmt);
 
         const my_time: DateTime = .{
@@ -503,7 +535,7 @@ pub fn main() !void {
         };
         const params = .{.{ my_time, my_duration }};
         inline for (params) |param| {
-            const exe_res = try client.execute(io, &prep_stmt, param);
+            const exe_res = try prep_stmt.execute(io, param);
             _ = try exe_res.expect(.ok);
         }
     }
@@ -514,9 +546,9 @@ pub fn main() !void {
             duration: Duration,
         };
         const prep_res = try client.prepare(allocator, io, "SELECT * FROM test.temporal_types_example");
-        defer prep_res.deinit(allocator);
+        defer prep_res.deinit(allocator, io);
         const prep_stmt: PreparedStatement = try prep_res.expect(.stmt);
-        const res = try client.execute(io, &prep_stmt, .{});
+        const res = try prep_stmt.execute(io, .{});
         const rows: ResultSet(BinaryResultRow) = try res.expect(.rows);
         const rows_iter = rows.iter();
 
@@ -545,7 +577,7 @@ pub fn main() !void {
     const allocator = std.heap.page_allocator;
     { // Insert
         const prep_res = try client.prepare(allocator, io, "INSERT INTO test.array_types_example VALUES (?, ?)");
-        defer prep_res.deinit(allocator);
+        defer prep_res.deinit(allocator, io);
         const prep_stmt: PreparedStatement = try prep_res.expect(.stmt);
 
         const params = .{
@@ -553,7 +585,7 @@ pub fn main() !void {
             .{ "Alice", null }
         };
         inline for (params) |param| {
-            const exe_res = try client.execute(io, &prep_stmt, param);
+            const exe_res = try prep_stmt.execute(io, param);
             _ = try exe_res.expect(.ok);
         }
     }
@@ -564,9 +596,9 @@ pub fn main() !void {
             mac_addr: ?[6]u8,
         };
         const prep_res = try client.prepare(allocator, io, "SELECT * FROM test.array_types_example");
-        defer prep_res.deinit(allocator);
+        defer prep_res.deinit(allocator, io);
         const prep_stmt: PreparedStatement = try prep_res.expect(.stmt);
-        const res = try client.execute(io, &prep_stmt, .{});
+        const res = try prep_stmt.execute(io, .{});
         const rows: ResultSet(BinaryResultRow) = try res.expect(.rows);
         const rows_iter = rows.iter();
 

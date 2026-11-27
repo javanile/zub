@@ -10,9 +10,9 @@ keywords:
   - godot
   - godot-engine
   - godot4
-date: 2026-10-04
-updated_at: 2026-10-04T12:27:46+00:00
-last_sync: 2026-10-04T12:27:46Z
+date: 2026-11-21
+updated_at: 2026-11-21T15:41:12+00:00
+last_sync: 2026-11-21T15:41:12Z
 package_kind: library
 has_library: true
 has_binary: false
@@ -37,7 +37,7 @@ expected until a stable version is released. Issue reports, feature requests, an
 
 ## Prerequisites
 
-1. Zig 0.17.0
+1. Zig 0.17.1
 2. Godot 4.7.2
 
 **Note:** gdzig currently targets these exact Zig and Godot releases.
@@ -55,6 +55,25 @@ See the [example](example/) for a browser export preset and instructions.
 ## Usage:
 
 See the [example](example/) folder for reference.
+
+### Compile-time Godot compatibility minimum
+
+Default builds discover the running engine version. To fold version gates,
+interface lookups, and method-bind selection at compile time, select a measured
+minimum:
+
+```sh
+zig build -Dgodot_compatibility_minimum=4.6
+```
+
+This is a floor, not an exact engine lock. Matching and newer engines are
+accepted, and older engines are rejected during initialization. Bindings still
+come from the current vendored API. With the option, `gdzig.api_version` points to the
+constant effective floor rather than the actual runtime version. Cached minima
+use the vendored metadata directly. An uncached minimum downloads that exact
+stable Godot release to measure compatibility, without changing the API snapshot.
+See the [compatibility minimum guide](docs/compatibility-minimum.md) for catalog
+requirements, downstream build usage and limitations.
 
 ## Code Sample:
 
